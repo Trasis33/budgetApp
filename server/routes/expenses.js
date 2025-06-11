@@ -1,0 +1,145 @@
+const express = require('express');
+const router = express.Router();
+const { db } = require('../db/setup');
+const auth = require('../middleware/auth');
+
+// @route   GET api/expenses
+// @desc    Get all expenses
+// @access  Private
+router.get('/', auth, async (req, res) => {
+  try {
+    const expenses = await db('expenses')
+      .join('categories', 'expenses.category_id', 'categories.id')
+      .join('users', 'expenses.paid_by_user_id', 'users.id')
+      .select(
+        'expenses.*',
+        'categories.name as category_name',
+        'categories.icon as category_icon',
+        'users.name as paid_by_name'
+      );
+    
+    res.json(expenses);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/expenses
+// @desc    Create a new expense
+// @access  Private
+router.post('/', auth, async (req, res) => {
+  const {
+    date,
+    amount,
+    category_id,
+    paid_by_user_id,
+    split_ratio,
+    description
+  } = req.body;
+
+  try {
+    // Validate the request
+    if (!date || !amount || !category_id || !paid_by_user_id) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    const [id] = await db('expenses').insert({
+      date,
+      amount,
+      category_id,
+      paid_by_user_id,
+      split_ratio: split_ratio || '50/50',
+      description
+    });
+
+    const expense = await db('expenses')
+      .join('categories', 'expenses.category_id', 'categories.id')
+      .join('users', 'expenses.paid_by_user_id', 'users.id')
+      .select(
+        'expenses.*',
+        'categories.name as category_name',
+        'categories.icon as category_icon',
+        'users.name as paid_by_name'
+      )
+      .where('expenses.id', id)
+      .first();
+
+    res.json(expense);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   PUT api/expenses/:id
+// @desc    Update an expense
+// @access  Private
+router.put('/:id', auth, async (req, res) => {
+  const {
+    date,
+    amount,
+    category_id,
+    paid_by_user_id,
+    split_ratio,
+    description
+  } = req.body;
+
+  try {
+    const expenseExists = await db('expenses').where('id', req.params.id).first();
+    
+    if (!expenseExists) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    await db('expenses')
+      .where('id', req.params.id)
+      .update({
+        date,
+        amount,
+        category_id,
+        paid_by_user_id,
+        split_ratio,
+        description
+      });
+
+    const expense = await db('expenses')
+      .join('categories', 'expenses.category_id', 'categories.id')
+      .join('users', 'expenses.paid_by_user_id', 'users.id')
+      .select(
+        'expenses.*',
+        'categories.name as category_name',
+        'categories.icon as category_icon',
+        'users.name as paid_by_name'
+      )
+      .where('expenses.id', req.params.id)
+      .first();
+
+    res.json(expense);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   DELETE api/expenses/:id
+// @desc    Delete an expense
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const expenseExists = await db('expenses').where('id', req.params.id).first();
+    
+    if (!expenseExists) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    await db('expenses').where('id', req.params.id).del();
+
+    res.json({ message: 'Expense removed' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+module.exports = router;
