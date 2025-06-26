@@ -25,6 +25,34 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route   GET api/expenses/:id
+// @desc    Get a single expense
+// @access  Private
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const expense = await db('expenses')
+      .join('categories', 'expenses.category_id', 'categories.id')
+      .join('users', 'expenses.paid_by_user_id', 'users.id')
+      .select(
+        'expenses.*',
+        'categories.name as category_name',
+        'categories.icon as category_icon',
+        'users.name as paid_by_name'
+      )
+      .where('expenses.id', req.params.id)
+      .first();
+
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    res.json(expense);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   POST api/expenses
 // @desc    Create a new expense
 // @access  Private
@@ -39,13 +67,17 @@ router.post('/', auth, async (req, res) => {
   } = req.body;
 
   try {
-    // Validate the request
-    if (!date || !amount || !category_id || !paid_by_user_id) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
+    // Validate mandatory fields (date can be omitted)
+    if (!amount || !category_id || !paid_by_user_id) {
+      return res.status(400).json({ message: 'Please provide amount, category and payer' });
     }
 
+    // Default the date to the first of the current month if not supplied
+    const today = new Date();
+    const defaultDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+
     const [id] = await db('expenses').insert({
-      date,
+      date: date || defaultDate,
       amount,
       category_id,
       paid_by_user_id,
@@ -95,7 +127,7 @@ router.put('/:id', auth, async (req, res) => {
     await db('expenses')
       .where('id', req.params.id)
       .update({
-        date,
+        date: date || expenseExists.date,
         amount,
         category_id,
         paid_by_user_id,

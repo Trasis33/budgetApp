@@ -52,6 +52,7 @@ const setupDatabase = async () => {
         table.decimal('amount', 10, 2).notNullable();
         table.integer('category_id').references('id').inTable('categories');
         table.integer('paid_by_user_id').references('id').inTable('users');
+        table.string('split_ratio').defaultTo('50/50');
         table.string('description').notNullable();
         table.string('notes').nullable();
         table.timestamps(true, true);
@@ -63,6 +64,9 @@ const setupDatabase = async () => {
         table.integer('month').notNullable();
         table.integer('year').notNullable();
         table.decimal('total_expenses', 10, 2).defaultTo(0);
+        table.decimal('user1_owes_user2', 10, 2).defaultTo(0);
+        table.decimal('remaining_budget_user1', 10, 2).nullable();
+        table.decimal('remaining_budget_user2', 10, 2).nullable();
         table.timestamps(true, true);
         table.unique(['month', 'year']);
       });
@@ -72,12 +76,14 @@ const setupDatabase = async () => {
       // Seed categories
       const categories = [
         { name: 'Groceries', icon: 'shopping-cart' },
-        { name: 'Housing', icon: 'home' },
+        { name: 'Kids Clothes', icon: 'tshirt' },
+        { name: 'Mortgage', icon: 'home' },
         { name: 'Utilities', icon: 'bolt' },
         { name: 'Transportation', icon: 'car' },
         { name: 'Dining Out', icon: 'utensils' },
         { name: 'Entertainment', icon: 'film' },
         { name: 'Healthcare', icon: 'heart' },
+        { name: 'Household Items', icon: 'box' },
         { name: 'Miscellaneous', icon: 'box' }
       ];
 

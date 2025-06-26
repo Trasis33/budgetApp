@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import formatCurrency from '../utils/formatCurrency';
 
 const MonthlyStatement = () => {
   const { year, month } = useParams();
@@ -38,13 +39,6 @@ const MonthlyStatement = () => {
 
     fetchMonthlyData();
   }, [year, month]);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('sv-SE', {
-      style: 'currency',
-      currency: 'SEK'
-    }).format(amount);
-  };
 
   const formatMonthName = () => {
     const date = new Date(`${year}-${month}-01`);

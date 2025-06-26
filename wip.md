@@ -1,75 +1,118 @@
-ompleted Items
+# Budget App Implementation
 
-Project Setup and Infrastructure
+A lightweight web app that helps couples track expenses, split bills, and keep an eye on personal finances. This replaces our current Numbers document and gives both of us an easy way to input and track our financial data.
 
- • ✅ Git repository established
- • ✅ Basic project structure created (React frontend, Node.js backend)
- • ✅ SQLite database configuration started
+## Completed Tasks
 
-Authentication System
+### Project Setup and Infrastructure
+- [x] Git repository established
+- [x] Basic project structure created (React frontend, Node.js backend)
+- [x] SQLite database configuration started
 
- • ✅ User authentication context implemented
- • ✅ Login/logout functionality with token storage
- • ✅ Authentication middleware on server-side
- • ✅ Protected route handling
+### Authentication System
+- [x] User authentication context implemented
+- [x] Login/logout functionality with token storage
+- [x] Authentication middleware on server-side
+- [x] Protected route handling
 
-Frontend Foundation
+### Frontend Foundation
+- [x] Basic layout components (Layout, Sidebar)
+- [x] Initial responsive design
+- [x] Basic routing structure
+- [x] Complete expense entry form with all required fields
+- [x] Implement full expense listing with filtering functionality
 
- • ✅ Basic layout components (Layout, Sidebar)
- • ✅ Initial responsive design
- • ✅ Basic routing structure
+### Dashboard
+- [x] Monthly summary data structure (UI & backend integration)
+- [ ] Recent expenses listing
+- [x] Currency formatting utility
+- [x] Fix database schema (add `split_ratio`, `user1_owes_user2`, `remaining_budget_user1`, `remaining_budget_user2`)
+- [x] Seed all 10 predefined categories in `server/db/setup.js`
+- [x] Extract reusable currency formatting utility (`src/utils/formatCurrency.js`) and refactor existing usage
 
-Dashboard
+## In Progress Tasks
 
- • ✅ Monthly summary data structure
- • ✅ Recent expenses listing
- • ✅ Currency formatting utility
+- [ ] Build bill splitting calculator functionality
+- [ ] Create monthly statement generator UI
 
+## Future Tasks
 
-Remaining Items
+### Phase 2: Enhanced Features
+- [ ] Budget tracking
+  - [ ] Salary input and tracking
+  - [ ] Remaining budget calculations
+  - [ ] Monthly spending breakdown by category
+- [ ] Basic reporting
+  - [ ] Monthly summary reports
+  - [ ] Running total of balances
+- [ ] Settings customization
+  - [ ] Default split ratios
+  - [ ] Personal details management
+- [ ] Category management (10 predefined categories)
 
-Phase 1: MVP (2-3 weeks)
+### Phase 3: Refinement
+- [ ] Data visualizations with Chart.js
+- [ ] Export functionality to CSV/PDF
+- [ ] UI polish and mobile optimization
+- [ ] Final security review
 
- • ⬜ Complete expense entry form with all required fields
- • ⬜ Full expense listing with filtering functionality
- • ⬜ Category management (10 predefined categories)
- • ⬜ Bill splitting calculator
- • ⬜ Monthly statement generator
+### Deployment
+- [ ] Docker containerization
+- [ ] HTTPS configuration
+- [ ] Database backup solution
+- [ ] Deployment to Raspberry Pi or cloud service
 
-Phase 2: Enhanced Features (2-3 weeks)
+## Implementation Plan
 
- • ⬜ Budget tracking
-    • ⬜ Salary input and tracking
-    • ⬜ Remaining budget calculations
-    • ⬜ Monthly spending breakdown by category
- • ⬜ Basic reporting
-    • ⬜ Monthly summary reports
-    • ⬜ Running total of balances
- • ⬜ Settings customization
-    • ⬜ Default split ratios
-    • ⬜ Personal details management
+### Architecture Overview
+The app follows a React frontend + Node.js/Express backend architecture with SQLite database. Key technical decisions:
 
-Phase 3: Refinement (1-2 weeks)
+- **Frontend**: React.js with Tailwind CSS for mobile-first responsive design
+- **Backend**: Node.js with Express for API endpoints
+- **Database**: SQLite for lightweight, minimal-setup data persistence
+- **Authentication**: JWT-based authentication with secure token storage
 
- • ⬜ Data visualizations with Chart.js
- • ⬜ Export functionality to CSV/PDF
- • ⬜ UI polish and mobile optimization
- • ⬜ Final security review
+### Data Flow
+1. **Expense Entry**: Users input expenses through React forms → API validates and stores in SQLite
+2. **Bill Splitting**: Algorithm calculates who owes whom based on split ratios and monthly bills
+3. **Monthly Statements**: Automated generation of monthly summaries with balance calculations
 
-Deployment
+### Key Components Needed
+- Expense form with fields: date, amount, category, paid by, split type, description
+- Bill splitting calculator with monthly bill selection interface
+- Monthly statement generator for balance tracking
+- Budget tracking with salary input and remaining budget calculations
 
- • ⬜ Docker containerization
- • ⬜ HTTPS configuration
- • ⬜ Database backup solution
- • ⬜ Deployment to Raspberry Pi or cloud service
+### Technical Requirements
+- Mobile-first design for easy data entry
+- 10 predefined categories: Groceries, Kids Clothes, Mortgage, Utilities, Transportation, Dining Out, Entertainment, Healthcare, Household Items, Miscellaneous
+- Environment variables for security
+- Regular database backups
 
+## Relevant Files
 
-Next Priority Tasks
+### Backend Files
+- `server/` - Node.js backend directory
+- `server/db/` - SQLite database configuration ✅
+- `server/routes/expenses.js` - Expense CRUD endpoints ✅
+- `server/routes/categories.js` - Category CRUD endpoints ✅
+- `server/routes/summary.js` - Monthly summary & balances ✅
 
- 1 Complete expense entry form with all required fields
- 2 Implement full expense listing with filtering
- 3 Build bill splitting calculator functionality
- 4 Create monthly statement generator
+### Frontend Files  
+- `client/src/` - React frontend source directory ✅
+- `client/src/components/layout/Layout.js` - Main layout component ✅
+- `client/src/components/layout/Sidebar.js` - Navigation sidebar ✅
+- `client/src/context/AuthContext.js` - Authentication context ✅
+- `client/src/utils/formatCurrency.js` - Currency formatting utility (to be created)
 
-This project is currently in early development with foundational elements in place. The focus should now be on completing the core expense tracking features to reach a
-functional MVP.
+### Configuration Files
+- `package.json` - Project dependencies ✅
+- Project root structure established ✅
+
+### Files to be Created/Modified
+- `client/src/components/ExpenseForm.js` - Complete expense entry form
+- `client/src/components/ExpenseList.js` - Full expense listing with filtering
+- `client/src/components/BillSplitter.js` - Bill splitting calculator
+- `client/src/components/MonthlyStatement.js` - Monthly statement generator
+- `server/db/setup.js` - Database schema & seed adjustments
+- `server/routes/statements.js` - Monthly statement API endpoints

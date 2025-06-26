@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { RiAddLine } from 'react-icons/ri';
+import formatCurrency from '../utils/formatCurrency';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -35,14 +36,6 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [currentYear, currentMonth]);
 
-  // Format currency (SEK)
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('sv-SE', {
-      style: 'currency',
-      currency: 'SEK'
-    }).format(amount);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -55,6 +48,7 @@ const Dashboard = () => {
     return (
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
         <p>{error}</p>
+        {console.log("error message: ", error)}
       </div>
     );
   }

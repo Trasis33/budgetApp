@@ -29,7 +29,7 @@ Key Features
 2. Expense Entry
 
  • Form to add new expenses with fields:
-    • Date (optional, just need the month)
+    • Date (optional; defaults to current month)
     • Amount (in SEK)
     • Category
     • Paid by (you/me)
