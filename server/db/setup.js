@@ -58,6 +58,19 @@ const setupDatabase = async () => {
         table.timestamps(true, true);
       });
 
+      await db.schema.createTable('recurring_expenses', (table) => {
+        table.increments('id').primary();
+        table.string('description').notNullable();
+        table.decimal('default_amount', 10, 2).notNullable();
+        table.integer('category_id').references('id').inTable('categories');
+        table.integer('paid_by_user_id').references('id').inTable('users');
+        table.string('split_type').defaultTo('50/50');
+        table.integer('split_ratio_user1').defaultTo(50);
+        table.integer('split_ratio_user2').defaultTo(50);
+        table.boolean('is_active').defaultTo(true);
+        table.timestamps(true, true);
+      });
+
       // Create monthly_statements table
       await db.schema.createTable('monthly_statements', (table) => {
         table.increments('id').primary();

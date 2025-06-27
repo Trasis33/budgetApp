@@ -32,7 +32,8 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 
 ## In Progress Tasks
 
-- [ ] Build bill splitting calculator functionality
+- [x] Implement recurring bills feature (frontend and backend setup) ([see plan](./recurring-bills-feature.md))
+- [ ] Build bill splitting calculator functionality ([see plan](./bill-splitting-calculator.md))
 - [ ] Create monthly statement generator UI
 
 ## Future Tasks

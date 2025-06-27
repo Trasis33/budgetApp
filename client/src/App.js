@@ -9,6 +9,7 @@ import AddExpense from './pages/AddExpense';
 import MonthlyStatement from './pages/MonthlyStatement';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
+import Recurring from './pages/Recurring';
 import NotFound from './pages/NotFound';
 
 // Auth Context and Private Route
@@ -50,6 +51,7 @@ function App() {
           <Route path="expenses/add" element={<AddExpense />} />
           <Route path="expenses/edit/:id" element={<AddExpense />} />
           <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
+          <Route path="recurring" element={<Recurring />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         

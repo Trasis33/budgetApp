@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const expenseRoutes = require('./routes/expenses');
 const categoryRoutes = require('./routes/categories');
 const summaryRoutes = require('./routes/summary');
+const recurringExpenseRoutes = require('./routes/recurringExpenses');
 const userRoutes = require('./routes/users');
 const { setupDatabase } = require('./db/setup');
 
@@ -29,6 +30,7 @@ const startServer = async () => {
     app.use('/api/expenses', auth, expenseRoutes);
     app.use('/api/categories', auth, categoryRoutes);
     app.use('/api/summary', auth, summaryRoutes);
+    app.use('/api/recurring-expenses', auth, recurringExpenseRoutes);
     app.use('/api/users', auth, userRoutes);
 
     // Serve static assets in production
