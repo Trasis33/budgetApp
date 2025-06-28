@@ -44,11 +44,10 @@ Key Features
  • Selection interface for monthly bills paid by each of us
  • Calculation of total monthly bills + split expenses (food, kids clothes, etc.)
 
-4. Budget Tracking
+4. Recurring Bills
 
- • Salary input and tracking
- • Calculation of what's left after expenses
- • Monthly spending breakdown by category
+ • System for managing predictable monthly expenses
+ • Automatic inclusion in monthly calculations
 
 5. Reports & Visualization
 
@@ -108,6 +107,8 @@ Phase 1: MVP (2-3 weeks)
  • Basic authentication
  • Expense entry and listing
  • Simple bill splitting calculation
+ • Recurring bills feature
+ • Monthly statement generator
 
 Phase 2: Enhanced Features (2-3 weeks)
 

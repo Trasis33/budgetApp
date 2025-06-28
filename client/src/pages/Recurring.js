@@ -7,23 +7,33 @@ const Recurring = () => {
     const [recurringExpenses, setRecurringExpenses] = useState([]);
     const [formData, setFormData] = useState({
         description: '',
-        amount: '',
+        default_amount: '',
         category_id: '',
         paid_by_user_id: '',
         split_type: '50/50',
-        user1_id: '',
-        user2_id: '',
-        user1_ratio: 0.5,
-        user2_ratio: 0.5,
+        split_ratio_user1: 0.5,
+        split_ratio_user2: 0.5,
     });
     const [categories, setCategories] = useState([]);
     const [users, setUsers] = useState([]);
     const [editingId, setEditingId] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchRecurringExpenses();
-        fetchCategories();
-        fetchUsers();
+        const fetchData = async () => {
+            try {
+                await Promise.all([
+                    fetchRecurringExpenses(),
+                    fetchCategories(),
+                    fetchUsers()
+                ]);
+            } catch (error) {
+                console.error("Failed to fetch initial data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     const fetchRecurringExpenses = async () => {
@@ -67,23 +77,23 @@ const Recurring = () => {
 
     const handleSplitTypeChange = (e) => {
         const { value } = e.target;
-        let user1_ratio = 0.5;
-        let user2_ratio = 0.5;
+        let split_ratio_user1 = 0.5;
+        let split_ratio_user2 = 0.5;
 
         if (value === 'personal') {
-            user1_ratio = 1;
-            user2_ratio = 0;
+            split_ratio_user1 = 1;
+            split_ratio_user2 = 0;
         } else if (value === 'custom') {
             // Will be handled by a separate input for custom ratio
-            user1_ratio = 0; // Placeholder, will be updated by custom input
-            user2_ratio = 0; // Placeholder, will be updated by custom input
+            split_ratio_user1 = 0; // Placeholder, will be updated by custom input
+            split_ratio_user2 = 0; // Placeholder, will be updated by custom input
         }
 
         setFormData(prev => ({
             ...prev,
             split_type: value,
-            user1_ratio,
-            user2_ratio,
+            split_ratio_user1,
+            split_ratio_user2,
         }));
     };
 
@@ -91,8 +101,8 @@ const Recurring = () => {
         const ratio = parseFloat(e.target.value);
         setFormData(prev => ({
             ...prev,
-            user1_ratio: ratio,
-            user2_ratio: 1 - ratio,
+            split_ratio_user1: ratio,
+            split_ratio_user2: 1 - ratio,
         }));
     };
 
@@ -106,14 +116,12 @@ const Recurring = () => {
             }
             setFormData({
                 description: '',
-                amount: '',
+                default_amount: '',
                 category_id: '',
                 paid_by_user_id: '',
                 split_type: '50/50',
-                user1_id: users[0]?.id || '',
-                user2_id: users[1]?.id || '',
-                user1_ratio: 0.5,
-                user2_ratio: 0.5,
+                split_ratio_user1: 0.5,
+                split_ratio_user2: 0.5,
             });
             setEditingId(null);
             fetchRecurringExpenses();
@@ -125,14 +133,12 @@ const Recurring = () => {
     const handleEdit = (expense) => {
         setFormData({
             description: expense.description,
-            amount: expense.amount,
+            default_amount: expense.default_amount,
             category_id: expense.category_id,
             paid_by_user_id: expense.paid_by_user_id,
             split_type: expense.split_type,
-            user1_id: expense.user1_id,
-            user2_id: expense.user2_id,
-            user1_ratio: expense.user1_ratio,
-            user2_ratio: expense.user2_ratio,
+            split_ratio_user1: expense.split_ratio_user1,
+            split_ratio_user2: expense.split_ratio_user2,
         });
         setEditingId(expense.id);
     };
@@ -147,6 +153,14 @@ const Recurring = () => {
             }
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto p-4">
@@ -170,8 +184,8 @@ const Recurring = () => {
                         <label className="block text-gray-700">Amount</label>
                         <input
                             type="number"
-                            name="amount"
-                            value={formData.amount}
+                            name="default_amount"
+                            value={formData.default_amount}
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded mt-1"
                             required
@@ -202,7 +216,7 @@ const Recurring = () => {
                                     onClick={() => setFormData(prev => ({ ...prev, paid_by_user_id: user.id }))}
                                     className={`flex-1 p-2 rounded ${formData.paid_by_user_id === user.id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
                                 >
-                                    {user.username}
+                                    {user.name}
                                 </button>
                             ))}
                         </div>
@@ -235,18 +249,18 @@ const Recurring = () => {
                     </div>
                     {formData.split_type === 'custom' && (
                         <div>
-                            <label className="block text-gray-700">User 1 Ratio ({users.find(u => u.id === formData.user1_id)?.username})</label>
+                            <label className="block text-gray-700">User 1 Ratio ({users.find(u => u.id === formData.paid_by_user_id)?.name})</label>
                             <input
                                 type="range"
                                 min="0"
                                 max="1"
                                 step="0.01"
-                                name="user1_ratio"
-                                value={formData.user1_ratio}
+                                name="split_ratio_user1"
+                                value={formData.split_ratio_user1}
                                 onChange={handleRatioChange}
                                 className="w-full mt-1"
                             />
-                            <p className="text-sm text-gray-600">User 1: {(formData.user1_ratio * 100).toFixed(0)}% - User 2: {((1 - formData.user1_ratio) * 100).toFixed(0)}%</p>
+                            <p className="text-sm text-gray-600">User 1: {(formData.split_ratio_user1 * 100).toFixed(0)}% - User 2: {((1 - formData.split_ratio_user1) * 100).toFixed(0)}%</p>
                         </div>
                     )}
                 </div>
@@ -256,14 +270,12 @@ const Recurring = () => {
                 {editingId && (
                     <button type="button" onClick={() => { setEditingId(null); setFormData({
                         description: '',
-                        amount: '',
+                        default_amount: '',
                         category_id: '',
                         paid_by_user_id: '',
                         split_type: '50/50',
-                        user1_id: users[0]?.id || '',
-                        user2_id: users[1]?.id || '',
-                        user1_ratio: 0.5,
-                        user2_ratio: 0.5,
+                        split_ratio_user1: 0.5,
+                        split_ratio_user2: 0.5,
                     }); }} className="bg-gray-500 text-white p-2 rounded mt-4 ml-2 hover:bg-gray-600">
                         Cancel Edit
                     </button>
@@ -290,9 +302,9 @@ const Recurring = () => {
                             {recurringExpenses.map(expense => (
                                 <tr key={expense.id}>
                                     <td className="py-2 px-4 border-b">{expense.description}</td>
-                                    <td className="py-2 px-4 border-b">{formatCurrency(expense.amount)}</td>
+                                    <td className="py-2 px-4 border-b">{formatCurrency(expense.default_amount)}</td>
                                     <td className="py-2 px-4 border-b">{categories.find(cat => cat.id === expense.category_id)?.name}</td>
-                                    <td className="py-2 px-4 border-b">{users.find(user => user.id === expense.paid_by_user_id)?.username}</td>
+                                    <td className="py-2 px-4 border-b">{users.find(user => user.id === expense.paid_by_user_id)?.name}</td>
                                     <td className="py-2 px-4 border-b">
                                         {expense.split_type === '50/50' && '50/50'}
                                         {expense.split_type === 'personal' && 'Personal'}

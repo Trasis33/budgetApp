@@ -30,11 +30,47 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 - [x] Seed all 10 predefined categories in `server/db/setup.js`
 - [x] Extract reusable currency formatting utility (`src/utils/formatCurrency.js`) and refactor existing usage
 
+## Completed Tasks
+
+### Project Setup and Infrastructure
+- [x] Git repository established
+- [x] Basic project structure created (React frontend, Node.js backend)
+- [x] SQLite database configuration started
+
+### Authentication System
+- [x] User authentication context implemented
+- [x] Login/logout functionality with token storage
+- [x] Authentication middleware on server-side
+- [x] Protected route handling
+
+### Frontend Foundation
+- [x] Basic layout components (Layout, Sidebar)
+- [x] Initial responsive design
+- [x] Basic routing structure
+- [x] Complete expense entry form with all required fields
+- [x] Implement full expense listing with filtering functionality
+
+### Dashboard
+- [x] Monthly summary data structure (UI & backend integration)
+- [ ] Recent expenses listing
+- [x] Currency formatting utility
+- [x] Fix database schema (add `split_ratio`, `user1_owes_user2`, `remaining_budget_user1`, `remaining_budget_user2`)
+- [x] Seed all 10 predefined categories in `server/db/setup.js`
+- [x] Extract reusable currency formatting utility (`src/utils/formatCurrency.js`) and refactor existing usage
+
+### Recurring Bills Feature
+- [x] Implement recurring bills feature (frontend and backend setup, including auth middleware re-addition and `amount` column correction) ([see plan](./recurring-bills-feature.md))
+- [x] Implement recurring expense generation logic with update handling and unique constraint enforcement.
+
+### Bill Splitting Calculator
+- [x] Build bill splitting calculator functionality (frontend UI and backend API) ([see plan](./bill-splitting-calculator.md))
+
+### Monthly Statement Generator
+- [x] Create monthly statement generator UI with print functionality.
+
 ## In Progress Tasks
 
-- [x] Implement recurring bills feature (frontend and backend setup) ([see plan](./recurring-bills-feature.md))
-- [ ] Build bill splitting calculator functionality ([see plan](./bill-splitting-calculator.md))
-- [ ] Create monthly statement generator UI
+- [ ] Recent expenses listing
 
 ## Future Tasks
 

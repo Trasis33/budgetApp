@@ -1,39 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
+import { useReactToPrint } from 'react-to-print';
 
 const MonthlyStatement = () => {
   const { year, month } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [data, setData] = useState({
-    expenses: [],
-    summary: {
-      totalExpenses: 0,
-      categorySummary: []
-    }
+  const [data, setData] = useState(null);
+
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: `Monthly Statement - ${month}/${year}`,
   });
 
   useEffect(() => {
     const fetchMonthlyData = async () => {
       try {
-        // Get monthly summary
-        const summaryRes = await axios.get(`/api/summary/monthly/${year}/${month}`);
-        
-        // Get expenses for the month
-        const expensesRes = await axios.get(`/api/expenses/monthly/${year}/${month}`);
-        
-        setData({
-          expenses: expensesRes.data,
-          summary: summaryRes.data
-        });
-        
-        setLoading(false);
+        const response = await api.get(`/summary/monthly/${year}/${month}`);
+        setData(response.data);
       } catch (err) {
         setError('Error fetching monthly statement data');
-        setLoading(false);
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -41,70 +34,87 @@ const MonthlyStatement = () => {
   }, [year, month]);
 
   const formatMonthName = () => {
-    const date = new Date(`${year}-${month}-01`);
+    const date = new Date(year, month - 1, 1);
     return date.toLocaleString('default', { month: 'long' });
   };
 
   if (loading) return <div className="p-4">Loading monthly statement...</div>;
   if (error) return <div className="p-4 text-red-500">{error}</div>;
+  if (!data) return <div className="p-4">No data available for this month.</div>;
+
+  const { expenses, categoryTotals, userPayments, balances, statement } = data;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">
-        Monthly Statement: {formatMonthName()} {year}
-      </h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Summary Section */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Monthly Summary</h2>
-          <div className="mb-4">
-            <p className="text-gray-600">Total Expenses</p>
-            <p className="text-2xl font-bold text-red-600">
-              {formatCurrency(data.summary.totalExpenses)}
-            </p>
-          </div>
-          
-          <h3 className="text-md font-medium mb-2">Expenses by Category</h3>
-          <ul className="space-y-2">
-            {data.summary.categorySummary.map((category) => (
-              <li key={category.category_id} className="flex justify-between items-center">
-                <span>{category.category_name}</span>
-                <span className="font-medium">{formatCurrency(category.total)}</span>
-              </li>
-            ))}
-          </ul>
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">
+          Monthly Statement: {formatMonthName()} {year}
+        </h1>
+        <button onClick={handlePrint} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+          Print Statement
+        </button>
+      </div>
+
+      <div ref={componentRef} className="p-8 border rounded-lg bg-white">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold">Financial Summary</h2>
+          <p className="text-gray-500">{formatMonthName()} {year}</p>
         </div>
-        
-        {/* Expenses List */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Expenses</h2>
-          {data.expenses.length === 0 ? (
-            <p className="text-gray-500">No expenses recorded for this month.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Description</th>
-                    <th className="text-left py-2">Category</th>
-                    <th className="text-right py-2">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.expenses.map((expense) => (
-                    <tr key={expense.id} className="border-b">
-                      <td className="py-2">{new Date(expense.date).toLocaleDateString()}</td>
-                      <td className="py-2">{expense.description}</td>
-                      <td className="py-2">{expense.category_name}</td>
-                      <td className="py-2 text-right">{formatCurrency(expense.amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Payment Summary</h3>
+            {Object.entries(userPayments).map(([userId, amount]) => (
+              <div key={userId} className="flex justify-between py-2">
+                <span className="font-medium">{balances[userId].name || `User ${userId}`} Paid:</span>
+                <span>{formatCurrency(amount)}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Category Breakdown</h3>
+            {Object.entries(categoryTotals).map(([category, total]) => (
+              <div key={category} className="flex justify-between py-1">
+                <span>{category}</span>
+                <span className="font-medium">{formatCurrency(total)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-4 border-b pb-2">Settlement</h3>
+          <div className="text-center text-2xl font-bold p-4 bg-gray-100 rounded-lg">
+            {statement.user1_owes_user2 > 0
+              ? `${balances[Object.keys(balances)[0]].name} owes ${balances[Object.keys(balances)[1]].name} ${formatCurrency(statement.user1_owes_user2)}`
+              : `${balances[Object.keys(balances)[1]].name} owes ${balances[Object.keys(balances)[0]].name} ${formatCurrency(Math.abs(statement.user1_owes_user2))}`}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold mb-4 border-b pb-2">All Transactions</h3>
+          <table className="min-w-full">
+            <thead>
+              <tr>
+                <th className="text-left py-2">Date</th>
+                <th className="text-left py-2">Description</th>
+                <th className="text-left py-2">Category</th>
+                <th className="text-left py-2">Paid By</th>
+                <th className="text-right py-2">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((expense) => (
+                <tr key={expense.id} className="border-b">
+                  <td className="py-2">{new Date(expense.date).toLocaleDateString()}</td>
+                  <td className="py-2">{expense.description}</td>
+                  <td className="py-2">{expense.category_name}</td>
+                  <td className="py-2">{expense.paid_by_name}</td>
+                  <td className="py-2 text-right">{formatCurrency(expense.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

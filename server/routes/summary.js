@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db/setup');
+const db = require('../db/database');
 const auth = require('../middleware/auth');
+const generateRecurringExpenses = require('../utils/generateRecurringExpenses');
 
 // @route   GET api/summary/monthly/:year/:month
 // @desc    Get monthly summary
@@ -10,6 +11,8 @@ router.get('/monthly/:year/:month', auth, async (req, res) => {
   const { year, month } = req.params;
   
   try {
+    await generateRecurringExpenses(year, month);
+
     // Get all users for reference
     const users = await db('users').select('id', 'name');
     if (users.length < 2) {
@@ -63,35 +66,38 @@ router.get('/monthly/:year/:month', auth, async (req, res) => {
       };
     });
     
-    // Find existing monthly statement or create a new one
+    // Calculate user1_owes_user2
+    const user1 = users[0];
+    const user2 = users[1];
+    let user1_owes_user2 = 0;
+    if (balances[user1.id].balance < 0) {
+      user1_owes_user2 = Math.abs(balances[user1.id].balance);
+    } else {
+      user1_owes_user2 = -balances[user1.id].balance;
+    }
+
+    // Find existing monthly statement or create/update a new one
     let statement = await db('monthly_statements')
       .where({ month: parseInt(month), year: parseInt(year) })
       .first();
     
-    if (!statement) {
-      // Calculate user1_owes_user2 (assuming user1 is first user, user2 is second)
-      const user1 = users[0];
-      const user2 = users[1];
-      
-      let user1_owes_user2 = 0;
-      
-      if (balances[user1.id].balance < 0) {
-        // User1 has paid less than their share
-        user1_owes_user2 = Math.abs(balances[user1.id].balance);
-      } else {
-        // User1 has paid more than their share
-        user1_owes_user2 = -balances[user1.id].balance;
-      }
-      
+    if (statement) {
+      await db('monthly_statements')
+        .where({ id: statement.id })
+        .update({
+          total_expenses: totalExpenses,
+          user1_owes_user2: user1_owes_user2,
+        });
+      statement = await db('monthly_statements').where({ id: statement.id }).first();
+    } else {
       const [id] = await db('monthly_statements').insert({
         month: parseInt(month),
         year: parseInt(year),
-        user1_owes_user2,
-        // Add budgets if available
+        total_expenses: totalExpenses,
+        user1_owes_user2: user1_owes_user2,
         remaining_budget_user1: null,
         remaining_budget_user2: null
       });
-      
       statement = await db('monthly_statements').where('id', id).first();
     }
     
@@ -135,6 +141,80 @@ router.put('/monthly/:year/:month', auth, async (req, res) => {
     statement = await db('monthly_statements').where('id', statement.id).first();
     
     res.json(statement);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   GET api/summary/settle
+// @desc    Calculate and settle the bill for a given month
+// @access  Private
+router.get('/settle', auth, async (req, res) => {
+  const { month, year } = req.query;
+
+  if (!month || !year) {
+    return res.status(400).json({ message: 'Month and year are required' });
+  }
+
+  try {
+    await generateRecurringExpenses(year, month);
+
+    const users = await db('users').select('id', 'name');
+    if (users.length !== 2) {
+      return res.status(400).json({ message: 'This feature is designed for two users.' });
+    }
+
+    const [user1, user2] = users;
+
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+    const expenses = await db('expenses').whereBetween('date', [startDate, endDate]);
+
+    let totalSharedExpenses = 0;
+    const userShares = { [user1.id]: 0, [user2.id]: 0 };
+    const userPaid = { [user1.id]: 0, [user2.id]: 0 };
+
+    for (const expense of expenses) {
+      const amount = parseFloat(expense.amount);
+      userPaid[expense.paid_by_user_id] += amount;
+
+      if (expense.split_type === 'personal') {
+        continue; // Skip personal expenses in settlement
+      }
+
+      totalSharedExpenses += amount;
+
+      if (expense.split_type === '50/50') {
+        userShares[user1.id] += amount / 2;
+        userShares[user2.id] += amount / 2;
+      } else if (expense.split_type === 'custom') {
+        userShares[user1.id] += amount * (expense.split_ratio_user1 / 100);
+        userShares[user2.id] += amount * (expense.split_ratio_user2 / 100);
+      }
+    }
+
+    const balance1 = userPaid[user1.id] - userShares[user1.id];
+
+    let settlement = {};
+    const amountOwed = Math.abs(balance1);
+
+    if (balance1 > 0) {
+      settlement.message = `${user2.name} owes ${user1.name} ${amountOwed.toFixed(2)} SEK`;
+    } else if (balance1 < 0) {
+      settlement.message = `${user1.name} owes ${user2.name} ${amountOwed.toFixed(2)} SEK`;
+    } else {
+      settlement.message = 'All settled up!';
+    }
+
+    res.json({
+      totalSharedExpenses: totalSharedExpenses.toFixed(2),
+      user1: { name: user1.name, paid: userPaid[user1.id].toFixed(2) },
+      user2: { name: user2.name, paid: userPaid[user2.id].toFixed(2) },
+      settlement,
+    });
+
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

@@ -1,34 +1,13 @@
-const knex = require('knex');
-const path = require('path');
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
-
-// Ensure the directory exists
-const dbDirectory = path.join(__dirname);
-if (!fs.existsSync(dbDirectory)) {
-  fs.mkdirSync(dbDirectory, { recursive: true });
-}
-
-const db = knex({
-  client: 'sqlite3',
-  connection: {
-    filename: path.join(__dirname, 'expense_tracker.sqlite')
-  },
-  useNullAsDefault: true
-});
+const db = require('./database');
 
 const setupDatabase = async () => {
   try {
-    // Force re-creation of the demo user
     console.log('Starting database setup...');
-    
-    // Check if users table exists
-    const hasUsersTable = await db.schema.hasTable('users');
-    
-    if (!hasUsersTable) {
-      console.log('Creating database tables...');
-      
-      // Create users table
+
+    // Create users table if it doesn't exist
+    if (!(await db.schema.hasTable('users'))) {
+      console.log('Creating users table...');
       await db.schema.createTable('users', (table) => {
         table.increments('id').primary();
         table.string('name').notNullable();
@@ -36,8 +15,11 @@ const setupDatabase = async () => {
         table.string('password').notNullable();
         table.timestamps(true, true);
       });
+    }
 
-      // Create categories table
+    // Create categories table if it doesn't exist
+    if (!(await db.schema.hasTable('categories'))) {
+      console.log('Creating categories table...');
       await db.schema.createTable('categories', (table) => {
         table.increments('id').primary();
         table.string('name').notNullable();
@@ -45,47 +27,6 @@ const setupDatabase = async () => {
         table.timestamps(true, true);
       });
 
-      // Create expenses table
-      await db.schema.createTable('expenses', (table) => {
-        table.increments('id').primary();
-        table.date('date').notNullable();
-        table.decimal('amount', 10, 2).notNullable();
-        table.integer('category_id').references('id').inTable('categories');
-        table.integer('paid_by_user_id').references('id').inTable('users');
-        table.string('split_ratio').defaultTo('50/50');
-        table.string('description').notNullable();
-        table.string('notes').nullable();
-        table.timestamps(true, true);
-      });
-
-      await db.schema.createTable('recurring_expenses', (table) => {
-        table.increments('id').primary();
-        table.string('description').notNullable();
-        table.decimal('default_amount', 10, 2).notNullable();
-        table.integer('category_id').references('id').inTable('categories');
-        table.integer('paid_by_user_id').references('id').inTable('users');
-        table.string('split_type').defaultTo('50/50');
-        table.integer('split_ratio_user1').defaultTo(50);
-        table.integer('split_ratio_user2').defaultTo(50);
-        table.boolean('is_active').defaultTo(true);
-        table.timestamps(true, true);
-      });
-
-      // Create monthly_statements table
-      await db.schema.createTable('monthly_statements', (table) => {
-        table.increments('id').primary();
-        table.integer('month').notNullable();
-        table.integer('year').notNullable();
-        table.decimal('total_expenses', 10, 2).defaultTo(0);
-        table.decimal('user1_owes_user2', 10, 2).defaultTo(0);
-        table.decimal('remaining_budget_user1', 10, 2).nullable();
-        table.decimal('remaining_budget_user2', 10, 2).nullable();
-        table.timestamps(true, true);
-        table.unique(['month', 'year']);
-      });
-
-      console.log('Database tables created successfully');
-      
       // Seed categories
       const categories = [
         { name: 'Groceries', icon: 'shopping-cart' },
@@ -99,52 +40,96 @@ const setupDatabase = async () => {
         { name: 'Household Items', icon: 'box' },
         { name: 'Miscellaneous', icon: 'box' }
       ];
-
       await db('categories').insert(categories);
       console.log('Categories seeded successfully');
     }
-    
-    // Always recreate the demo user for testing
-    try {
-      // Delete the demo user if it exists (to ensure fresh password)
-      await db('users').where('email', 'user1@example.com').delete();
-      console.log('Removed old demo user if it existed');
-      
-      // Create new demo user
-      const salt = await bcrypt.genSalt(10);
-      // Use a simpler string for the password to avoid any encoding issues
-      const plainPassword = 'password123';
-      console.log('Creating demo user with password:', plainPassword);
-      
-      const hashedPassword = await bcrypt.hash(plainPassword, salt);
-      console.log('Hashed password length:', hashedPassword.length);
-      
-      const userId = await db('users').insert({
-        name: 'Demo User',
-        email: 'user1@example.com',
-        password: hashedPassword
+
+    // Create recurring_expenses table if it doesn't exist
+    if (!(await db.schema.hasTable('recurring_expenses'))) {
+        console.log('Creating recurring_expenses table...');
+        await db.schema.createTable('recurring_expenses', (table) => {
+            table.increments('id').primary();
+            table.string('description').notNullable();
+            table.decimal('default_amount', 10, 2).notNullable();
+            table.integer('category_id').references('id').inTable('categories');
+            table.integer('paid_by_user_id').references('id').inTable('users');
+            table.string('split_type').defaultTo('50/50');
+            table.decimal('split_ratio_user1', 5, 2).nullable();
+            table.decimal('split_ratio_user2', 5, 2).nullable();
+            table.boolean('is_active').defaultTo(true);
+            table.timestamps(true, true);
+        });
+    }
+
+    // Create expenses table if it doesn't exist
+    if (!(await db.schema.hasTable('expenses'))) {
+      console.log('Creating expenses table...');
+      await db.schema.createTable('expenses', (table) => {
+        table.increments('id').primary();
+        table.date('date').notNullable();
+        table.decimal('amount', 10, 2).notNullable();
+        table.integer('category_id').references('id').inTable('categories');
+        table.integer('paid_by_user_id').references('id').inTable('users');
+        table.string('split_type').defaultTo('50/50');
+        table.decimal('split_ratio_user1', 5, 2).nullable();
+        table.decimal('split_ratio_user2', 5, 2).nullable();
+        table.string('description').notNullable();
+        table.string('notes').nullable();
+        table.integer('recurring_expense_id').references('id').inTable('recurring_expenses').onDelete('SET NULL');
+        table.timestamp('recurring_template_updated_at').nullable();
+        table.timestamps(true, true);
+        table.unique(['recurring_expense_id', 'date']);
       });
-      
-      console.log('Demo user created successfully with ID:', userId);
-      
-      // Verify the user was created
-      const createdUser = await db('users').where('email', 'user1@example.com').first();
-      if (createdUser) {
-        console.log('Verified demo user exists in database');
-        
-        // Test password matching
-        const passwordTest = await bcrypt.compare(plainPassword, createdUser.password);
-        console.log('Password verification test:', passwordTest ? 'SUCCESS' : 'FAILED');
-      } else {
-        console.log('ERROR: Demo user not found after creation!');
+    }
+
+    // Create monthly_statements table if it doesn't exist
+    if (!(await db.schema.hasTable('monthly_statements'))) {
+      console.log('Creating monthly_statements table...');
+      await db.schema.createTable('monthly_statements', (table) => {
+        table.increments('id').primary();
+        table.integer('month').notNullable();
+        table.integer('year').notNullable();
+        table.decimal('total_expenses', 10, 2).defaultTo(0);
+        table.decimal('user1_owes_user2', 10, 2).defaultTo(0);
+        table.decimal('remaining_budget_user1', 10, 2).nullable();
+        table.decimal('remaining_budget_user2', 10, 2).nullable();
+        table.timestamps(true, true);
+        table.unique(['month', 'year']);
+      });
+    }
+
+    // Seed demo users only if they don't exist
+    try {
+      const user1 = await db('users').where('email', 'user1@example.com').first();
+      if (!user1) {
+        const salt_1 = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('password123', salt_1);
+        await db('users').insert({
+          name: 'Demo User',
+          email: 'user1@example.com',
+          password: hashedPassword
+        });
+        console.log('Demo user 1 created successfully');
+      }
+
+      const user2 = await db('users').where('email', 'user2@example.com').first();
+      if (!user2) {
+        const salt_2 = await bcrypt.genSalt(10);
+        const hashedPassword_2 = await bcrypt.hash('password123', salt_2);
+        await db('users').insert({
+          name: 'Demo User 2',
+          email: 'user2@example.com',
+          password: hashedPassword_2
+        });
+        console.log('Demo user 2 created successfully');
       }
     } catch (userErr) {
       console.error('Error creating demo user:', userErr);
     }
-    
+
   } catch (err) {
     console.error('Database setup error:', err);
   }
 };
 
-module.exports = { db, setupDatabase };
+module.exports = { setupDatabase };

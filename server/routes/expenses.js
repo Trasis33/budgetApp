@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db/setup');
+const db = require('../db/database');
 const auth = require('../middleware/auth');
 
 // @route   GET api/expenses
@@ -62,7 +62,9 @@ router.post('/', auth, async (req, res) => {
     amount,
     category_id,
     paid_by_user_id,
-    split_ratio,
+    split_type,
+    split_ratio_user1,
+    split_ratio_user2,
     description
   } = req.body;
 
@@ -81,7 +83,9 @@ router.post('/', auth, async (req, res) => {
       amount,
       category_id,
       paid_by_user_id,
-      split_ratio: split_ratio || '50/50',
+      split_type: split_type || '50/50',
+      split_ratio_user1: split_ratio_user1 || null,
+      split_ratio_user2: split_ratio_user2 || null,
       description
     });
 
@@ -113,7 +117,9 @@ router.put('/:id', auth, async (req, res) => {
     amount,
     category_id,
     paid_by_user_id,
-    split_ratio,
+    split_type,
+    split_ratio_user1,
+    split_ratio_user2,
     description
   } = req.body;
 
@@ -131,7 +137,9 @@ router.put('/:id', auth, async (req, res) => {
         amount,
         category_id,
         paid_by_user_id,
-        split_ratio,
+        split_type,
+        split_ratio_user1,
+        split_ratio_user2,
         description
       });
 

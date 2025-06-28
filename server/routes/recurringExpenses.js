@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db/setup');
+const db = require('../db/database');
 const auth = require('../middleware/auth');
 
 // Get all recurring expenses for the authenticated user
 router.get('/', auth, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const expenses = await db('recurring_expenses')
-      .where({ user1_id: userId })
-      .orWhere({ user2_id: userId });
+    const expenses = await db('recurring_expenses').where('is_active', true);
     res.json(expenses);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -20,16 +17,12 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
         const expense = await db('recurring_expenses')
             .where({ id })
-            .andWhere(function() {
-                this.where({ user1_id: userId }).orWhere({ user2_id: userId })
-            })
             .first();
 
         if (!expense) {
-            return res.status(404).json({ message: 'Recurring expense not found or not authorized' });
+            return res.status(404).json({ message: 'Recurring expense not found' });
         }
         res.json(expense);
     } catch (err) {
@@ -40,24 +33,16 @@ router.get('/:id', auth, async (req, res) => {
 // Add a new recurring expense
 router.post('/', auth, async (req, res) => {
   try {
-    const { description, amount, category_id, paid_by_user_id, split_type, user1_id, user2_id, user1_ratio, user2_ratio } = req.body;
-    const userId = req.user.id;
-
-    // Ensure the logged-in user is part of the expense
-    if (user1_id !== userId && user2_id !== userId) {
-        return res.status(403).json({ message: 'User not authorized to add this expense' });
-    }
+    const { description, default_amount, category_id, paid_by_user_id, split_type, split_ratio_user1, split_ratio_user2 } = req.body;
     
     const [id] = await db('recurring_expenses').insert({
         description,
-        amount,
+        default_amount,
         category_id,
         paid_by_user_id,
         split_type,
-        user1_id,
-        user2_id,
-        user1_ratio,
-        user2_ratio
+        split_ratio_user1,
+        split_ratio_user2
     });
     const newExpense = await db('recurring_expenses').where({ id }).first();
     res.status(201).json(newExpense);
@@ -70,8 +55,7 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
-        const { description, amount, category_id, paid_by_user_id, split_type, user1_id, user2_id, user1_ratio, user2_ratio } = req.body;
+        const { description, default_amount, category_id, paid_by_user_id, split_type, split_ratio_user1, split_ratio_user2 } = req.body;
 
         const expense = await db('recurring_expenses').where({ id }).first();
 
@@ -79,20 +63,14 @@ router.put('/:id', auth, async (req, res) => {
             return res.status(404).json({ message: 'Recurring expense not found' });
         }
 
-        if (expense.user1_id !== userId && expense.user2_id !== userId) {
-            return res.status(403).json({ message: 'User not authorized to update this expense' });
-        }
-
         await db('recurring_expenses').where({ id }).update({
             description,
-            amount,
+            default_amount,
             category_id,
             paid_by_user_id,
             split_type,
-            user1_id,
-            user2_id,
-            user1_ratio,
-            user2_ratio
+            split_ratio_user1,
+            split_ratio_user2
         });
 
         const updatedExpense = await db('recurring_expenses').where({ id }).first();
@@ -102,11 +80,10 @@ router.put('/:id', auth, async (req, res) => {
     }
 });
 
-// Delete a recurring expense
+// Delete a recurring expense (deactivate)
 router.delete('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
 
         const expense = await db('recurring_expenses').where({ id }).first();
 
@@ -114,11 +91,7 @@ router.delete('/:id', auth, async (req, res) => {
             return res.status(404).json({ message: 'Recurring expense not found' });
         }
 
-        if (expense.user1_id !== userId && expense.user2_id !== userId) {
-            return res.status(403).json({ message: 'User not authorized to delete this expense' });
-        }
-
-        await db('recurring_expenses').where({ id }).del();
+        await db('recurring_expenses').where({ id }).update({ is_active: false });
         res.status(204).send();
     } catch (err) {
         res.status(500).json({ message: err.message });

@@ -10,6 +10,7 @@ import MonthlyStatement from './pages/MonthlyStatement';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
 import Recurring from './pages/Recurring';
+import BillSplitter from './pages/BillSplitter';
 import NotFound from './pages/NotFound';
 
 // Auth Context and Private Route
@@ -52,6 +53,7 @@ function App() {
           <Route path="expenses/edit/:id" element={<AddExpense />} />
           <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
           <Route path="recurring" element={<Recurring />} />
+          <Route path="bill-splitter" element={<BillSplitter />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         
