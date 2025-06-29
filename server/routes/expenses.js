@@ -25,6 +25,30 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route   GET api/expenses/recent
+// @desc    Get recent expenses
+// @access  Private
+router.get('/recent', auth, async (req, res) => {
+  try {
+    const recentExpenses = await db('expenses')
+      .join('categories', 'expenses.category_id', 'categories.id')
+      .join('users', 'expenses.paid_by_user_id', 'users.id')
+      .select(
+        'expenses.*',
+        'categories.name as category_name',
+        'categories.icon as category_icon',
+        'users.name as paid_by_name'
+      )
+      .orderBy('date', 'desc')
+      .limit(5);
+
+    res.json(recentExpenses);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   GET api/expenses/:id
 // @desc    Get a single expense
 // @access  Private

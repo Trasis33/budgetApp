@@ -22,8 +22,8 @@ const Dashboard = () => {
         setSummary(summaryRes.data);
         
         // Get recent expenses (last 5)
-        const expensesRes = await axios.get('/api/expenses');
-        setRecentExpenses(expensesRes.data.slice(0, 5));
+        const expensesRes = await axios.get('/api/expenses/recent');
+        setRecentExpenses(expensesRes.data);
         
         setLoading(false);
       } catch (err) {
