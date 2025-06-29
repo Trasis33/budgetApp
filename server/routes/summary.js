@@ -60,6 +60,7 @@ router.get('/monthly/:year/:month', auth, async (req, res) => {
     const balances = {};
     users.forEach(user => {
       balances[user.id] = {
+        name: user.name,
         paid: userPayments[user.id],
         share: perPersonShare,
         balance: userPayments[user.id] - perPersonShare
@@ -178,11 +179,14 @@ router.get('/settle', auth, async (req, res) => {
 
     for (const expense of expenses) {
       const amount = parseFloat(expense.amount);
-      userPaid[expense.paid_by_user_id] += amount;
 
+      // Skip personal expenses entirely when calculating settlement
       if (expense.split_type === 'personal') {
-        continue; // Skip personal expenses in settlement
+        continue;
       }
+
+      // Only count shared expenses towards what each user has paid
+      userPaid[expense.paid_by_user_id] += amount;
 
       totalSharedExpenses += amount;
 
