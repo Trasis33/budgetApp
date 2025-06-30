@@ -1,10 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 DESIGN VARIATIONS GENERATOR
 Generate n = 3 files
-Instructions
+
+INSTRUCTIONS
 Look at the design that has been attached.
 Create 3 different versions of that same design. Make each one look different but keep the same basic idea and functionality.
 Follow any additional instructions given in the prompt.
-File Management
+
+FILE MANAGEMENT
 Check if a "variations" folder exists
 If it exists:
 Rename the reference design to "source.html"
@@ -13,7 +20,8 @@ If "source.html" already exists, delete the old one first
 If no "variations" folder exists:
 Create the "variations" folder
 Put the reference design in as "source.html"
-Create Files
+
+CREATE FILES
 Make these files in the variations folder:
 design1.html
 design2.html
