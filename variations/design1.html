@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            border-right: 2px solid #334155;
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-header {
+            padding: 0 2rem 2rem;
+            border-bottom: 2px solid #334155;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #22d3ee;
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 1.5rem;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: #ffffff;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+            color: #0f172a;
+            box-shadow: 0 5px 20px rgba(34, 211, 238, 0.4);
+        }
+
+        .nav-icon {
+            margin-right: 1rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-bottom: 2px solid #334155;
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: #ffffff;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
+        }
+
+        .content {
+            padding: 2.5rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid #475569;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #22d3ee 0%, #06b6d4 100%);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value.negative {
+            color: #f87171;
+            text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
+        }
+
+        .stat-subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Recent Expenses Table */
+        .table-section {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            border: 1px solid #475569;
+            overflow: hidden;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-header {
+            padding: 2rem;
+            border-bottom: 2px solid #475569;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .table-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #334155 0%, #475569 100%);
+            border-bottom: 2px solid #64748b;
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #475569;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .amount {
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .view-all-link {
+            padding: 1.5rem 2rem;
+            display: block;
+            color: #22d3ee;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-top: 2px solid #475569;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            transition: all 0.3s ease;
+        }
+
+        .view-all-link:hover {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: #ffffff;
+        }
+
+        /* Monthly Statement Section */
+        .statement-section {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            border: 1px solid #475569;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .statement-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .statement-description {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+            color: #ffffff;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 2px solid #6b7280;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(75, 85, 99, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(75, 85, 99, 0.5);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2.5rem;
+            color: #64748b;
+            font-size: 0.8rem;
+            border-top: 2px solid #334155;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">💸 Expense Tracker</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">💰</span>
+                        Expenses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📄</span>
+                        Monthly Statement
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🔄</span>
+                        Recurring Bills
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🧾</span>
+                        Bill Splitter
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h1 class="header-title">💸 Expense Tracker</h1>
+                <div class="user-info">
+                    <div class="user-avatar">D</div>
+                    <span style="color: #e2e8f0; font-weight: 600;">Demo User</span>
+                    <button class="btn-primary">+ Add Expense</button>
+                    <a href="#" style="color: #94a3b8; text-decoration: none; margin-left: 1.5rem; font-weight: 600;">Logout</a>
+                </div>
+            </header>
+
+            <div class="content">
+                <h2 class="dashboard-title">🎯 Dashboard</h2>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Month Total</div>
+                        <div class="stat-value">31 209,00 kr</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Balance</div>
+                        <div class="stat-value negative">-2 283,50 kr</div>
+                        <div class="stat-subtitle">Your partner owes you</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Top Category</div>
+                        <div class="stat-value" style="font-size: 1.5rem;">Kids Clothes</div>
+                        <div class="stat-subtitle">13 000,00 kr</div>
+                    </div>
+                </div>
+
+                <!-- Recent Expenses Table -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3 class="table-title">📋 Recent Expenses</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>DATE</th>
+                                    <th>CATEGORY</th>
+                                    <th>AMOUNT</th>
+                                    <th>PAID BY</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-06-29</td>
+                                    <td>Kids Clothes</td>
+                                    <td class="amount">13 000,00 kr</td>
+                                    <td>Demo User 2</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-06-28</td>
+                                    <td>Groceries</td>
+                                    <td class="amount">1 424,00 kr</td>
+                                    <td>Demo User</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-06-28</td>
+                                    <td>Groceries</td>
+                                    <td class="amount">321,00 kr</td>
+                                    <td>Demo User 2</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-06-01</td>
+                                    <td>Mortgage</td>
+                                    <td class="amount">10 190,00 kr</td>
+                                    <td>Demo User</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-06-01</td>
+                                    <td>Utilities</td>
+                                    <td class="amount">449,00 kr</td>
+                                    <td>Demo User</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="#" class="view-all-link">View all expenses →</a>
+                </div>
+
+                <!-- Monthly Statement Section -->
+                <div class="statement-section">
+                    <h3 class="statement-title">📊 Monthly Statement</h3>
+                    <p class="statement-description">
+                        View the complete breakdown of this month's expenses and calculate who owes whom.
+                    </p>
+                    <button class="btn-secondary">View Statement</button>
+                </div>
+            </div>
+
+            <footer class="footer">
+                © 2025 Expense Tracker - Dark Edition<br>
+                v2.0.0 | Powered by Innovation
+            </footer>
+        </main>
+    </div>
+</body>
+</html> 
