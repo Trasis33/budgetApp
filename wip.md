@@ -47,9 +47,9 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 ## Future Tasks
 
 ### Phase 2: Enhanced Features
-- [ ] Budget tracking
-  - [ ] Salary input and tracking
-  - [ ] Remaining budget calculations
+- [x] Budget tracking
+  - [x] Salary input and tracking
+  - [x] Remaining budget calculations
   - [ ] Monthly spending breakdown by category
 - [ ] Basic reporting
   - [ ] Monthly summary reports
