@@ -20,9 +20,9 @@ router.get('/monthly/:year/:month', auth, async (req, res) => {
     }
     
     // Get monthly expenses
-    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
-    const endDate = `${year}-${month.padStart(2, '0')}-${lastDay}`;
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
     
     const expenses = await db('expenses')
       .whereBetween('date', [startDate, endDate])

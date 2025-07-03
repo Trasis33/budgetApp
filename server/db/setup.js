@@ -82,6 +82,19 @@ const setupDatabase = async () => {
       });
     }
 
+    // Create incomes table if it doesn't exist
+    if (!(await db.schema.hasTable('incomes'))) {
+      console.log('Creating incomes table...');
+      await db.schema.createTable('incomes', (table) => {
+        table.increments('id').primary();
+        table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
+        table.string('source').notNullable();
+        table.decimal('amount', 10, 2).notNullable();
+        table.date('date').notNullable();
+        table.timestamps(true, true);
+      });
+    }
+
     // Create monthly_statements table if it doesn't exist
     if (!(await db.schema.hasTable('monthly_statements'))) {
       console.log('Creating monthly_statements table...');

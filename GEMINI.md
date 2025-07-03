@@ -41,6 +41,12 @@ The application follows a standard client-server architecture:
 *   Print functionality for generating a printable version of the statement.
 *   The monthly statement data is dynamically calculated and updated, ensuring consistency with the latest expense data.
 
+### 3.5. Budget Tracking
+*   **Personal & Household Budgets:** Supports both individual and combined household budget views.
+*   **Flexible Income Management:** Allows users to log a primary salary and add multiple other income sources per month.
+*   **Dashboard Integration:** Displays a personal budget summary (income, expenses, remaining) on the main dashboard.
+*   **Dedicated Budget Page:** A new page at `/budget` allows for detailed household budget management and income entry.
+
 ## 4. Database Schema Highlights
 
 *   **`users`**: Stores user authentication details.
@@ -56,6 +62,11 @@ The application follows a standard client-server architecture:
     *   `unique(['recurring_expense_id', 'date'])`: Constraint to prevent duplicate generated expenses.
 *   **`monthly_statements`**: Stores calculated monthly summaries.
     *   `unique(['month', 'year'])`: Constraint to ensure only one statement per month/year.
+*   **`incomes`**: Stores user income entries.
+    *   `source`: The source of the income (e.g., 'Primary Salary', 'Freelance').
+    *   `amount`: The amount of income.
+    *   `date`: The date the income was received.
+    *   `user_id`: Foreign key linking to the `users` table.
 
 ## 5. Development Workflow & Considerations
 
@@ -66,8 +77,6 @@ The application follows a standard client-server architecture:
 
 ## 6. Future Enhancements (from `wip.md`)
 
-*   Recent expenses listing on the Dashboard.
-*   Budget tracking (salary input, remaining budget calculations, monthly spending breakdown).
 *   Basic reporting (monthly summary reports, running total of balances).
 *   Settings customization (default split ratios, personal details management).
 *   Data visualizations with Chart.js.

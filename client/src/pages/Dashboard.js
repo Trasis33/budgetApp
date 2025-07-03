@@ -1,29 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../api/axios';
 import { Link } from 'react-router-dom';
 import { RiAddLine } from 'react-icons/ri';
 import formatCurrency from '../utils/formatCurrency';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
   const [recentExpenses, setRecentExpenses] = useState([]);
+  const [personalBudget, setPersonalBudget] = useState({ income: 0, expenses: 0, remaining: 0 });
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
-  const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  const currentMonth = (currentDate.getMonth() + 1).toString();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         // Get monthly summary
-        const summaryRes = await axios.get(`/api/summary/monthly/${currentYear}/${currentMonth}`);
+        const summaryRes = await axios.get(`/summary/monthly/${currentYear}/${currentMonth}`);
         setSummary(summaryRes.data);
         
         // Get recent expenses (last 5)
-        const expensesRes = await axios.get('/api/expenses/recent');
+        const expensesRes = await axios.get('/expenses/recent');
         setRecentExpenses(expensesRes.data);
+
+        // Get personal budget data
+        if (user) {
+          const incomeRes = await axios.get(`/incomes?month=${currentMonth}&year=${currentYear}`);
+          const userIncomes = incomeRes.data.filter(income => income.user_id === user.id);
+          const totalIncome = userIncomes.reduce((sum, income) => sum + parseFloat(income.amount), 0);
+
+          const userExpenses = summaryRes.data.expenses.filter(expense => expense.paid_by_user_id === user.id);
+          const totalExpenses = userExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+
+          setPersonalBudget({ 
+            income: totalIncome, 
+            expenses: totalExpenses, 
+            remaining: totalIncome - totalExpenses 
+          });
+        }
         
         setLoading(false);
       } catch (err) {
@@ -34,7 +53,7 @@ const Dashboard = () => {
     };
     
     fetchDashboardData();
-  }, [currentYear, currentMonth]);
+  }, [currentYear, currentMonth, user]);
 
   if (loading) {
     return (
@@ -64,6 +83,22 @@ const Dashboard = () => {
           <RiAddLine className="mr-1" />
           <span>Add Expense</span>
         </Link>
+      </div>
+
+      {/* Personal Budget Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-sm font-medium text-gray-500">My Income</h2>
+          <p className="text-2xl font-semibold mt-2">{formatCurrency(personalBudget.income)}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-sm font-medium text-gray-500">My Expenses</h2>
+          <p className="text-2xl font-semibold mt-2">{formatCurrency(personalBudget.expenses)}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-sm font-medium text-gray-500">My Remaining Budget</h2>
+          <p className="text-2xl font-semibold mt-2">{formatCurrency(personalBudget.remaining)}</p>
+        </div>
       </div>
 
       {/* Summary Cards */}
