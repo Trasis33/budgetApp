@@ -1,5 +1,8 @@
 # Budget App Implementation
 
+### Ideas to implement:
+https://reactbits.dev/components/elastic-slider
+
 A lightweight web app that helps couples track expenses, split bills, and keep an eye on personal finances. This replaces our current Numbers document and gives both of us an easy way to input and track our financial data.
 
 ## Completed Tasks
