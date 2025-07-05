@@ -30,7 +30,7 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
   - [x] Add salary/income input functionality to user profiles
   - [x] Implement remaining budget calculations on dashboard
   - [x] Create monthly spending breakdown by category charts
-  - [ ] Add budget vs. actual spending comparisons
+  - [x] Add budget vs. actual spending comparisons
 
 #### **2. Advanced Reporting & Analytics**
 - **Priority**: Medium-High

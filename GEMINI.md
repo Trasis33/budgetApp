@@ -46,12 +46,17 @@ The application follows a standard client-server architecture:
 *   **Flexible Income Management:** Allows users to log a primary salary and add multiple other income sources per month.
 *   **Dashboard Integration:** Displays a personal budget summary (income, expenses, remaining) on the main dashboard.
 *   **Dedicated Budget Page:** A new page at `/budget` allows for detailed household budget management and income entry.
-*   **Data Visualizations:** Includes charts for monthly spending by category and income vs. expenses, powered by Chart.js.
+*   **Data Visualizations:** Includes charts for monthly spending by category, income vs. expenses, and budget vs. actual spending, powered by Chart.js.
 
 ## 4. Database Schema Highlights
 
 *   **`users`**: Stores user authentication details.
 *   **`categories`**: Predefined expense categories.
+*   **`budgets`**: Stores monthly budget targets for each category.
+    *   `category_id`: Foreign key linking to `categories`.
+    *   `amount`: The budgeted amount for the category.
+    *   `month`, `year`: The month and year the budget applies to.
+    *   `unique(['category_id', 'month', 'year'])`: Constraint to ensure only one budget per category per month/year.
 *   **`recurring_expenses`**: Stores templates for recurring bills.
     *   `default_amount`: The default amount for the recurring expense.
     *   `split_type`: Defines how the expense is split ('50/50', 'custom', 'personal').
