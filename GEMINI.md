@@ -46,6 +46,7 @@ The application follows a standard client-server architecture:
 *   **Flexible Income Management:** Allows users to log a primary salary and add multiple other income sources per month.
 *   **Dashboard Integration:** Displays a personal budget summary (income, expenses, remaining) on the main dashboard.
 *   **Dedicated Budget Page:** A new page at `/budget` allows for detailed household budget management and income entry.
+*   **Data Visualizations:** Includes charts for monthly spending by category and income vs. expenses, powered by Chart.js.
 
 ## 4. Database Schema Highlights
 

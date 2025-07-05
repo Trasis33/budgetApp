@@ -43,6 +43,11 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 ### Monthly Statement Generator
 - [x] Create monthly statement generator UI with print functionality.
 
+### Data Visualizations
+- [x] Integrate Chart.js for spending pattern graphs.
+- [x] Category distribution pie charts.
+- [x] Monthly trend line graphs.
+
 ## In Progress Tasks
 
 
@@ -53,7 +58,7 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 - [x] Budget tracking
   - [x] Salary input and tracking
   - [x] Remaining budget calculations
-  - [ ] Monthly spending breakdown by category
+  - [x] Monthly spending breakdown by category
 - [ ] Basic reporting
   - [ ] Monthly summary reports
   - [ ] Running total of balances
@@ -63,7 +68,6 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 - [ ] Category management (10 predefined categories)
 
 ### Phase 3: Refinement
-- [ ] Data visualizations with Chart.js
 - [ ] Export functionality to CSV/PDF
 - [ ] UI polish and mobile optimization
 - [ ] Final security review
