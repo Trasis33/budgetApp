@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
@@ -11,6 +11,7 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  Title,
 } from 'chart.js';
 
 ChartJS.register(
@@ -19,7 +20,8 @@ ChartJS.register(
   Legend,
   CategoryScale,
   LinearScale,
-  BarElement
+  BarElement,
+  Title
 );
 
 const Budget = () => {
@@ -33,34 +35,45 @@ const Budget = () => {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const [chartData, setChartData] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [budgets, setBudgets] = useState({});
+
+  const fetchBudgetData = useCallback(async () => {
+    try {
+      const [incomesRes, chartsRes, categoriesRes] = await Promise.all([
+        axios.get(`/incomes?month=${month}&year=${year}`),
+        axios.get(`/summary/charts/${year}/${month}`),
+        axios.get('/categories'),
+      ]);
+      setIncomes(incomesRes.data);
+      setChartData(chartsRes.data);
+      setCategories(categoriesRes.data);
+
+      const initialBudgets = {};
+      chartsRes.data.categorySpending.forEach(item => {
+        const category = categoriesRes.data.find(c => c.name === item.category);
+        if (category) {
+          initialBudgets[category.id] = item.budget || '';
+        }
+      });
+      setBudgets(initialBudgets);
+
+    } catch (err) {
+      console.error(err);
+    }
+  }, [month, year]);
 
   useEffect(() => {
-    const fetchBudgetData = async () => {
-      try {
-        const [incomesRes, chartsRes] = await Promise.all([
-          axios.get(`/incomes?month=${month}&year=${year}`),
-          axios.get(`/summary/charts/${year}/${month}`),
-        ]);
-        setIncomes(incomesRes.data);
-        setChartData(chartsRes.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
     fetchBudgetData();
-  }, [month, year]);
+  }, [fetchBudgetData]);
 
   const handleAddIncome = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('/incomes', { source, amount, date });
-      setIncomes([...incomes, res.data]);
+      await axios.post('/incomes', { source, amount, date });
       setSource('');
       setAmount('');
-      // Refetch chart data after adding income
-      const chartsRes = await axios.get(`/summary/charts/${year}/${month}`);
-      setChartData(chartsRes.data);
+      fetchBudgetData(); // Refetch all data
     } catch (err) {
       console.error(err);
     }
@@ -69,12 +82,34 @@ const Budget = () => {
   const handleDeleteIncome = async (id) => {
     try {
       await axios.delete(`/incomes/${id}`);
-      setIncomes(incomes.filter((income) => income.id !== id));
-      // Refetch chart data after deleting income
-      const chartsRes = await axios.get(`/summary/charts/${year}/${month}`);
-      setChartData(chartsRes.data);
+      fetchBudgetData(); // Refetch all data
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleBudgetChange = (categoryId, value) => {
+    setBudgets(prev => ({ ...prev, [categoryId]: value }));
+  };
+
+  const handleSaveBudget = async (categoryId) => {
+    try {
+      const amount = budgets[categoryId];
+      if (amount === '' || isNaN(parseFloat(amount))) {
+        alert('Please enter a valid number for the budget.');
+        return;
+      }
+      await axios.post('/budgets', {
+        category_id: categoryId,
+        amount: parseFloat(amount),
+        month,
+        year,
+      });
+      alert('Budget saved!');
+      fetchBudgetData(); // Refetch to update charts
+    } catch (err) {
+      console.error('Failed to save budget:', err);
+      alert('Failed to save budget.');
     }
   };
 
@@ -84,20 +119,7 @@ const Budget = () => {
       {
         label: 'Spending by Category',
         data: chartData?.categorySpending.map((c) => c.total),
-        backgroundColor: [
-          '#83AFF6FF', // blue
-          '#59E58DFF', // green
-          '#F6A56AFF', // orange
-          '#B395F8FF', // purple
-          '#FC8CC4FF', // pink
-        ],
-        borderColor: [
-          '#3b82f6', // blue
-          '#22c55e', // green
-          '#f97316', // orange
-          '#8b5cf6', // purple
-          '#ec4899', // pink
-        ],
+        backgroundColor: ['#3b82f6', '#22c55e', '#f97316', '#8b5cf6', '#ec4899'],
       },
     ],
   };
@@ -108,14 +130,28 @@ const Budget = () => {
       {
         label: 'Income',
         data: [chartData?.monthlyTotals.income],
-        backgroundColor: '#59E58DFF', // green
-        borderColor: '#22c55e', // green
+        backgroundColor: '#22c55e',
       },
       {
         label: 'Expenses',
         data: [chartData?.monthlyTotals.expenses],
-        backgroundColor: '#FC8CC4FF', // pink
-        borderColor: '#ec4899', // pink
+        backgroundColor: '#ec4899',
+      },
+    ],
+  };
+
+  const budgetVsActualChartData = {
+    labels: chartData?.categorySpending.map(c => c.category),
+    datasets: [
+      {
+        label: 'Budgeted',
+        data: chartData?.categorySpending.map(c => c.budget),
+        backgroundColor: '#3b82f6',
+      },
+      {
+        label: 'Actual',
+        data: chartData?.categorySpending.map(c => c.total),
+        backgroundColor: '#f97316',
       },
     ],
   };
@@ -170,18 +206,46 @@ const Budget = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-6 rounded-lg shadow-md h-96">
           <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
-          {chartData && <Doughnut data={categoryChartData} />}
+          {chartData && <Doughnut data={categoryChartData} options={{ plugins: { legend: { position: 'bottom' } } }} />}
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-6 rounded-lg shadow-md h-96">
           <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
           {chartData && <Bar data={incomeExpenseChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
+      {/* New Budget vs Actual Chart */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8 h-96">
+        <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
+        {chartData && <Bar data={budgetVsActualChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Manage Budgets */}
+        <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Manage Budgets</h2>
+          <div className="space-y-4">
+            {categories.map(category => (
+              <div key={category.id} className="flex items-center gap-2">
+                <label htmlFor={`budget-${category.id}`} className="flex-1 text-sm font-medium text-gray-700 truncate">{category.name}</label>
+                <input
+                  type="number"
+                  id={`budget-${category.id}`}
+                  value={budgets[category.id] || ''}
+                  onChange={(e) => handleBudgetChange(category.id, e.target.value)}
+                  className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                  placeholder="0.00"
+                />
+                <button onClick={() => handleSaveBudget(category.id)} className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Save</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Manage Income */}
+        <div className="md:col-span-1">
           <h2 className="text-xl font-semibold mb-4">Manage Income</h2>
           <form onSubmit={handleAddIncome} className="bg-white p-6 rounded-lg shadow-md">
             <div className="mb-4">
@@ -223,7 +287,8 @@ const Budget = () => {
           </form>
         </div>
 
-        <div>
+        {/* Income List */}
+        <div className="md:col-span-1">
           <h2 className="text-xl font-semibold mb-4">Income This Month</h2>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <ul className="space-y-4">

@@ -236,12 +236,23 @@ router.get('/charts/:year/:month', auth, async (req, res) => {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const endDate = new Date(year, month, 0).toISOString().split('T')[0];
 
-    // 1. Get expenses grouped by category
-    const categorySpending = await db('expenses')
-      .join('categories', 'expenses.category_id', 'categories.id')
-      .whereBetween('date', [startDate, endDate])
+    // 1. Get expenses grouped by category with budget
+    const categorySpending = await db('categories')
+      .leftJoin('expenses', function() {
+        this.on('categories.id', '=', 'expenses.category_id')
+          .andOn(db.raw('strftime("%Y-%m", expenses.date) = ?', [`${year}-${String(month).padStart(2, '0')}`]));
+      })
+      .leftJoin('budgets', function() {
+        this.on('categories.id', '=', 'budgets.category_id')
+          .andOn('budgets.month', '=', db.raw('?', [month]))
+          .andOn('budgets.year', '=', db.raw('?', [year]));
+      })
       .groupBy('categories.name')
-      .select(db.raw('categories.name as category, sum(expenses.amount) as total'))
+      .select(
+        'categories.name as category',
+        db.raw('COALESCE(SUM(expenses.amount), 0) as total'),
+        db.raw('COALESCE(MAX(budgets.amount), 0) as budget')
+      )
       .orderBy('total', 'desc');
 
     // 2. Get total income
