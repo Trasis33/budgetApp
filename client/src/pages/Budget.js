@@ -2,6 +2,25 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
+import { Doughnut, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+} from 'chart.js';
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+);
 
 const Budget = () => {
   const [incomes, setIncomes] = useState([]);
@@ -13,17 +32,23 @@ const Budget = () => {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
 
+  const [chartData, setChartData] = useState(null);
+
   useEffect(() => {
-    const fetchIncomes = async () => {
+    const fetchBudgetData = async () => {
       try {
-        const res = await axios.get(`/incomes?month=${month}&year=${year}`);
-        setIncomes(res.data);
+        const [incomesRes, chartsRes] = await Promise.all([
+          axios.get(`/incomes?month=${month}&year=${year}`),
+          axios.get(`/summary/charts/${year}/${month}`),
+        ]);
+        setIncomes(incomesRes.data);
+        setChartData(chartsRes.data);
       } catch (err) {
         console.error(err);
       }
     };
 
-    fetchIncomes();
+    fetchBudgetData();
   }, [month, year]);
 
   const handleAddIncome = async (e) => {
@@ -33,6 +58,9 @@ const Budget = () => {
       setIncomes([...incomes, res.data]);
       setSource('');
       setAmount('');
+      // Refetch chart data after adding income
+      const chartsRes = await axios.get(`/summary/charts/${year}/${month}`);
+      setChartData(chartsRes.data);
     } catch (err) {
       console.error(err);
     }
@@ -42,9 +70,54 @@ const Budget = () => {
     try {
       await axios.delete(`/incomes/${id}`);
       setIncomes(incomes.filter((income) => income.id !== id));
+      // Refetch chart data after deleting income
+      const chartsRes = await axios.get(`/summary/charts/${year}/${month}`);
+      setChartData(chartsRes.data);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const categoryChartData = {
+    labels: chartData?.categorySpending.map((c) => c.category),
+    datasets: [
+      {
+        label: 'Spending by Category',
+        data: chartData?.categorySpending.map((c) => c.total),
+        backgroundColor: [
+          '#83AFF6FF', // blue
+          '#59E58DFF', // green
+          '#F6A56AFF', // orange
+          '#B395F8FF', // purple
+          '#FC8CC4FF', // pink
+        ],
+        borderColor: [
+          '#3b82f6', // blue
+          '#22c55e', // green
+          '#f97316', // orange
+          '#8b5cf6', // purple
+          '#ec4899', // pink
+        ],
+      },
+    ],
+  };
+
+  const incomeExpenseChartData = {
+    labels: ['Income vs. Expenses'],
+    datasets: [
+      {
+        label: 'Income',
+        data: [chartData?.monthlyTotals.income],
+        backgroundColor: '#59E58DFF', // green
+        borderColor: '#22c55e', // green
+      },
+      {
+        label: 'Expenses',
+        data: [chartData?.monthlyTotals.expenses],
+        backgroundColor: '#FC8CC4FF', // pink
+        borderColor: '#ec4899', // pink
+      },
+    ],
   };
 
   if (!user) {
@@ -92,6 +165,18 @@ const Budget = () => {
               })}
             </select>
           </div>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
+          {chartData && <Doughnut data={categoryChartData} />}
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
+          {chartData && <Bar data={incomeExpenseChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
         </div>
       </div>
 

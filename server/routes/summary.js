@@ -225,4 +225,50 @@ router.get('/settle', auth, async (req, res) => {
   }
 });
 
+
+// @route   GET api/summary/charts/:year/:month
+// @desc    Get chart data for a specific month
+// @access  Private
+router.get('/charts/:year/:month', auth, async (req, res) => {
+  const { year, month } = req.params;
+
+  try {
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+    // 1. Get expenses grouped by category
+    const categorySpending = await db('expenses')
+      .join('categories', 'expenses.category_id', 'categories.id')
+      .whereBetween('date', [startDate, endDate])
+      .groupBy('categories.name')
+      .select(db.raw('categories.name as category, sum(expenses.amount) as total'))
+      .orderBy('total', 'desc');
+
+    // 2. Get total income
+    const incomeResult = await db('incomes')
+      .whereBetween('date', [startDate, endDate])
+      .sum('amount as totalIncome')
+      .first();
+    const totalIncome = incomeResult.totalIncome || 0;
+
+    // 3. Get total expenses
+    const expensesResult = await db('expenses')
+      .whereBetween('date', [startDate, endDate])
+      .sum('amount as totalExpenses')
+      .first();
+    const totalExpenses = expensesResult.totalExpenses || 0;
+
+    res.json({
+      categorySpending,
+      monthlyTotals: {
+        income: totalIncome,
+        expenses: totalExpenses,
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;
