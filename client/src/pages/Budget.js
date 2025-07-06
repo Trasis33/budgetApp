@@ -206,18 +206,34 @@ const Budget = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md h-96">
+        <div className="bg-white p-6 pb-20 rounded-lg shadow-md h-96">
           <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
-          {chartData && <Doughnut data={categoryChartData} options={{ plugins: { legend: { position: 'bottom' } } }} />}
+          {chartData && (
+            <Doughnut
+              data={categoryChartData}
+              options={{
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'right',
+                    labels: {
+                      boxWidth: 20,
+                      padding: 10,
+                    },
+                  },
+                },
+              }}
+            />
+          )}
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md h-96">
+        <div className="bg-white p-6 pb-20 rounded-lg shadow-md h-96">
           <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
           {chartData && <Bar data={incomeExpenseChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
         </div>
       </div>
 
       {/* New Budget vs Actual Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8 h-96">
+      <div className="bg-white p-6 pb-14 rounded-lg shadow-md mb-8 h-96">
         <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
         {chartData && <Bar data={budgetVsActualChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
       </div>
