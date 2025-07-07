@@ -1,6 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import formatCurrency from '../utils/formatCurrency';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const Analytics = () => {
   const { user } = useAuth();
@@ -113,6 +141,195 @@ const Analytics = () => {
       </button>
     </div>
   );
+
+  // Chart colors (matching existing theme)
+  const chartColors = {
+    primary: '#3b82f6',      // Blue
+    secondary: '#22c55e',    // Green
+    accent: '#f97316',       // Orange
+    purple: '#8b5cf6',       // Purple
+    pink: '#ec4899',         // Pink
+    gray: '#6b7280',         // Gray
+    red: '#ef4444',          // Red
+    yellow: '#eab308'        // Yellow
+  };
+
+  // Chart utility functions
+  const formatMonthLabel = (monthStr) => {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(year, month - 1);
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+  };
+
+  const commonChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          padding: 15,
+          font: {
+            size: 11
+          }
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return formatCurrency(value);
+          }
+        }
+      }
+    }
+  };
+
+  // Chart data preparation functions
+  const getMonthlyTrendChartData = () => {
+    if (!trendsData || !trendsData.monthlyTotals) return null;
+
+    const months = trendsData.monthlyTotals.map(item => formatMonthLabel(item.month));
+    const currentSpending = trendsData.monthlyTotals.map(item => item.total_spending);
+    const budgetTargets = trendsData.monthlyTotals.map(item => item.total_budget || 0);
+    
+    // Previous year data (if available)
+    const previousYearSpending = trendsData.previousYearTotals ? 
+      trendsData.previousYearTotals.map(item => item.total_spending) : [];
+
+    const datasets = [
+      {
+        label: 'Current Spending',
+        data: currentSpending,
+        borderColor: chartColors.primary,
+        backgroundColor: chartColors.primary + '10',
+        borderWidth: 3,
+        fill: false,
+        tension: 0.1
+      }
+    ];
+
+    // Add budget line if budget data exists
+    if (budgetTargets.some(budget => budget > 0)) {
+      datasets.push({
+        label: 'Budget Target',
+        data: budgetTargets,
+        borderColor: chartColors.secondary,
+        backgroundColor: chartColors.secondary + '10',
+        borderWidth: 2,
+        borderDash: [5, 5],
+        fill: false,
+        tension: 0.1
+      });
+    }
+
+    // Add previous year line if data exists
+    if (previousYearSpending.length > 0) {
+      datasets.push({
+        label: 'Previous Year',
+        data: previousYearSpending,
+        borderColor: chartColors.gray,
+        backgroundColor: chartColors.gray + '10',
+        borderWidth: 2,
+        borderDash: [2, 2],
+        fill: false,
+        tension: 0.1
+      });
+    }
+
+    return {
+      labels: months,
+      datasets
+    };
+  };
+
+  const getCategoryTrendChartData = () => {
+    if (!categoryTrendsData || !categoryTrendsData.topCategories) return null;
+
+    // Get all unique months from the data
+    const allMonths = new Set();
+    Object.values(categoryTrendsData.trendsByCategory).forEach(categoryData => {
+      categoryData.monthlyData.forEach(item => {
+        allMonths.add(item.month);
+      });
+    });
+    
+    const sortedMonths = Array.from(allMonths).sort();
+    const monthLabels = sortedMonths.map(formatMonthLabel);
+
+    // Take top 5 categories for mobile, or limit based on screen size
+    const maxCategories = window.innerWidth < 768 ? 3 : 5;
+    const topCategories = categoryTrendsData.topCategories.slice(0, maxCategories);
+    
+    const colors = [chartColors.primary, chartColors.secondary, chartColors.accent, chartColors.purple, chartColors.pink];
+    
+    const datasets = topCategories.map((category, index) => {
+      const categoryData = categoryTrendsData.trendsByCategory[category];
+      const monthlySpending = sortedMonths.map(month => {
+        const monthData = categoryData.monthlyData.find(item => item.month === month);
+        return monthData ? monthData.total_spending : 0;
+      });
+
+      return {
+        label: category,
+        data: monthlySpending,
+        borderColor: colors[index],
+        backgroundColor: colors[index] + '10',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.1
+      };
+    });
+
+    return {
+      labels: monthLabels,
+      datasets
+    };
+  };
+
+  const getIncomeExpenseChartData = () => {
+    if (!incomeExpensesData || !incomeExpensesData.monthlyData) return null;
+
+    const months = incomeExpensesData.monthlyData.map(item => formatMonthLabel(item.month));
+    const incomeData = incomeExpensesData.monthlyData.map(item => item.income);
+    const expenseData = incomeExpensesData.monthlyData.map(item => item.expenses);
+
+    return {
+      labels: months,
+      datasets: [
+        {
+          label: 'Income',
+          data: incomeData,
+          borderColor: chartColors.secondary,
+          backgroundColor: chartColors.secondary + '20',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.1
+        },
+        {
+          label: 'Expenses',
+          data: expenseData,
+          borderColor: chartColors.accent,
+          backgroundColor: chartColors.accent + '20',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.1
+        }
+      ]
+    };
+  };
 
   // Overview cards data
   const getOverviewData = () => {
@@ -241,7 +458,6 @@ const Analytics = () => {
 
       {/* Charts Section */}
       <div className="space-y-8">
-        {/* Chart placeholders - will be implemented in Phase 3 */}
         {loading ? (
           <>
             <SkeletonCard />
@@ -251,56 +467,146 @@ const Analytics = () => {
           </>
         ) : (
           <>
-            {/* Monthly Spending Trend Chart Placeholder */}
+            {/* Monthly Spending Trend Chart */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Monthly Spending Trends</h2>
-              <div className="h-64 bg-gray-50 rounded flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="text-4xl mb-2">📈</div>
-                  <p>Chart will be implemented in Phase 3</p>
-                  <p className="text-sm mt-1">
-                    Data available: {trendsData?.monthlyTotals?.length || 0} months
-                  </p>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Monthly Spending Trends</h2>
+                <div className="text-sm text-gray-500">
+                  {trendsData?.monthlyTotals?.length || 0} months
                 </div>
+              </div>
+              <div className="h-80">
+                {(() => {
+                  const chartData = getMonthlyTrendChartData();
+                  if (!chartData || chartData.labels.length === 0) {
+                    return (
+                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                          <div className="text-4xl mb-2">📈</div>
+                          <p>No spending data available for this period</p>
+                          <p className="text-sm mt-1">Add some expenses to see trends</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Line 
+                      data={chartData} 
+                      options={{
+                        ...commonChartOptions,
+                        plugins: {
+                          ...commonChartOptions.plugins,
+                          title: {
+                            display: false
+                          }
+                        }
+                      }} 
+                    />
+                  );
+                })()
+                }
               </div>
             </div>
 
-            {/* Category Spending Trends Chart Placeholder */}
+            {/* Category Spending Trends Chart */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Category Spending Trends</h2>
-              <div className="h-64 bg-gray-50 rounded flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="text-4xl mb-2">📊</div>
-                  <p>Chart will be implemented in Phase 3</p>
-                  <p className="text-sm mt-1">
-                    Top categories: {categoryTrendsData?.topCategories?.slice(0, 3).join(', ') || 'None'}
-                  </p>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Category Spending Trends</h2>
+                <div className="text-sm text-gray-500">
+                  Top {window.innerWidth < 768 ? '3' : '5'} categories
                 </div>
+              </div>
+              <div className="h-80">
+                {(() => {
+                  const chartData = getCategoryTrendChartData();
+                  if (!chartData || chartData.datasets.length === 0) {
+                    return (
+                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                          <div className="text-4xl mb-2">📊</div>
+                          <p>No category data available</p>
+                          <p className="text-sm mt-1">Add expenses with categories to see trends</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Line 
+                      data={chartData} 
+                      options={{
+                        ...commonChartOptions,
+                        plugins: {
+                          ...commonChartOptions.plugins,
+                          legend: {
+                            ...commonChartOptions.plugins.legend,
+                            position: window.innerWidth < 768 ? 'bottom' : 'top'
+                          }
+                        }
+                      }} 
+                    />
+                  );
+                })()
+                }
               </div>
             </div>
 
-            {/* Income vs Expenses Chart Placeholder */}
+            {/* Income vs Expenses Chart */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Income vs Expenses</h2>
-              <div className="h-64 bg-gray-50 rounded flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="text-4xl mb-2">💰</div>
-                  <p>Chart will be implemented in Phase 3</p>
-                  <p className="text-sm mt-1">
-                    Avg savings rate: {incomeExpensesData?.summary?.avgSavingsRate?.toFixed(1) || 0}%
-                  </p>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Income vs Expenses</h2>
+                <div className="text-sm text-gray-500">
+                  Avg savings: {incomeExpensesData?.summary?.avgSavingsRate?.toFixed(1) || 0}%
                 </div>
+              </div>
+              <div className="h-80">
+                {(() => {
+                  const chartData = getIncomeExpenseChartData();
+                  if (!chartData || chartData.labels.length === 0) {
+                    return (
+                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                          <div className="text-4xl mb-2">💰</div>
+                          <p>No income/expense data available</p>
+                          <p className="text-sm mt-1">Add income and expenses to see comparison</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Line 
+                      data={chartData} 
+                      options={{
+                        ...commonChartOptions,
+                        plugins: {
+                          ...commonChartOptions.plugins,
+                          tooltip: {
+                            ...commonChartOptions.plugins.tooltip,
+                            callbacks: {
+                              label: function(context) {
+                                const value = formatCurrency(context.parsed.y);
+                                const surplus = context.parsed.y - (context.chart.data.datasets[1-context.datasetIndex]?.data[context.dataIndex] || 0);
+                                const surplusText = context.datasetIndex === 0 ? ` (Surplus: ${formatCurrency(Math.abs(surplus))})` : '';
+                                return `${context.dataset.label}: ${value}${surplusText}`;
+                              }
+                            }
+                          }
+                        }
+                      }} 
+                    />
+                  );
+                })()
+                }
               </div>
             </div>
 
-            {/* Budget Performance Placeholder */}
+            {/* Budget Performance Placeholder (Priority 4 - implemented later) */}
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Budget Performance</h2>
               <div className="h-64 bg-gray-50 rounded flex items-center justify-center">
                 <div className="text-center text-gray-500">
                   <div className="text-4xl mb-2">🎯</div>
-                  <p>Chart will be implemented in Phase 3</p>
-                  <p className="text-sm mt-1">Budget heatmap coming soon</p>
+                  <p>Budget heatmap coming in Phase 4</p>
+                  <p className="text-sm mt-1">Priority charts 1-3 now implemented!</p>
                 </div>
               </div>
             </div>
