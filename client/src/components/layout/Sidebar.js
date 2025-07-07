@@ -7,6 +7,7 @@ import {
   RiCalendarCheckLine,
   RiRefreshLine,
   RiHandCoinLine,
+  RiBarChartLine,
   RiSettings4Line
 } from 'react-icons/ri';
 
@@ -40,6 +41,16 @@ const Sidebar = () => {
         >
           <RiWallet3Line className="w-5 h-5 mr-2" />
           <span>Budget</span>
+        </NavLink>
+        
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 ${isActive ? 'bg-gray-100' : ''}`
+          }
+        >
+          <RiBarChartLine className="w-5 h-5 mr-2" />
+          <span>Analytics</span>
         </NavLink>
         
         <NavLink
