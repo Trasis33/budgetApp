@@ -1,0 +1,308 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db/database');
+const authMiddleware = require('../middleware/auth');
+
+// Apply authentication to all analytics routes
+router.use(authMiddleware);
+
+/**
+ * GET /api/analytics/trends/:startDate/:endDate
+ * Returns spending trends data for priority charts
+ * Includes monthly totals, category breakdowns, budget comparisons
+ * Optimized for 6-month default period
+ */
+router.get('/trends/:startDate/:endDate', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.params;
+    const userId = req.user.id;
+
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+
+    // Get monthly spending totals with budget comparisons
+    const monthlyTotals = await db.raw(`
+      SELECT 
+        strftime('%Y-%m', e.date) as month,
+        SUM(e.amount) as total_spending,
+        COUNT(e.id) as expense_count,
+        AVG(e.amount) as avg_expense,
+        COALESCE(SUM(b.amount), 0) as total_budget
+      FROM expenses e
+      LEFT JOIN budgets b ON strftime('%Y', e.date) = b.year 
+        AND strftime('%m', e.date) = printf('%02d', b.month)
+      WHERE e.date BETWEEN ? AND ?
+        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
+          SELECT id FROM users WHERE id != ? LIMIT 1
+        ))
+      GROUP BY strftime('%Y-%m', e.date)
+      ORDER BY month ASC
+    `, [startDate, endDate, userId, userId]);
+
+    // Get previous year comparison data for the same period
+    const previousYearStart = new Date(startDate);
+    previousYearStart.setFullYear(previousYearStart.getFullYear() - 1);
+    const previousYearEnd = new Date(endDate);
+    previousYearEnd.setFullYear(previousYearEnd.getFullYear() - 1);
+
+    const previousYearTotals = await db.raw(`
+      SELECT 
+        strftime('%Y-%m', e.date) as month,
+        SUM(e.amount) as total_spending
+      FROM expenses e
+      WHERE e.date BETWEEN ? AND ?
+        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
+          SELECT id FROM users WHERE id != ? LIMIT 1
+        ))
+      GROUP BY strftime('%Y-%m', e.date)
+      ORDER BY month ASC
+    `, [
+      previousYearStart.toISOString().split('T')[0],
+      previousYearEnd.toISOString().split('T')[0],
+      userId,
+      userId
+    ]);
+
+    // Calculate trend indicators
+    const currentPeriodTotal = monthlyTotals.reduce((sum, month) => sum + month.total_spending, 0);
+    const previousPeriodTotal = previousYearTotals.reduce((sum, month) => sum + month.total_spending, 0);
+    const trendPercentage = previousPeriodTotal > 0 
+      ? ((currentPeriodTotal - previousPeriodTotal) / previousPeriodTotal * 100)
+      : 0;
+
+    // Calculate average monthly spending
+    const avgMonthlySpending = monthlyTotals.length > 0 
+      ? currentPeriodTotal / monthlyTotals.length 
+      : 0;
+
+    res.json({
+      monthlyTotals,
+      previousYearTotals,
+      summary: {
+        totalSpending: currentPeriodTotal,
+        avgMonthlySpending,
+        trendPercentage: Math.round(trendPercentage * 100) / 100,
+        trendDirection: trendPercentage > 0 ? 'up' : trendPercentage < 0 ? 'down' : 'stable',
+        monthCount: monthlyTotals.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching trends data:', error);
+    res.status(500).json({ error: 'Failed to fetch trends data' });
+  }
+});
+
+/**
+ * GET /api/analytics/category-trends/:startDate/:endDate
+ * Returns category-specific spending over time
+ * Top categories with monthly breakdowns
+ * Budget vs actual for each category
+ */
+router.get('/category-trends/:startDate/:endDate', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.params;
+    const userId = req.user.id;
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+
+    // Get category spending by month
+    const categoryTrends = await db.raw(`
+      SELECT 
+        c.name as category,
+        c.id as category_id,
+        strftime('%Y-%m', e.date) as month,
+        SUM(e.amount) as total_spending,
+        COUNT(e.id) as expense_count,
+        AVG(e.amount) as avg_expense
+      FROM expenses e
+      JOIN categories c ON e.category_id = c.id
+      WHERE e.date BETWEEN ? AND ?
+        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
+          SELECT id FROM users WHERE id != ? LIMIT 1
+        ))
+      GROUP BY c.id, c.name, strftime('%Y-%m', e.date)
+      ORDER BY c.name, month ASC
+    `, [startDate, endDate, userId, userId]);
+
+    // Get total spending by category (for top categories)
+    const categoryTotals = await db.raw(`
+      SELECT 
+        c.name as category,
+        c.id as category_id,
+        SUM(e.amount) as total_spending,
+        COUNT(e.id) as expense_count
+      FROM expenses e
+      JOIN categories c ON e.category_id = c.id
+      WHERE e.date BETWEEN ? AND ?
+        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
+          SELECT id FROM users WHERE id != ? LIMIT 1
+        ))
+      GROUP BY c.id, c.name
+      ORDER BY total_spending DESC
+      LIMIT 5
+    `, [startDate, endDate, userId, userId]);
+
+    // Get budget data for categories
+    const categoryBudgets = await db.raw(`
+      SELECT 
+        c.name as category,
+        c.id as category_id,
+        strftime('%Y-%m', printf('%04d-%02d-01', b.year, b.month)) as month,
+        b.amount as budget_amount
+      FROM budgets b
+      JOIN categories c ON b.category_id = c.id
+      WHERE printf('%04d-%02d-01', b.year, b.month) BETWEEN ? AND ?
+      ORDER BY c.name, month ASC
+    `, [startDate, endDate]);
+
+    // Organize data by category for easier frontend consumption
+    const topCategories = categoryTotals.map(cat => cat.category);
+    const trendsByCategory = {};
+    
+    topCategories.forEach(category => {
+      trendsByCategory[category] = {
+        monthlyData: categoryTrends.filter(trend => trend.category === category),
+        budgetData: categoryBudgets.filter(budget => budget.category === category),
+        totalSpending: categoryTotals.find(cat => cat.category === category)?.total_spending || 0
+      };
+    });
+
+    res.json({
+      topCategories,
+      trendsByCategory,
+      categoryTotals,
+      summary: {
+        totalCategories: categoryTotals.length,
+        topCategory: categoryTotals[0]?.category || null,
+        topCategorySpending: categoryTotals[0]?.total_spending || 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching category trends:', error);
+    res.status(500).json({ error: 'Failed to fetch category trends data' });
+  }
+});
+
+/**
+ * GET /api/analytics/income-expenses/:startDate/:endDate
+ * Returns monthly income and expense totals
+ * Surplus/deficit calculations
+ * Trend indicators
+ */
+router.get('/income-expenses/:startDate/:endDate', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.params;
+    const userId = req.user.id;
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+
+    // Get monthly income totals
+    const monthlyIncome = await db.raw(`
+      SELECT 
+        strftime('%Y-%m', i.date) as month,
+        SUM(i.amount) as total_income,
+        COUNT(i.id) as income_count,
+        AVG(i.amount) as avg_income
+      FROM incomes i
+      WHERE i.date BETWEEN ? AND ?
+        AND i.user_id = ?
+      GROUP BY strftime('%Y-%m', i.date)
+      ORDER BY month ASC
+    `, [startDate, endDate, userId]);
+
+    // Get monthly expense totals
+    const monthlyExpenses = await db.raw(`
+      SELECT 
+        strftime('%Y-%m', e.date) as month,
+        SUM(e.amount) as total_expenses,
+        COUNT(e.id) as expense_count,
+        AVG(e.amount) as avg_expense
+      FROM expenses e
+      WHERE e.date BETWEEN ? AND ?
+        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
+          SELECT id FROM users WHERE id != ? LIMIT 1
+        ))
+      GROUP BY strftime('%Y-%m', e.date)
+      ORDER BY month ASC
+    `, [startDate, endDate, userId, userId]);
+
+    // Combine income and expense data by month
+    const monthlyData = [];
+    const allMonths = new Set([
+      ...monthlyIncome.map(m => m.month),
+      ...monthlyExpenses.map(m => m.month)
+    ]);
+
+    Array.from(allMonths).sort().forEach(month => {
+      const income = monthlyIncome.find(m => m.month === month);
+      const expenses = monthlyExpenses.find(m => m.month === month);
+      
+      const incomeAmount = income?.total_income || 0;
+      const expenseAmount = expenses?.total_expenses || 0;
+      const surplus = incomeAmount - expenseAmount;
+
+      monthlyData.push({
+        month,
+        income: incomeAmount,
+        expenses: expenseAmount,
+        surplus,
+        savingsRate: incomeAmount > 0 ? (surplus / incomeAmount * 100) : 0
+      });
+    });
+
+    // Calculate summary statistics
+    const totalIncome = monthlyData.reduce((sum, month) => sum + month.income, 0);
+    const totalExpenses = monthlyData.reduce((sum, month) => sum + month.expenses, 0);
+    const totalSurplus = totalIncome - totalExpenses;
+    const avgSavingsRate = monthlyData.length > 0 
+      ? monthlyData.reduce((sum, month) => sum + month.savingsRate, 0) / monthlyData.length
+      : 0;
+
+    // Calculate trends
+    const recentMonths = monthlyData.slice(-3); // Last 3 months
+    const earlierMonths = monthlyData.slice(0, -3);
+    
+    const recentAvgSavings = recentMonths.length > 0 
+      ? recentMonths.reduce((sum, month) => sum + month.savingsRate, 0) / recentMonths.length
+      : 0;
+    const earlierAvgSavings = earlierMonths.length > 0 
+      ? earlierMonths.reduce((sum, month) => sum + month.savingsRate, 0) / earlierMonths.length
+      : 0;
+
+    const savingsTrend = earlierAvgSavings > 0 
+      ? ((recentAvgSavings - earlierAvgSavings) / earlierAvgSavings * 100)
+      : 0;
+
+    res.json({
+      monthlyData,
+      summary: {
+        totalIncome,
+        totalExpenses,
+        totalSurplus,
+        avgSavingsRate: Math.round(avgSavingsRate * 100) / 100,
+        savingsTrend: Math.round(savingsTrend * 100) / 100,
+        savingsTrendDirection: savingsTrend > 0 ? 'improving' : savingsTrend < 0 ? 'declining' : 'stable',
+        monthCount: monthlyData.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching income-expenses data:', error);
+    res.status(500).json({ error: 'Failed to fetch income-expenses data' });
+  }
+});
+
+module.exports = router;
