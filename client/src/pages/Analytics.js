@@ -331,6 +331,75 @@ const Analytics = () => {
     };
   };
 
+  const getBudgetPerformanceData = () => {
+    if (!categoryTrendsData || !categoryTrendsData.topCategories) return null;
+
+    const categories = categoryTrendsData.topCategories.slice(0, 6); // Show top 6 for better visualization
+    const performanceData = [];
+
+    categories.forEach(category => {
+      const categoryData = categoryTrendsData.trendsByCategory[category];
+      const totalSpending = categoryData.totalSpending;
+      
+      // Calculate average budget for this category
+      let avgBudget = 0;
+      if (categoryData.budgetData && categoryData.budgetData.length > 0) {
+        avgBudget = categoryData.budgetData.reduce((sum, budget) => sum + budget.budget_amount, 0) / categoryData.budgetData.length;
+      }
+
+      if (avgBudget > 0) {
+        const budgetUtilization = (totalSpending / avgBudget) * 100;
+        performanceData.push({
+          category,
+          spending: totalSpending,
+          budget: avgBudget,
+          utilization: budgetUtilization,
+          status: budgetUtilization > 100 ? 'over' : budgetUtilization > 90 ? 'warning' : 'good'
+        });
+      }
+    });
+
+    return performanceData;
+  };
+
+  const getBudgetPerformanceChartData = () => {
+    const performanceData = getBudgetPerformanceData();
+    if (!performanceData || performanceData.length === 0) return null;
+
+    const labels = performanceData.map(item => item.category);
+    const budgetData = performanceData.map(item => item.budget);
+    const spendingData = performanceData.map(item => item.spending);
+    
+    // Color bars based on performance
+    const budgetColors = performanceData.map(item => {
+      switch (item.status) {
+        case 'over': return chartColors.red;
+        case 'warning': return chartColors.yellow;
+        default: return chartColors.secondary;
+      }
+    });
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Budget',
+          data: budgetData,
+          backgroundColor: chartColors.primary + '40',
+          borderColor: chartColors.primary,
+          borderWidth: 1
+        },
+        {
+          label: 'Actual Spending',
+          data: spendingData,
+          backgroundColor: budgetColors.map(color => color + '80'),
+          borderColor: budgetColors,
+          borderWidth: 1
+        }
+      ]
+    };
+  };
+
   // Overview cards data
   const getOverviewData = () => {
     if (!trendsData || !incomeExpensesData) return null;
@@ -599,15 +668,89 @@ const Analytics = () => {
               </div>
             </div>
 
-            {/* Budget Performance Placeholder (Priority 4 - implemented later) */}
+            {/* Budget Performance Chart */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Budget Performance</h2>
-              <div className="h-64 bg-gray-50 rounded flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="text-4xl mb-2">🎯</div>
-                  <p>Budget heatmap coming in Phase 4</p>
-                  <p className="text-sm mt-1">Priority charts 1-3 now implemented!</p>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Budget Performance</h2>
+                <div className="text-sm text-gray-500">
+                  Budget vs Actual
                 </div>
+              </div>
+              <div className="h-80">
+                {(() => {
+                  const chartData = getBudgetPerformanceChartData();
+                  const performanceData = getBudgetPerformanceData();
+                  
+                  if (!chartData || !performanceData || performanceData.length === 0) {
+                    return (
+                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                          <div className="text-4xl mb-2">🎯</div>
+                          <p>No budget data available</p>
+                          <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <>
+                      <Bar 
+                        data={chartData} 
+                        options={{
+                          ...commonChartOptions,
+                          plugins: {
+                            ...commonChartOptions.plugins,
+                            tooltip: {
+                              ...commonChartOptions.plugins.tooltip,
+                              callbacks: {
+                                label: function(context) {
+                                  const value = formatCurrency(context.parsed.y);
+                                  const dataIndex = context.dataIndex;
+                                  const performance = performanceData[dataIndex];
+                                  const utilizationText = context.datasetIndex === 1 ? 
+                                    ` (${performance.utilization.toFixed(1)}% of budget)` : '';
+                                  return `${context.dataset.label}: ${value}${utilizationText}`;
+                                }
+                              }
+                            }
+                          },
+                          scales: {
+                            ...commonChartOptions.scales,
+                            x: {
+                              ticks: {
+                                maxRotation: window.innerWidth < 768 ? 45 : 0,
+                                font: {
+                                  size: window.innerWidth < 768 ? 10 : 11
+                                }
+                              }
+                            }
+                          }
+                        }} 
+                      />
+                      
+                      {/* Budget Performance Summary */}
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {performanceData.map((item, index) => (
+                          <div key={item.category} className="flex items-center justify-between text-sm py-1">
+                            <span className="font-medium">{item.category}:</span>
+                            <span className={`font-bold ${
+                              item.status === 'over' ? 'text-red-600' : 
+                              item.status === 'warning' ? 'text-yellow-600' : 
+                              'text-green-600'
+                            }`}>
+                              {item.utilization.toFixed(0)}%
+                              {item.status === 'over' && ' ⚠️'}
+                              {item.status === 'warning' && ' ⚠️'}
+                              {item.status === 'good' && ' ✅'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()
+                }
               </div>
             </div>
           </>
