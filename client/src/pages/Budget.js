@@ -30,6 +30,8 @@ const Budget = () => {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -39,6 +41,9 @@ const Budget = () => {
   const [budgets, setBudgets] = useState({});
 
   const fetchBudgetData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
       const [incomesRes, chartsRes, categoriesRes] = await Promise.all([
         axios.get(`/incomes?month=${month}&year=${year}`),
@@ -59,7 +64,10 @@ const Budget = () => {
       setBudgets(initialBudgets);
 
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching budget data:', err);
+      setError('Failed to load budget data. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }, [month, year]);
 
@@ -113,47 +121,182 @@ const Budget = () => {
     }
   };
 
-  const categoryChartData = {
-    labels: chartData?.categorySpending.map((c) => c.category),
-    datasets: [
-      {
-        label: 'Spending by Category',
-        data: chartData?.categorySpending.map((c) => c.total),
-        backgroundColor: ['#3b82f6', '#22c55e', '#f97316', '#8b5cf6', '#ec4899'],
-      },
-    ],
+  // Chart colors (matching Analytics.js theme)
+  const chartColors = {
+    primary: '#3b82f6',      // Blue
+    secondary: '#22c55e',    // Green
+    accent: '#f97316',       // Orange
+    purple: '#8b5cf6',       // Purple
+    pink: '#ec4899',         // Pink
+    gray: '#6b7280',         // Gray
+    red: '#ef4444',          // Red
+    yellow: '#eab308'        // Yellow
   };
 
-  const incomeExpenseChartData = {
-    labels: ['Income vs. Expenses'],
-    datasets: [
-      {
-        label: 'Income',
-        data: [chartData?.monthlyTotals.income],
-        backgroundColor: '#22c55e',
+  // Common chart options for consistency
+  const commonChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          padding: 15,
+          font: {
+            size: 11
+          }
+        }
       },
-      {
-        label: 'Expenses',
-        data: [chartData?.monthlyTotals.expenses],
-        backgroundColor: '#ec4899',
-      },
-    ],
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${formatCurrency(context.parsed.y || context.parsed)}`;
+          }
+        }
+      }
+    }
   };
 
-  const budgetVsActualChartData = {
-    labels: chartData?.categorySpending.map(c => c.category),
-    datasets: [
-      {
-        label: 'Budgeted',
-        data: chartData?.categorySpending.map(c => c.budget),
-        backgroundColor: '#3b82f6',
-      },
-      {
-        label: 'Actual',
-        data: chartData?.categorySpending.map(c => c.total),
-        backgroundColor: '#f97316',
-      },
-    ],
+  // Doughnut chart specific options
+  const doughnutChartOptions = {
+    ...commonChartOptions,
+    plugins: {
+      ...commonChartOptions.plugins,
+      legend: {
+        position: window.innerWidth < 768 ? 'bottom' : 'right',
+        labels: {
+          boxWidth: 20,
+          padding: window.innerWidth < 768 ? 8 : 15,
+          font: {
+            size: window.innerWidth < 768 ? 10 : 11
+          }
+        }
+      }
+    }
+  };
+
+  // Bar chart specific options
+  const barChartOptions = {
+    ...commonChartOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return formatCurrency(value);
+          }
+        }
+      }
+    }
+  };
+
+  // Skeleton loader component
+  const SkeletonCard = () => (
+    <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
+      <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+      <div className="h-80 bg-gray-200 rounded"></div>
+    </div>
+  );
+
+  // Empty state component
+  const EmptyChartState = ({ message, suggestion, icon }) => (
+    <div className="h-80 bg-gray-50 rounded flex items-center justify-center">
+      <div className="text-center text-gray-500">
+        <div className="text-6xl mb-4">{icon}</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">{message}</h3>
+        <p className="text-sm text-gray-500 mb-4">{suggestion}</p>
+        <button 
+          onClick={() => window.location.href = '/add-expense'}
+          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+        >
+          Add Expense
+        </button>
+      </div>
+    </div>
+  );
+
+  // Chart data preparation functions
+  const getCategoryChartData = () => {
+    if (!chartData?.categorySpending || chartData.categorySpending.length === 0) {
+      return null;
+    }
+
+    const colors = [
+      chartColors.primary,
+      chartColors.secondary,
+      chartColors.accent,
+      chartColors.purple,
+      chartColors.pink,
+      chartColors.gray,
+      chartColors.red,
+      chartColors.yellow
+    ];
+
+    return {
+      labels: chartData.categorySpending.map((c) => c.category),
+      datasets: [
+        {
+          label: 'Spending by Category',
+          data: chartData.categorySpending.map((c) => c.total),
+          backgroundColor: colors.slice(0, chartData.categorySpending.length),
+          borderWidth: 1,
+          borderColor: '#ffffff'
+        },
+      ],
+    };
+  };
+
+  const getIncomeExpenseChartData = () => {
+    if (!chartData?.monthlyTotals) {
+      return null;
+    }
+
+    return {
+      labels: ['Income vs. Expenses'],
+      datasets: [
+        {
+          label: 'Income',
+          data: [chartData.monthlyTotals.income || 0],
+          backgroundColor: chartColors.secondary,
+          borderColor: chartColors.secondary,
+          borderWidth: 1
+        },
+        {
+          label: 'Expenses',
+          data: [chartData.monthlyTotals.expenses || 0],
+          backgroundColor: chartColors.pink,
+          borderColor: chartColors.pink,
+          borderWidth: 1
+        },
+      ],
+    };
+  };
+
+  const getBudgetVsActualChartData = () => {
+    if (!chartData?.categorySpending || chartData.categorySpending.length === 0) {
+      return null;
+    }
+
+    return {
+      labels: chartData.categorySpending.map(c => c.category),
+      datasets: [
+        {
+          label: 'Budgeted',
+          data: chartData.categorySpending.map(c => c.budget || 0),
+          backgroundColor: chartColors.primary,
+          borderColor: chartColors.primary,
+          borderWidth: 1
+        },
+        {
+          label: 'Actual',
+          data: chartData.categorySpending.map(c => c.total || 0),
+          backgroundColor: chartColors.accent,
+          borderColor: chartColors.accent,
+          borderWidth: 1
+        },
+      ],
+    };
   };
 
   if (!user) {
@@ -163,6 +306,25 @@ const Budget = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Household Budget</h1>
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <div className="text-red-400">⚠️</div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <button 
+                onClick={fetchBudgetData}
+                className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Month/Year Filter */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
@@ -205,38 +367,88 @@ const Budget = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 pb-20 rounded-lg shadow-md h-96">
-          <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
-          {chartData && (
-            <Doughnut
-              data={categoryChartData}
-              options={{
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'right',
-                    labels: {
-                      boxWidth: 20,
-                      padding: 10,
-                    },
-                  },
-                },
-              }}
-            />
-          )}
+      {loading ? (
+        <div className="space-y-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          <SkeletonCard />
         </div>
-        <div className="bg-white p-6 pb-20 rounded-lg shadow-md h-96">
-          <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
-          {chartData && <Bar data={incomeExpenseChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
-        </div>
-      </div>
+      ) : (
+        <div className="space-y-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Spending by Category Chart */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
+              <div className="h-80">
+                {(() => {
+                  const chartData = getCategoryChartData();
+                  if (!chartData) {
+                    return (
+                      <EmptyChartState 
+                        message="No category data available"
+                        suggestion="Add some expenses to see your spending breakdown by category"
+                        icon="🍰"
+                      />
+                    );
+                  }
+                  return (
+                    <Doughnut
+                      data={chartData}
+                      options={doughnutChartOptions}
+                    />
+                  );
+                })()}
+              </div>
+            </div>
 
-      {/* New Budget vs Actual Chart */}
-      <div className="bg-white p-6 pb-14 rounded-lg shadow-md mb-8 h-96">
-        <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
-        {chartData && <Bar data={budgetVsActualChartData} options={{ responsive: true, maintainAspectRatio: false }} />}
-      </div>
+            {/* Income vs Expenses Chart */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
+              <div className="h-80">
+                {(() => {
+                  const chartData = getIncomeExpenseChartData();
+                  if (!chartData) {
+                    return (
+                      <EmptyChartState 
+                        message="No income/expense data available"
+                        suggestion="Add income and expenses to see your financial overview"
+                        icon="💰"
+                      />
+                    );
+                  }
+                  return (
+                    <Bar data={chartData} options={barChartOptions} />
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Budget vs Actual Chart */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
+            <div className="h-80">
+              {(() => {
+                const chartData = getBudgetVsActualChartData();
+                if (!chartData) {
+                  return (
+                    <EmptyChartState 
+                      message="No budget comparison data available"
+                      suggestion="Set budgets for categories and add expenses to see budget performance"
+                      icon="🎯"
+                    />
+                  );
+                }
+                return (
+                  <Bar data={chartData} options={barChartOptions} />
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Manage Budgets */}
