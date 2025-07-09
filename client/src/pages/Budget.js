@@ -222,6 +222,7 @@ const Budget = () => {
       return null;
     }
 
+    // Use the same color palette as Analytics.js
     const colors = [
       chartColors.primary,
       chartColors.secondary,
@@ -230,18 +231,28 @@ const Budget = () => {
       chartColors.pink,
       chartColors.gray,
       chartColors.red,
-      chartColors.yellow
+      chartColors.yellow,
+      // Add more colors if needed by lightening/darkening the base colors
+      `${chartColors.primary}CC`,
+      `${chartColors.secondary}CC`,
+      `${chartColors.accent}CC`
     ];
 
+    // Sort categories by amount (descending) for consistent color assignment
+    const sortedCategories = [...chartData.categorySpending].sort((a, b) => b.total - a.total);
+
     return {
-      labels: chartData.categorySpending.map((c) => c.category),
+      labels: sortedCategories.map((c) => c.category),
       datasets: [
         {
           label: 'Spending by Category',
-          data: chartData.categorySpending.map((c) => c.total),
-          backgroundColor: colors.slice(0, chartData.categorySpending.length),
+          data: sortedCategories.map((c) => c.total),
+          backgroundColor: colors.slice(0, sortedCategories.length),
           borderWidth: 1,
-          borderColor: '#ffffff'
+          borderColor: '#ffffff',
+          hoverOffset: 8,
+          borderRadius: 4,
+          spacing: 2
         },
       ],
     };
@@ -258,16 +269,18 @@ const Budget = () => {
         {
           label: 'Income',
           data: [chartData.monthlyTotals.income || 0],
-          backgroundColor: chartColors.secondary,
+          backgroundColor: chartColors.secondary + '80',
           borderColor: chartColors.secondary,
-          borderWidth: 1
+          borderWidth: 1,
+          borderRadius: 6
         },
         {
           label: 'Expenses',
           data: [chartData.monthlyTotals.expenses || 0],
-          backgroundColor: chartColors.pink,
-          borderColor: chartColors.pink,
-          borderWidth: 1
+          backgroundColor: chartColors.accent + '80',
+          borderColor: chartColors.accent,
+          borderWidth: 1,
+          borderRadius: 6
         },
       ],
     };
@@ -278,24 +291,41 @@ const Budget = () => {
       return null;
     }
 
+    // Get categories that are over/under budget for coloring
+    const performanceData = chartData.categorySpending.map(item => {
+      if (!item.budget) return 'none';
+      const utilization = (item.total / item.budget) * 100;
+      return utilization > 100 ? 'over' : utilization > 90 ? 'warning' : 'good';
+    });
+
+    // Color bars based on performance
+    const budgetColors = performanceData.map(status => {
+      switch (status) {
+        case 'over': return chartColors.red;
+        case 'warning': return chartColors.yellow;
+        case 'good': return chartColors.secondary;
+        default: return chartColors.gray; // For categories without budget
+      }
+    });
+
     return {
       labels: chartData.categorySpending.map(c => c.category),
       datasets: [
         {
           label: 'Budgeted',
           data: chartData.categorySpending.map(c => c.budget || 0),
-          backgroundColor: chartColors.primary,
+          backgroundColor: chartColors.primary + '40',
           borderColor: chartColors.primary,
           borderWidth: 1
         },
         {
-          label: 'Actual',
+          label: 'Actual Spending',
           data: chartData.categorySpending.map(c => c.total || 0),
-          backgroundColor: chartColors.accent,
-          borderColor: chartColors.accent,
+          backgroundColor: budgetColors.map(color => color + '80'),
+          borderColor: budgetColors,
           borderWidth: 1
-        },
-      ],
+        }
+      ]
     };
   };
 
