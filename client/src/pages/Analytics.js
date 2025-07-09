@@ -3,6 +3,11 @@ import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+// Budget Performance Summary Components
+import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
+import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
+import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -337,24 +342,68 @@ const Analytics = () => {
     const categories = categoryTrendsData.topCategories.slice(0, 6); // Show top 6 for better visualization
     const performanceData = [];
 
+    // Helper function to get all months in the selected period
+    const getMonthsInPeriod = (startDate, endDate) => {
+      const months = [];
+      const current = new Date(startDate);
+      const end = new Date(endDate);
+      
+      while (current <= end) {
+        months.push(current.toISOString().slice(0, 7)); // YYYY-MM format
+        current.setMonth(current.getMonth() + 1);
+      }
+      return months;
+    };
+
+    const periodMonths = getMonthsInPeriod(startDate, endDate);
+
     categories.forEach(category => {
       const categoryData = categoryTrendsData.trendsByCategory[category];
       const totalSpending = categoryData.totalSpending;
       
-      // Calculate average budget for this category
-      let avgBudget = 0;
-      if (categoryData.budgetData && categoryData.budgetData.length > 0) {
-        avgBudget = categoryData.budgetData.reduce((sum, budget) => sum + budget.budget_amount, 0) / categoryData.budgetData.length;
-      }
-
-      if (avgBudget > 0) {
-        const budgetUtilization = (totalSpending / avgBudget) * 100;
+      // Create a time-period-aware budget calculation
+      let totalBudgetForPeriod = 0;
+      let budgetMonthsFound = 0;
+      let lastKnownBudget = 0;
+      
+      // First, get all available budget data for this category, sorted by month
+      const availableBudgets = categoryData.budgetData || [];
+      const budgetByMonth = {};
+      
+      availableBudgets.forEach(budget => {
+        budgetByMonth[budget.month] = budget.budget_amount;
+        lastKnownBudget = budget.budget_amount; // Keep track of the most recent budget
+      });
+      
+      // Now, for each month in the period, use actual budget or fill with last known value
+      periodMonths.forEach(month => {
+        if (budgetByMonth[month]) {
+          // Use actual budget for this month
+          totalBudgetForPeriod += budgetByMonth[month];
+          lastKnownBudget = budgetByMonth[month]; // Update last known budget
+          budgetMonthsFound++;
+        } else if (lastKnownBudget > 0) {
+          // Fill with last known budget value
+          totalBudgetForPeriod += lastKnownBudget;
+          budgetMonthsFound++;
+        }
+      });
+      
+      // Only include categories that have budget data (actual or filled)
+      if (budgetMonthsFound > 0 && totalBudgetForPeriod > 0) {
+        const budgetUtilization = (totalSpending / totalBudgetForPeriod) * 100;
+        const avgMonthlyBudget = totalBudgetForPeriod / periodMonths.length;
+        
         performanceData.push({
           category,
           spending: totalSpending,
-          budget: avgBudget,
+          budget: totalBudgetForPeriod,
+          avgMonthlyBudget,
           utilization: budgetUtilization,
-          status: budgetUtilization > 100 ? 'over' : budgetUtilization > 90 ? 'warning' : 'good'
+          status: budgetUtilization > 100 ? 'over' : budgetUtilization > 90 ? 'warning' : 'good',
+          monthsWithBudget: budgetMonthsFound,
+          monthsInPeriod: periodMonths.length,
+          budgetCoverage: (budgetMonthsFound / periodMonths.length) * 100
         });
       }
     });
@@ -383,7 +432,7 @@ const Analytics = () => {
       labels,
       datasets: [
         {
-          label: 'Budget',
+          label: `Budget (${timePeriod.replace('months', 'mo').replace('year', 'yr')})`,
           data: budgetData,
           backgroundColor: chartColors.primary + '40',
           borderColor: chartColors.primary,
@@ -668,33 +717,41 @@ const Analytics = () => {
               </div>
             </div>
 
-            {/* Budget Performance Chart */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Budget Performance</h2>
-                <div className="text-sm text-gray-500">
-                  Budget vs Actual
+            {/* Budget Performance Section */}
+            <div className="space-y-6">
+              {/* Chart Section */}
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-xl font-semibold">Budget Performance</h2>
+                  <div className="text-sm text-gray-500">
+                    {timePeriod.replace('months', ' months').replace('year', ' year')}
+                  </div>
                 </div>
-              </div>
-              <div className="h-80">
-                {(() => {
-                  const chartData = getBudgetPerformanceChartData();
-                  const performanceData = getBudgetPerformanceData();
-                  
-                  if (!chartData || !performanceData || performanceData.length === 0) {
-                    return (
-                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                          <div className="text-4xl mb-2">🎯</div>
-                          <p>No budget data available</p>
-                          <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
+                <div className="text-sm text-gray-600 mb-4">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-blue-600">ⓘ</span>
+                    Budget totals are calculated using actual monthly budgets when available, 
+                    filled with the most recent budget value for missing months.
+                  </span>
+                </div>
+                <div className="h-80">
+                  {(() => {
+                    const chartData = getBudgetPerformanceChartData();
+                    const performanceData = getBudgetPerformanceData();
+                    
+                    if (!chartData || !performanceData || performanceData.length === 0) {
+                      return (
+                        <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                          <div className="text-center text-gray-500">
+                            <div className="text-4xl mb-2">🎯</div>
+                            <p>No budget data available</p>
+                            <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  }
-                  
-                  return (
-                    <>
+                      );
+                    }
+                    
+                    return (
                       <Bar 
                         data={chartData} 
                         options={{
@@ -728,29 +785,20 @@ const Analytics = () => {
                           }
                         }} 
                       />
-                      
-                      {/* Budget Performance Summary */}
-                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {performanceData.map((item, index) => (
-                          <div key={item.category} className="flex items-center justify-between text-sm py-1">
-                            <span className="font-medium">{item.category}:</span>
-                            <span className={`font-bold ${
-                              item.status === 'over' ? 'text-red-600' : 
-                              item.status === 'warning' ? 'text-yellow-600' : 
-                              'text-green-600'
-                            }`}>
-                              {item.utilization.toFixed(0)}%
-                              {item.status === 'over' && ' ⚠️'}
-                              {item.status === 'warning' && ' ⚠️'}
-                              {item.status === 'good' && ' ✅'}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  );
-                })()
-                }
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Budget Performance Badges - Now in its own card */}
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold mb-4">Budget Overview</h3>
+                {(() => {
+                  const performanceData = getBudgetPerformanceData();
+                  if (!performanceData || performanceData.length === 0) return null;
+                  
+                  return <BudgetPerformanceBadges performanceData={performanceData} />;
+                })()}
               </div>
             </div>
           </>
@@ -758,7 +806,7 @@ const Analytics = () => {
       </div>
 
       {/* Debug Info (only in development) */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="mt-8 p-4 bg-gray-100 rounded-lg">
           <h3 className="font-medium mb-2">Debug Info:</h3>
           <p className="text-sm text-gray-600">Date range: {startDate} to {endDate}</p>
@@ -767,7 +815,7 @@ const Analytics = () => {
             Data loaded: trends={!!trendsData}, categories={!!categoryTrendsData}, income={!!incomeExpensesData}
           </p>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
