@@ -47,10 +47,22 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
 - [x] Integrate Chart.js for spending pattern graphs.
 - [x] Category distribution pie charts.
 - [x] Monthly trend line graphs.
+- [x] Advanced analytics dashboard with time-period-aware calculations.
+- [x] Budget performance visualizations with multiple component designs.
 
 ## In Progress Tasks
 
-
+### Advanced Analytics Enhancements
+- [x] **Time-period-aware budget performance calculations** - Implemented intelligent budget aggregation that:
+  - Uses actual monthly budget data when available
+  - Fills missing months with most recent budget values
+  - Supports variable recurring expenses (e.g., adjustable mortgage rates)
+  - Provides budget coverage transparency and data reliability indicators
+- [x] **Multiple budget performance visualization components**:
+  - Enhanced cards with progress bars and coverage information
+  - Horizontal progress bars with gradient animations
+  - Compact status badges with hover tooltips and summary statistics
+- [x] **Chart consistency improvements** - Unified Budget.js and Analytics.js chart implementations
 
 ## Future Tasks
 
@@ -60,17 +72,22 @@ A lightweight web app that helps couples track expenses, split bills, and keep a
   - [x] Remaining budget calculations
   - [x] Create monthly spending breakdown by category charts
   - [x] Add budget vs. actual spending comparisons
-- [ ] Basic reporting
-  - [ ] Monthly summary reports
+  - [x] Time-period-aware budget performance calculations
+- [x] Advanced reporting
+  - [x] Monthly summary reports
+  - [x] Analytics dashboard with trend analysis
+  - [x] Budget performance visualizations
   - [ ] Running total of balances
-- [ ] Settings customization
-  - [ ] Default split ratios
-  - [ ] Personal details management
-- [ ] Category management (10 predefined categories)
+- [x] Settings customization
+  - [x] Default split ratios
+  - [x] Personal details management
+  - [x] Category management (add/delete categories)
 
 ### Phase 3: Refinement
+- [x] Advanced analytics dashboard with multiple visualization options
+- [x] UI polish and mobile optimization for charts
+- [x] Chart consistency improvements across Budget and Analytics pages
 - [ ] Export functionality to CSV/PDF
-- [ ] UI polish and mobile optimization
 - [ ] Final security review
 
 ### Deployment
@@ -120,7 +137,10 @@ The app follows a React frontend + Node.js/Express backend architecture with SQL
 - `client/src/components/layout/Layout.js` - Main layout component ✅
 - `client/src/components/layout/Sidebar.js` - Navigation sidebar ✅
 - `client/src/context/AuthContext.js` - Authentication context ✅
-- `client/src/utils/formatCurrency.js` - Currency formatting utility (to be created)
+- `client/src/utils/formatCurrency.js` - Currency formatting utility ✅
+- `client/src/components/BudgetPerformanceCards.js` - Enhanced cards budget performance component ✅
+- `client/src/components/BudgetPerformanceBars.js` - Horizontal progress bars budget performance component ✅
+- `client/src/components/BudgetPerformanceBadges.js` - Compact badges budget performance component ✅
 
 ### Configuration Files
 - `package.json` - Project dependencies ✅
