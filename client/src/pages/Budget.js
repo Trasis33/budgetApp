@@ -264,7 +264,7 @@ const Budget = () => {
       return null;
     }
 
-    // Use the same color palette as Analytics.js
+    // Define a base color palette
     const colors = [
       chartColors.primary,
       chartColors.secondary,
@@ -274,11 +274,10 @@ const Budget = () => {
       chartColors.gray,
       chartColors.red,
       chartColors.yellow,
-      // Add more colors if needed by lightening/darkening the base colors
-      `${chartColors.primary}CC`,
-      `${chartColors.secondary}CC`,
-      `${chartColors.accent}CC`
     ];
+
+    // Lighten the colors by adding opacity (e.g., 'B3' for ~70% opacity)
+    const donutColors = colors.map(color => `${color}B3`);
 
     // Sort categories by amount (descending) for consistent color assignment
     const sortedCategories = [...chartData.categorySpending].sort((a, b) => b.total - a.total);
@@ -289,11 +288,11 @@ const Budget = () => {
         {
           label: 'Spending by Category',
           data: sortedCategories.map((c) => c.total),
-          backgroundColor: colors.slice(0, sortedCategories.length),
+          backgroundColor: donutColors.slice(0, sortedCategories.length),
           borderWidth: 1,
           borderColor: '#ffffff',
           hoverOffset: 8,
-          borderRadius: 4,
+          borderRadius: 8,
           spacing: 2
         },
       ],
@@ -358,7 +357,8 @@ const Budget = () => {
           data: chartData.categorySpending.map(c => c.budget || 0),
           backgroundColor: chartColors.primary + '40',
           borderColor: chartColors.primary,
-          borderWidth: 1
+          borderWidth: 1,
+          borderRadius: 6
         },
         {
           label: 'Actual Spending',
@@ -366,6 +366,7 @@ const Budget = () => {
           backgroundColor: budgetColors.map(color => color + '80'),
           borderColor: budgetColors,
           borderWidth: 1,
+          borderRadius: 6,
           // Custom legend configuration
           legend: {
             display: true,
