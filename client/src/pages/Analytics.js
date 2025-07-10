@@ -39,12 +39,12 @@ const Analytics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Time period state (default: 6 months)
   const [timePeriod, setTimePeriod] = useState('6months');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  
+
   // Data states
   const [trendsData, setTrendsData] = useState(null);
   const [categoryTrendsData, setCategoryTrendsData] = useState(null);
@@ -79,7 +79,7 @@ const Analytics = () => {
   // Fetch all analytics data
   const fetchAnalyticsData = useCallback(async () => {
     if (!startDate || !endDate) return;
-    
+
     setLoading(true);
     setError(null);
 
@@ -138,7 +138,7 @@ const Analytics = () => {
       <div className="text-gray-400 text-6xl mb-4">📊</div>
       <h3 className="text-lg font-medium text-gray-900 mb-2">{message}</h3>
       <p className="text-sm text-gray-500 mb-4">{suggestion}</p>
-      <button 
+      <button
         onClick={() => window.location.href = '/add-expense'}
         className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
       >
@@ -184,7 +184,7 @@ const Analytics = () => {
         mode: 'index',
         intersect: false,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
           }
         }
@@ -194,7 +194,7 @@ const Analytics = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             return formatCurrency(value);
           }
         }
@@ -209,9 +209,9 @@ const Analytics = () => {
     const months = trendsData.monthlyTotals.map(item => formatMonthLabel(item.month));
     const currentSpending = trendsData.monthlyTotals.map(item => item.total_spending);
     const budgetTargets = trendsData.monthlyTotals.map(item => item.total_budget || 0);
-    
+
     // Previous year data (if available)
-    const previousYearSpending = trendsData.previousYearTotals ? 
+    const previousYearSpending = trendsData.previousYearTotals ?
       trendsData.previousYearTotals.map(item => item.total_spending) : [];
 
     const datasets = [
@@ -270,16 +270,16 @@ const Analytics = () => {
         allMonths.add(item.month);
       });
     });
-    
+
     const sortedMonths = Array.from(allMonths).sort();
     const monthLabels = sortedMonths.map(formatMonthLabel);
 
     // Take top 5 categories for mobile, or limit based on screen size
     const maxCategories = window.innerWidth < 768 ? 3 : 5;
     const topCategories = categoryTrendsData.topCategories.slice(0, maxCategories);
-    
+
     const colors = [chartColors.primary, chartColors.secondary, chartColors.accent, chartColors.purple, chartColors.pink];
-    
+
     const datasets = topCategories.map((category, index) => {
       const categoryData = categoryTrendsData.trendsByCategory[category];
       const monthlySpending = sortedMonths.map(month => {
@@ -347,7 +347,7 @@ const Analytics = () => {
       const months = [];
       const current = new Date(startDate);
       const end = new Date(endDate);
-      
+
       while (current <= end) {
         months.push(current.toISOString().slice(0, 7)); // YYYY-MM format
         current.setMonth(current.getMonth() + 1);
@@ -360,21 +360,21 @@ const Analytics = () => {
     categories.forEach(category => {
       const categoryData = categoryTrendsData.trendsByCategory[category];
       const totalSpending = categoryData.totalSpending;
-      
+
       // Create a time-period-aware budget calculation
       let totalBudgetForPeriod = 0;
       let budgetMonthsFound = 0;
       let lastKnownBudget = 0;
-      
+
       // First, get all available budget data for this category, sorted by month
       const availableBudgets = categoryData.budgetData || [];
       const budgetByMonth = {};
-      
+
       availableBudgets.forEach(budget => {
         budgetByMonth[budget.month] = budget.budget_amount;
         lastKnownBudget = budget.budget_amount; // Keep track of the most recent budget
       });
-      
+
       // Now, for each month in the period, use actual budget or fill with last known value
       periodMonths.forEach(month => {
         if (budgetByMonth[month]) {
@@ -388,12 +388,12 @@ const Analytics = () => {
           budgetMonthsFound++;
         }
       });
-      
+
       // Only include categories that have budget data (actual or filled)
       if (budgetMonthsFound > 0 && totalBudgetForPeriod > 0) {
         const budgetUtilization = (totalSpending / totalBudgetForPeriod) * 100;
         const avgMonthlyBudget = totalBudgetForPeriod / periodMonths.length;
-        
+
         performanceData.push({
           category,
           spending: totalSpending,
@@ -418,7 +418,7 @@ const Analytics = () => {
     const labels = performanceData.map(item => item.category);
     const budgetData = performanceData.map(item => item.budget);
     const spendingData = performanceData.map(item => item.spending);
-    
+
     // Color bars based on performance
     const budgetColors = performanceData.map(item => {
       switch (item.status) {
@@ -500,7 +500,7 @@ const Analytics = () => {
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error</h3>
               <p className="text-sm text-red-700 mt-1">{error}</p>
-              <button 
+              <button
                 onClick={fetchAnalyticsData}
                 className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200"
               >
@@ -523,11 +523,11 @@ const Analytics = () => {
         ) : (
           (() => {
             const overview = getOverviewData();
-            
+
             if (!overview || trendsData?.summary.monthCount === 0) {
               return (
                 <div className="col-span-1 sm:col-span-2 lg:col-span-4">
-                  <EmptyState 
+                  <EmptyState
                     message="No data available for this period"
                     suggestion="Add some expenses to see your analytics. We need at least 3 months of data for meaningful insights."
                   />
@@ -585,6 +585,16 @@ const Analytics = () => {
           </>
         ) : (
           <>
+            {/* Budget Performance Badges - Now in its own card */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold mb-4">Budget Overview</h3>
+              {(() => {
+                const performanceData = getBudgetPerformanceData();
+                if (!performanceData || performanceData.length === 0) return null;
+
+                return <BudgetPerformanceBadges performanceData={performanceData} />;
+              })()}
+            </div>
             {/* Monthly Spending Trend Chart */}
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex justify-between items-center mb-4">
@@ -608,8 +618,8 @@ const Analytics = () => {
                     );
                   }
                   return (
-                    <Line 
-                      data={chartData} 
+                    <Line
+                      data={chartData}
                       options={{
                         ...commonChartOptions,
                         plugins: {
@@ -618,7 +628,7 @@ const Analytics = () => {
                             display: false
                           }
                         }
-                      }} 
+                      }}
                     />
                   );
                 })()
@@ -649,8 +659,8 @@ const Analytics = () => {
                     );
                   }
                   return (
-                    <Line 
-                      data={chartData} 
+                    <Line
+                      data={chartData}
                       options={{
                         ...commonChartOptions,
                         plugins: {
@@ -660,7 +670,7 @@ const Analytics = () => {
                             position: window.innerWidth < 768 ? 'bottom' : 'top'
                           }
                         }
-                      }} 
+                      }}
                     />
                   );
                 })()
@@ -691,8 +701,8 @@ const Analytics = () => {
                     );
                   }
                   return (
-                    <Line 
-                      data={chartData} 
+                    <Line
+                      data={chartData}
                       options={{
                         ...commonChartOptions,
                         plugins: {
@@ -700,16 +710,16 @@ const Analytics = () => {
                           tooltip: {
                             ...commonChartOptions.plugins.tooltip,
                             callbacks: {
-                              label: function(context) {
+                              label: function (context) {
                                 const value = formatCurrency(context.parsed.y);
-                                const surplus = context.parsed.y - (context.chart.data.datasets[1-context.datasetIndex]?.data[context.dataIndex] || 0);
+                                const surplus = context.parsed.y - (context.chart.data.datasets[1 - context.datasetIndex]?.data[context.dataIndex] || 0);
                                 const surplusText = context.datasetIndex === 0 ? ` (Surplus: ${formatCurrency(Math.abs(surplus))})` : '';
                                 return `${context.dataset.label}: ${value}${surplusText}`;
                               }
                             }
                           }
                         }
-                      }} 
+                      }}
                     />
                   );
                 })()
@@ -730,7 +740,7 @@ const Analytics = () => {
                 <div className="text-sm text-gray-600 mb-4">
                   <span className="inline-flex items-center gap-1">
                     <span className="text-blue-600">ⓘ</span>
-                    Budget totals are calculated using actual monthly budgets when available, 
+                    Budget totals are calculated using actual monthly budgets when available,
                     filled with the most recent budget value for missing months.
                   </span>
                 </div>
@@ -738,7 +748,7 @@ const Analytics = () => {
                   {(() => {
                     const chartData = getBudgetPerformanceChartData();
                     const performanceData = getBudgetPerformanceData();
-                    
+
                     if (!chartData || !performanceData || performanceData.length === 0) {
                       return (
                         <div className="h-full bg-gray-50 rounded flex items-center justify-center">
@@ -750,10 +760,10 @@ const Analytics = () => {
                         </div>
                       );
                     }
-                    
+
                     return (
-                      <Bar 
-                        data={chartData} 
+                      <Bar
+                        data={chartData}
                         options={{
                           ...commonChartOptions,
                           plugins: {
@@ -761,11 +771,11 @@ const Analytics = () => {
                             tooltip: {
                               ...commonChartOptions.plugins.tooltip,
                               callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                   const value = formatCurrency(context.parsed.y);
                                   const dataIndex = context.dataIndex;
                                   const performance = performanceData[dataIndex];
-                                  const utilizationText = context.datasetIndex === 1 ? 
+                                  const utilizationText = context.datasetIndex === 1 ?
                                     ` (${performance.utilization.toFixed(1)}% of budget)` : '';
                                   return `${context.dataset.label}: ${value}${utilizationText}`;
                                 }
@@ -783,22 +793,11 @@ const Analytics = () => {
                               }
                             }
                           }
-                        }} 
+                        }}
                       />
                     );
                   })()}
                 </div>
-              </div>
-
-              {/* Budget Performance Badges - Now in its own card */}
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-4">Budget Overview</h3>
-                {(() => {
-                  const performanceData = getBudgetPerformanceData();
-                  if (!performanceData || performanceData.length === 0) return null;
-                  
-                  return <BudgetPerformanceBadges performanceData={performanceData} />;
-                })()}
               </div>
             </div>
           </>
