@@ -134,6 +134,48 @@ const Budget = () => {
   };
 
   // Common chart options for consistency
+  // Custom legend for the budget vs actual chart
+  const budgetVsActualLegend = {
+    id: 'budgetVsActualLegend',
+    afterDraw(chart, args, options) {
+      const { ctx, chartArea, width } = chart;
+      if (!chartArea) return;
+
+      const legendItems = [
+        { text: 'Budgeted', fillStyle: chartColors.primary + '40' },
+        { text: 'Actual Spending', fillStyle: chartColors.accent + '80' },
+        { text: 'Good', fillStyle: chartColors.secondary },
+        { text: 'Warning', fillStyle: chartColors.yellow },
+        { text: 'Over', fillStyle: chartColors.red },
+      ];
+
+      ctx.save();
+      ctx.font = "12px 'Inter', sans-serif";
+      ctx.textBaseline = 'middle';
+
+      const boxSize = 10;
+      const itemSpacing = 15;
+      const totalLegendWidth = legendItems.reduce((acc, item) => {
+        return acc + boxSize + 5 + ctx.measureText(item.text).width + itemSpacing;
+      }, 0) - itemSpacing;
+
+      let x = (width - totalLegendWidth) / 2;
+      const y = chartArea.top - 20;
+
+      legendItems.forEach(item => {
+        ctx.fillStyle = item.fillStyle;
+        ctx.fillRect(x, y, boxSize, boxSize);
+        x += boxSize + 5;
+
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText(item.text, x, y + boxSize / 2);
+        x += ctx.measureText(item.text).width + itemSpacing;
+      });
+
+      ctx.restore();
+    }
+  };
+
   const commonChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -323,10 +365,47 @@ const Budget = () => {
           data: chartData.categorySpending.map(c => c.total || 0),
           backgroundColor: budgetColors.map(color => color + '80'),
           borderColor: budgetColors,
-          borderWidth: 1
+          borderWidth: 1,
+          // Custom legend configuration
+          legend: {
+            display: true,
+            labels: {
+              generateLabels: function(chart) {
+                // Return empty array to prevent default legend items
+                return [];
+              }
+            }
+          }
         }
       ]
     };
+  };
+  
+  // Custom options for the budget vs actual chart
+  const budgetVsActualChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false, // Allow chart to fill container
+    plugins: {
+      // Disable the default legend and title
+      legend: {
+        display: false
+      },
+      title: {
+        display: false
+      },
+      // Add our custom legend
+      [budgetVsActualLegend.id]: {}
+    },
+    // Adjust layout to make room for our custom legend
+    layout: {
+      padding: {
+        top: 40, // Add space at the top for our custom legend
+        bottom: 10,
+        left: 10,
+        right: 10
+      }
+    },
+    devicePixelRatio: window.devicePixelRatio || 1 // Handle high DPI displays
   };
 
   if (!user) {
@@ -471,8 +550,13 @@ const Budget = () => {
                     />
                   );
                 }
+                const budgetVsActualData = chartData;
                 return (
-                  <Bar data={chartData} options={barChartOptions} />
+                  <Bar
+                    data={budgetVsActualData}
+                    options={budgetVsActualChartOptions}
+                    plugins={[budgetVsActualLegend]}
+                  />
                 );
               })()}
             </div>
