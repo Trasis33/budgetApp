@@ -5,7 +5,6 @@ import {
   RiWallet3Line,
   RiMoneyDollarCircleLine, 
   RiCalendarCheckLine,
-  RiRefreshLine,
   RiBarChartLine,
   RiSettings4Line
 } from 'react-icons/ri';
@@ -72,15 +71,6 @@ const Sidebar = () => {
           <span>Monthly Statement</span>
         </NavLink>
         
-        <NavLink
-          to="/recurring"
-          className={({ isActive }) =>
-            `flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 ${isActive ? 'bg-gray-100' : ''}`
-          }
-        >
-          <RiRefreshLine className="w-5 h-5 mr-2" />
-          <span>Recurring Bills</span>
-        </NavLink>
 
         
         <NavLink

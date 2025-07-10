@@ -9,7 +9,6 @@ import AddExpense from './pages/AddExpense';
 import MonthlyStatement from './pages/MonthlyStatement';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
-import Recurring from './pages/Recurring';
 import Budget from './pages/Budget';
 import Analytics from './pages/Analytics';
 import NotFound from './pages/NotFound';
@@ -53,7 +52,6 @@ function App() {
           <Route path="expenses/add" element={<AddExpense />} />
           <Route path="expenses/edit/:id" element={<AddExpense />} />
           <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
-          <Route path="recurring" element={<Recurring />} />
           <Route path="budget" element={<Budget />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
