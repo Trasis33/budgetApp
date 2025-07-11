@@ -10,7 +10,6 @@ import MonthlyStatement from './pages/MonthlyStatement';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
 import Budget from './pages/Budget';
-import Analytics from './pages/Analytics';
 import NotFound from './pages/NotFound';
 
 // Auth Context and Private Route
@@ -53,7 +52,6 @@ function App() {
           <Route path="expenses/edit/:id" element={<AddExpense />} />
           <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
           <Route path="budget" element={<Budget />} />
-          <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         
