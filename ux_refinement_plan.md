@@ -102,29 +102,38 @@ Dashboard (Overview + Quick Actions)
 **Actual Time**: ~30 minutes
 **Commit**: `2ad406e` - Stage 1: Remove Bill Splitter and clean up related code
 
-### Stage 2: Integrate Recurring into Expenses (Priority: HIGH)
-**Files to modify:**
-- `client/src/pages/Expenses.js` - Add tabs/sections for recurring bills
-- Move recurring bill management UI into Expenses page
-- Update navigation in Sidebar.js
-- `client/src/pages/Recurring.js` - Integrate into Expenses or delete
+### Stage 2: Integrate Recurring into Expenses (Priority: HIGH) ✅ COMPLETED
+**Files modified:**
+- ✅ `client/src/pages/Expenses.js` - Added context-aware recurring bills management
+- ✅ `client/src/components/layout/Sidebar.js` - Removed recurring navigation link
+- ✅ `client/src/App.js` - Removed recurring route and import
+- ✅ `client/src/pages/Recurring.js` - Archived to `client/src/pages/archive/`
+- ✅ Visual indicators (🔄) added for recurring expenses in main table
+- ✅ "Manage Recurring" button with show/hide functionality
+- ✅ Zero extra clicks for normal expense viewing (context-aware smart view)
+- ✅ Preserved all template-based recurring bill functionality
 
-**Implementation Approach**:
+**Implementation Achieved:**
 ```jsx
-// Expenses.js structure
+// Context-aware smart view approach
 <div className="expenses-page">
-  <Tabs>
-    <Tab label="All Expenses">
-      {/* Current expenses list + filtering */}
-    </Tab>
-    <Tab label="Recurring Bills">
-      {/* Recurring bills management */}
-    </Tab>
-  </Tabs>
+  <Header>
+    <button>🔄 Manage Recurring</button> // Only when needed
+    <button>Add Expense</button>
+  </Header>
+  
+  {showRecurringManagement && (
+    <RecurringManagementSection /> // On-demand
+  )}
+  
+  <ExpensesList>
+    🔄 Recurring indicators in main list // Visual context
+  </ExpensesList>
 </div>
 ```
 
-**Estimated Time**: 1-2 days
+**Actual Time**: ~2 hours
+**Commit**: `0967f15` - Stage 2: Integrate recurring bills into Expenses page
 
 ### Stage 3: Merge Budget & Analytics (Priority: MEDIUM)
 **Files to modify:**
