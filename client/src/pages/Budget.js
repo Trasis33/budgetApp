@@ -21,6 +21,8 @@ import {
 import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
 import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
 import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
+import SavingsRateTracker from '../components/SavingsRateTracker';
+import SavingsGoalsManager from '../components/SavingsGoalsManager';
 
 ChartJS.register(
   ArcElement,
@@ -389,14 +391,16 @@ const Budget = () => {
           data: budgetData,
           backgroundColor: chartColors.primary + '40',
           borderColor: chartColors.primary,
-          borderWidth: 1
+          borderWidth: 1,
+          borderRadius: 6
         },
         {
           label: 'Actual Spending',
           data: spendingData,
           backgroundColor: budgetColors.map(color => color + '80'),
           borderColor: budgetColors,
-          borderWidth: 1
+          borderWidth: 1,
+          borderRadius: 6
         }
       ]
     };
@@ -1236,25 +1240,37 @@ const Budget = () => {
         )}
       </div>
       
-      {/* Coming Soon Features */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
-        <h3 className="text-lg font-semibold mb-4 text-blue-900">Advanced Analytics Coming Soon</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center space-x-3">
-            <span className="text-blue-600">📈</span>
-            <span className="text-blue-800">Monthly spending trends</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-purple-600">🔍</span>
-            <span className="text-blue-800">Deep category analysis</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-green-600">💰</span>
-            <span className="text-blue-800">Savings rate tracking</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-orange-600">🎯</span>
-            <span className="text-blue-800">Budget optimization tips</span>
+      {/* Enhanced Savings Rate Tracking */}
+      <SavingsRateTracker 
+        timePeriod={timePeriod}
+        startDate={startDate}
+        endDate={endDate}
+      />
+
+      {/* Savings Goals Management */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SavingsGoalsManager />
+        
+        {/* Coming Soon Features */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-semibold mb-4 text-blue-900">More Advanced Analytics Coming Soon</h3>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <span className="text-orange-600">🎯</span>
+              <span className="text-blue-800">AI-powered budget optimization tips</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-purple-600">📊</span>
+              <span className="text-blue-800">Predictive spending forecasts</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-green-600">🏆</span>
+              <span className="text-blue-800">Financial health scoring</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-blue-600">📈</span>
+              <span className="text-blue-800">Seasonal spending patterns</span>
+            </div>
           </div>
         </div>
       </div>

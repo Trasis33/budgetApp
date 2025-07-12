@@ -37,6 +37,7 @@ const startServer = async () => {
     app.use('/api/users', auth, userRoutes);
     app.use('/api/budgets', auth, budgetRoutes);
     app.use('/api/analytics', auth, require('./routes/analytics'));
+    app.use('/api/savings', auth, require('./routes/savings'));
 
     // Serve static assets in production
     if (process.env.NODE_ENV === 'production') {

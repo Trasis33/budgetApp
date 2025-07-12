@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from '../api/axios';
-import { useAuth } from '../context/AuthContext';
-import formatCurrency from '../utils/formatCurrency';
+import axios from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
+import formatCurrency from '../../utils/formatCurrency';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 // Budget Performance Summary Components
-import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
-import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
-import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
+import BudgetPerformanceCards from '../../components/BudgetPerformanceCards';
+import BudgetPerformanceBars from '../../components/BudgetPerformanceBars';
+import BudgetPerformanceBadges from '../../components/BudgetPerformanceBadges';
 import {
   Chart as ChartJS,
   CategoryScale,
