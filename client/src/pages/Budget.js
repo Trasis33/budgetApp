@@ -23,6 +23,7 @@ import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
 import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
 import SavingsRateTracker from '../components/SavingsRateTracker';
 import SavingsGoalsManager from '../components/SavingsGoalsManager';
+import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 
 ChartJS.register(
   ArcElement,
@@ -1251,26 +1252,25 @@ const Budget = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SavingsGoalsManager />
         
-        {/* Coming Soon Features */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
-          <h3 className="text-lg font-semibold mb-4 text-blue-900">More Advanced Analytics Coming Soon</h3>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <span className="text-orange-600">🎯</span>
-              <span className="text-blue-800">AI-powered budget optimization tips</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <span className="text-purple-600">📊</span>
-              <span className="text-blue-800">Predictive spending forecasts</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <span className="text-green-600">🏆</span>
-              <span className="text-blue-800">Financial health scoring</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <span className="text-blue-600">📈</span>
-              <span className="text-blue-800">Seasonal spending patterns</span>
-            </div>
+        {/* Budget Optimization Tips */}
+        <BudgetOptimizationTips />
+      </div>
+      
+      {/* Additional Advanced Analytics Coming Soon */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
+        <h3 className="text-lg font-semibold mb-4 text-blue-900">More Advanced Analytics Coming Soon</h3>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3">
+            <span className="text-purple-600">📊</span>
+            <span className="text-blue-800">Predictive spending forecasts</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-green-600">🏆</span>
+            <span className="text-blue-800">Financial health scoring</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-blue-600">📈</span>
+            <span className="text-blue-800">Seasonal spending patterns</span>
           </div>
         </div>
       </div>
