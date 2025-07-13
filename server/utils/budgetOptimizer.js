@@ -1,7 +1,7 @@
 // Budget Optimizer - Analysis Engine for Budget Optimization Tips
 // Created: 2025-07-12
 
-const db = require('../db/database');
+const knex = require('../db/database');
 
 class BudgetOptimizer {
   constructor(userId) {
@@ -32,63 +32,90 @@ class BudgetOptimizer {
   }
 
   // Get expense history for the last N months
+  // For couples' budget app: Include split expenses from both users + personal expenses from current user
   async getExpenseHistory(months) {
-    const query = `
-      SELECT 
-        category,
-        strftime('%Y-%m', date) as month,
-        SUM(amount) as amount
-      FROM expenses 
-      WHERE user_id = ? 
-        AND date >= date('now', '-${months} months')
-      GROUP BY category, strftime('%Y-%m', date)
-      ORDER BY month DESC
-    `;
-    
-    return new Promise((resolve, reject) => {
-      db.all(query, [this.userId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      });
-    });
+    try {
+      const userId = this.userId; // Capture userId for use in nested functions
+      const rows = await knex('expenses')
+        .select(
+          'categories.name as category',
+          knex.raw("strftime('%Y-%m', expenses.date) as month"),
+          knex.raw('SUM(expenses.amount) as amount')
+        )
+        .join('categories', 'expenses.category_id', 'categories.id')
+        .where('expenses.date', '>=', knex.raw(`date('now', '-${months} months')`))
+        .where(function() {
+          // Include personal expenses only for the current user
+          this.where(function() {
+            this.where('expenses.paid_by_user_id', userId)
+                .andWhere('expenses.split_type', '=', 'personal');
+          })
+          // Include all shared/split expenses regardless of who paid
+          .orWhere('expenses.split_type', '!=', 'personal');
+        })
+        .groupBy(['categories.name', knex.raw("strftime('%Y-%m', expenses.date)")])
+        .orderBy('month', 'desc');
+      
+      return rows || [];
+    } catch (error) {
+      console.error('Error getting expense history:', error);
+      throw error;
+    }
   }
 
   // Get budget history for the last N months
   async getBudgetHistory(months) {
-    const query = `
-      SELECT 
-        category,
-        strftime('%Y-%m', start_date) as month,
-        amount as budget_amount
-      FROM budgets 
-      WHERE user_id = ? 
-        AND start_date >= date('now', '-${months} months')
-      ORDER BY start_date DESC
-    `;
-    
-    return new Promise((resolve, reject) => {
-      db.all(query, [this.userId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      });
-    });
+    try {
+      const currentDate = new Date();
+      const startYear = currentDate.getFullYear();
+      const startMonth = currentDate.getMonth() + 1;
+      
+      const rows = await knex('budgets')
+        .select(
+          'categories.name as category',
+          knex.raw("printf('%04d-%02d', budgets.year, budgets.month) as month"),
+          knex.raw('budgets.amount as budget_amount')
+        )
+        .join('categories', 'budgets.category_id', 'categories.id')
+        .where(function() {
+          // Get budgets from the last N months
+          for (let i = 0; i < months; i++) {
+            const targetDate = new Date(startYear, startMonth - 1 - i, 1);
+            const year = targetDate.getFullYear();
+            const month = targetDate.getMonth() + 1;
+            this.orWhere(function() {
+              this.where('budgets.year', year).where('budgets.month', month);
+            });
+          }
+        })
+        .orderBy('budgets.year', 'desc')
+        .orderBy('budgets.month', 'desc');
+      
+      return rows || [];
+    } catch (error) {
+      console.error('Error getting budget history:', error);
+      throw error;
+    }
   }
 
   // Get savings goals
   async getSavingsGoals() {
-    const query = `
-      SELECT * FROM savings_goals 
-      WHERE user_id = ? 
-        AND (target_date IS NULL OR target_date > date('now'))
-      ORDER BY created_at DESC
-    `;
-    
-    return new Promise((resolve, reject) => {
-      db.all(query, [this.userId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      });
-    });
+    try {
+      const rows = await knex('savings_goals')
+        .select('*')
+        .where('user_id', this.userId)
+        .where(function() {
+          this.whereNull('target_date')
+            .orWhere('target_date', '>', knex.raw("date('now')"));
+        })
+        .orderBy('created_at', 'desc');
+      
+      return rows || [];
+    } catch (error) {
+      console.error('Error getting savings goals:', error);
+      // Return empty array if savings_goals table doesn't exist yet
+      return [];
+    }
   }
 
   // Generate specific optimization recommendations
@@ -277,9 +304,9 @@ class BudgetOptimizer {
 
   // Format currency
   formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('sv-SE', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SEK'
     }).format(amount);
   }
 }

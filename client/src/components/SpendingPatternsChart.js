@@ -1,5 +1,6 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
+import formatCurrency from '../utils/formatCurrency';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -75,7 +76,7 @@ const SpendingPatternsChart = ({ patterns }) => {
         beginAtZero: true,
         ticks: {
           callback: function(value) {
-            return '$' + value.toLocaleString();
+            return formatCurrency(value);
           }
         }
       }

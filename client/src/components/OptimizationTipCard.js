@@ -1,4 +1,5 @@
 import React from 'react';
+import formatCurrency from '../utils/formatCurrency';
 
 const OptimizationTipCard = ({ tip, onDismiss }) => {
   const getTipIcon = (type) => {
@@ -29,7 +30,7 @@ const OptimizationTipCard = ({ tip, onDismiss }) => {
             {tip.impact_amount && (
               <div className="mt-2 flex items-center space-x-4">
                 <span className="text-sm font-medium text-green-600">
-                  Potential savings: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tip.impact_amount)}
+                  Potential savings: {formatCurrency(tip.impact_amount)}
                 </span>
                 <span className={`text-xs ${getConfidenceColor(tip.confidence_score)}`}>
                   {(tip.confidence_score * 100).toFixed(0)}% confidence

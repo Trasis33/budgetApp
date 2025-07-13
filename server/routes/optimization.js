@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const BudgetOptimizer = require('../utils/budgetOptimizer');
-const db = require('../db/database');
+const knex = require('../db/database');
 
 // Get spending analysis and recommendations
 router.get('/analyze', async (req, res) => {
@@ -22,21 +22,17 @@ router.get('/analyze', async (req, res) => {
 // Get active optimization tips
 router.get('/tips', async (req, res) => {
   try {
-    const query = `
-      SELECT * FROM budget_optimization_tips 
-      WHERE user_id = ? 
-        AND is_dismissed = 0 
-        AND (expires_at IS NULL OR expires_at > datetime('now'))
-      ORDER BY confidence_score DESC, created_at DESC
-    `;
+    const tips = await knex('budget_optimization_tips')
+      .where('user_id', req.user.id)
+      .where('is_dismissed', 0)
+      .where(function() {
+        this.whereNull('expires_at')
+          .orWhere('expires_at', '>', knex.fn.now())
+      })
+      .orderBy('confidence_score', 'desc')
+      .orderBy('created_at', 'desc');
     
-    db.all(query, [req.user.id], (err, rows) => {
-      if (err) {
-        console.error('Error fetching tips:', err);
-        return res.status(500).json({ error: 'Failed to fetch optimization tips' });
-      }
-      res.json(rows || []);
-    });
+    res.json(tips || []);
   } catch (error) {
     console.error('Error in /tips:', error);
     res.status(500).json({ error: error.message });
@@ -47,24 +43,17 @@ router.get('/tips', async (req, res) => {
 router.post('/tips/:id/dismiss', async (req, res) => {
   try {
     const tipId = req.params.id;
-    const query = `
-      UPDATE budget_optimization_tips 
-      SET is_dismissed = 1 
-      WHERE id = ? AND user_id = ?
-    `;
     
-    db.run(query, [tipId, req.user.id], function(err) {
-      if (err) {
-        console.error('Error dismissing tip:', err);
-        return res.status(500).json({ error: 'Failed to dismiss tip' });
-      }
-      
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Tip not found' });
-      }
-      
-      res.json({ message: 'Tip dismissed successfully' });
-    });
+    const updatedCount = await knex('budget_optimization_tips')
+      .where('id', tipId)
+      .where('user_id', req.user.id)
+      .update({ is_dismissed: 1 });
+    
+    if (updatedCount === 0) {
+      return res.status(404).json({ error: 'Tip not found' });
+    }
+    
+    res.json({ message: 'Tip dismissed successfully' });
   } catch (error) {
     console.error('Error in /tips/:id/dismiss:', error);
     res.status(500).json({ error: error.message });
@@ -77,24 +66,16 @@ router.put('/tips/:id', async (req, res) => {
     const tipId = req.params.id;
     const { is_dismissed } = req.body;
     
-    const query = `
-      UPDATE budget_optimization_tips 
-      SET is_dismissed = ? 
-      WHERE id = ? AND user_id = ?
-    `;
+    const updatedCount = await knex('budget_optimization_tips')
+      .where('id', tipId)
+      .where('user_id', req.user.id)
+      .update({ is_dismissed });
     
-    db.run(query, [is_dismissed, tipId, req.user.id], function(err) {
-      if (err) {
-        console.error('Error updating tip:', err);
-        return res.status(500).json({ error: 'Failed to update tip' });
-      }
-      
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Tip not found' });
-      }
-      
-      res.json({ message: 'Tip updated successfully' });
-    });
+    if (updatedCount === 0) {
+      return res.status(404).json({ error: 'Tip not found' });
+    }
+    
+    res.json({ message: 'Tip updated successfully' });
   } catch (error) {
     console.error('Error in /tips/:id:', error);
     res.status(500).json({ error: error.message });
@@ -103,52 +84,32 @@ router.put('/tips/:id', async (req, res) => {
 
 // Helper function to store recommendations
 async function storeRecommendations(userId, recommendations) {
-  return new Promise((resolve, reject) => {
+  try {
     // First, clear existing non-dismissed tips
-    const clearQuery = `
-      DELETE FROM budget_optimization_tips 
-      WHERE user_id = ? AND is_dismissed = 0
-    `;
+    await knex('budget_optimization_tips')
+      .where('user_id', userId)
+      .where('is_dismissed', 0)
+      .del();
     
-    db.run(clearQuery, [userId], function(err) {
-      if (err) {
-        console.error('Error clearing old tips:', err);
-        return reject(err);
-      }
+    // Insert new recommendations
+    if (recommendations && recommendations.length > 0) {
+      const tipsToInsert = recommendations.map(tip => ({
+        user_id: userId,
+        tip_type: tip.type,
+        category: tip.category || null,
+        title: tip.title,
+        description: tip.description,
+        impact_amount: tip.impact_amount || null,
+        confidence_score: tip.confidence_score || 0.5,
+        expires_at: knex.raw("datetime('now', '+30 days')")
+      }));
       
-      // Insert new recommendations
-      const insertPromises = recommendations.map(tip => {
-        return new Promise((resolveInsert, rejectInsert) => {
-          const insertQuery = `
-            INSERT INTO budget_optimization_tips 
-            (user_id, tip_type, category, title, description, impact_amount, confidence_score, expires_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', '+30 days'))
-          `;
-          
-          db.run(insertQuery, [
-            userId,
-            tip.type,
-            tip.category || null,
-            tip.title,
-            tip.description,
-            tip.impact_amount || null,
-            tip.confidence_score || 0.5
-          ], function(err) {
-            if (err) {
-              console.error('Error inserting tip:', err);
-              rejectInsert(err);
-            } else {
-              resolveInsert(this.lastID);
-            }
-          });
-        });
-      });
-      
-      Promise.all(insertPromises)
-        .then(() => resolve())
-        .catch(reject);
-    });
-  });
+      await knex('budget_optimization_tips').insert(tipsToInsert);
+    }
+  } catch (error) {
+    console.error('Error storing recommendations:', error);
+    throw error;
+  }
 }
 
 module.exports = router;
