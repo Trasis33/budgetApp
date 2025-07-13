@@ -41,12 +41,20 @@ The application follows a standard client-server architecture:
 *   Print functionality for generating a printable version of the statement.
 *   The monthly statement data is dynamically calculated and updated, ensuring consistency with the latest expense data.
 
-### 3.5. Budget Tracking
+### 3.5. Budget Tracking & Advanced Analytics
 *   **Personal & Household Budgets:** Supports both individual and combined household budget views.
 *   **Flexible Income Management:** Allows users to log a primary salary and add multiple other income sources per month.
 *   **Dashboard Integration:** Displays a personal budget summary (income, expenses, remaining) on the main dashboard.
 *   **Dedicated Budget Page:** A new page at `/budget` allows for detailed household budget management and income entry.
 *   **Data Visualizations:** Includes charts for monthly spending by category, income vs. expenses, and budget vs. actual spending, powered by Chart.js.
+*   **Enhanced Savings Rate Tracking:** Comprehensive savings analysis with goal tracking, milestone achievements, and trend analysis.
+*   **Budget Optimization Tips:** AI-powered recommendations based on spending patterns, seasonal trends, and financial goals.
+*   **Revolutionary Trend Strength Analysis:** 
+    - Normalized strength calculation (0-100% relative to average spending)
+    - Categorical classification (minimal, weak, moderate, strong, very_strong)
+    - Confidence scoring based on data consistency and volatility
+    - Detailed metrics including percentage change, monthly change, and volatility
+    - Color-coded visual indicators with human-readable descriptions
 
 ## 4. Database Schema Highlights
 
@@ -73,6 +81,21 @@ The application follows a standard client-server architecture:
     *   `amount`: The amount of income.
     *   `date`: The date the income was received.
     *   `user_id`: Foreign key linking to the `users` table.
+*   **`savings_goals`**: Stores user savings goals and targets.
+    *   `goal_name`: The name/description of the savings goal.
+    *   `target_amount`: The target amount to save.
+    *   `current_amount`: The current progress toward the goal.
+    *   `target_date`: Optional target date for achieving the goal.
+    *   `category`: Goal category (e.g., 'emergency', 'vacation', 'house').
+*   **`budget_optimization_tips`**: Stores AI-generated budget optimization recommendations.
+    *   `tip_type`: Type of recommendation ('reduction', 'reallocation', 'seasonal', 'goal_based').
+    *   `category`: Affected expense category.
+    *   `title`: Short title for the recommendation.
+    *   `description`: Detailed description of the recommendation.
+    *   `impact_amount`: Potential savings amount.
+    *   `confidence_score`: AI confidence level (0-1) in the recommendation.
+    *   `is_dismissed`: Whether the user has dismissed the tip.
+    *   `expires_at`: When the tip expires and should be removed.
 
 ## 5. Development Workflow & Considerations
 

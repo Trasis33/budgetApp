@@ -149,16 +149,18 @@ class BudgetOptimizer {
 
     // 3. Seasonal spending alerts
     const seasonalSpikes = Object.entries(patterns).filter(([_, pattern]) => 
-      pattern.trend === 'increasing' && pattern.trendStrength > 0.3
+      pattern.trend === 'increasing' && 
+      (pattern.enhancedTrend.category === 'strong' || pattern.enhancedTrend.category === 'very_strong')
     );
     seasonalSpikes.forEach(([category, pattern]) => {
+      const confidenceScore = pattern.enhancedTrend.confidence / 100;
       recommendations.push({
         type: 'seasonal',
         category: category,
         title: `Prepare for ${category} seasonal increase`,
-        description: `${category} spending has been increasing. Consider planning for higher expenses in this category.`,
-        impact_amount: pattern.suggestedPreparation || 0,
-        confidence_score: 0.6
+        description: `${category} spending has been increasing with ${pattern.enhancedTrend.category} trend strength (${pattern.enhancedTrend.normalizedStrength}%). Consider planning for higher expenses in this category.`,
+        impact_amount: pattern.suggestedPreparation || Math.round(pattern.enhancedTrend.monthlyChange * 2),
+        confidence_score: Math.min(confidenceScore, 0.9)
       });
     });
 
@@ -196,11 +198,15 @@ class BudgetOptimizer {
     // Calculate trend direction for each category
     Object.keys(categoryTrends).forEach(category => {
       const data = categoryTrends[category].sort((a, b) => a.month.localeCompare(b.month));
-      const trend = this.calculateTrend(data.map(d => d.amount));
+      const amounts = data.map(d => d.amount);
+      const rawTrend = this.calculateTrend(amounts);
+      const trendAnalysis = this.calculateEnhancedTrendStrength(amounts, rawTrend);
+      
       categoryTrends[category] = {
         data,
-        trend: trend > 0.1 ? 'increasing' : trend < -0.1 ? 'decreasing' : 'stable',
-        trendStrength: Math.abs(trend)
+        trend: rawTrend > 0.1 ? 'increasing' : rawTrend < -0.1 ? 'decreasing' : 'stable',
+        trendStrength: Math.abs(rawTrend),
+        enhancedTrend: trendAnalysis
       };
     });
 
@@ -220,6 +226,77 @@ class BudgetOptimizer {
     
     const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
     return slope;
+  }
+
+  // Calculate enhanced trend strength with detailed metrics
+  calculateEnhancedTrendStrength(amounts, rawTrend) {
+    if (amounts.length < 2) {
+      return {
+        category: 'insufficient_data',
+        normalizedStrength: 0,
+        percentageChange: 0,
+        monthlyChange: 0,
+        volatility: 0,
+        confidence: 0,
+        description: 'Not enough data to calculate trend'
+      };
+    }
+
+    // Calculate basic statistics
+    const average = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const firstValue = amounts[0] || 0;
+    const lastValue = amounts[amounts.length - 1] || 0;
+    
+    // Calculate percentage change from first to last value
+    const percentageChange = firstValue > 0 ? ((lastValue - firstValue) / firstValue) * 100 : 0;
+    
+    // Calculate monthly change in absolute terms
+    const monthlyChange = Math.abs(rawTrend);
+    
+    // Calculate volatility (standard deviation)
+    const variance = amounts.reduce((acc, val) => acc + Math.pow(val - average, 2), 0) / amounts.length;
+    const volatility = Math.sqrt(variance);
+    
+    // Normalize trend strength based on average spending
+    const normalizedStrength = average > 0 ? (monthlyChange / average) * 100 : 0;
+    
+    // Calculate confidence based on data consistency and trend strength
+    const dataPoints = amounts.length;
+    const consistencyFactor = Math.min(dataPoints / 6, 1); // More data = higher confidence
+    const strengthFactor = Math.min(normalizedStrength / 10, 1); // Reasonable strength = higher confidence
+    const volatilityFactor = Math.max(0, 1 - (volatility / average)); // Lower volatility = higher confidence
+    const confidence = (consistencyFactor + strengthFactor + volatilityFactor) / 3;
+    
+    // Categorize the trend strength
+    let category, description;
+    if (normalizedStrength < 2) {
+      category = 'minimal';
+      description = 'Very small change, spending is relatively stable';
+    } else if (normalizedStrength < 5) {
+      category = 'weak';
+      description = 'Small change, minor trend detected';
+    } else if (normalizedStrength < 15) {
+      category = 'moderate';
+      description = 'Noticeable change, clear trend present';
+    } else if (normalizedStrength < 30) {
+      category = 'strong';
+      description = 'Significant change, strong trend detected';
+    } else {
+      category = 'very_strong';
+      description = 'Major change, very strong trend - requires attention';
+    }
+    
+    return {
+      category,
+      normalizedStrength: Math.round(normalizedStrength * 10) / 10,
+      percentageChange: Math.round(percentageChange * 10) / 10,
+      monthlyChange: Math.round(monthlyChange),
+      volatility: Math.round(volatility),
+      confidence: Math.round(confidence * 100),
+      description,
+      dataPoints,
+      average: Math.round(average)
+    };
   }
 
   // Detect seasonal patterns
