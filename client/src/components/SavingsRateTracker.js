@@ -40,45 +40,25 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
     const months = savingsData.monthlyData.map(item => formatMonthLabel(item.month));
     const savingsRates = savingsData.monthlyData.map(item => item.savingsRate);
 
-    // Chart colors
-    const chartColors = {
-      primary: '#10b981',      // Green for savings
-      secondary: '#3b82f6',    // Blue for target
-      accent: '#f59e0b',       // Amber for warning
-      red: '#ef4444'           // Red for negative
-    };
-
     return {
       labels: months,
       datasets: [
         {
           label: 'Savings Rate (%)',
           data: savingsRates,
-          borderColor: chartColors.primary,
-          backgroundColor: chartColors.primary + '20',
+          borderColor: '#10b981',
+          backgroundColor: '#10b98120',
           borderWidth: 3,
           fill: true,
           tension: 0.1,
           pointBackgroundColor: savingsRates.map(rate => 
-            rate < 0 ? chartColors.red : 
-            rate < 10 ? chartColors.accent : 
-            chartColors.primary
+            rate < 0 ? '#ef4444' : 
+            rate < 10 ? '#f59e0b' : 
+            '#10b981'
           ),
           pointRadius: 6,
           pointHoverRadius: 8
-        },
-        // Add target line if there are savings goals
-        ...(savingsData.savingsGoals && savingsData.savingsGoals.length > 0 ? [{
-          label: 'Savings Goal',
-          data: Array(months.length).fill(20), // Default 20% target
-          borderColor: chartColors.secondary,
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          borderDash: [5, 5],
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 0
-        }] : [])
+        }
       ]
     };
   };
@@ -89,13 +69,6 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
     plugins: {
       legend: {
         position: 'top',
-        labels: {
-          boxWidth: 12,
-          padding: 15,
-          font: {
-            size: 11
-          }
-        }
       },
       tooltip: {
         callbacks: {
@@ -113,14 +86,6 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
           callback: function(value) {
             return value + '%';
           }
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        }
-      },
-      x: {
-        grid: {
-          display: false
         }
       }
     }
@@ -159,145 +124,9 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
           <p className="text-gray-500">{error}</p>
           <button 
             onClick={fetchSavingsData}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
             Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle data availability scenarios
-  if (savingsData && savingsData.dataAvailability) {
-    const { dataAvailability } = savingsData;
-    
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4">💰 Savings Rate Analysis</h3>
-        
-        {/* Data Status Card */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start space-x-4">
-            <div className="text-3xl">
-              {dataAvailability.hasIncome && dataAvailability.hasExpenses ? '📊' : 
-               dataAvailability.hasIncome ? '💰' : 
-               dataAvailability.hasExpenses ? '💸' : '📝'}
-            </div>
-            <div className="flex-1">
-              <div className="text-lg font-semibold text-gray-800 mb-2">
-                {dataAvailability.trendDirection === 'no-data' ? 'No Data Available' :
-                 dataAvailability.trendDirection === 'insufficient-data' ? 'Insufficient Data for Analysis' :
-                 'Data Status'}
-              </div>
-              <p className="text-gray-600 mb-4">{dataAvailability.message}</p>
-              
-              {/* Data Status Indicators */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-3 bg-white rounded-lg border">
-                  <div className="text-2xl font-bold text-green-600">
-                    {dataAvailability.incomeEntries || 0}
-                  </div>
-                  <div className="text-sm text-gray-500">Income Entries</div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {dataAvailability.hasIncome ? '✅ Available' : '❌ Missing'}
-                  </div>
-                </div>
-                <div className="text-center p-3 bg-white rounded-lg border">
-                  <div className="text-2xl font-bold text-red-600">
-                    {dataAvailability.expenseEntries || 0}
-                  </div>
-                  <div className="text-sm text-gray-500">Expense Entries</div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {dataAvailability.hasExpenses ? '✅ Available' : '❌ Missing'}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Progress toward meaningful analysis */}
-              {dataAvailability.monthsWithData !== undefined && (
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Data Coverage Progress</span>
-                    <span>{dataAvailability.monthsWithData} / {dataAvailability.requiredForMeaningfulAnalysis} months</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min(100, (dataAvailability.monthsWithData / dataAvailability.requiredForMeaningfulAnalysis) * 100)}%`
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Action suggestions */}
-              <div className="text-sm text-gray-600">
-                <div className="font-medium mb-2">Next Steps:</div>
-                <ul className="space-y-1">
-                  {!dataAvailability.hasIncome && (
-                    <li className="flex items-center space-x-2">
-                      <span className="text-green-500">•</span>
-                      <span>Add income entries to track your earnings</span>
-                    </li>
-                  )}
-                  {!dataAvailability.hasExpenses && (
-                    <li className="flex items-center space-x-2">
-                      <span className="text-red-500">•</span>
-                      <span>Add expense entries to track your spending</span>
-                    </li>
-                  )}
-                  {dataAvailability.monthsWithData !== undefined && dataAvailability.monthsWithData < dataAvailability.requiredForMeaningfulAnalysis && (
-                    <li className="flex items-center space-x-2">
-                      <span className="text-blue-500">•</span>
-                      <span>Add data for {dataAvailability.requiredForMeaningfulAnalysis - dataAvailability.monthsWithData} more month(s) to see trends</span>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Show partial data if available */}
-        {savingsData.monthlyData && savingsData.monthlyData.length > 0 && (
-          <div className="mt-6">
-            <h4 className="text-md font-semibold mb-3">📈 Available Data</h4>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {formatCurrency(savingsData.summary.totalIncome)}
-                  </div>
-                  <div className="text-sm text-gray-500">Total Income</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {formatCurrency(savingsData.summary.totalExpenses)}
-                  </div>
-                  <div className="text-sm text-gray-500">Total Expenses</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-2xl font-bold ${
-                    savingsData.summary.totalSavings >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {formatCurrency(savingsData.summary.totalSavings)}
-                  </div>
-                  <div className="text-sm text-gray-500">Net Savings</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Retry button */}
-        <div className="text-center mt-6">
-          <button 
-            onClick={fetchSavingsData}
-            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition-colors"
-          >
-            Check Again
           </button>
         </div>
       </div>
@@ -326,11 +155,10 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">💰 Savings Rate Analysis</h3>
         <div className="text-sm text-gray-500">
-          {timePeriod.replace('months', 'mo').replace('year', 'yr')}
+          {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-50 p-4 rounded-lg">
           <div className="text-sm text-gray-600 mb-1">Average Savings Rate</div>
@@ -369,7 +197,6 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
         </div>
       </div>
 
-      {/* Chart */}
       <div className="h-80">
         {chartData ? (
           <Line data={chartData} options={chartOptions} />
@@ -383,7 +210,6 @@ const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
         )}
       </div>
 
-      {/* Savings Goals Section */}
       {savingsData.savingsGoals && savingsData.savingsGoals.length > 0 && (
         <div className="mt-6 pt-6 border-t border-gray-200">
           <h4 className="text-md font-semibold mb-3">🎯 Savings Goals</h4>

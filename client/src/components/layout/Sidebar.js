@@ -5,7 +5,6 @@ import {
   RiWallet3Line,
   RiMoneyDollarCircleLine, 
   RiCalendarCheckLine,
-  RiBarChartLine,
   RiSettings4Line
 } from 'react-icons/ri';
 
@@ -60,8 +59,6 @@ const Sidebar = () => {
           <RiCalendarCheckLine className="w-5 h-5 mr-2" />
           <span>Monthly Statement</span>
         </NavLink>
-        
-
         
         <NavLink
           to="/settings"

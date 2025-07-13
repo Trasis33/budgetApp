@@ -24,14 +24,21 @@ ChartJS.register(
 
 const SpendingPatternsChart = ({ patterns }) => {
   const getChartData = () => {
-    const categories = Object.keys(patterns).slice(0, 5); // Show top 5 categories
+    if (!patterns || Object.keys(patterns).length === 0) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+
+    const categories = Object.keys(patterns).slice(0, 5);
     const colors = [
       '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'
     ];
     
     const datasets = categories.map((category, index) => {
-      const data = patterns[category].data.map(d => d.amount);
-      const labels = patterns[category].data.map(d => d.month);
+      const data = patterns[category].data ? patterns[category].data.map(d => d.amount) : [];
+      const labels = patterns[category].data ? patterns[category].data.map(d => d.month) : [];
       
       return {
         label: category,
@@ -43,9 +50,8 @@ const SpendingPatternsChart = ({ patterns }) => {
       };
     });
     
-    // Get all unique months for x-axis
     const allMonths = [...new Set(
-      categories.flatMap(cat => patterns[cat].data.map(d => d.month))
+      categories.flatMap(cat => patterns[cat] && patterns[cat].data ? patterns[cat].data.map(d => d.month) : [])
     )].sort();
     
     return {
@@ -70,12 +76,12 @@ const SpendingPatternsChart = ({ patterns }) => {
     };
 
     const base = baseInfo[trend] || baseInfo.stable;
-    const strengthColor = strengthColors[enhancedTrend?.category] || 'text-gray-500';
+    const strengthColor = strengthColors[enhancedTrend && enhancedTrend.category ? enhancedTrend.category : 'minimal'];
 
     return {
       ...base,
       strengthColor,
-      strengthText: enhancedTrend?.category || 'unknown'
+      strengthText: enhancedTrend && enhancedTrend.category ? enhancedTrend.category : 'unknown'
     };
   };
   
@@ -133,11 +139,11 @@ const SpendingPatternsChart = ({ patterns }) => {
                 </div>
               </div>
               <div className="text-xs text-gray-600 space-y-1">
-                <p><strong>Strength:</strong> {pattern.enhancedTrend.normalizedStrength}%</p>
-                <p><strong>Change:</strong> {pattern.enhancedTrend.percentageChange}% over {pattern.enhancedTrend.dataPoints} months</p>
-                <p><strong>Volatility:</strong> {formatCurrency(pattern.enhancedTrend.volatility)}</p>
-                <p><strong>Confidence:</strong> {pattern.enhancedTrend.confidence}%</p>
-                <p className="text-xs italic">{pattern.enhancedTrend.description}</p>
+                <p><strong>Strength:</strong> {pattern.enhancedTrend && pattern.enhancedTrend.normalizedStrength ? pattern.enhancedTrend.normalizedStrength : 0}%</p>
+                <p><strong>Change:</strong> {pattern.enhancedTrend && pattern.enhancedTrend.percentageChange ? pattern.enhancedTrend.percentageChange : 0}% over {pattern.enhancedTrend && pattern.enhancedTrend.dataPoints ? pattern.enhancedTrend.dataPoints : 0} months</p>
+                <p><strong>Volatility:</strong> {formatCurrency(pattern.enhancedTrend && pattern.enhancedTrend.volatility ? pattern.enhancedTrend.volatility : 0)}</p>
+                <p><strong>Confidence:</strong> {pattern.enhancedTrend && pattern.enhancedTrend.confidence ? pattern.enhancedTrend.confidence : 0}%</p>
+                <p className="text-xs italic">{pattern.enhancedTrend && pattern.enhancedTrend.description ? pattern.enhancedTrend.description : 'No description'}</p>
               </div>
             </div>
           );
