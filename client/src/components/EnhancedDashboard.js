@@ -25,6 +25,13 @@ const EnhancedDashboard = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
 
+  // Helper function to safely calculate numbers and avoid NaN
+  const getSafeNumber = (spending, income) => {
+    if (!spending || !income || income === 0) return 0;
+    const rate = ((income - spending) / income) * 100;
+    return isNaN(rate) ? 0 : Math.round(rate);
+  };
+
   useEffect(() => {
     fetchDashboardData();
     
@@ -93,10 +100,10 @@ const EnhancedDashboard = () => {
 
   if (loading && !dashboardData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading enhanced dashboard...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-sm font-medium">Loading enhanced dashboard...</p>
         </div>
       </div>
     );
@@ -105,32 +112,33 @@ const EnhancedDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Enhanced Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">
+      <div className="bg-white shadow-soft border-b border-gray-200">
+        <div className="container-contained">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4">
+            <div className="mb-3 sm:mb-0">
+              <h1 className="text-fluid-xl font-bold text-gray-900 tracking-tight">Enhanced Dashboard</h1>
+              <p className="text-sm text-gray-600 mt-0.5 font-medium">
                 Last updated: {lastUpdated.toLocaleTimeString()}
               </p>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <button
-                onClick={handleManualRefresh}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </button>
-              
-              <button
-                onClick={handleExportData}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </button>
+                 onClick={handleManualRefresh}
+                 disabled={loading}
+                 className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-soft text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+               >
+                 <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+                 Refresh
+               </button>
+               
+               <button
+                 onClick={handleExportData}
+                 className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-soft text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+               >
+                 <Download className="w-4 h-4 mr-1.5" />
+                 Export
+               </button>
               
               <div className="flex items-center">
                 <input
@@ -138,9 +146,9 @@ const EnhancedDashboard = () => {
                   id="autoRefresh"
                   checked={autoRefresh}
                   onChange={(e) => setAutoRefresh(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="autoRefresh" className="ml-2 text-sm text-gray-700">
+                <label htmlFor="autoRefresh" className="ml-2 text-sm text-gray-700 font-medium">
                   Auto-refresh
                 </label>
               </div>
@@ -150,125 +158,132 @@ const EnhancedDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container-contained py-6">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <DollarSign className="h-8 w-8 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-gray-900">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow-soft border border-gray-100 p-3 hover:shadow-medium transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 mb-0.5">This Month</p>
+                <p className="text-lg font-bold text-gray-900 truncate" title={formatCurrency(dashboardData?.summary?.expenses?.reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0)}>
                   {formatCurrency(dashboardData?.summary?.expenses?.reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0)}
                 </p>
               </div>
+              <div className="flex-shrink-0 ml-2">
+                <div className="p-1.5 bg-blue-50 rounded-lg">
+                  <DollarSign className="h-4 w-4 text-blue-600" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <TrendingUp className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Savings Rate</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {dashboardData?.patterns?.summary?.avgMonthlySpending ? 
-                    Math.round(((dashboardData?.summary?.income - dashboardData?.patterns?.summary?.avgMonthlySpending) / dashboardData?.summary?.income) * 100) : 0}%
+          <div className="bg-white rounded-lg shadow-soft border border-gray-100 p-3 hover:shadow-medium transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 mb-0.5">Savings Rate</p>
+                <p className="text-lg font-bold text-gray-900 truncate" title={`${getSafeNumber(dashboardData?.patterns?.summary?.avgMonthlySpending, dashboardData?.summary?.income)}%`}>
+                  {getSafeNumber(dashboardData?.patterns?.summary?.avgMonthlySpending, dashboardData?.summary?.income)}%
                 </p>
               </div>
+              <div className="flex-shrink-0 ml-2">
+                <div className="p-1.5 bg-green-50 rounded-lg">
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Target className="h-8 w-8 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Budget Status</p>
-                <p className="text-2xl font-bold text-gray-900">
+          <div className="bg-white rounded-lg shadow-soft border border-gray-100 p-3 hover:shadow-medium transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 mb-0.5">Budget Status</p>
+                <p className="text-lg font-bold text-gray-900 truncate" title={dashboardData?.summary?.budgetStatus || 'On Track'}>
                   {dashboardData?.summary?.budgetStatus || 'On Track'}
                 </p>
               </div>
+              <div className="flex-shrink-0 ml-2">
+                <div className="p-1.5 bg-purple-50 rounded-lg">
+                  <Target className="h-4 w-4 text-purple-600" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-8 w-8 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Alerts</p>
-                <p className="text-2xl font-bold text-gray-900">
+          <div className="bg-white rounded-lg shadow-soft border border-gray-100 p-3 hover:shadow-medium transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 mb-0.5">Alerts</p>
+                <p className="text-lg font-bold text-gray-900">
                   {dashboardData?.optimization?.alerts?.length || 0}
                 </p>
+              </div>
+              <div className="flex-shrink-0 ml-2">
+                <div className="p-1.5 bg-yellow-50 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left Column - Main Analytics */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Analytics Overview */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
               <DashboardAnalytics />
             </div>
 
             {/* Spending Patterns */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Spending Patterns</h3>
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
+              <div className="px-3 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">Spending Patterns</h3>
               </div>
-              <div className="p-6">
+              <div className="p-3">
                 <SpendingPatternsChart patterns={dashboardData?.patterns?.categoryTrends || {}} />
               </div>
             </div>
 
             {/* Budget Performance */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Budget Performance</h3>
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
+              <div className="px-3 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">Budget Performance</h3>
               </div>
-              <div className="p-6">
+              <div className="p-3">
                 <BudgetPerformanceCards />
               </div>
             </div>
           </div>
 
           {/* Right Column - Insights & Optimization */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Savings Tracker */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Savings Progress</h3>
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
+              <div className="px-3 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">Savings Progress</h3>
               </div>
-              <div className="p-6">
+              <div className="p-3">
                 <SavingsRateTracker />
               </div>
             </div>
 
             {/* Performance Badges */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Achievements</h3>
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
+              <div className="px-3 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">Achievements</h3>
               </div>
-              <div className="p-6">
+              <div className="p-3">
                 <BudgetPerformanceBadges />
               </div>
             </div>
 
             {/* Optimization Tips */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Smart Tips</h3>
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
+              <div className="px-3 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">Smart Tips</h3>
               </div>
-              <div className="p-6">
+              <div className="p-3 space-y-2">
                 {dashboardData?.optimization?.tips?.map((tip, index) => (
                   <OptimizationTipCard key={index} tip={tip} />
                 ))}
@@ -276,18 +291,18 @@ const EnhancedDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+            <div className="bg-white rounded-lg shadow-soft border border-gray-100">
+              <div className="px-3 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">Quick Actions</h3>
               </div>
-              <div className="p-6 space-y-3">
-                <button className="w-full text-left px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+              <div className="p-3 space-y-1.5">
+                <button className="w-full text-left px-2 py-1.5 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors text-sm">
                   Add Expense
                 </button>
-                <button className="w-full text-left px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors">
+                <button className="w-full text-left px-2 py-1.5 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors text-sm">
                   Set Budget Goal
                 </button>
-                <button className="w-full text-left px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors">
+                <button className="w-full text-left px-2 py-1.5 bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 transition-colors text-sm">
                   View Reports
                 </button>
               </div>

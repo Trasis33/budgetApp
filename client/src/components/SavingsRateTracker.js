@@ -3,22 +3,55 @@ import { Line } from 'react-chartjs-2';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 
-const SavingsRateTracker = ({ timePeriod, startDate, endDate }) => {
+const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const [savingsData, setSavingsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchSavingsData();
-  }, [startDate, endDate]);
+    // Set default dates if not provided
+    const getDefaultDates = () => {
+      const end = new Date();
+      const start = new Date();
+      
+      // Default to 6 months if not specified
+      switch(timePeriod) {
+        case '3months':
+          start.setMonth(start.getMonth() - 3);
+          break;
+        case '1year':
+          start.setFullYear(start.getFullYear() - 1);
+          break;
+        default: // '6months' or any other value
+          start.setMonth(start.getMonth() - 6);
+      }
+      
+      return {
+        startDate: startDate || start.toISOString().split('T')[0],
+        endDate: endDate || end.toISOString().split('T')[0]
+      };
+    };
+    
+    fetchSavingsData(getDefaultDates());
+  }, [startDate, endDate, timePeriod]);
 
-  const fetchSavingsData = async () => {
-    if (!startDate || !endDate) return;
-
+  const fetchSavingsData = async (dates = {}) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`/analytics/savings-analysis/${startDate}/${endDate}`);
+      
+      // Use provided dates or the ones passed in the function parameter
+      const start = dates.startDate || startDate;
+      const end = dates.endDate || endDate;
+      
+      if (!start || !end) {
+        console.error('Missing date parameters for savings analysis');
+        setError('Missing date parameters');
+        setLoading(false);
+        return;
+      }
+      
+      const response = await axios.get(`/analytics/savings-analysis/${start}/${end}`);
       setSavingsData(response.data);
     } catch (err) {
       console.error('Error fetching savings data:', err);

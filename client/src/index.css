@@ -3,15 +3,69 @@
 @tailwind utilities;
 
 @import './styles/dashboard.css';
+@import './styles/typography.css';
 
 /* Custom base styles */
 @layer base {
+  :root {
+    /* 4-point grid system variables */
+    --spacing-unit: 0.25rem;
+    --spacing-1: calc(var(--spacing-unit) * 1);
+    --spacing-2: calc(var(--spacing-unit) * 2);
+    --spacing-3: calc(var(--spacing-unit) * 3);
+    --spacing-4: calc(var(--spacing-unit) * 4);
+    --spacing-6: calc(var(--spacing-unit) * 6);
+    --spacing-8: calc(var(--spacing-unit) * 8);
+    --spacing-12: calc(var(--spacing-unit) * 12);
+    --spacing-16: calc(var(--spacing-unit) * 16);
+    --spacing-20: calc(var(--spacing-unit) * 20);
+    --spacing-24: calc(var(--spacing-unit) * 24);
+    
+    /* Typography scale */
+    --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+    --font-size-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+    --font-size-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+    --font-size-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+    --font-size-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+    --font-size-2xl: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+    --font-size-3xl: clamp(1.875rem, 1.6rem + 1.375vw, 2.25rem);
+    --font-size-4xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    color: #111827;
+    background-color: #f9fafb;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* Remove default button styles */
+  button {
+    font-family: inherit;
+  }
+
+  /* Improve text rendering */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
   }
 }
 

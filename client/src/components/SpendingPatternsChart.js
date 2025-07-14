@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import formatCurrency from '../utils/formatCurrency';
 import {
@@ -22,23 +22,55 @@ ChartJS.register(
   Legend
 );
 
-const SpendingPatternsChart = ({ patterns }) => {
+const SpendingPatternsChart = ({ patterns = null }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [processedPatterns, setProcessedPatterns] = useState(null);
+
+  useEffect(() => {
+    // Process patterns data asynchronously to avoid UI blocking
+    const processData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Simulate a short delay to ensure UI shows loading state
+        // This helps with perceived performance
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        if (!patterns) {
+          // If patterns is null, we consider it as no data
+          setProcessedPatterns({});
+        } else {
+          // Otherwise use the provided patterns data
+          setProcessedPatterns(patterns);
+        }
+      } catch (err) {
+        console.error('Error processing patterns data:', err);
+        setError('Failed to process spending patterns data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    processData();
+  }, [patterns]);
   const getChartData = () => {
-    if (!patterns || Object.keys(patterns).length === 0) {
+    if (!processedPatterns || Object.keys(processedPatterns).length === 0) {
       return {
         labels: [],
         datasets: []
       };
     }
 
-    const categories = Object.keys(patterns).slice(0, 5);
+    const categories = Object.keys(processedPatterns).slice(0, 5);
     const colors = [
       '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'
     ];
     
     const datasets = categories.map((category, index) => {
-      const data = patterns[category].data ? patterns[category].data.map(d => d.amount) : [];
-      const labels = patterns[category].data ? patterns[category].data.map(d => d.month) : [];
+      const data = processedPatterns[category]?.data ? processedPatterns[category].data.map(d => d.amount) : [];
+      const labels = processedPatterns[category]?.data ? processedPatterns[category].data.map(d => d.month) : [];
       
       return {
         label: category,
@@ -51,7 +83,7 @@ const SpendingPatternsChart = ({ patterns }) => {
     });
     
     const allMonths = [...new Set(
-      categories.flatMap(cat => patterns[cat] && patterns[cat].data ? patterns[cat].data.map(d => d.month) : [])
+      categories.flatMap(cat => processedPatterns[cat]?.data ? processedPatterns[cat].data.map(d => d.month) : [])
     )].sort();
     
     return {
@@ -87,13 +119,20 @@ const SpendingPatternsChart = ({ patterns }) => {
   
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 6,
+          font: {
+            size: 9
+          }
+        }
       },
       title: {
-        display: true,
-        text: 'Spending Trends by Category',
+        display: false
       },
     },
     scales: {
@@ -102,48 +141,93 @@ const SpendingPatternsChart = ({ patterns }) => {
         ticks: {
           callback: function(value) {
             return formatCurrency(value);
+          },
+          font: {
+            size: 8
+          }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            size: 8
           }
         }
       }
     }
   };
   
-  if (!patterns || Object.keys(patterns).length === 0) {
+  if (loading) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p>No spending patterns data available</p>
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+        <div className="h-64 bg-gray-200 rounded"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-6 text-red-500">
+        <p className="text-sm">{error}</p>
+        <button
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            // Re-process data after a short delay
+            setTimeout(() => {
+              setProcessedPatterns(patterns || {});
+              setLoading(false);
+            }, 500);
+          }}
+          className="mt-3 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!processedPatterns || Object.keys(processedPatterns).length === 0) {
+    return (
+      <div className="text-center py-6 text-gray-500">
+        <p className="text-base mb-1">📊 No spending patterns data available</p>
+        <p className="text-xs">Add more transactions to see your spending patterns</p>
       </div>
     );
   }
   
   return (
     <div className="spending-patterns-chart">
-      <div className="mb-4">
+      <div className="mb-3">
         <Line data={getChartData()} options={options} />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(patterns).slice(0, 6).map(([category, pattern]) => {
-          const trendInfo = getTrendIndicator(pattern.trend, pattern.enhancedTrend);
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
+          const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
           return (
-            <div key={category} className="bg-gray-50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <h5 className="font-medium text-sm">{category}</h5>
-                <div className="flex items-center gap-2">
+            <div key={category} className="bg-gray-50 rounded-md p-2">
+              <div className="flex items-center justify-between mb-0.5">
+                <h5 className="font-medium text-xs truncate">{category}</h5>
+                <div className="flex items-center gap-1">
                   <span className={`text-xs ${trendInfo.color}`}>
-                    {trendInfo.icon} {trendInfo.text}
+                    {trendInfo.icon}
                   </span>
                   <span className={`text-xs font-medium ${trendInfo.strengthColor}`}>
                     {trendInfo.strengthText}
                   </span>
                 </div>
               </div>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p><strong>Strength:</strong> {pattern.enhancedTrend && pattern.enhancedTrend.normalizedStrength ? pattern.enhancedTrend.normalizedStrength : 0}%</p>
-                <p><strong>Change:</strong> {pattern.enhancedTrend && pattern.enhancedTrend.percentageChange ? pattern.enhancedTrend.percentageChange : 0}% over {pattern.enhancedTrend && pattern.enhancedTrend.dataPoints ? pattern.enhancedTrend.dataPoints : 0} months</p>
-                <p><strong>Volatility:</strong> {formatCurrency(pattern.enhancedTrend && pattern.enhancedTrend.volatility ? pattern.enhancedTrend.volatility : 0)}</p>
-                <p><strong>Confidence:</strong> {pattern.enhancedTrend && pattern.enhancedTrend.confidence ? pattern.enhancedTrend.confidence : 0}%</p>
-                <p className="text-xs italic">{pattern.enhancedTrend && pattern.enhancedTrend.description ? pattern.enhancedTrend.description : 'No description'}</p>
+              <div className="text-xs text-gray-600 space-y-0.5">
+                <p className="truncate">Strength: {pattern?.enhancedTrend?.normalizedStrength || 0}%</p>
+                <p className="truncate">Change: {pattern?.enhancedTrend?.percentageChange || 0}%</p>
               </div>
             </div>
           );
