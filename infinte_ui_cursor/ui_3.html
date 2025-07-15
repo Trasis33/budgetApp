@@ -3,604 +3,922 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker - Monthly Statement</title>
+    <title>Enhanced Dashboard - Version 3</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: #fafafa;
-            color: #1a1a1a;
-            line-height: 1.5;
+            font-family: JetBrains Mono, Consolas, 'Courier New', monospace;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
         }
-
+        
         .app-container {
             display: flex;
             min-height: 100vh;
         }
-
-        /* Sidebar Styles */
+        
         .sidebar {
-            width: 256px;
-            background-color: #ffffff;
-            border-right: 1px solid #e5e5e5;
-            padding: 1.5rem 0;
+            width: 15rem;
+            background-color: #1e293b;
+            border-right: 2px solid #334155;
+            padding: 1.5rem;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
         }
-
-        .sidebar-header {
-            padding: 0 1.5rem 2rem;
-            border-bottom: 1px solid #e5e5e5;
-            margin-bottom: 1rem;
-        }
-
+        
         .logo {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1a1a1a;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #00f2fe;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 2px solid #00f2fe;
+            padding: 0.5rem;
+            text-align: center;
         }
-
-        .nav-menu {
-            list-style: none;
-            padding: 0 1rem;
-        }
-
+        
         .nav-item {
-            margin-bottom: 0.25rem;
-        }
-
-        .nav-link {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
-            color: #666666;
+            padding: 0.75rem;
+            margin-bottom: 0.25rem;
+            color: #94a3b8;
             text-decoration: none;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            font-weight: 500;
             transition: all 0.2s ease;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-left: 3px solid transparent;
         }
-
-        .nav-link:hover {
-            background-color: #f9fafb;
-            color: #1a1a1a;
+        
+        .nav-item:hover {
+            background-color: #334155;
+            color: #00f2fe;
+            border-left-color: #00f2fe;
         }
-
-        .nav-link.active {
-            background-color: #f3f4f6;
-            color: #1a1a1a;
+        
+        .nav-item.active {
+            background-color: #1e40af;
+            color: #ffffff;
+            font-weight: 600;
+            border-left-color: #3b82f6;
         }
-
+        
         .nav-icon {
+            width: 1rem;
+            height: 1rem;
             margin-right: 0.75rem;
-            width: 1.25rem;
-            height: 1.25rem;
         }
-
-        /* Main Content */
+        
         .main-content {
             flex: 1;
-            margin-left: 256px;
-            background-color: #fafafa;
+            margin-left: 15rem;
+            padding: 0;
         }
-
+        
         .header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e5e5e5;
-            padding: 1rem 2rem;
+            background-color: #1e293b;
+            border-bottom: 2px solid #334155;
+            padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
         }
-
+        
         .header-title {
-            font-size: 1.875rem;
-            font-weight: 600;
-            color: #1a1a1a;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #00f2fe;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
-
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
         .user-info {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: #334155;
+            border: 1px solid #475569;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
+        
         .user-avatar {
-            width: 2rem;
-            height: 2rem;
-            background-color: #3b82f6;
-            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            background-color: #00f2fe;
+            color: #0f172a;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 500;
-            font-size: 0.875rem;
+            font-weight: 700;
+            font-size: 0.75rem;
         }
-
-        .content {
-            padding: 2rem;
-        }
-
-        .page-title {
-            font-size: 1.875rem;
+        
+        .btn {
+            padding: 0.5rem 1rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #1a1a1a;
-        }
-
-        .page-subtitle {
-            color: #666666;
-            margin-bottom: 2rem;
-        }
-
-        /* Month Selector */
-        .month-selector {
-            background-color: #ffffff;
-            border-radius: 0.5rem;
-            border: 1px solid #e5e5e5;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .month-controls {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .month-button {
-            background-color: transparent;
-            border: 1px solid #e5e5e5;
-            border-radius: 0.375rem;
-            padding: 0.5rem;
+            font-size: 0.75rem;
+            border: 2px solid;
             cursor: pointer;
             transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: transparent;
         }
-
-        .month-button:hover {
-            background-color: #f9fafb;
+        
+        .btn-primary {
+            border-color: #3b82f6;
+            color: #3b82f6;
         }
-
-        .current-month {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1a1a1a;
+        
+        .btn-primary:hover {
+            background-color: #3b82f6;
+            color: #ffffff;
         }
-
-        /* Summary Cards */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+        
+        .btn-secondary {
+            border-color: #64748b;
+            color: #64748b;
         }
-
-        .summary-card {
-            background-color: #ffffff;
-            border-radius: 0.5rem;
+        
+        .btn-secondary:hover {
+            background-color: #64748b;
+            color: #ffffff;
+        }
+        
+        .dashboard-content {
             padding: 1.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            border: 1px solid #e5e5e5;
         }
-
-        .summary-label {
-            font-size: 0.875rem;
-            color: #666666;
-            margin-bottom: 0.5rem;
+        
+        .dashboard-header {
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 1rem;
         }
-
-        .summary-value {
+        
+        .dashboard-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #1a1a1a;
+            color: #00f2fe;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
-
-        .summary-value.positive {
-            color: #16a34a;
+        
+        .dashboard-subtitle {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        .summary-value.negative {
-            color: #dc2626;
+        
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
         }
-
-        /* Balance Settlement */
-        .settlement-section {
-            background-color: #ffffff;
-            border-radius: 0.5rem;
-            border: 1px solid #e5e5e5;
-            padding: 1.5rem;
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
             margin-bottom: 2rem;
         }
-
-        .settlement-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1a1a1a;
+        
+        .stat-card {
+            background-color: #1e293b;
+            border: 2px solid #334155;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: #00f2fe;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 1rem;
         }
-
-        .settlement-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background-color: #f9fafb;
-            border-radius: 0.375rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .settlement-text {
-            font-size: 0.875rem;
-            color: #1a1a1a;
-        }
-
-        .settlement-amount {
+        
+        .stat-title {
+            font-size: 0.75rem;
+            color: #94a3b8;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .stat-icon {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #334155;
+            border: 1px solid #475569;
             font-size: 1rem;
         }
-
-        /* Expense Breakdown */
-        .breakdown-section {
-            background-color: #ffffff;
-            border-radius: 0.5rem;
-            border: 1px solid #e5e5e5;
-            overflow: hidden;
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00f2fe;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .analytics-section {
             margin-bottom: 2rem;
         }
-
-        .breakdown-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e5e5;
+        
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 0.5rem;
         }
-
-        .breakdown-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1a1a1a;
+        
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #00f2fe;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
-
-        .filter-select {
-            background-color: #ffffff;
-            border: 1px solid #e5e5e5;
-            border-radius: 0.375rem;
-            padding: 0.5rem 1rem;
+        
+        .time-filter {
+            padding: 0.5rem;
+            border: 2px solid #475569;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            font-family: inherit;
+            text-transform: uppercase;
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background-color: #1e293b;
+            border: 2px solid #334155;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .chart-card:hover {
+            border-color: #00f2fe;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.1);
+        }
+        
+        .chart-header {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 0.5rem;
+        }
+        
+        .chart-title {
             font-size: 0.875rem;
-            color: #1a1a1a;
-            cursor: pointer;
+            font-weight: 700;
+            color: #00f2fe;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        .table-container {
-            overflow-x: auto;
+        
+        .chart-subtitle {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        table {
+        
+        .chart-container {
+            height: 180px;
+            position: relative;
+        }
+        
+        .table-card {
+            background-color: #1e293b;
+            border: 2px solid #334155;
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background-color: #334155;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid #475569;
+        }
+        
+        .table-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #00f2fe;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table {
             width: 100%;
             border-collapse: collapse;
         }
-
-        th {
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e5e5;
+        
+        .table th {
+            background-color: #334155;
             padding: 0.75rem 1rem;
-            font-weight: 500;
-            font-size: 0.875rem;
-            color: #374151;
-            text-align: left;
-        }
-
-        td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f3f4f6;
-            font-size: 0.875rem;
-            color: #1f2937;
-        }
-
-        .amount {
-            font-weight: 600;
-        }
-
-        .category-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
             font-size: 0.75rem;
-            font-weight: 500;
-            background-color: #f3f4f6;
-            color: #374151;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: left;
+            border-bottom: 1px solid #475569;
         }
-
-        .category-badge.groceries {
-            background-color: #dcfce7;
-            color: #16a34a;
+        
+        .table td {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            color: #e2e8f0;
+            border-bottom: 1px solid #334155;
         }
-
-        .category-badge.utilities {
-            background-color: #dbeafe;
-            color: #2563eb;
+        
+        .table tr:hover {
+            background-color: #334155;
         }
-
-        .category-badge.mortgage {
-            background-color: #fef3c7;
-            color: #d97706;
+        
+        .table tr:last-child td {
+            border-bottom: none;
         }
-
-        .category-badge.kids-clothes {
-            background-color: #ede9fe;
-            color: #7c3aed;
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid;
         }
-
-        .export-button {
-            background-color: transparent;
-            color: #1a1a1a;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
+        
+        .badge-success {
+            background-color: #065f46;
+            color: #10b981;
+            border-color: #10b981;
+        }
+        
+        .badge-warning {
+            background-color: #78350f;
+            color: #f59e0b;
+            border-color: #f59e0b;
+        }
+        
+        .badge-error {
+            background-color: #7f1d1d;
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+        
+        .savings-progress {
+            background-color: #1e293b;
+            border: 2px solid #334155;
+            padding: 1.5rem;
+        }
+        
+        .progress-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 0.5rem;
+        }
+        
+        .progress-title {
             font-size: 0.875rem;
-            border: 1px solid #e5e5e5;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            font-weight: 700;
+            color: #00f2fe;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        .export-button:hover {
-            background-color: #f9fafb;
-            border-color: #d1d5db;
+        
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .progress-stat {
+            text-align: center;
+            padding: 0.75rem;
+            background-color: #334155;
+            border: 1px solid #475569;
+        }
+        
+        .progress-stat-label {
+            font-size: 0.625rem;
+            color: #94a3b8;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .progress-stat-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #00f2fe;
+        }
+        
+        .savings-goals {
+            margin-top: 1.5rem;
+        }
+        
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .goal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .goal-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .goal-icon {
+            width: 2rem;
+            height: 2rem;
+            background-color: #334155;
+            border: 1px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .goal-details h4 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .goal-details p {
+            font-size: 0.625rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .goal-amount {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #00f2fe;
+        }
+        
+        .terminal-effect {
+            position: relative;
+        }
+        
+        .terminal-effect::before {
+            content: '> ';
+            color: #00f2fe;
+            font-weight: 700;
+        }
+        
+        .glitch {
+            animation: glitch 2s infinite;
+        }
+        
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">Expense Tracker</div>
-            </div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">💰</span>
-                        Expenses
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        <span class="nav-icon">📄</span>
-                        Monthly Statement
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">🔄</span>
-                        Recurring Bills
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">🧾</span>
-                        Bill Splitter
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">⚙️</span>
-                        Settings
-                    </a>
-                </li>
-            </ul>
+            <div class="logo">EXP_TRACK</div>
+            <a href="#" class="nav-item active">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                </svg>
+                DASHBOARD
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zM14 6a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h8zM6 8a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 012-2h2z"/>
+                </svg>
+                FINANCIAL
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8a1 1 0 000 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a1 1 0 100-2H3zm8 6a1 1 0 11-2 0 1 1 0 012 0z"/>
+                </svg>
+                EXPENSES
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2v1a1 1 0 102 0V3h4v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zM6 7a1 1 0 112 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 112 0v4a1 1 0 11-2 0V7z"/>
+                </svg>
+                STATEMENT
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                </svg>
+                SETTINGS
+            </a>
         </nav>
-
-        <!-- Main Content -->
+        
         <main class="main-content">
             <header class="header">
-                <h1 class="header-title">Expense Tracker</h1>
-                <div class="user-info">
-                    <div class="user-avatar">D</div>
-                    <span>Demo User</span>
-                    <a href="#" style="color: #666666; text-decoration: none; margin-left: 1rem;">Logout</a>
+                <h1 class="header-title glitch">EXPENSE_TRACKER</h1>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">F</div>
+                        <span>FREDRIK</span>
+                    </div>
+                    <button class="btn btn-secondary">LOGOUT</button>
                 </div>
             </header>
-
-            <div class="content">
-                <h2 class="page-title">Monthly Statement</h2>
-                <p class="page-subtitle">Complete breakdown of expenses and balance calculations for the selected month.</p>
-
-                <!-- Month Selector -->
-                <div class="month-selector">
-                    <div class="month-controls">
-                        <button class="month-button">←</button>
-                        <div class="current-month">June 2025</div>
-                        <button class="month-button">→</button>
-                    </div>
-                    <button class="export-button">Export PDF</button>
-                </div>
-
-                <!-- Summary Cards -->
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <div class="summary-label">Total Expenses</div>
-                        <div class="summary-value">31 209,00 kr</div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-label">Demo User Paid</div>
-                        <div class="summary-value">16 742,75 kr</div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-label">Demo User 2 Paid</div>
-                        <div class="summary-value">14 466,25 kr</div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-label">Net Balance</div>
-                        <div class="summary-value negative">-2 283,50 kr</div>
+            
+            <div class="dashboard-content">
+                <div class="dashboard-header">
+                    <h2 class="dashboard-title terminal-effect">ENHANCED_DASHBOARD</h2>
+                    <p class="dashboard-subtitle">LAST_UPDATE: 23:41:34</p>
+                    <div class="dashboard-actions">
+                        <button class="btn btn-secondary">REFRESH</button>
+                        <button class="btn btn-secondary">EXPORT</button>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <input type="checkbox" checked>
+                            <span>AUTO_REFRESH</span>
+                        </label>
                     </div>
                 </div>
-
-                <!-- Balance Settlement -->
-                <div class="settlement-section">
-                    <h3 class="settlement-title">Balance Settlement</h3>
-                    <div class="settlement-item">
-                        <div class="settlement-text">Demo User 2 owes Demo User</div>
-                        <div class="settlement-amount negative">2 283,50 kr</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">THIS_MONTH</span>
+                            <div class="stat-icon">💰</div>
+                        </div>
+                        <div class="stat-value">18_074.00_KR</div>
+                        <div class="stat-change" style="color: #10b981;">+2.5%_LAST_MONTH</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">SAVINGS_RATE</span>
+                            <div class="stat-icon">📈</div>
+                        </div>
+                        <div class="stat-value">0%</div>
+                        <div class="stat-change" style="color: #94a3b8;">NO_CHANGE</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">BUDGET_STATUS</span>
+                            <div class="stat-icon">🎯</div>
+                        </div>
+                        <div class="stat-value">ON_TRACK</div>
+                        <div class="stat-change" style="color: #10b981;">WITHIN_BUDGET</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">ALERTS</span>
+                            <div class="stat-icon">⚠️</div>
+                        </div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-change" style="color: #94a3b8;">NO_ALERTS</div>
                     </div>
                 </div>
-
-                <!-- Expense Breakdown -->
-                <div class="breakdown-section">
-                    <div class="breakdown-header">
-                        <h3 class="breakdown-title">Expense Breakdown</h3>
-                        <select class="filter-select">
-                            <option value="all">All Categories</option>
-                            <option value="groceries">Groceries</option>
-                            <option value="utilities">Utilities</option>
-                            <option value="mortgage">Mortgage</option>
-                            <option value="kids-clothes">Kids Clothes</option>
+                
+                <div class="analytics-section">
+                    <div class="section-header">
+                        <h3 class="section-title terminal-effect">ANALYTICS_DASHBOARD</h3>
+                        <select class="time-filter">
+                            <option>LAST_6_MONTHS</option>
+                            <option>LAST_3_MONTHS</option>
+                            <option>LAST_YEAR</option>
                         </select>
                     </div>
-                    <div class="table-container">
-                        <table>
+                    
+                    <div class="analytics-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">TOTAL_SPENDING</h4>
+                                <p class="chart-subtitle">202_241.00_KR</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="spendingChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">AVG_MONTHLY</h4>
+                                <p class="chart-subtitle">40_448.20_KR</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">MONTHS_TRACKED</h4>
+                                <p class="chart-subtitle">5</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="trendsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">STATUS</h4>
+                                <p class="chart-subtitle">STABLE</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3 class="table-title terminal-effect">MONTHLY_BREAKDOWN</h3>
+                        </div>
+                        <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Paid By</th>
-                                    <th>Split</th>
+                                    <th>MONTH</th>
+                                    <th>SPENDING</th>
+                                    <th>BUDGET</th>
+                                    <th>VARIANCE</th>
+                                    <th>EXPENSES</th>
+                                    <th>AVG/EXPENSE</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>2025-06-29</td>
-                                    <td>Children's Summer Clothes</td>
-                                    <td><span class="category-badge kids-clothes">Kids Clothes</span></td>
-                                    <td class="amount">13 000,00 kr</td>
-                                    <td>Demo User 2</td>
-                                    <td>50/50</td>
+                                    <td style="color: #00f2fe; font-weight: 700;">MAR_25</td>
+                                    <td>2_500.00_KR</td>
+                                    <td>0.00_KR</td>
+                                    <td><span class="badge badge-error">-2_500.00_KR_(0%)</span></td>
+                                    <td>1</td>
+                                    <td>2_500.00_KR</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-28</td>
-                                    <td>Weekly Grocery Shopping</td>
-                                    <td><span class="category-badge groceries">Groceries</span></td>
-                                    <td class="amount">1 424,00 kr</td>
-                                    <td>Demo User</td>
-                                    <td>50/50</td>
+                                    <td style="color: #00f2fe; font-weight: 700;">APR_25</td>
+                                    <td>17_354.00_KR</td>
+                                    <td>0.00_KR</td>
+                                    <td><span class="badge badge-error">-17_354.00_KR_(0%)</span></td>
+                                    <td>4</td>
+                                    <td>4_338.50_KR</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-28</td>
-                                    <td>Extra Groceries</td>
-                                    <td><span class="category-badge groceries">Groceries</span></td>
-                                    <td class="amount">321,00 kr</td>
-                                    <td>Demo User 2</td>
-                                    <td>50/50</td>
+                                    <td style="color: #00f2fe; font-weight: 700;">MAY_25</td>
+                                    <td>16_464.00_KR</td>
+                                    <td>0.00_KR</td>
+                                    <td><span class="badge badge-error">-16_464.00_KR_(0%)</span></td>
+                                    <td>3</td>
+                                    <td>5_488.00_KR</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-15</td>
-                                    <td>Grocery Shopping</td>
-                                    <td><span class="category-badge groceries">Groceries</span></td>
-                                    <td class="amount">892,00 kr</td>
-                                    <td>Demo User</td>
-                                    <td>50/50</td>
+                                    <td style="color: #00f2fe; font-weight: 700;">JUN_25</td>
+                                    <td>93_627.00_KR</td>
+                                    <td>77_340.00_KR</td>
+                                    <td><span class="badge badge-error">-16_287.00_KR_(-21%)</span></td>
+                                    <td>18</td>
+                                    <td>5_201.50_KR</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-10</td>
-                                    <td>Grocery Shopping</td>
-                                    <td><span class="category-badge groceries">Groceries</span></td>
-                                    <td class="amount">756,00 kr</td>
-                                    <td>Demo User 2</td>
-                                    <td>50/50</td>
-                                </tr>
-                                <tr>
-                                    <td>2025-06-05</td>
-                                    <td>Monthly Grocery Shopping</td>
-                                    <td><span class="category-badge groceries">Groceries</span></td>
-                                    <td class="amount">1 125,00 kr</td>
-                                    <td>Demo User</td>
-                                    <td>50/50</td>
-                                </tr>
-                                <tr>
-                                    <td>2025-06-01</td>
-                                    <td>Monthly Mortgage Payment</td>
-                                    <td><span class="category-badge mortgage">Mortgage</span></td>
-                                    <td class="amount">10 190,00 kr</td>
-                                    <td>Demo User</td>
-                                    <td>50/50</td>
-                                </tr>
-                                <tr>
-                                    <td>2025-06-01</td>
-                                    <td>Electricity & Water Bill</td>
-                                    <td><span class="category-badge utilities">Utilities</span></td>
-                                    <td class="amount">449,00 kr</td>
-                                    <td>Demo User</td>
-                                    <td>50/50</td>
-                                </tr>
-                                <tr>
-                                    <td>2025-06-01</td>
-                                    <td>Internet & Phone Bill</td>
-                                    <td><span class="category-badge utilities">Utilities</span></td>
-                                    <td class="amount">589,00 kr</td>
-                                    <td>Demo User 2</td>
-                                    <td>50/50</td>
-                                </tr>
-                                <tr>
-                                    <td>2025-06-01</td>
-                                    <td>Insurance Premium</td>
-                                    <td><span class="category-badge">Insurance</span></td>
-                                    <td class="amount">1 462,00 kr</td>
-                                    <td>Demo User</td>
-                                    <td>50/50</td>
+                                    <td style="color: #00f2fe; font-weight: 700;">JUL_25</td>
+                                    <td>72_296.00_KR</td>
+                                    <td>81_000.00_KR</td>
+                                    <td><span class="badge badge-success">+8_704.00_KR_(+10.7%)</span></td>
+                                    <td>20</td>
+                                    <td>3_614.80_KR</td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <div class="savings-progress">
+                        <div class="progress-header">
+                            <h3 class="progress-title terminal-effect">SAVINGS_PROGRESS</h3>
+                        </div>
+                        
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <div class="progress-stat-label">AVG_SAVINGS_RATE</div>
+                                <div class="progress-stat-value">19.0%</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-label">TOTAL_SAVINGS</div>
+                                <div class="progress-stat-value">4_621.00</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-label">TREND</div>
+                                <div class="progress-stat-value" style="color: #10b981;">STABLE</div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container" style="height: 120px;">
+                            <canvas id="savingsChart"></canvas>
+                        </div>
+                        
+                        <div class="savings-goals">
+                            <h4 style="font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem; color: #00f2fe; text-transform: uppercase; letter-spacing: 0.05em;">💰 SAVINGS_GOALS</h4>
+                            <div class="goal-item">
+                                <div class="goal-info">
+                                    <div class="goal-icon">🚨</div>
+                                    <div class="goal-details">
+                                        <h4>EMERGENCY_FUND</h4>
+                                        <p>EMERGENCY</p>
+                                    </div>
+                                </div>
+                                <div class="goal-amount">50_000.00_KR</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-
+    
     <script>
-        // Month navigation
-        const monthButtons = document.querySelectorAll('.month-button');
-        const currentMonthElement = document.querySelector('.current-month');
-        
-        monthButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                if (this.textContent === '←') {
-                    console.log('Previous month');
-                } else {
-                    console.log('Next month');
+        // Initialize charts with cyberpunk theme
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
                 }
-            });
+            },
+            scales: {
+                y: {
+                    display: false,
+                    grid: {
+                        color: '#334155'
+                    }
+                },
+                x: {
+                    display: false,
+                    grid: {
+                        color: '#334155'
+                    }
+                }
+            }
+        };
+        
+        // Spending Chart
+        new Chart(document.getElementById('spendingChart'), {
+            type: 'line',
+            data: {
+                labels: ['MAR', 'APR', 'MAY', 'JUN', 'JUL'],
+                datasets: [{
+                    data: [2500, 17354, 16464, 93627, 72296],
+                    borderColor: '#00f2fe',
+                    backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                    fill: true,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#00f2fe',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: chartOptions
         });
-
-        // Export functionality
-        document.querySelector('.export-button').addEventListener('click', function() {
-            alert('Exporting PDF... (This is a demo)');
+        
+        // Monthly Chart
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'bar',
+            data: {
+                labels: ['MAR', 'APR', 'MAY', 'JUN', 'JUL'],
+                datasets: [{
+                    data: [2500, 17354, 16464, 93627, 72296],
+                    backgroundColor: '#10b981',
+                    borderColor: '#059669',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
         });
-
-        // Filter functionality
-        document.querySelector('.filter-select').addEventListener('change', function() {
-            console.log('Filter changed to:', this.value);
+        
+        // Trends Chart
+        new Chart(document.getElementById('trendsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['TRACKED', 'REMAINING'],
+                datasets: [{
+                    data: [5, 7],
+                    backgroundColor: ['#8b5cf6', '#334155'],
+                    borderColor: ['#a855f7', '#475569'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                ...chartOptions,
+                cutout: '70%'
+            }
+        });
+        
+        // Comparison Chart
+        new Chart(document.getElementById('comparisonChart'), {
+            type: 'line',
+            data: {
+                labels: ['MAR', 'APR', 'MAY', 'JUN', 'JUL'],
+                datasets: [{
+                    data: [50, 45, 55, 40, 60],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: true,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: chartOptions
+        });
+        
+        // Savings Chart
+        new Chart(document.getElementById('savingsChart'), {
+            type: 'line',
+            data: {
+                labels: ['MAR', 'APR', 'MAY', 'JUN', 'JUL'],
+                datasets: [{
+                    data: [0, 5, 15, 19, 19],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: chartOptions
         });
     </script>
 </body>
-</html> 
+</html>

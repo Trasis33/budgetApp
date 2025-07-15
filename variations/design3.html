@@ -3,613 +3,812 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker - Dashboard</title>
+    <title>Enhanced Dashboard - Minimal Glass</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            font-family: 'Noto Sans', 'Hiragino Sans', 'Yu Gothic', sans-serif;
-            background-color: #fafafa;
-            color: #2d2d2d;
-            line-height: 1.6;
-            font-weight: 300;
+            font-family: SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 30%, #f1f5f9 70%, #e2e8f0 100%);
+            color: #475569;
+            line-height: 1.5;
+            min-height: 100vh;
         }
-
+        
         .app-container {
             display: flex;
             min-height: 100vh;
         }
-
-        /* Sidebar Styles */
+        
         .sidebar {
-            width: 220px;
-            background-color: #ffffff;
-            border-right: 1px solid #e5e5e5;
-            padding: 1.5rem 0;
+            width: 15rem;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(226, 232, 240, 0.5);
+            padding: 1.5rem;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
         }
-
-        .sidebar-header {
-            padding: 0 1.5rem 1.5rem;
-            border-bottom: 1px solid #e5e5e5;
-            margin-bottom: 1rem;
-        }
-
+        
         .logo {
             font-size: 1rem;
-            font-weight: 500;
-            color: #1a1a1a;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 2rem;
+            text-align: left;
         }
-
-        .nav-menu {
-            list-style: none;
-            padding: 0 1rem;
-        }
-
+        
         .nav-item {
-            margin-bottom: 0.25rem;
-        }
-
-        .nav-link {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
-            color: #666666;
+            padding: 0.625rem 0.875rem;
+            margin-bottom: 0.125rem;
+            border-radius: 0.375rem;
+            color: #64748b;
             text-decoration: none;
-            border-radius: 0;
-            font-size: 0.8rem;
-            font-weight: 400;
             transition: all 0.2s ease;
-            letter-spacing: 0.3px;
-            border-left: 2px solid transparent;
-        }
-
-        .nav-link:hover {
-            background-color: #f5f5f5;
-            color: #1a1a1a;
-            border-left-color: #cccccc;
-        }
-
-        .nav-link.active {
-            background-color: #dcfce7;
-            color: #16a34a;
-            border-left-color: #22c55e;
             font-weight: 500;
+            font-size: 0.875rem;
         }
-
+        
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.06);
+            color: #3b82f6;
+        }
+        
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.08);
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        
         .nav-icon {
+            width: 1rem;
+            height: 1rem;
             margin-right: 0.75rem;
-            width: 0.8rem;
-            height: 0.8rem;
-            font-size: 0.8rem;
-            opacity: 0.8;
         }
-
-        /* Main Content */
+        
         .main-content {
             flex: 1;
-            margin-left: 220px;
-            background-color: #fafafa;
+            margin-left: 15rem;
+            padding: 0;
         }
-
+        
         .header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e5e5e5;
-            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            padding: 0.875rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
         }
-
+        
         .header-title {
-            font-size: 1.25rem;
-            font-weight: 400;
-            color: #1a1a1a;
-            letter-spacing: 0.5px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #334155;
         }
-
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+        
         .user-info {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 0.5rem;
+            padding: 0.25rem 0.625rem;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            font-size: 0.875rem;
         }
-
+        
         .user-avatar {
-            width: 1.75rem;
-            height: 1.75rem;
-            background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%);
-            color: #2563eb;
-            border-radius: 2px;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 500;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             color: #ffffff;
-            padding: 0.6rem 1.5rem;
-            border-radius: 2px;
+            font-size: 0.625rem;
+        }
+        
+        .btn {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
             font-weight: 500;
-            font-size: 0.75rem;
+            font-size: 0.875rem;
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            transform: translateY(-1px);
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.5);
+            color: #475569;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            backdrop-filter: blur(4px);
         }
-
-        .content {
-            padding: 2rem;
-            max-width: 1000px;
-            margin: 0 auto;
+        
+        .btn:hover {
+            transform: translateY(-0.5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-
+        
+        .dashboard-content {
+            padding: 1.25rem;
+        }
+        
+        .dashboard-header {
+            margin-bottom: 1.25rem;
+        }
+        
         .dashboard-title {
             font-size: 1.5rem;
-            font-weight: 300;
-            margin-bottom: 2rem;
-            color: #1a1a1a;
-            text-align: center;
-            letter-spacing: 1px;
-            position: relative;
-            padding-bottom: 0.75rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 0.25rem;
         }
-
-        .dashboard-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            height: 1px;
-            background-color: #22c55e;
+        
+        .dashboard-subtitle {
+            color: #64748b;
+            font-size: 0.875rem;
         }
-
-        /* Stats Cards */
+        
+        .dashboard-actions {
+            display: flex;
+            gap: 0.625rem;
+            margin-top: 0.875rem;
+        }
+        
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.875rem;
+            margin-bottom: 1.25rem;
         }
-
+        
         .stat-card {
-            background-color: #ffffff;
-            border: 1px solid #e5e5e5;
-            padding: 1.5rem 1.25rem;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(226, 232, 240, 0.5);
             transition: all 0.2s ease;
-            position: relative;
-            border-radius: 2px;
         }
-
+        
         .stat-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: rgba(59, 130, 246, 0.2);
         }
-
-        .stat-card:nth-child(1)::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.625rem;
         }
-
-        .stat-card:nth-child(2)::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #ec4899 0%, #be185d 100%);
-        }
-
-        .stat-card:nth-child(3)::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            color: #666666;
-            margin-bottom: 0.75rem;
+        
+        .stat-title {
+            font-size: 0.875rem;
+            color: #64748b;
             font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
-
+        
+        .stat-icon {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+        
         .stat-value {
-            font-size: 1.75rem;
-            font-weight: 300;
-            color: #1a1a1a;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #334155;
             margin-bottom: 0.25rem;
-            letter-spacing: 0.5px;
         }
-
-        .stat-value.negative {
-            color: #ec4899;
-        }
-
-        .stat-subtitle {
-            font-size: 0.65rem;
-            color: #999999;
-            font-weight: 400;
-            letter-spacing: 0.3px;
-        }
-
-        /* Recent Expenses Table */
-        .table-section {
-            background-color: #ffffff;
-            border: 1px solid #e5e5e5;
-            overflow: hidden;
-            margin-bottom: 2.5rem;
-            border-radius: 2px;
-        }
-
-        .table-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #e5e5e5;
-            background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%);
-        }
-
-        .table-title {
-            font-size: 1rem;
+        
+        .stat-change {
+            font-size: 0.75rem;
             font-weight: 500;
-            color: #1a1a1a;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
         }
-
-        .table-container {
-            overflow-x: auto;
+        
+        .analytics-section {
+            margin-bottom: 1.25rem;
         }
-
-        table {
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.875rem;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        
+        .time-filter {
+            padding: 0.375rem 0.625rem;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(4px);
+            color: #374151;
+            font-size: 0.875rem;
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0.875rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .chart-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        .chart-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+        
+        .chart-header {
+            margin-bottom: 0.875rem;
+        }
+        
+        .chart-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.125rem;
+        }
+        
+        .chart-subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        .chart-container {
+            height: 140px;
+            position: relative;
+        }
+        
+        .table-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: rgba(248, 250, 252, 0.6);
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        
+        .table-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        
+        .table {
             width: 100%;
             border-collapse: collapse;
         }
-
-        th {
-            background-color: #f5f5f5;
-            border-bottom: 1px solid #e5e5e5;
-            padding: 1rem 0.75rem;
-            font-weight: 500;
-            font-size: 0.65rem;
-            color: #666666;
+        
+        .table th {
+            background: rgba(248, 250, 252, 0.4);
+            padding: 0.625rem 0.875rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
             text-align: left;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
-
-        td {
-            padding: 1rem 0.75rem;
-            border-bottom: 1px solid #f5f5f5;
-            font-size: 0.8rem;
-            color: #2d2d2d;
-            font-weight: 300;
+        
+        .table td {
+            padding: 0.75rem 0.875rem;
+            font-size: 0.875rem;
+            color: #374151;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.3);
         }
-
-        tbody tr:hover {
-            background-color: #fafafa;
+        
+        .table tr:last-child td {
+            border-bottom: none;
         }
-
-        .amount {
-            font-weight: 500;
-            color: #1a1a1a;
-            letter-spacing: 0.3px;
-        }
-
-        .view-all-link {
-            padding: 1rem 1.5rem;
-            display: block;
-            color: #666666;
-            text-decoration: none;
+        
+        .badge {
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 500;
-            border-top: 1px solid #e5e5e5;
-            background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+        }
+        
+        .badge-success {
+            background: rgba(34, 197, 94, 0.08);
+            color: #166534;
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.08);
+            color: #92400e;
+        }
+        
+        .badge-error {
+            background: rgba(239, 68, 68, 0.08);
+            color: #991b1b;
+        }
+        
+        .savings-progress {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        
+        .progress-header {
+            margin-bottom: 0.875rem;
+        }
+        
+        .progress-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.375rem;
+        }
+        
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.625rem;
+            margin-bottom: 0.875rem;
+        }
+        
+        .progress-stat {
             text-align: center;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            transition: all 0.2s ease;
+            padding: 0.625rem;
+            background: rgba(248, 250, 252, 0.4);
+            border-radius: 0.375rem;
         }
-
-        .view-all-link:hover {
-            background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%);
-            color: #1a1a1a;
-        }
-
-        /* Monthly Statement Section */
-        .statement-section {
-            background-color: #ffffff;
-            border: 1px solid #e5e5e5;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            border-radius: 2px;
-        }
-
-        .statement-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
-        }
-
-        .statement-title {
-            font-size: 1rem;
+        
+        .progress-stat-label {
+            font-size: 0.625rem;
+            color: #64748b;
+            margin-bottom: 0.125rem;
             font-weight: 500;
-            color: #1a1a1a;
-            margin-bottom: 0.75rem;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
+            letter-spacing: 0.025em;
         }
-
-        .statement-description {
-            color: #666666;
-            margin-bottom: 1.5rem;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            font-weight: 300;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
+        
+        .progress-stat-value {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #334155;
         }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-            color: #7c3aed;
-            padding: 0.8rem 2rem;
-            border: 1px solid #c4b5fd;
-            border-radius: 2px;
+        
+        .savings-goals {
+            margin-top: 0.875rem;
+        }
+        
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.3);
+        }
+        
+        .goal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .goal-info {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+        
+        .goal-icon {
+            width: 1.75rem;
+            height: 1.75rem;
+            background: rgba(59, 130, 246, 0.08);
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+        
+        .goal-details h4 {
+            font-size: 0.875rem;
             font-weight: 500;
+            color: #334155;
+            margin-bottom: 0.125rem;
+        }
+        
+        .goal-details p {
             font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+            color: #64748b;
         }
-
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
-
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: #999999;
-            font-size: 0.65rem;
-            border-top: 1px solid #e5e5e5;
-            margin-top: 1.5rem;
-            background-color: #ffffff;
-            font-weight: 300;
-            letter-spacing: 0.5px;
-        }
-
-        /* Zen Circle Decoration */
-        .zen-circle {
-            position: fixed;
-            top: 15%;
-            right: 3%;
-            width: 120px;
-            height: 120px;
-            border: 1px solid #e5e5e5;
-            border-radius: 50%;
-            opacity: 0.2;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .zen-circle::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            border: 1px solid #cccccc;
-            border-radius: 50%;
-        }
-
-        .zen-circle::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            border-radius: 50%;
-            opacity: 0.1;
+        
+        .goal-amount {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
         }
     </style>
 </head>
 <body>
-    <div class="zen-circle"></div>
-    
     <div class="app-container">
-        <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">Expense Tracker</div>
-            </div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        <span class="nav-icon">○</span>
-                        Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">○</span>
-                        Expenses
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">○</span>
-                        Monthly Statement
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">○</span>
-                        Recurring Bills
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">○</span>
-                        Bill Splitter
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">○</span>
-                        Settings
-                    </a>
-                </li>
-            </ul>
+            <div class="logo">Expense Tracker</div>
+            <a href="#" class="nav-item active">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zM14 6a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h8zM6 8a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 012-2h2z"/>
+                </svg>
+                Financial
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8a1 1 0 000 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a1 1 0 100-2H3zm8 6a1 1 0 11-2 0 1 1 0 012 0z"/>
+                </svg>
+                Expenses
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2v1a1 1 0 102 0V3h4v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zM6 7a1 1 0 112 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 112 0v4a1 1 0 11-2 0V7z"/>
+                </svg>
+                Monthly Statement
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                </svg>
+                Settings
+            </a>
         </nav>
-
-        <!-- Main Content -->
+        
         <main class="main-content">
             <header class="header">
                 <h1 class="header-title">Expense Tracker</h1>
-                <div class="user-info">
-                    <div class="user-avatar">D</div>
-                    <span style="color: #666666; font-weight: 300; font-size: 0.85rem;">Demo User</span>
-                    <button class="btn-primary">Add Expense</button>
-                    <a href="#" style="color: #999999; text-decoration: none; margin-left: 1.5rem; font-size: 0.75rem; letter-spacing: 0.5px;">Logout</a>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">F</div>
+                        <span>Fredrik</span>
+                    </div>
+                    <button class="btn btn-secondary">Logout</button>
                 </div>
             </header>
-
-            <div class="content">
-                <h2 class="dashboard-title">Dashboard</h2>
-
-                <!-- Stats Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Month Total</div>
-                        <div class="stat-value">31 209,00 kr</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Balance</div>
-                        <div class="stat-value negative">-2 283,50 kr</div>
-                        <div class="stat-subtitle">Your partner owes you</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Top Category</div>
-                        <div class="stat-value" style="font-size: 1.25rem; font-weight: 400;">Kids Clothes</div>
-                        <div class="stat-subtitle">13 000,00 kr</div>
+            
+            <div class="dashboard-content">
+                <div class="dashboard-header">
+                    <h2 class="dashboard-title">Enhanced Dashboard</h2>
+                    <p class="dashboard-subtitle">Last updated: 23:41:34</p>
+                    <div class="dashboard-actions">
+                        <button class="btn btn-secondary">🔄 Refresh</button>
+                        <button class="btn btn-secondary">📊 Export</button>
+                        <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.875rem;">
+                            <input type="checkbox" checked>
+                            <span>Auto-refresh</span>
+                        </label>
                     </div>
                 </div>
-
-                <!-- Recent Expenses Table -->
-                <div class="table-section">
-                    <div class="table-header">
-                        <h3 class="table-title">Recent Expenses</h3>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">This Month</span>
+                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.08); color: #3b82f6;">💰</div>
+                        </div>
+                        <div class="stat-value">18 074,00 kr</div>
+                        <div class="stat-change" style="color: #10b981;">+2.5% from last month</div>
                     </div>
-                    <div class="table-container">
-                        <table>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Savings Rate</span>
+                            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.08); color: #22c55e;">📈</div>
+                        </div>
+                        <div class="stat-value">0%</div>
+                        <div class="stat-change" style="color: #64748b;">No change</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Budget Status</span>
+                            <div class="stat-icon" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6;">🎯</div>
+                        </div>
+                        <div class="stat-value">On Track</div>
+                        <div class="stat-change" style="color: #10b981;">Within budget</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Alerts</span>
+                            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.08); color: #f59e0b;">⚠️</div>
+                        </div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-change" style="color: #64748b;">No alerts</div>
+                    </div>
+                </div>
+                
+                <div class="analytics-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Analytics Dashboard</h3>
+                        <select class="time-filter">
+                            <option>Last 6 Months</option>
+                            <option>Last 3 Months</option>
+                            <option>Last Year</option>
+                        </select>
+                    </div>
+                    
+                    <div class="analytics-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">Total Spending</h4>
+                                <p class="chart-subtitle">202 241,00 kr</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="spendingChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">Avg Monthly</h4>
+                                <p class="chart-subtitle">40 448,20 kr</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">Months Tracked</h4>
+                                <p class="chart-subtitle">5</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="trendsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4 class="chart-title">Status</h4>
+                                <p class="chart-subtitle">Stable</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.875rem;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3 class="table-title">Monthly Breakdown</h3>
+                        </div>
+                        <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Paid By</th>
+                                    <th>Month</th>
+                                    <th>Spending</th>
+                                    <th>Budget</th>
+                                    <th>Variance</th>
+                                    <th>Expenses</th>
+                                    <th>Avg/Expense</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>2025-06-29</td>
-                                    <td>Kids Clothes</td>
-                                    <td class="amount">13 000,00 kr</td>
-                                    <td>Demo User 2</td>
+                                    <td style="font-weight: 600;">Mar 25</td>
+                                    <td>2 500,00 kr</td>
+                                    <td>0,00 kr</td>
+                                    <td><span class="badge badge-error">-2 500,00 kr (0%)</span></td>
+                                    <td>1</td>
+                                    <td>2 500,00 kr</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-28</td>
-                                    <td>Groceries</td>
-                                    <td class="amount">1 424,00 kr</td>
-                                    <td>Demo User</td>
+                                    <td style="font-weight: 600;">Apr 25</td>
+                                    <td>17 354,00 kr</td>
+                                    <td>0,00 kr</td>
+                                    <td><span class="badge badge-error">-17 354,00 kr (0%)</span></td>
+                                    <td>4</td>
+                                    <td>4 338,50 kr</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-28</td>
-                                    <td>Groceries</td>
-                                    <td class="amount">321,00 kr</td>
-                                    <td>Demo User 2</td>
+                                    <td style="font-weight: 600;">May 25</td>
+                                    <td>16 464,00 kr</td>
+                                    <td>0,00 kr</td>
+                                    <td><span class="badge badge-error">-16 464,00 kr (0%)</span></td>
+                                    <td>3</td>
+                                    <td>5 488,00 kr</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-01</td>
-                                    <td>Mortgage</td>
-                                    <td class="amount">10 190,00 kr</td>
-                                    <td>Demo User</td>
+                                    <td style="font-weight: 600;">Jun 25</td>
+                                    <td>93 627,00 kr</td>
+                                    <td>77 340,00 kr</td>
+                                    <td><span class="badge badge-error">-16 287,00 kr (-21%)</span></td>
+                                    <td>18</td>
+                                    <td>5 201,50 kr</td>
                                 </tr>
                                 <tr>
-                                    <td>2025-06-01</td>
-                                    <td>Utilities</td>
-                                    <td class="amount">449,00 kr</td>
-                                    <td>Demo User</td>
+                                    <td style="font-weight: 600;">Jul 25</td>
+                                    <td>72 296,00 kr</td>
+                                    <td>81 000,00 kr</td>
+                                    <td><span class="badge badge-success">+8 704,00 kr (+10.7%)</span></td>
+                                    <td>20</td>
+                                    <td>3 614,80 kr</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <a href="#" class="view-all-link">View all expenses</a>
-                </div>
-
-                <!-- Monthly Statement Section -->
-                <div class="statement-section">
-                    <h3 class="statement-title">Monthly Statement</h3>
-                    <p class="statement-description">
-                        View the complete breakdown of this month's expenses and calculate who owes whom.
-                    </p>
-                    <button class="btn-secondary">View Statement</button>
+                    
+                    <div class="savings-progress">
+                        <div class="progress-header">
+                            <h3 class="progress-title">Savings Progress</h3>
+                        </div>
+                        
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <div class="progress-stat-label">Avg Rate</div>
+                                <div class="progress-stat-value">19.0%</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-label">Total</div>
+                                <div class="progress-stat-value">4 621,00</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-label">Trend</div>
+                                <div class="progress-stat-value" style="color: #10b981;">Stable</div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container" style="height: 100px;">
+                            <canvas id="savingsChart"></canvas>
+                        </div>
+                        
+                        <div class="savings-goals">
+                            <h4 style="font-size: 0.75rem; font-weight: 600; margin-bottom: 0.625rem; color: #334155;">💰 Savings Goals</h4>
+                            <div class="goal-item">
+                                <div class="goal-info">
+                                    <div class="goal-icon">🚨</div>
+                                    <div class="goal-details">
+                                        <h4>Emergency fund</h4>
+                                        <p>emergency</p>
+                                    </div>
+                                </div>
+                                <div class="goal-amount">50 000,00 kr</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <footer class="footer">
-                © 2025 Expense Tracker<br>
-                Designed with simplicity in mind
-            </footer>
         </main>
     </div>
+    
+    <script>
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { display: false }, x: { display: false } }
+        };
+        
+        new Chart(document.getElementById('spendingChart'), {
+            type: 'line',
+            data: {
+                labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    data: [2500, 17354, 16464, 93627, 72296],
+                    borderColor: '#64748b',
+                    backgroundColor: 'rgba(100, 116, 139, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 1.5
+                }]
+            },
+            options: chartOptions
+        });
+        
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    data: [2500, 17354, 16464, 93627, 72296],
+                    backgroundColor: '#94a3b8'
+                }]
+            },
+            options: chartOptions
+        });
+        
+        new Chart(document.getElementById('trendsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Tracked', 'Remaining'],
+                datasets: [{
+                    data: [5, 7],
+                    backgroundColor: ['#64748b', '#e2e8f0']
+                }]
+            },
+            options: { ...chartOptions, cutout: '65%' }
+        });
+        
+        new Chart(document.getElementById('comparisonChart'), {
+            type: 'line',
+            data: {
+                labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    data: [50, 45, 55, 40, 60],
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148, 163, 184, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 1.5
+                }]
+            },
+            options: chartOptions
+        });
+        
+        new Chart(document.getElementById('savingsChart'), {
+            type: 'line',
+            data: {
+                labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    data: [0, 5, 15, 19, 19],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 1.5
+                }]
+            },
+            options: chartOptions
+        });
+    </script>
 </body>
-</html> 
+</html>

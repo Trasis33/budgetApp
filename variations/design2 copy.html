@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 50%, #ecfdf5 100%);
@@ -19,14 +20,14 @@
             line-height: 1.5;
             min-height: 100vh;
         }
-        
+
         .app-container {
             display: flex;
             min-height: 100vh;
         }
-        
+
         .sidebar {
-            width: 16rem;
+            width: 15rem;
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
             border-right: 1px solid rgba(203, 213, 225, 0.3);
@@ -35,92 +36,94 @@
             height: 100vh;
             overflow-y: auto;
         }
-        
+
         .logo {
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 600;
             background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 2rem;
             text-align: left;
         }
-        
+
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.25rem;
-            border-radius: 0.75rem;
+            padding: 0.625rem 0.875rem;
+            margin-bottom: 0.125rem;
+            border-radius: 0.375rem;
             color: #64748b;
             text-decoration: none;
             transition: all 0.3s ease;
             font-weight: 500;
             font-size: 0.875rem;
         }
-        
+
         .nav-item:hover {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%);
             color: #8b5cf6;
             transform: translateX(2px);
         }
-        
+
         .nav-item.active {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
             color: #8b5cf6;
             font-weight: 600;
         }
-        
+
         .nav-icon {
-            width: 1.125rem;
-            height: 1.125rem;
+            width: 1rem;
+            height: 1rem;
             margin-right: 0.75rem;
         }
-        
+
         .main-content {
             flex: 1;
-            margin-left: 16rem;
+            margin-left: 15rem;
             padding: 0;
         }
-        
+
         .header {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(203, 213, 225, 0.3);
-            padding: 1rem 1.5rem;
+            padding: 0.875rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .header-title {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             font-weight: 600;
             background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.875rem;
         }
-        
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.375rem 0.75rem;
+            padding: 0.25rem 0.625rem;
             background: rgba(255, 255, 255, 0.5);
-            border-radius: 2rem;
+            border-radius: 1.5rem;
             border: 1px solid rgba(203, 213, 225, 0.3);
             font-size: 0.875rem;
         }
-        
+
         .user-avatar {
-            width: 1.75rem;
-            height: 1.75rem;
+            width: 1.5rem;
+            height: 1.5rem;
             background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
             border-radius: 50%;
             display: flex;
@@ -128,12 +131,12 @@
             justify-content: center;
             font-weight: 500;
             color: #ffffff;
-            font-size: 0.75rem;
+            font-size: 0.625rem;
         }
-        
+
         .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.75rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
             font-weight: 500;
             font-size: 0.875rem;
             border: none;
@@ -144,204 +147,206 @@
             align-items: center;
             gap: 0.375rem;
         }
-        
+
         .btn-secondary {
             background: rgba(255, 255, 255, 0.6);
             color: #475569;
             border: 1px solid rgba(203, 213, 225, 0.3);
             backdrop-filter: blur(8px);
         }
-        
+
         .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
         }
-        
+
         .dashboard-content {
-            padding: 1.5rem;
+            padding: 1.25rem;
         }
-        
+
         .dashboard-header {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
-        
+
         .dashboard-title {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
             background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.25rem;
         }
-        
+
         .dashboard-subtitle {
             color: #64748b;
             font-size: 0.875rem;
         }
-        
+
         .dashboard-actions {
             display: flex;
-            gap: 0.75rem;
-            margin-top: 1rem;
+            gap: 0.625rem;
+            margin-top: 0.875rem;
         }
-        
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.875rem;
+            margin-bottom: 1.25rem;
         }
-        
+
         .stat-card {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
-            border-radius: 1rem;
-            padding: 1.25rem;
+            border-radius: 0.5rem;
+            padding: 1rem;
             border: 1px solid rgba(203, 213, 225, 0.3);
             transition: all 0.3s ease;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 30px rgba(139, 92, 246, 0.12);
             border-color: rgba(139, 92, 246, 0.2);
         }
-        
+
         .stat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.625rem;
         }
-        
+
         .stat-title {
             font-size: 0.875rem;
             color: #64748b;
             font-weight: 500;
         }
-        
+
         .stat-icon {
-            width: 2.25rem;
-            height: 2.25rem;
-            border-radius: 0.75rem;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 0.375rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.125rem;
+            font-size: 0.875rem;
         }
-        
+
         .stat-value {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #1e293b;
             margin-bottom: 0.25rem;
         }
-        
+
         .stat-change {
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
+
         .analytics-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
-        
+
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.875rem;
         }
-        
+
         .section-title {
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 600;
             background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .time-filter {
-            padding: 0.5rem 0.75rem;
+            padding: 0.375rem 0.625rem;
             border: 1px solid rgba(203, 213, 225, 0.3);
-            border-radius: 0.75rem;
+            border-radius: 0.375rem;
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(8px);
             color: #374151;
             font-size: 0.875rem;
         }
-        
+
         .analytics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.875rem;
+            margin-bottom: 1.25rem;
         }
-        
+
         .chart-card {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
-            border-radius: 1rem;
-            padding: 1.25rem;
+            border-radius: 0.5rem;
+            padding: 1rem;
             border: 1px solid rgba(203, 213, 225, 0.3);
             transition: all 0.3s ease;
         }
-        
+
         .chart-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(6, 182, 212, 0.1);
             border-color: rgba(6, 182, 212, 0.2);
         }
-        
+
         .chart-header {
-            margin-bottom: 1rem;
+            margin-bottom: 0.875rem;
         }
-        
+
         .chart-title {
-            font-size: 1rem;
+            font-size: 0.875rem;
             font-weight: 600;
             color: #1e293b;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.125rem;
         }
-        
+
         .chart-subtitle {
             font-size: 0.75rem;
             color: #64748b;
         }
-        
+
         .chart-container {
-            height: 160px;
+            height: 140px;
             position: relative;
         }
-        
+
         .table-card {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
-            border-radius: 1rem;
+            border-radius: 0.5rem;
             border: 1px solid rgba(203, 213, 225, 0.3);
             overflow: hidden;
         }
-        
+
         .table-header {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
-            padding: 1rem 1.25rem;
+            padding: 0.875rem 1rem;
             border-bottom: 1px solid rgba(203, 213, 225, 0.3);
         }
-        
+
         .table-title {
-            font-size: 1rem;
+            font-size: 0.875rem;
             font-weight: 600;
             color: #1e293b;
         }
-        
+
         .table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .table th {
             background: rgba(248, 250, 252, 0.5);
-            padding: 0.75rem 1rem;
+            padding: 0.625rem 0.875rem;
             font-size: 0.75rem;
             font-weight: 600;
             color: #475569;
@@ -349,73 +354,73 @@
             letter-spacing: 0.025em;
             text-align: left;
         }
-        
+
         .table td {
-            padding: 0.875rem 1rem;
+            padding: 0.75rem 0.875rem;
             font-size: 0.875rem;
             color: #374151;
             border-bottom: 1px solid rgba(203, 213, 225, 0.2);
         }
-        
+
         .table tr:last-child td {
             border-bottom: none;
         }
-        
+
         .badge {
-            padding: 0.25rem 0.625rem;
-            border-radius: 1.5rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
+
         .badge-success {
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
             color: #166534;
         }
-        
+
         .badge-warning {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%);
             color: #92400e;
         }
-        
+
         .badge-error {
             background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%);
             color: #991b1b;
         }
-        
+
         .savings-progress {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
-            border-radius: 1rem;
-            padding: 1.25rem;
+            border-radius: 0.5rem;
+            padding: 1rem;
             border: 1px solid rgba(203, 213, 225, 0.3);
         }
-        
+
         .progress-header {
-            margin-bottom: 1rem;
+            margin-bottom: 0.875rem;
         }
-        
+
         .progress-title {
-            font-size: 1rem;
+            font-size: 0.875rem;
             font-weight: 600;
             color: #1e293b;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.375rem;
         }
-        
+
         .progress-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: 0.625rem;
+            margin-bottom: 0.875rem;
         }
-        
+
         .progress-stat {
             text-align: center;
-            padding: 0.75rem;
+            padding: 0.625rem;
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
-            border-radius: 0.75rem;
+            border-radius: 0.375rem;
         }
-        
+
         .progress-stat-label {
             font-size: 0.625rem;
             color: #64748b;
@@ -424,58 +429,58 @@
             text-transform: uppercase;
             letter-spacing: 0.025em;
         }
-        
+
         .progress-stat-value {
-            font-size: 1rem;
+            font-size: 0.875rem;
             font-weight: 700;
             color: #1e293b;
         }
-        
+
         .savings-goals {
-            margin-top: 1rem;
+            margin-top: 0.875rem;
         }
-        
+
         .goal-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem 0;
+            padding: 0.625rem 0;
             border-bottom: 1px solid rgba(203, 213, 225, 0.2);
         }
-        
+
         .goal-item:last-child {
             border-bottom: none;
         }
-        
+
         .goal-info {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.625rem;
         }
-        
+
         .goal-icon {
-            width: 2rem;
-            height: 2rem;
+            width: 1.75rem;
+            height: 1.75rem;
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
-            border-radius: 0.75rem;
+            border-radius: 0.375rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 0.875rem;
         }
-        
+
         .goal-details h4 {
             font-size: 0.875rem;
             font-weight: 500;
             color: #1e293b;
             margin-bottom: 0.125rem;
         }
-        
+
         .goal-details p {
             font-size: 0.75rem;
             color: #64748b;
         }
-        
+
         .goal-amount {
             font-size: 0.875rem;
             font-weight: 600;
@@ -483,42 +488,49 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <nav class="sidebar">
             <div class="logo">Expense Tracker</div>
             <a href="#" class="nav-item active">
                 <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                    <path
+                        d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
                 Dashboard
             </a>
             <a href="#" class="nav-item">
                 <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zM14 6a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h8zM6 8a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 012-2h2z"/>
+                    <path
+                        d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zM14 6a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h8zM6 8a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 012-2h2z" />
                 </svg>
                 Financial
             </a>
             <a href="#" class="nav-item">
                 <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8a1 1 0 000 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a1 1 0 100-2H3zm8 6a1 1 0 11-2 0 1 1 0 012 0z"/>
+                    <path
+                        d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8a1 1 0 000 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a1 1 0 100-2H3zm8 6a1 1 0 11-2 0 1 1 0 012 0z" />
                 </svg>
                 Expenses
             </a>
             <a href="#" class="nav-item">
                 <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2v1a1 1 0 102 0V3h4v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zM6 7a1 1 0 112 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 112 0v4a1 1 0 11-2 0V7z"/>
+                    <path
+                        d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2v1a1 1 0 102 0V3h4v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zM6 7a1 1 0 112 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 112 0v4a1 1 0 11-2 0V7z" />
                 </svg>
                 Monthly Statement
             </a>
             <a href="#" class="nav-item">
                 <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                        clip-rule="evenodd" />
                 </svg>
                 Settings
             </a>
         </nav>
-        
+
         <main class="main-content">
             <header class="header">
                 <h1 class="header-title">Expense Tracker</h1>
@@ -530,7 +542,7 @@
                     <button class="btn btn-secondary">Logout</button>
                 </div>
             </header>
-            
+
             <div class="dashboard-content">
                 <div class="dashboard-header">
                     <h2 class="dashboard-title">Enhanced Dashboard</h2>
@@ -544,45 +556,53 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">This Month</span>
-                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%); color: #3b82f6;">💰</div>
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%); color: #3b82f6;">
+                                💰</div>
                         </div>
                         <div class="stat-value">18 074,00 kr</div>
                         <div class="stat-change" style="color: #10b981;">+2.5% from last month</div>
                     </div>
-                    
+
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Savings Rate</span>
-                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(134, 239, 172, 0.1) 100%); color: #22c55e;">📈</div>
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(134, 239, 172, 0.1) 100%); color: #22c55e;">
+                                📈</div>
                         </div>
                         <div class="stat-value">0%</div>
                         <div class="stat-change" style="color: #64748b;">No change</div>
                     </div>
-                    
+
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Budget Status</span>
-                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%); color: #8b5cf6;">🎯</div>
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%); color: #8b5cf6;">
+                                🎯</div>
                         </div>
                         <div class="stat-value">On Track</div>
                         <div class="stat-change" style="color: #10b981;">Within budget</div>
                     </div>
-                    
+
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Alerts</span>
-                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%); color: #f59e0b;">⚠️</div>
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%); color: #f59e0b;">
+                                ⚠️</div>
                         </div>
                         <div class="stat-value">0</div>
                         <div class="stat-change" style="color: #64748b;">No alerts</div>
                     </div>
                 </div>
-                
+
                 <div class="analytics-section">
                     <div class="section-header">
                         <h3 class="section-title">Analytics Dashboard</h3>
@@ -592,7 +612,7 @@
                             <option>Last Year</option>
                         </select>
                     </div>
-                    
+
                     <div class="analytics-grid">
                         <div class="chart-card">
                             <div class="chart-header">
@@ -603,7 +623,7 @@
                                 <canvas id="spendingChart"></canvas>
                             </div>
                         </div>
-                        
+
                         <div class="chart-card">
                             <div class="chart-header">
                                 <h4 class="chart-title">Avg Monthly</h4>
@@ -613,7 +633,7 @@
                                 <canvas id="monthlyChart"></canvas>
                             </div>
                         </div>
-                        
+
                         <div class="chart-card">
                             <div class="chart-header">
                                 <h4 class="chart-title">Months Tracked</h4>
@@ -623,7 +643,7 @@
                                 <canvas id="trendsChart"></canvas>
                             </div>
                         </div>
-                        
+
                         <div class="chart-card">
                             <div class="chart-header">
                                 <h4 class="chart-title">Status</h4>
@@ -635,7 +655,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
                     <div class="table-card">
                         <div class="table-header">
@@ -696,12 +716,12 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <div class="savings-progress">
                         <div class="progress-header">
                             <h3 class="progress-title">Savings Progress</h3>
                         </div>
-                        
+
                         <div class="progress-stats">
                             <div class="progress-stat">
                                 <div class="progress-stat-label">Avg Savings Rate</div>
@@ -716,13 +736,14 @@
                                 <div class="progress-stat-value" style="color: #10b981;">Stable</div>
                             </div>
                         </div>
-                        
+
                         <div class="chart-container" style="height: 120px;">
                             <canvas id="savingsChart"></canvas>
                         </div>
-                        
+
                         <div class="savings-goals">
-                            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: #1e293b;">💰 Savings Goals</h4>
+                            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: #1e293b;">
+                                💰 Savings Goals</h4>
                             <div class="goal-item">
                                 <div class="goal-info">
                                     <div class="goal-icon">🚨</div>
@@ -739,7 +760,7 @@
             </div>
         </main>
     </div>
-    
+
     <script>
         const chartOptions = {
             responsive: true,
@@ -747,14 +768,14 @@
             plugins: { legend: { display: false } },
             scales: { y: { display: false }, x: { display: false } }
         };
-        
+
         function createGradient(ctx, color1, color2) {
             const gradient = ctx.createLinearGradient(0, 0, 0, 160);
             gradient.addColorStop(0, color1);
             gradient.addColorStop(1, color2);
             return gradient;
         }
-        
+
         const spendingCtx = document.getElementById('spendingChart').getContext('2d');
         new Chart(spendingCtx, {
             type: 'line',
@@ -771,7 +792,7 @@
             },
             options: chartOptions
         });
-        
+
         const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
         new Chart(monthlyCtx, {
             type: 'bar',
@@ -784,7 +805,7 @@
             },
             options: chartOptions
         });
-        
+
         new Chart(document.getElementById('trendsChart'), {
             type: 'doughnut',
             data: {
@@ -796,7 +817,7 @@
             },
             options: { ...chartOptions, cutout: '70%' }
         });
-        
+
         const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
         new Chart(comparisonCtx, {
             type: 'line',
@@ -813,7 +834,7 @@
             },
             options: chartOptions
         });
-        
+
         const savingsCtx = document.getElementById('savingsChart').getContext('2d');
         new Chart(savingsCtx, {
             type: 'line',
@@ -832,4 +853,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,0 +1,24 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync",
+  "description": "Monitors all source files in the repository and updates documentation when changes are detected",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "client/src/**/*.js",
+      "server/**/*.js",
+      "*.js",
+      "*.json",
+      "*.md",
+      "client/src/**/*.css",
+      "server/db/migrations/*.js",
+      "Dockerfile",
+      ".env.example"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Source files have been modified in this full-stack JavaScript expense tracking application. Please review the changes and update the documentation accordingly. Focus on:\n\n1. Update the warp.md if there are significant feature changes, new components, or architectural updates\n2. If there's a /docs folder, update relevant documentation there\n3. Consider updating any feature documentation in the completed/ or in_progress/ folders if applicable\n4. Ensure documentation reflects current functionality, API changes, component structure, or database schema modifications\n5. Update any setup instructions, environment variables, or deployment notes if configuration files changed\n\nThe application is a React frontend with Node.js/Express backend using SQLite, designed for expense tracking and bill splitting for couples."
+  }
+}
