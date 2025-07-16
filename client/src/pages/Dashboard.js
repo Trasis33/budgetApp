@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import EnhancedDashboard from '../components/EnhancedDashboard';
+import ModernEnhancedDashboard from '../components/ModernEnhancedDashboard';
 
 const Dashboard = () => {
-  return <EnhancedDashboard />;
+  return <ModernEnhancedDashboard />;
 };
 
 export default Dashboard;

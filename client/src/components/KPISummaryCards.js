@@ -18,96 +18,92 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
     }
   };
 
-  const getTrendColor = (trend) => {
-    switch(trend) {
-      case 'up': return 'text-red-600 bg-red-50';
-      case 'down': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
   const formatTrend = (percentage) => {
     if (percentage > 0) return `+${percentage}%`;
     return `${percentage}%`;
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Total Spending</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">
-              {formatCurrency(analytics?.summary?.totalSpending || 0)}
-            </p>
-          </div>
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <DollarSign className="w-5 h-5 text-blue-600" />
+    <div className="stats-grid">
+      <div className="stat-card">
+        <div className="stat-header">
+          <span className="stat-title">Total Spending</span>
+          <div className="stat-icon" style={{
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)', 
+            color: '#3b82f6'
+          }}>
+            <DollarSign className="h-4 w-4" />
           </div>
         </div>
-        <div className={`mt-3 flex items-center text-xs ${getTrendColor(analytics?.summary?.trendDirection)} rounded px-2 py-1`}>
+        <div className="stat-value">
+          {formatCurrency(analytics?.summary?.totalSpending || 0)}
+        </div>
+        <div className="stat-change" style={{
+          color: analytics?.summary?.trendDirection === 'up' ? '#ef4444' : 
+                 analytics?.summary?.trendDirection === 'down' ? '#10b981' : '#64748b'
+        }}>
           {getTrendIcon(analytics?.summary?.trendDirection)}
-          <span className="ml-1 font-medium">
+          <span style={{ marginLeft: 'var(--spacing-xs)' }}>
             {formatTrend(analytics?.summary?.trendPercentage || 0)} vs last year
           </span>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Avg Monthly</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">
-              {formatCurrency(analytics?.summary?.avgMonthlySpending || 0)}
-            </p>
-          </div>
-          <div className="p-2 bg-green-50 rounded-lg">
-            <Target className="w-5 h-5 text-green-600" />
+      <div className="stat-card">
+        <div className="stat-header">
+          <span className="stat-title">Avg Monthly</span>
+          <div className="stat-icon" style={{
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(134, 239, 172, 0.1) 100%)', 
+            color: '#22c55e'
+          }}>
+            <Target className="h-4 w-4" />
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-3">
+        <div className="stat-value">
+          {formatCurrency(analytics?.summary?.avgMonthlySpending || 0)}
+        </div>
+        <div className="stat-change" style={{color: '#64748b'}}>
           Across {analytics?.summary?.monthCount || 0} months
-        </p>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Months Tracked</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">
-              {analytics?.summary?.monthCount || 0}
-            </p>
-          </div>
-          <div className="p-2 bg-purple-50 rounded-lg">
-            <Clock className="w-5 h-5 text-purple-600" />
+      <div className="stat-card">
+        <div className="stat-header">
+          <span className="stat-title">Months Tracked</span>
+          <div className="stat-icon" style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%)', 
+            color: '#8b5cf6'
+          }}>
+            <Clock className="h-4 w-4" />
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-3">
+        <div className="stat-value">
+          {analytics?.summary?.monthCount || 0}
+        </div>
+        <div className="stat-change" style={{color: '#64748b'}}>
           Complete data coverage
-        </p>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-600 truncate">Status</p>
-            <p className="text-lg font-bold text-gray-900 mt-1 truncate" title={
-              analytics?.summary?.trendDirection === 'stable' ? 'Stable' :
-              analytics?.summary?.trendDirection === 'up' ? 'Rising' : 'Declining'
-            }>
-              {analytics?.summary?.trendDirection === 'stable' ? 'Stable' :
-               analytics?.summary?.trendDirection === 'up' ? 'Rising' : 'Declining'}
-            </p>
-          </div>
-          <div className="p-2 bg-yellow-50 rounded-lg ml-2">
-            {analytics?.summary?.trendDirection === 'stable' ? <Minus className="w-4 h-4 text-yellow-600" /> :
-             analytics?.summary?.trendDirection === 'up' ? <TrendingUp className="w-4 h-4 text-red-600" /> :
-             <TrendingDown className="w-4 h-4 text-green-600" />}
+      <div className="stat-card">
+        <div className="stat-header">
+          <span className="stat-title">Status</span>
+          <div className="stat-icon" style={{
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%)', 
+            color: '#f59e0b'
+          }}>
+            {analytics?.summary?.trendDirection === 'stable' ? <Minus className="h-4 w-4" /> :
+             analytics?.summary?.trendDirection === 'up' ? <TrendingUp className="h-4 w-4" /> :
+             <TrendingDown className="h-4 w-4" />}
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-3">
+        <div className="stat-value">
+          {analytics?.summary?.trendDirection === 'stable' ? 'Stable' :
+           analytics?.summary?.trendDirection === 'up' ? 'Rising' : 'Declining'}
+        </div>
+        <div className="stat-change" style={{color: '#64748b'}}>
           Pattern
-        </p>
+        </div>
       </div>
     </div>
   );

@@ -100,10 +100,10 @@ const DashboardAnalytics = () => {
       </div>
 
       {/* KPI Cards */}
-      <KPISummaryCards
+      {/* <KPISummaryCards
         analytics={analytics}
         formatCurrency={formatCurrency}
-      />
+      /> */}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

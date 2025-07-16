@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import formatCurrency from '../utils/formatCurrency';
+import { modernChartOptions, createGradient, modernColors } from '../utils/chartConfig';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +11,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 
 ChartJS.register(
@@ -19,7 +21,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const SpendingPatternsChart = ({ patterns = null }) => {
@@ -63,22 +66,25 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       };
     }
 
-    const categories = Object.keys(processedPatterns).slice(0, 5);
-    const colors = [
-      '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'
-    ];
+    const categories = Object.keys(processedPatterns).slice(0, 3); // Limit for glass morphism clarity
+    const colors = [modernColors.primary, modernColors.secondary, modernColors.success];
     
     const datasets = categories.map((category, index) => {
       const data = processedPatterns[category]?.data ? processedPatterns[category].data.map(d => d.amount) : [];
-      const labels = processedPatterns[category]?.data ? processedPatterns[category].data.map(d => d.month) : [];
       
       return {
         label: category,
         data: data,
         borderColor: colors[index],
-        backgroundColor: colors[index] + '20',
-        fill: false,
-        tension: 0.1,
+        backgroundColor: modernColors.gradients.primary,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3,
+        pointBackgroundColor: colors[index],
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       };
     });
     
@@ -118,51 +124,25 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   };
   
   const options = {
-    responsive: true,
-    maintainAspectRatio: false,
+    ...modernChartOptions,
     plugins: {
+      ...modernChartOptions.plugins,
       legend: {
+        display: true,
         position: 'top',
         labels: {
           usePointStyle: true,
-          padding: 6,
+          color: '#64748b',
           font: {
-            size: 9
-          }
-        }
-      },
-      title: {
-        display: false
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return formatCurrency(value);
+            size: 11,
+            weight: '500'
           },
-          font: {
-            size: 8
-          }
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
-      },
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: {
-            size: 8
-          }
+          padding: 16
         }
       }
     }
   };
-  
+
   if (loading) {
     return (
       <div className="animate-pulse">
@@ -213,9 +193,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
           const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
           return (
-            <div key={category} className="bg-gray-50 rounded-md p-2">
-              <div className="flex items-center justify-between mb-0.5">
-                <h5 className="font-medium text-xs truncate">{category}</h5>
+            <div key={category} className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <h5 className="stat-title truncate">{category}</h5>
                 <div className="flex items-center gap-1">
                   <span className={`text-xs ${trendInfo.color}`}>
                     {trendInfo.icon}
@@ -225,9 +205,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                   </span>
                 </div>
               </div>
-              <div className="text-xs text-gray-600 space-y-0.5">
-                <p className="truncate">Strength: {pattern?.enhancedTrend?.normalizedStrength || 0}%</p>
-                <p className="truncate">Change: {pattern?.enhancedTrend?.percentageChange || 0}%</p>
+              <div className="text-xs space-y-1">
+                <p className="truncate text-gray-600">Strength: {pattern?.enhancedTrend?.normalizedStrength || 0}%</p>
+                <p className="truncate text-gray-600">Change: {pattern?.enhancedTrend?.percentageChange || 0}%</p>
               </div>
             </div>
           );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/layout/Layout';
+import ModernLayout from './components/layout/ModernLayout';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import AddExpense from './pages/AddExpense';
@@ -33,7 +33,7 @@ function App() {
         
         <Route path="/" element={
           <ProtectedRoute>
-            <Layout />
+            <ModernLayout />
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard />} />

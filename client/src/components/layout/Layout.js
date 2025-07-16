@@ -11,9 +11,11 @@ const Layout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    // <div className="flex h-screen bg-gray-100">
+    <div className="app-container">
       {/* Sidebar for larger screens */}
-      <div className="hidden md:block md:w-64 bg-white shadow-md">
+      {/* <div className="hidden md:block md:w-64 bg-white shadow-md"> */}
+      <div className="sidebar">
         <Sidebar />
       </div>
 
@@ -42,7 +44,9 @@ const Layout = () => {
         </div>
       )}
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* <div className="flex flex-col flex-1 overflow-hidden"> */}
+      <div className="main-content">
+        {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-auto p-4">
           <div className="max-w-7xl mx-auto">

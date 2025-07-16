@@ -100,17 +100,17 @@ const EnhancedDashboard = () => {
 
   if (loading && !dashboardData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 text-sm font-medium">Loading enhanced dashboard...</p>
+      <div className="dashboard-content">
+        <div className="flex justify-center items-center h-64">
+          <div className="loading-spinner"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    // <div className="min-h-screen bg-gray-50">
+    <div className="main-content">
       {/* Header */}
       <div className="bg-white shadow-soft border-b border-gray-200">
         <div className="container-contained">

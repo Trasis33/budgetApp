@@ -12,9 +12,11 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
+    // <nav className="bg-white shadow-md">
+    <nav className="header">
+      {/* Navbar content */}
       <div className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="header-title">
           {/* Mobile menu button */}
           <button
             type="button"
@@ -30,32 +32,33 @@ const Navbar = ({ toggleSidebar }) => {
         </div>
         
         {/* User Profile Dropdown */}
-        <div className="relative">
+        <div className='header-actions'>
+          <div className="relative">
+            <button
+              type="button"
+              className="flex items-center space-x-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 rounded-full"
+              id="user-menu"
+              aria-expanded="false"
+              aria-haspopup="true"
+            >
+              <span className="sr-only">Open user menu</span>
+              <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden md:block">{user?.name}</span>
+            </button>
+            
+            {/* Dropdown menu, show/hide based on menu state. */}
+            {/* We'll implement the dropdown functionality later */}
+          </div>
+          {/* Logout Button */}
           <button
-            type="button"
-            className="flex items-center space-x-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 rounded-full"
-            id="user-menu"
-            aria-expanded="false"
-            aria-haspopup="true"
+            onClick={handleLogout}
+            className="ml-2 px-3 py-1 text-sm text-gray-700 hover:text-gray-900 focus:outline-none"
           >
-            <span className="sr-only">Open user menu</span>
-            <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <span className="hidden md:block">{user?.name}</span>
+            Logout
           </button>
-          
-          {/* Dropdown menu, show/hide based on menu state. */}
-          {/* We'll implement the dropdown functionality later */}
         </div>
-        
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="ml-2 px-3 py-1 text-sm text-gray-700 hover:text-gray-900 focus:outline-none"
-        >
-          Logout
-        </button>
       </div>
     </nav>
   );
