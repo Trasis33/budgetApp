@@ -58,9 +58,10 @@ const ModernEnhancedDashboard = () => {
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
       
-      const [chartsRes, analyticsRes, optimizationRes] = await Promise.all([
+      const [chartsRes, analyticsRes, patternsRes, optimizationRes] = await Promise.all([
         axios.get(`/summary/charts/${currentYear}/${currentMonth}`),
         axios.get(`/analytics/trends/${startDate}/${endDate}`),
+        axios.get('/optimization/analyze'),
         axios.get('/optimization/tips').catch(() => ({ data: { tips: [] } }))
       ]);
 
@@ -71,7 +72,7 @@ const ModernEnhancedDashboard = () => {
           totalExpenses: chartsRes.data.monthlyTotals?.expenses || 0
         },
         analytics: analyticsRes.data,
-        patterns: analyticsRes.data,
+        patterns: patternsRes.data,
         optimization: optimizationRes.data
       });
       
@@ -226,7 +227,7 @@ const ModernEnhancedDashboard = () => {
       {/* Analytics Section */}
       <div className="analytics-section">
         <div className="section-header">
-          {/* <h3 className="section-title">Analytics Dashboard</h3> */}
+          <h3 className="section-title">Analytics Dashboard</h3>
           <select className="time-filter">
             <option>Last 6 Months</option>
             <option>Last 3 Months</option>
@@ -241,7 +242,7 @@ const ModernEnhancedDashboard = () => {
               <p className="chart-subtitle">Monthly trends and analysis</p>
             </div>
             <div className="chart-container">
-              <SpendingPatternsChart data={dashboardData?.analytics} />
+              <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
             </div>
           </div>
 

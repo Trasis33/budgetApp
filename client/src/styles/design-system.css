@@ -349,7 +349,7 @@ body {
 
 /* Dashboard specific components */
 .dashboard-content {
-  padding: var(--spacing-5xl);
+  padding: var(--spacing-xl);
 }
 
 .dashboard-header {
