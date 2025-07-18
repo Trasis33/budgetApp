@@ -86,9 +86,11 @@ const MonthlyComparisonChart = ({ monthlyTotals, formatCurrency }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">Monthly Comparison</h3>
-      <div className="h-56">
+    <div className="chart-card">
+      <div className="chart-header">
+        <h3 className="section-title">Monthly Comparison</h3>
+      </div>
+      <div className="chart-container">
         {chartData() && <Bar data={chartData()} options={chartOptions} />}
       </div>
     </div>

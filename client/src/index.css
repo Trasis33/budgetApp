@@ -49,7 +49,7 @@
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.5;
     color: #374151;
-    background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 50%, #ecfdf5 100%);
+    /* background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 50%, #ecfdf5 100%); */
     min-height: 100vh;
   }
 
@@ -82,7 +82,7 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply /*bg-white*/ rounded-lg shadow-sm border border-gray-200;
   }
   
   .card-hover {

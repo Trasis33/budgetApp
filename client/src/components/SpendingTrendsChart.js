@@ -93,9 +93,11 @@ const SpendingTrendsChart = ({ monthlyTotals, formatCurrency }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">Spending Trends</h3>
-      <div className="h-56">
+    <div className="chart-card">
+      <div className="chart-header">
+        <h3 className="section-title">Spending Trends</h3>
+      </div>
+      <div className="chart-container">
         {chartData() && <Line data={chartData()} options={chartOptions} />}
       </div>
     </div>

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
-import { useAuth } from '../context/AuthContext';
+// import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
 import { AlertCircle } from 'lucide-react';
 import MonthlyBreakdownTable from './MonthlyBreakdownTable';
 import SpendingTrendsChart from './SpendingTrendsChart';
 import MonthlyComparisonChart from './MonthlyComparisonChart';
-import KPISummaryCards from './KPISummaryCards';
+// import KPISummaryCards from './KPISummaryCards';
 
 
 
 const DashboardAnalytics = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Commented out as not currently used
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -64,33 +64,71 @@ const DashboardAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="analytics-section">
+        <div className="section-header">
+          <h2 className="dashboard-title">Analytics Dashboard</h2>
+        </div>
+        <div className="loading-container" style={{ 
+          height: '320px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column'
+        }}>
+          <div className="loading-spinner"></div>
+          <p style={{
+            fontSize: 'var(--font-size-base)',
+            color: 'var(--color-text-secondary)',
+            marginTop: 'var(--spacing-xl)'
+          }}>
+            Loading analytics dashboard...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-3">
-        <div className="flex items-center">
-          <AlertCircle className="w-4 h-4 text-red-500 mr-1.5" />
-          <span className="text-red-700 text-sm">{error}</span>
+      <div className="analytics-section">
+        <div className="section-header">
+          <h2 className="dashboard-title">Analytics Dashboard</h2>
+        </div>
+        <div className="error-message">
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            marginBottom: 'var(--spacing-lg)'
+          }}>
+            <AlertCircle style={{ 
+              width: '1rem', 
+              height: '1rem', 
+              color: 'var(--color-error)',
+              marginRight: 'var(--spacing-lg)'
+            }} />
+            <span>{error}</span>
+          </div>
+          <button 
+            onClick={fetchAnalytics}
+            className="btn btn-primary"
+          >
+            Retry Loading Analytics
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="analytics-section">
       {/* Header with Controls */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-fluid-lg font-bold text-gray-900">Analytics Dashboard</h2>
-        <div className="flex items-center space-x-1.5">
+      <div className="section-header">
+        <h2 className="dashboard-title">Analytics Dashboard</h2>
+        <div className="dashboard-actions">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="time-filter"
           >
             <option value="3months">Last 3 Months</option>
             <option value="6months">Last 6 Months</option>
@@ -106,7 +144,7 @@ const DashboardAnalytics = () => {
       /> */}
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="analytics-grid">
         <SpendingTrendsChart
           monthlyTotals={analytics?.monthlyTotals}
           formatCurrency={formatCurrency}
@@ -118,10 +156,15 @@ const DashboardAnalytics = () => {
       </div>
 
       {/* Monthly Breakdown Table */}
-      <MonthlyBreakdownTable
-        monthlyTotals={analytics?.monthlyTotals}
-        formatCurrency={formatCurrency}
-      />
+      <div className="table-section">
+        <div className="section-header">
+          <h3 className="section-title">Monthly Breakdown</h3>
+        </div>
+        <MonthlyBreakdownTable
+          monthlyTotals={analytics?.monthlyTotals}
+          formatCurrency={formatCurrency}
+        />
+      </div>
     </div>
   );
 };

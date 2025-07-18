@@ -3,35 +3,35 @@ import PropTypes from 'prop-types';
 
 const MonthlyBreakdownTable = ({ monthlyTotals, formatCurrency }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-3 py-3 border-b border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900">Monthly Breakdown</h3>
+    <div className="chart-card">
+      <div className="chart-header">
+        <h3 className="section-title">Monthly Breakdown</h3>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="table-container">
+        <table className="data-table">
+          <thead className="table-header">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="table-header-cell">
                 Month
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="table-header-cell">
                 Spending
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="table-header-cell">
                 Budget
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="table-header-cell">
                 Variance
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="table-header-cell">
                 Expenses
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="table-header-cell">
                 Avg/Expense
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="table-body">
             {monthlyTotals?.map((month) => {
               const variance = month.total_budget - month.total_spending;
               const variancePercent = month.total_budget > 0
@@ -39,8 +39,8 @@ const MonthlyBreakdownTable = ({ monthlyTotals, formatCurrency }) => {
                 : 0;
               
               return (
-                <tr key={month.month} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-sm font-medium text-gray-900 truncate" title={
+                <tr key={month.month} className="table-row">
+                  <td className="table-cell table-cell-primary" title={
                     new Date(month.month + '-01').toLocaleDateString('en-US', {
                       month: 'long',
                       year: 'numeric'
@@ -51,25 +51,23 @@ const MonthlyBreakdownTable = ({ monthlyTotals, formatCurrency }) => {
                       year: '2-digit'
                     })}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 truncate" title={formatCurrency(month.total_spending)}>
+                  <td className="table-cell" title={formatCurrency(month.total_spending)}>
                     {formatCurrency(month.total_spending)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 truncate" title={formatCurrency(month.total_budget || 0)}>
+                  <td className="table-cell" title={formatCurrency(month.total_budget || 0)}>
                     {formatCurrency(month.total_budget || 0)}
                   </td>
-                  <td className="px-3 py-2 text-sm">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      variance >= 0
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                  <td className="table-cell">
+                    <span className={`status-badge ${
+                      variance >= 0 ? 'status-success' : 'status-error'
                     }`}>
-                      <span className="truncate">{variance >= 0 ? '+' : ''}{formatCurrency(variance)} ({variancePercent}%)</span>
+                      <span className="status-text">{variance >= 0 ? '+' : ''}{formatCurrency(variance)} ({variancePercent}%)</span>
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900">
+                  <td className="table-cell">
                     {month.expense_count}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 truncate" title={formatCurrency(month.avg_expense)}>
+                  <td className="table-cell" title={formatCurrency(month.avg_expense)}>
                     {formatCurrency(month.avg_expense)}
                   </td>
                 </tr>
