@@ -37,8 +37,8 @@
   --color-text-muted: #475569;
   
   /* Background colors */
-  --bg-primary: rgba(255, 255, 255, 0.4);
-  --bg-secondary: rgba(255, 255, 255, 0.4);
+  --bg-primary: rgba(255, 255, 255, 0.2);
+  --bg-secondary: rgba(255, 255, 255, 0.2);
   --bg-card: rgba(255, 255, 255, 0.4);
   /* --bg-gradient: linear-gradient(135deg, #fbdfff 0%, #d4eeff 50%, #d1fde9 100%); */
   /* --bg-gradient: linear-gradient(45deg, rgba(65, 89, 208, 1.000) 0.000%, rgba(200, 79, 192, 1.000) 50.000%, rgba(255, 205, 112, 1.000) 100.000%); */
