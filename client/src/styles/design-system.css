@@ -541,6 +541,14 @@ body {
 }
 
 /* Loading states */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8xl) var(--spacing-4xl);
+}
+
 .loading-spinner {
   display: inline-block;
   width: 20px;

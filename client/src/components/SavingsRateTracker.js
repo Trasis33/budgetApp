@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
@@ -7,6 +7,32 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const [savingsData, setSavingsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const fetchSavingsData = useCallback(async (dates = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Use provided dates or the ones passed in the function parameter
+      const start = dates.startDate || startDate;
+      const end = dates.endDate || endDate;
+      
+      if (!start || !end) {
+        console.error('Missing date parameters for savings analysis');
+        setError('Missing date parameters');
+        setLoading(false);
+        return;
+      }
+      
+      const response = await axios.get(`/analytics/savings-analysis/${start}/${end}`);
+      setSavingsData(response.data);
+    } catch (err) {
+      console.error('Error fetching savings data:', err);
+      setError('Failed to load savings data');
+    } finally {
+      setLoading(false);
+    }
+  }, [startDate, endDate]);
 
   useEffect(() => {
     // Set default dates if not provided
@@ -33,33 +59,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     };
     
     fetchSavingsData(getDefaultDates());
-  }, [startDate, endDate, timePeriod]);
-
-  const fetchSavingsData = async (dates = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use provided dates or the ones passed in the function parameter
-      const start = dates.startDate || startDate;
-      const end = dates.endDate || endDate;
-      
-      if (!start || !end) {
-        console.error('Missing date parameters for savings analysis');
-        setError('Missing date parameters');
-        setLoading(false);
-        return;
-      }
-      
-      const response = await axios.get(`/analytics/savings-analysis/${start}/${end}`);
-      setSavingsData(response.data);
-    } catch (err) {
-      console.error('Error fetching savings data:', err);
-      setError('Failed to load savings data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [startDate, endDate, timePeriod, fetchSavingsData]);
 
   const formatMonthLabel = (monthStr) => {
     const [year, month] = monthStr.split('-');
@@ -79,16 +79,18 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         {
           label: 'Savings Rate (%)',
           data: savingsRates,
-          borderColor: '#10b981',
-          backgroundColor: '#10b98120',
+          borderColor: '#10b981', // Keep as hex for Chart.js compatibility
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
           borderWidth: 3,
           fill: true,
-          tension: 0.1,
+          tension: 0.4,
           pointBackgroundColor: savingsRates.map(rate => 
             rate < 0 ? '#ef4444' : 
             rate < 10 ? '#f59e0b' : 
             '#10b981'
           ),
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
           pointRadius: 6,
           pointHoverRadius: 8
         }
@@ -102,8 +104,24 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          color: 'var(--color-text-secondary)',
+          font: {
+            family: 'var(--font-primary)',
+            size: 12,
+            weight: '500'
+          },
+          padding: 16,
+          usePointStyle: true
+        }
       },
       tooltip: {
+        backgroundColor: 'var(--bg-card)',
+        titleColor: 'var(--color-text-primary)',
+        bodyColor: 'var(--color-text-secondary)',
+        borderColor: 'var(--border-color)',
+        borderWidth: 1,
+        cornerRadius: 8,
         callbacks: {
           label: function(context) {
             const value = context.parsed.y;
@@ -113,9 +131,31 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
       }
     },
     scales: {
+      x: {
+        grid: {
+          color: 'var(--border-color)',
+          borderColor: 'var(--border-color)'
+        },
+        ticks: {
+          color: 'var(--color-text-secondary)',
+          font: {
+            family: 'var(--font-primary)',
+            size: 11
+          }
+        }
+      },
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'var(--border-color)',
+          borderColor: 'var(--border-color)'
+        },
         ticks: {
+          color: 'var(--color-text-secondary)',
+          font: {
+            family: 'var(--font-primary)',
+            size: 11
+          },
           callback: function(value) {
             return value + '%';
           }
@@ -124,11 +164,11 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     }
   };
 
-  const getSavingsRateColor = (rate) => {
-    if (rate < 0) return 'text-red-600';
-    if (rate < 10) return 'text-yellow-600';
-    if (rate < 20) return 'text-blue-600';
-    return 'text-green-600';
+  const getSavingsRateColorVariable = (rate) => {
+    if (rate < 0) return 'var(--color-error)';
+    if (rate < 10) return 'var(--color-warning)';
+    if (rate < 20) return 'var(--color-primary)';
+    return 'var(--color-success)';
   };
 
   const getSavingsRateStatus = (rate) => {
@@ -138,12 +178,40 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     return 'Excellent';
   };
 
+  const getTrendIcon = (direction) => {
+    switch(direction) {
+      case 'improving': return '📈';
+      case 'declining': return '📉';
+      default: return '➡️';
+    }
+  };
+
+  const getTrendColor = (direction) => {
+    switch(direction) {
+      case 'improving': return 'var(--color-success)';
+      case 'declining': return 'var(--color-error)';
+      default: return 'var(--color-text-secondary)';
+    }
+  };
+
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-80 bg-gray-200 rounded"></div>
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3 className="chart-title">💰 Savings Rate Analysis</h3>
+          <div className="chart-subtitle">
+            {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
+          </div>
+        </div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-secondary)',
+            marginTop: 'var(--spacing-lg)'
+          }}>
+            Loading savings analysis...
+          </p>
         </div>
       </div>
     );
@@ -151,13 +219,20 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
 
   if (error) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="text-center py-8">
-          <div className="text-red-500 text-4xl mb-2">⚠️</div>
-          <p className="text-gray-500">{error}</p>
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3 className="chart-title">💰 Savings Rate Analysis</h3>
+          <div className="chart-subtitle">
+            {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
+          </div>
+        </div>
+        <div className="error-message">
+          <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>⚠️</div>
+          <p>{error}</p>
           <button 
             onClick={fetchSavingsData}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            className="btn btn-primary"
+            style={{ marginTop: 'var(--spacing-4xl)' }}
           >
             Retry
           </button>
@@ -168,14 +243,29 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
 
   if (!savingsData || !savingsData.monthlyData || savingsData.monthlyData.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4">💰 Savings Rate Analysis</h3>
-        <div className="h-80 bg-gray-50 rounded flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            <div className="text-4xl mb-2">💰</div>
-            <p>No savings data available</p>
-            <p className="text-sm mt-1">Add income and expenses to see your savings rate</p>
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3 className="chart-title">💰 Savings Rate Analysis</h3>
+          <div className="chart-subtitle">
+            {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
           </div>
+        </div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'var(--spacing-8xl) var(--spacing-4xl)',
+          color: 'var(--color-text-secondary)',
+          height: '320px'
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>💰</div>
+          <p style={{ fontSize: 'var(--font-size-base)', marginBottom: 'var(--spacing-xs)' }}>
+            No savings data available
+          </p>
+          <p style={{ fontSize: 'var(--font-size-sm)' }}>
+            Add income and expenses to see your savings rate
+          </p>
         </div>
       </div>
     );
@@ -184,78 +274,127 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const chartData = getSavingsRateChartData();
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">💰 Savings Rate Analysis</h3>
-        <div className="text-sm text-gray-500">
+    <div className="chart-card">
+      <div className="chart-header">
+        <h3 className="chart-title">💰 Savings Rate Analysis</h3>
+        <div className="chart-subtitle">
           {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-sm text-gray-600 mb-1">Average Savings Rate</div>
-          <div className={`text-2xl font-bold ${getSavingsRateColor(savingsData.summary.averageSavingsRate)}`}>
+      <div className="stats-grid" style={{ marginBottom: 'var(--spacing-6xl)' }}>
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-title">Average Savings Rate</span>
+            <div className="stat-icon" style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%)',
+              color: 'var(--color-success)'
+            }}>
+              💰
+            </div>
+          </div>
+          <div className="stat-value" style={{
+            color: getSavingsRateColorVariable(savingsData.summary.averageSavingsRate)
+          }}>
             {savingsData.summary.averageSavingsRate.toFixed(1)}%
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="stat-change">
             {getSavingsRateStatus(savingsData.summary.averageSavingsRate)}
           </div>
         </div>
         
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-sm text-gray-600 mb-1">Total Savings</div>
-          <div className={`text-2xl font-bold ${savingsData.summary.totalSavings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-title">Total Savings</span>
+            <div className="stat-icon" style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)',
+              color: 'var(--color-primary)'
+            }}>
+              💵
+            </div>
+          </div>
+          <div className="stat-value" style={{
+            color: savingsData.summary.totalSavings >= 0 ? 'var(--color-success)' : 'var(--color-error)'
+          }}>
             {formatCurrency(savingsData.summary.totalSavings)}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="stat-change">
             Over {savingsData.summary.monthCount} months
           </div>
         </div>
         
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-sm text-gray-600 mb-1">Trend</div>
-          <div className={`text-2xl font-bold ${
-            savingsData.summary.trendDirection === 'improving' ? 'text-green-600' : 
-            savingsData.summary.trendDirection === 'declining' ? 'text-red-600' : 
-            'text-gray-600'
-          }`}>
-            {savingsData.summary.trendDirection === 'improving' ? '📈' : 
-             savingsData.summary.trendDirection === 'declining' ? '📉' : 
-             '➡️'}
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-title">Trend</span>
+            <div className="stat-icon" style={{
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
+              color: 'var(--color-warning)'
+            }}>
+              {getTrendIcon(savingsData.summary.trendDirection)}
+            </div>
           </div>
-          <div className="text-xs text-gray-500 capitalize">
+          <div className="stat-value" style={{
+            color: getTrendColor(savingsData.summary.trendDirection)
+          }}>
+            {getTrendIcon(savingsData.summary.trendDirection)}
+          </div>
+          <div className="stat-change" style={{ textTransform: 'capitalize' }}>
             {savingsData.summary.trendDirection}
           </div>
         </div>
       </div>
 
-      <div className="h-80">
+      <div className="chart-container" style={{ height: '320px' }}>
         {chartData ? (
           <Line data={chartData} options={chartOptions} />
         ) : (
-          <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <div className="text-4xl mb-2">📊</div>
-              <p>Unable to render chart</p>
-            </div>
+          <div className="error-message" style={{
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column'
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>📊</div>
+            <p>Unable to render chart</p>
           </div>
         )}
       </div>
 
       {savingsData.savingsGoals && savingsData.savingsGoals.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="text-md font-semibold mb-3">🎯 Savings Goals</h4>
-          <div className="space-y-3">
+        <div style={{ 
+          marginTop: 'var(--spacing-6xl)', 
+          paddingTop: 'var(--spacing-6xl)', 
+          borderTop: `1px solid var(--border-color)` 
+        }}>
+          <h4 className="section-title" style={{ marginBottom: 'var(--spacing-4xl)' }}>
+            🎯 Savings Goals
+          </h4>
+          <div className="stats-grid">
             {savingsData.savingsGoals.map(goal => (
-              <div key={goal.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">{goal.goal_name}</div>
-                  <div className="text-sm text-gray-600">{goal.category}</div>
+              <div key={goal.id} className="stat-card">
+                <div className="stat-header">
+                  <span className="stat-title">{goal.goal_name}</span>
+                  <div className="stat-icon" style={{
+                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
+                    color: 'var(--color-warning)'
+                  }}>
+                    🎯
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold">{formatCurrency(goal.target_amount)}</div>
-                  <div className="text-sm text-gray-500">
+                <div className="stat-value">{formatCurrency(goal.target_amount)}</div>
+                <div className="stat-change">
+                  <div style={{ 
+                    fontSize: 'var(--font-size-sm)', 
+                    color: 'var(--color-text-secondary)',
+                    marginBottom: 'var(--spacing-xs)'
+                  }}>
+                    {goal.category}
+                  </div>
+                  <div style={{ 
+                    fontSize: 'var(--font-size-xs)', 
+                    color: 'var(--color-text-muted)'
+                  }}>
                     {goal.target_date && new Date(goal.target_date).toLocaleDateString()}
                   </div>
                 </div>

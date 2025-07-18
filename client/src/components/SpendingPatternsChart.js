@@ -100,17 +100,17 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   
   const getTrendIndicator = (trend, enhancedTrend) => {
     const baseInfo = {
-      increasing: { icon: '📈', color: 'text-red-500', text: 'Increasing' },
-      decreasing: { icon: '📉', color: 'text-green-500', text: 'Decreasing' },
-      stable: { icon: '➡️', color: 'text-gray-500', text: 'Stable' }
+      increasing: { icon: '📈', color: 'var(--color-error)', text: 'Increasing' },
+      decreasing: { icon: '📉', color: 'var(--color-success)', text: 'Decreasing' },
+      stable: { icon: '➡️', color: 'var(--color-text-secondary)', text: 'Stable' }
     };
 
     const strengthColors = {
-      minimal: 'text-gray-400',
-      weak: 'text-yellow-500',
-      moderate: 'text-orange-500',
-      strong: 'text-red-500',
-      very_strong: 'text-red-700'
+      minimal: 'var(--color-text-muted)',
+      weak: 'var(--color-warning)',
+      moderate: '#f97316', // orange-500 equivalent
+      strong: 'var(--color-error)',
+      very_strong: '#dc2626' // red-600 equivalent
     };
 
     const base = baseInfo[trend] || baseInfo.stable;
@@ -132,12 +132,49 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         position: 'top',
         labels: {
           usePointStyle: true,
-          color: '#64748b',
+          color: 'var(--color-text-secondary)',
           font: {
             size: 11,
-            weight: '500'
+            weight: '500',
+            family: 'var(--font-primary)'
           },
           padding: 16
+        }
+      },
+      tooltip: {
+        backgroundColor: 'var(--bg-card)',
+        titleColor: 'var(--color-text-primary)',
+        bodyColor: 'var(--color-text-secondary)',
+        borderColor: 'var(--border-color)',
+        borderWidth: 1,
+        cornerRadius: 8
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          color: 'var(--border-color)',
+          borderColor: 'var(--border-color)'
+        },
+        ticks: {
+          color: 'var(--color-text-secondary)',
+          font: {
+            family: 'var(--font-primary)',
+            size: 11
+          }
+        }
+      },
+      y: {
+        grid: {
+          color: 'var(--border-color)',
+          borderColor: 'var(--border-color)'
+        },
+        ticks: {
+          color: 'var(--color-text-secondary)',
+          font: {
+            family: 'var(--font-primary)',
+            size: 11
+          }
         }
       }
     }
@@ -145,69 +182,128 @@ const SpendingPatternsChart = ({ patterns = null }) => {
 
   if (loading) {
     return (
-      <div className="animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3 className="chart-title">📊 Spending Patterns</h3>
+          <div className="chart-subtitle">Monthly spending trends by category</div>
+        </div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-secondary)',
+            marginTop: 'var(--spacing-lg)'
+          }}>
+            Loading spending patterns...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-6 text-red-500">
-        <p className="text-sm">{error}</p>
-        <button
-          onClick={() => {
-            setLoading(true);
-            setError(null);
-            // Re-process data after a short delay
-            setTimeout(() => {
-              setProcessedPatterns(patterns || {});
-              setLoading(false);
-            }, 500);
-          }}
-          className="mt-3 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-        >
-          Retry
-        </button>
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3 className="chart-title">📊 Spending Patterns</h3>
+          <div className="chart-subtitle">Monthly spending trends by category</div>
+        </div>
+        <div className="error-message">
+          <p>{error}</p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              setTimeout(() => {
+                setProcessedPatterns(patterns || {});
+                setLoading(false);
+              }, 500);
+            }}
+            className="btn btn-primary"
+            style={{ marginTop: 'var(--spacing-4xl)' }}
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!processedPatterns || Object.keys(processedPatterns).length === 0) {
     return (
-      <div className="text-center py-6 text-gray-500">
-        <p className="text-base mb-1">📊 No spending patterns data available</p>
-        <p className="text-xs">Add more transactions to see your spending patterns</p>
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3 className="chart-title">📊 Spending Patterns</h3>
+          <div className="chart-subtitle">Monthly spending trends by category</div>
+        </div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'var(--spacing-8xl) var(--spacing-4xl)',
+          color: 'var(--color-text-secondary)'
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>📊</div>
+          <p style={{ fontSize: 'var(--font-size-base)', marginBottom: 'var(--spacing-xs)' }}>
+            No spending patterns data available
+          </p>
+          <p style={{ fontSize: 'var(--font-size-xs)' }}>
+            Add more transactions to see your spending patterns
+          </p>
+        </div>
       </div>
     );
   }
   
   return (
-    <div className="spending-patterns-chart">
-      <div className="mb-3">
+    <div className="chart-card">
+      <div className="chart-header">
+        <h3 className="chart-title">📊 Spending Patterns</h3>
+        <div className="chart-subtitle">Monthly spending trends by category</div>
+      </div>
+      
+      <div className="chart-container" style={{ height: '240px', marginBottom: 'var(--spacing-4xl)' }}>
         <Line data={getChartData()} options={options} />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="stats-grid">
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
           const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
           return (
             <div key={category} className="stat-card">
-              <div className="flex items-center justify-between mb-2">
-                <h5 className="stat-title truncate">{category}</h5>
-                <div className="flex items-center gap-1">
-                  <span className={`text-xs ${trendInfo.color}`}>
+              <div className="stat-header">
+                <span className="stat-title">{category}</span>
+                <div className="stat-icon" style={{
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)',
+                  color: '#3b82f6'
+                }}>
+                  <span style={{ fontSize: 'var(--font-size-xs)' }}>
                     {trendInfo.icon}
-                  </span>
-                  <span className={`text-xs font-medium ${trendInfo.strengthColor}`}>
-                    {trendInfo.strengthText}
                   </span>
                 </div>
               </div>
-              <div className="text-xs space-y-1">
-                <p className="truncate text-gray-600">Strength: {pattern?.enhancedTrend?.normalizedStrength || 0}%</p>
-                <p className="truncate text-gray-600">Change: {pattern?.enhancedTrend?.percentageChange || 0}%</p>
+              <div className="stat-value" style={{ 
+                fontSize: 'var(--font-size-lg)',
+                marginBottom: 'var(--spacing-sm)',
+                color: trendInfo.strengthColor
+              }}>
+                {trendInfo.strengthText}
+              </div>
+              <div className="stat-change">
+                <div style={{ 
+                  fontSize: 'var(--font-size-xs)', 
+                  color: 'var(--color-text-secondary)',
+                  marginBottom: 'var(--spacing-xs)'
+                }}>
+                  Strength: {pattern?.enhancedTrend?.normalizedStrength || 0}%
+                </div>
+                <div style={{ 
+                  fontSize: 'var(--font-size-xs)', 
+                  color: 'var(--color-text-secondary)'
+                }}>
+                  Change: {pattern?.enhancedTrend?.percentageChange || 0}%
+                </div>
               </div>
             </div>
           );
