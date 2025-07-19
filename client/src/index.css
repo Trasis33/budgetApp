@@ -4,6 +4,8 @@
 
 @import './styles/design-system.css';
 @import './styles/dashboard.css';
+@import './styles/optimized-analytics.css';
+@import './styles/mini-components.css';
 /* @import './styles/typography.css'; Temporarily disabled - using design-system.css values */
 
 /* Custom base styles */

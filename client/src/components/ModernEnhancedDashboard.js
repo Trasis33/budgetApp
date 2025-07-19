@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardAnalytics from './DashboardAnalytics';
-import SpendingPatternsChart from './SpendingPatternsChart';
-import BudgetPerformanceCards from './BudgetPerformanceCards';
-import BudgetPerformanceBadges from './BudgetPerformanceBadges';
-import SavingsRateTracker from './SavingsRateTracker';
+import OptimizedAnalyticsSection from './OptimizedAnalyticsSection';
 import OptimizationTipCard from './OptimizationTipCard';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
@@ -25,6 +22,7 @@ const ModernEnhancedDashboard = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
+  const [analyticsTimeRange, setAnalyticsTimeRange] = useState('6months');
 
   // Helper function to safely calculate numbers and avoid NaN
   const getSafeNumber = (spending, income) => {
@@ -224,59 +222,13 @@ const ModernEnhancedDashboard = () => {
         </div> */}
       </div>
 
-      {/* Analytics Section */}
-      <div className="analytics-section">
-        <div className="section-header">
-          <h3 className="section-title">Analytics Dashboard</h3>
-          <select className="time-filter">
-            <option>Last 6 Months</option>
-            <option>Last 3 Months</option>
-            <option>Last Year</option>
-          </select>
-        </div>
-
-        <div className="analytics-grid">
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Spending Patterns</h4>
-              <p className="chart-subtitle">Monthly trends and analysis</p>
-            </div>
-            <div className="chart-container">
-              <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Budget Performance</h4>
-              <p className="chart-subtitle">Budget vs actual spending</p>
-            </div>
-            <div className="chart-container">
-              <BudgetPerformanceCards />
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Savings Progress</h4>
-              <p className="chart-subtitle">Track your savings goals</p>
-            </div>
-            <div className="chart-container">
-              <SavingsRateTracker />
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Performance Metrics</h4>
-              <p className="chart-subtitle">Key achievements</p>
-            </div>
-            <div className="chart-container">
-              <BudgetPerformanceBadges />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Optimized Analytics Section - Eliminates nested container issues */}
+      <OptimizedAnalyticsSection 
+        patternsData={dashboardData?.patterns?.patterns || {}}
+        savingsData={dashboardData?.analytics}
+        timeRange={analyticsTimeRange}
+        onTimeRangeChange={setAnalyticsTimeRange}
+      />
 
       {/* Main Dashboard Analytics Component */}
       <div className="card">

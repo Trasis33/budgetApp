@@ -1,0 +1,292 @@
+/* Mini Components Styles */
+/* Lightweight chart components without nested container issues */
+
+/* Common Mini Component Styles */
+.mini-chart-loading,
+.mini-chart-error,
+.mini-chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4xl);
+  text-align: center;
+  min-height: 120px;
+}
+
+.mini-chart-loading p,
+.mini-chart-error p,
+.mini-chart-empty p {
+  margin: var(--spacing-lg) 0 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.mini-chart-empty small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.retry-btn-small {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn-small:hover {
+  background: var(--color-secondary);
+  transform: translateY(-1px);
+}
+
+.empty-icon {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.6;
+}
+
+/* Mini Spending Patterns Chart */
+.mini-spending-patterns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3xl);
+  height: 100%;
+}
+
+.mini-chart-area {
+  flex: 1;
+  min-height: 160px;
+  position: relative;
+}
+
+.mini-stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+.mini-stat-item {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-2xl);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mini-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.mini-stat-category {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: capitalize;
+}
+
+.mini-stat-trend {
+  font-size: var(--font-size-sm);
+}
+
+.mini-stat-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.mini-stat-strength {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.mini-stat-change {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* Mini Savings Rate Tracker */
+.mini-savings-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  height: 100%;
+  overflow: visible;
+  min-height: 0;
+}
+
+.mini-savings-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.mini-summary-item {
+  text-align: center;
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: visible;
+  word-wrap: break-word;
+  min-width: 0;
+}
+
+.mini-summary-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin-bottom: var(--spacing-sm);
+}
+
+.mini-summary-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+}
+
+.mini-summary-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.mini-goals-section {
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+.mini-goals-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+.mini-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.mini-goal-item {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(251, 191, 36, 0.05) 100%);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-2xl);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+}
+
+.mini-goal-name {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.mini-goal-amount {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-warning);
+  margin-bottom: var(--spacing-xs);
+}
+
+.mini-goal-category {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+/* Responsive Design for Mini Components */
+@media (max-width: 768px) {
+  .mini-savings-summary {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+  
+  .mini-summary-item {
+    padding: var(--spacing-xl);
+  }
+  
+  .mini-stats-section {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+  
+  .mini-stat-item {
+    padding: var(--spacing-xl);
+  }
+  
+  .mini-goals-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+  
+  .mini-chart-area {
+    min-height: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mini-savings-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .mini-summary-value {
+    font-size: var(--font-size-base);
+  }
+  
+  .mini-stat-category {
+    font-size: var(--font-size-xs);
+  }
+  
+  .mini-chart-loading,
+  .mini-chart-error,
+  .mini-chart-empty {
+    min-height: 100px;
+    padding: var(--spacing-3xl);
+  }
+}
+
+/* Animation for mini components */
+.mini-spending-patterns,
+.mini-savings-tracker {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus states for accessibility */
+.mini-stat-item:focus,
+.mini-summary-item:focus,
+.mini-goal-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
