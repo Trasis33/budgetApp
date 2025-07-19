@@ -236,45 +236,10 @@ const ModernEnhancedDashboard = () => {
         </div>
 
         <div className="analytics-grid">
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Spending Patterns</h4>
-              <p className="chart-subtitle">Monthly trends and analysis</p>
-            </div>
-            <div className="chart-container">
-              <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Budget Performance</h4>
-              <p className="chart-subtitle">Budget vs actual spending</p>
-            </div>
-            <div className="chart-container">
-              <BudgetPerformanceCards />
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Savings Progress</h4>
-              <p className="chart-subtitle">Track your savings goals</p>
-            </div>
-            <div className="chart-container">
-              <SavingsRateTracker />
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h4 className="chart-title">Performance Metrics</h4>
-              <p className="chart-subtitle">Key achievements</p>
-            </div>
-            <div className="chart-container">
-              <BudgetPerformanceBadges />
-            </div>
-          </div>
+          <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
+          <SavingsRateTracker />
+          <BudgetPerformanceCards />
+          <BudgetPerformanceBadges />
         </div>
       </div>
 

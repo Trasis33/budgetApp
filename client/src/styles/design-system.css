@@ -212,6 +212,8 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   gap: var(--spacing-3xl);
   margin-bottom: var(--spacing-5xl);
+  /* Ensure analytics grid items have proper height for flexbox children */
+  grid-auto-rows: minmax(600px, auto);
 }
 
 /* Typography */

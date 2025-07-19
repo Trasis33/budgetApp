@@ -164,6 +164,84 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     }
   };
 
+  // Optimized chart options for compact 180px height container
+  const optimizedChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 10,
+        bottom: 10,
+        left: 5,
+        right: 5
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          padding: 8,
+          font: { 
+            size: 10,
+            family: 'var(--font-primary)'
+          },
+          color: 'var(--color-text-secondary)'
+        }
+      },
+      tooltip: {
+        enabled: true,
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'var(--bg-card)',
+        titleColor: 'var(--color-text-primary)',
+        bodyColor: 'var(--color-text-secondary)',
+        borderColor: 'var(--border-color)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        callbacks: {
+          label: function(context) {
+            const value = context.parsed.y;
+            return `${context.dataset.label}: ${value.toFixed(1)}%`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { 
+          maxTicksLimit: 6,
+          font: { 
+            size: 9,
+            family: 'var(--font-primary)'
+          },
+          color: 'var(--color-text-secondary)'
+        },
+        grid: { 
+          display: false 
+        }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { 
+          maxTicksLimit: 5,
+          font: { 
+            size: 9,
+            family: 'var(--font-primary)'
+          },
+          color: 'var(--color-text-secondary)',
+          callback: function(value) {
+            return value + '%';
+          }
+        },
+        grid: {
+          color: 'var(--border-color)',
+          borderColor: 'var(--border-color)'
+        }
+      }
+    }
+  };
+
   const getSavingsRateColorVariable = (rate) => {
     if (rate < 0) return 'var(--color-error)';
     if (rate < 10) return 'var(--color-warning)';
@@ -274,15 +352,25 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const chartData = getSavingsRateChartData();
 
   return (
-    <div className="chart-card">
-      <div className="chart-header">
+    <div className="chart-card" style={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
+      <div className="chart-header" style={{ flexShrink: 0 }}>
         <h3 className="chart-title">💰 Savings Rate Analysis</h3>
         <div className="chart-subtitle">
           {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
         </div>
       </div>
 
-      <div className="stats-grid" style={{ marginBottom: 'var(--spacing-6xl)' }}>
+      <div className="stats-grid" style={{ 
+        flexShrink: 0,
+        marginBottom: 'var(--spacing-3xl)',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 'var(--spacing-md)'
+      }}>
         <div className="stat-card">
           <div className="stat-header">
             <span className="stat-title">Average Savings Rate</span>
@@ -344,9 +432,13 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         </div>
       </div>
 
-      <div className="chart-container" style={{ height: '320px' }}>
+      <div className="chart-container" style={{ 
+        height: '180px', 
+        flexShrink: 0,
+        marginBottom: 'var(--spacing-3xl)'
+      }}>
         {chartData ? (
-          <Line data={chartData} options={chartOptions} />
+          <Line data={chartData} options={optimizedChartOptions} />
         ) : (
           <div className="error-message" style={{
             height: '100%',
@@ -363,44 +455,53 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
 
       {savingsData.savingsGoals && savingsData.savingsGoals.length > 0 && (
         <div style={{ 
-          marginTop: 'var(--spacing-6xl)', 
-          paddingTop: 'var(--spacing-6xl)', 
-          borderTop: `1px solid var(--border-color)` 
+          flex: 1,
+          overflowY: 'auto',
+          paddingTop: 'var(--spacing-3xl)',
+          borderTop: `1px solid var(--border-color)`
         }}>
-          <h4 className="section-title" style={{ marginBottom: 'var(--spacing-4xl)' }}>
-            🎯 Savings Goals
-          </h4>
-          <div className="stats-grid">
-            {savingsData.savingsGoals.map(goal => (
-              <div key={goal.id} className="stat-card">
-                <div className="stat-header">
-                  <span className="stat-title">{goal.goal_name}</span>
-                  <div className="stat-icon" style={{
-                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
-                    color: 'var(--color-warning)'
-                  }}>
-                    🎯
+          <details>
+            <summary className="section-title" style={{ 
+              cursor: 'pointer', 
+              marginBottom: 'var(--spacing-3xl)'
+            }}>
+              🎯 Savings Goals ({savingsData.savingsGoals.length})
+            </summary>
+            <div className="stats-grid" style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 'var(--spacing-md)'
+            }}>
+              {savingsData.savingsGoals.map(goal => (
+                <div key={goal.id} className="stat-card">
+                  <div className="stat-header">
+                    <span className="stat-title">{goal.goal_name}</span>
+                    <div className="stat-icon" style={{
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
+                      color: 'var(--color-warning)'
+                    }}>
+                      🎯
+                    </div>
+                  </div>
+                  <div className="stat-value">{formatCurrency(goal.target_amount)}</div>
+                  <div className="stat-change">
+                    <div style={{ 
+                      fontSize: 'var(--font-size-sm)', 
+                      color: 'var(--color-text-secondary)',
+                      marginBottom: 'var(--spacing-xs)'
+                    }}>
+                      {goal.category}
+                    </div>
+                    <div style={{ 
+                      fontSize: 'var(--font-size-xs)', 
+                      color: 'var(--color-text-muted)'
+                    }}>
+                      {goal.target_date && new Date(goal.target_date).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
-                <div className="stat-value">{formatCurrency(goal.target_amount)}</div>
-                <div className="stat-change">
-                  <div style={{ 
-                    fontSize: 'var(--font-size-sm)', 
-                    color: 'var(--color-text-secondary)',
-                    marginBottom: 'var(--spacing-xs)'
-                  }}>
-                    {goal.category}
-                  </div>
-                  <div style={{ 
-                    fontSize: 'var(--font-size-xs)', 
-                    color: 'var(--color-text-muted)'
-                  }}>
-                    {goal.target_date && new Date(goal.target_date).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </details>
         </div>
       )}
     </div>

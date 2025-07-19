@@ -180,6 +180,74 @@ const SpendingPatternsChart = ({ patterns = null }) => {
     }
   };
 
+  // Optimized chart options for compact 200px height container
+  const optimizedOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 10,
+        bottom: 10,
+        left: 5,
+        right: 5
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          padding: 8,
+          font: { 
+            size: 10,
+            family: 'var(--font-primary)'
+          },
+          color: 'var(--color-text-secondary)'
+        }
+      },
+      tooltip: {
+        enabled: true,
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'var(--bg-card)',
+        titleColor: 'var(--color-text-primary)',
+        bodyColor: 'var(--color-text-secondary)',
+        borderColor: 'var(--border-color)',
+        borderWidth: 1,
+        cornerRadius: 8
+      }
+    },
+    scales: {
+      x: {
+        ticks: { 
+          maxTicksLimit: 6,
+          font: { 
+            size: 9,
+            family: 'var(--font-primary)'
+          },
+          color: 'var(--color-text-secondary)'
+        },
+        grid: { 
+          display: false 
+        }
+      },
+      y: {
+        ticks: { 
+          maxTicksLimit: 5,
+          font: { 
+            size: 9,
+            family: 'var(--font-primary)'
+          },
+          color: 'var(--color-text-secondary)'
+        },
+        grid: {
+          color: 'var(--border-color)',
+          borderColor: 'var(--border-color)'
+        }
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="chart-card">
@@ -257,17 +325,32 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   }
   
   return (
-    <div className="chart-card">
-      <div className="chart-header">
+    <div className="chart-card" style={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
+      <div className="chart-header" style={{ flexShrink: 0 }}>
         <h3 className="chart-title">📊 Spending Patterns</h3>
         <div className="chart-subtitle">Monthly spending trends by category</div>
       </div>
       
-      <div className="chart-container" style={{ height: '240px', marginBottom: 'var(--spacing-4xl)' }}>
-        <Line data={getChartData()} options={options} />
+      <div className="chart-container" style={{ 
+        height: '200px', 
+        flexShrink: 0,
+        marginBottom: 'var(--spacing-3xl)'
+      }}>
+        <Line data={getChartData()} options={optimizedOptions} />
       </div>
       
-      <div className="stats-grid">
+      <div className="stats-grid" style={{
+        flex: 1,
+        overflowY: 'auto',
+        maxHeight: '300px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: 'var(--spacing-lg)'
+      }}>
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
           const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
           return (
