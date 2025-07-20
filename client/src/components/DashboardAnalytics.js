@@ -65,9 +65,9 @@ const DashboardAnalytics = () => {
   if (loading) {
     return (
       <div className="analytics-section">
-        <div className="section-header">
+        {/* <div className="section-header">
           <h2 className="dashboard-title">Analytics Dashboard</h2>
-        </div>
+        </div> */}
         <div className="loading-container" style={{ 
           height: '320px',
           display: 'flex',
@@ -91,9 +91,9 @@ const DashboardAnalytics = () => {
   if (error) {
     return (
       <div className="analytics-section">
-        <div className="section-header">
+        {/* <div className="section-header">
           <h2 className="dashboard-title">Analytics Dashboard</h2>
-        </div>
+        </div> */}
         <div className="error-message">
           <div style={{ 
             display: 'flex', 
@@ -123,7 +123,7 @@ const DashboardAnalytics = () => {
     <div className="analytics-section">
       {/* Header with Controls */}
       <div className="section-header">
-        <h2 className="dashboard-title">Analytics Dashboard</h2>
+        {/* <h2 className="dashboard-title">Analytics Dashboard</h2> */}
         <div className="dashboard-actions">
           <select
             value={timeRange}
