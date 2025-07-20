@@ -39,7 +39,7 @@
   /* Background colors */
   --bg-primary: rgba(255, 255, 255, 0.2);
   --bg-secondary: rgba(255, 255, 255, 0.2);
-  --bg-card: rgba(255, 255, 255, 0.4);
+  --bg-card: rgba(255, 255, 255, 0.2);
   /* --bg-gradient: linear-gradient(135deg, #fbdfff 0%, #d4eeff 50%, #d1fde9 100%); */
   /* --bg-gradient: linear-gradient(45deg, rgba(65, 89, 208, 1.000) 0.000%, rgba(200, 79, 192, 1.000) 50.000%, rgba(255, 205, 112, 1.000) 100.000%); */
   /* --bg-gradient: conic-gradient(from 20deg, rgb(52, 95, 95) 0.000deg, rgb(61, 93, 54) 40.000deg, rgb(91, 53, 100) 80.000deg, rgb(119, 53, 76) 120.000deg, rgb(53, 145, 148) 160.000deg, rgb(52, 135, 174) 200.000deg, rgb(52, 185, 192) 240.000deg, rgb(52, 207, 135) 280.000deg, rgb(163, 228, 52) 320.000deg, rgb(215, 244, 51) 360.000deg); */
@@ -784,7 +784,7 @@ body {
   }
   
   .chart-container {
-    height: 200px;
+    height: 280px;
   }
 }
 

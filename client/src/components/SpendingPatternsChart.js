@@ -66,23 +66,35 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       };
     }
 
-    const categories = Object.keys(processedPatterns).slice(0, 3); // Limit for glass morphism clarity
-    const colors = [modernColors.primary, modernColors.secondary, modernColors.success];
-    
+    const categories = Object.keys(processedPatterns).slice(0, 4); // Limit for glass morphism clarity
+    // const colors = [modernColors.primary, modernColors.secondary, modernColors.success];
+    const colors = [modernColors.primary, modernColors.secondary, modernColors.success, modernColors.warning, modernColors.error];
     const datasets = categories.map((category, index) => {
       const data = processedPatterns[category]?.data ? processedPatterns[category].data.map(d => d.amount) : [];
       
       return {
         label: category,
         data: data,
-        borderColor: colors[index],
-        backgroundColor: modernColors.gradients.primary,
+        borderColor: colors[index], // This sets the line color
+        backgroundColor: (context) => { // This sets the fill color
+          if (!context.chart) return null; // Ensure chart context is available
+          if (!context.chart.ctx) return null; // Ensure context has a canvas context
+          const chart = context.chart;
+          const {ctx, chartArea} = chart;
+          
+          if (!chartArea) return null;
+          
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, `${colors[index]}30`); // More opaque at top
+          gradient.addColorStop(1, `${colors[index]}00`); // Transparent at bottom
+          return gradient;
+        },
         fill: true,
         tension: 0.4,
-        borderWidth: 3,
+        borderWidth: 2,
         pointBackgroundColor: colors[index],
         pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
+        pointBorderWidth: 1,
         pointRadius: 4,
         pointHoverRadius: 6,
       };
@@ -123,7 +135,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
     };
   };
   
-  const options = {
+  /* const options = {
     ...modernChartOptions,
     plugins: {
       ...modernChartOptions.plugins,
@@ -178,7 +190,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         }
       }
     }
-  };
+  }; */
 
   // Optimized chart options for compact 200px height container
   const optimizedOptions = {
@@ -225,10 +237,13 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             size: 9,
             family: 'var(--font-primary)'
           },
-          color: 'var(--color-text-secondary)'
+          color: '#897bceff'
         },
         grid: { 
-          display: false 
+          display: true 
+        },
+        border: {
+          display: false
         }
       },
       y: {
@@ -238,11 +253,13 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             size: 9,
             family: 'var(--font-primary)'
           },
-          color: 'var(--color-text-secondary)'
+          color: '#897bceff'
         },
         grid: {
-          color: 'var(--border-color)',
-          borderColor: 'var(--border-color)'
+          display: true
+        },
+        border: {
+          display: false
         }
       }
     }
@@ -337,7 +354,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       </div>
       
       <div className="chart-container" style={{ 
-        height: '200px', 
+        height: '280px', 
         flexShrink: 0,
         marginBottom: 'var(--spacing-3xl)'
       }}>
