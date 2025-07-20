@@ -80,7 +80,20 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
           label: 'Savings Rate (%)',
           data: savingsRates,
           borderColor: '#10b981', // Keep as hex for Chart.js compatibility
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          // backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          backgroundColor: (context) => { // This sets the fill color
+            if (!context.chart) return null; // Ensure chart context is available
+            if (!context.chart.ctx) return null; // Ensure context has a canvas context
+            const chart = context.chart;
+            const {ctx, chartArea} = chart;
+            
+            if (!chartArea) return null;
+            
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, `${'#10b981'}30`); // More opaque at top
+            gradient.addColorStop(1, `${'#10b981'}00`); // Transparent at bottom
+            return gradient;
+          },
           borderWidth: 3,
           fill: true,
           tension: 0.4,
@@ -90,15 +103,15 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
             '#10b981'
           ),
           pointBorderColor: '#ffffff',
-          pointBorderWidth: 2,
-          pointRadius: 6,
+          pointBorderWidth: 1,
+          pointRadius: 4,
           pointHoverRadius: 8
         }
       ]
     };
   };
 
-  const chartOptions = {
+  /* const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -162,7 +175,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         }
       }
     }
-  };
+  }; */
 
   // Optimized chart options for compact 180px height container
   const optimizedChartOptions = {
@@ -215,10 +228,13 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
             size: 9,
             family: 'var(--font-primary)'
           },
-          color: 'var(--color-text-secondary)'
+          color: '#897bceff'
         },
         grid: { 
-          display: false 
+          display: true 
+        },
+        border: {
+          display: false
         }
       },
       y: {
@@ -229,14 +245,16 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
             size: 9,
             family: 'var(--font-primary)'
           },
-          color: 'var(--color-text-secondary)',
+          color: '#897bceff',
           callback: function(value) {
             return value + '%';
           }
         },
         grid: {
-          color: 'var(--border-color)',
-          borderColor: 'var(--border-color)'
+          display: true
+        },
+        border: {
+          display: false
         }
       }
     }
@@ -433,7 +451,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
       </div>
 
       <div className="chart-container" style={{ 
-        height: '180px', 
+        height: '280px', 
         flexShrink: 0,
         marginBottom: 'var(--spacing-3xl)'
       }}>
