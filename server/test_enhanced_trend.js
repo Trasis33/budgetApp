@@ -1,4 +1,4 @@
-const BudgetOptimizer = require('./server/utils/budgetOptimizer');
+const BudgetOptimizer = require('./utils/budgetOptimizer');
 
 // Test the enhanced trend strength calculation
 function testEnhancedTrend() {
