@@ -24,6 +24,7 @@ import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
 import SavingsRateTracker from '../components/SavingsRateTracker';
 import SavingsGoalsManager from '../components/SavingsGoalsManager';
 import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
+import CategorySpendingChart from '../components/charts/CategorySpendingChart';
 
 ChartJS.register(
   ArcElement,
@@ -64,6 +65,9 @@ const Budget = () => {
   const [timePeriod, setTimePeriod] = useState('6months');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // A/B testing state for charts
+  const [useShadcnChart, setUseShadcnChart] = useState(false);
 
   // Calculate date range based on selected time period
   const calculateDateRange = useCallback((period) => {
@@ -389,24 +393,73 @@ const Budget = () => {
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
-              <div className="h-80">
-                {(() => {
-                  const chartData = getCategoryChartData();
-                  if (!chartData) {
-                    return (
-                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                          <div className="text-4xl mb-2">🍰</div>
-                          <p>No category data available</p>
-                          <p className="text-sm mt-1">Add some expenses to see your spending breakdown</p>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return <Doughnut data={chartData} options={commonChartOptions} />;
-                })()}
+              <div className="section-header" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '1rem'
+              }}>
+                <h2 className="section-title" style={{
+                  fontSize: 'var(--font-size-xl)',
+                  fontWeight: 600,
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0
+                }}>Spending by Category</h2>
+                <button
+                  onClick={() => setUseShadcnChart(!useShadcnChart)}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '0.375rem 0.75rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(203, 213, 225, 0.3)',
+                    borderRadius: '0.375rem',
+                    color: '#64748b',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'rgba(139, 92, 246, 0.1)'
+                    e.target.style.color = '#8b5cf6'
+                    e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.2)'
+                    e.target.style.color = '#64748b'
+                    e.target.style.borderColor = 'rgba(203, 213, 225, 0.3)'
+                  }}
+                >
+                  📊 {useShadcnChart ? 'Chart.js' : 'Design System'} Version
+                </button>
               </div>
+
+              {useShadcnChart ? (
+                <CategorySpendingChart 
+                  chartData={getCategoryChartData()} 
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <div style={{ height: '320px' }}>
+                  {(() => {
+                    const chartData = getCategoryChartData();
+                    if (!chartData) {
+                      return (
+                        <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                          <div className="text-center text-gray-500">
+                            <div className="text-4xl mb-2">🍰</div>
+                            <p>No category data available</p>
+                            <p className="text-sm mt-1">Add some expenses to see your spending breakdown</p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return <Doughnut data={chartData} options={commonChartOptions} />;
+                  })()}
+                </div>
+              )}
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
