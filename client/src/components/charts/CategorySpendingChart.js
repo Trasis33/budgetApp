@@ -1,9 +1,9 @@
 import * as React from "react"
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import '../../styles/design-system.css'
 
-const CategorySpendingChart = ({ chartData, formatCurrency }) => {
-  // Transform Chart.js data format to Recharts format
+const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, categories = [] }) => {
+  // Transform Chart.js data format to Recharts format with filtering
   const transformData = (chartJsData) => {
     if (!chartJsData?.labels || !chartJsData?.datasets?.[0]) {
       return []
@@ -13,11 +13,15 @@ const CategorySpendingChart = ({ chartData, formatCurrency }) => {
     const data = datasets[0].data
     const colors = datasets[0].backgroundColor
 
-    return labels.map((label, index) => ({
-      category: label,
-      value: data[index],
-      fill: colors[index]
-    }))
+    // Filter out categories with no spending (amount <= 0) and sort by amount
+    return labels
+      .map((label, index) => ({
+        category: label,
+        value: data[index],
+        fill: colors[index]
+      }))
+      .filter(item => item.value > 0) // Only show categories with actual expenses
+      .sort((a, b) => b.value - a.value) // Sort by spending amount (highest first)
   }
 
   const pieData = transformData(chartData)
@@ -46,6 +50,36 @@ const CategorySpendingChart = ({ chartData, formatCurrency }) => {
     return enhancedPieData.reduce((acc, curr) => acc + curr.value, 0)
   }, [enhancedPieData])
 
+  // Helper function to get budget information for a category
+  const getBudgetInfo = (categoryName) => {
+    const category = categories.find(cat => cat.name === categoryName)
+    if (!category || !budgets[category.id]) {
+      return null
+    }
+    
+    const budget = parseFloat(budgets[category.id])
+    return budget > 0 ? budget : null
+  }
+
+  // Calculate percentage of total spending
+  const getSpendingPercentage = (value, total) => {
+    return total > 0 ? ((value / total) * 100).toFixed(1) : 0
+  }
+
+  // Get budget utilization percentage
+  const getBudgetUtilization = (spent, budget) => {
+    return budget > 0 ? ((spent / budget) * 100).toFixed(1) : null
+  }
+
+  // Get budget status
+  const getBudgetStatus = (spent, budget) => {
+    if (!budget) return 'no-budget'
+    const utilization = (spent / budget) * 100
+    if (utilization > 100) return 'over-budget'
+    if (utilization > 90) return 'near-budget'
+    return 'under-budget'
+  }
+
   // Empty state with design system styling
   if (!enhancedPieData || enhancedPieData.length === 0) {
     return (
@@ -65,7 +99,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency }) => {
             fontSize: 'var(--font-size-base)',
             textAlign: 'center'
           }}>
-            No category data available
+            No spending data available
           </p>
           <p style={{ 
             color: 'var(--color-text-muted)',
@@ -73,7 +107,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency }) => {
             marginTop: 'var(--spacing-sm)',
             textAlign: 'center'
           }}>
-            Add some expenses to see your spending breakdown
+            Add some expenses to see your spending breakdown by category
           </p>
         </div>
       </div>
@@ -97,6 +131,124 @@ const CategorySpendingChart = ({ chartData, formatCurrency }) => {
       <div style={{ height: '320px', position: 'relative' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
+            <Tooltip
+              cursor={false}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                
+                const data = payload[0]
+                const categoryName = data.payload.category
+                const spentAmount = data.value
+                const budget = getBudgetInfo(categoryName)
+                const spendingPercentage = getSpendingPercentage(spentAmount, totalValue)
+                const budgetUtilization = getBudgetUtilization(spentAmount, budget)
+                const budgetStatus = getBudgetStatus(spentAmount, budget)
+
+                return (
+                  <div style={{
+                    background: 'var(--bg-card)',
+                    backdropFilter: 'var(--backdrop-blur)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--border-radius-md)',
+                    padding: 'var(--spacing-3xl)',
+                    boxShadow: 'var(--shadow-lg)',
+                    fontSize: 'var(--font-size-sm)',
+                    minWidth: '200px'
+                  }}>
+                    {/* Category Name */}
+                    <div style={{ 
+                      fontWeight: 600, 
+                      color: 'var(--color-text-primary)',
+                      marginBottom: 'var(--spacing-lg)',
+                      fontSize: 'var(--font-size-base)'
+                    }}>
+                      {categoryName}
+                    </div>
+
+                    {/* Spending Amount */}
+                    <div style={{ 
+                      marginBottom: 'var(--spacing-lg)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--spacing-xs)'
+                    }}>
+                      <div style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: data.payload.fill
+                      }}></div>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Spent: </span>
+                      <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                        {formatCurrency(spentAmount)}
+                      </span>
+                    </div>
+
+                    {/* Percentage of Total */}
+                    <div style={{ 
+                      marginBottom: 'var(--spacing-lg)',
+                      color: 'var(--color-text-secondary)'
+                    }}>
+                      {spendingPercentage}% of total expenses
+                    </div>
+
+                    {/* Budget Information */}
+                    {budget ? (
+                      <>
+                        <div style={{ 
+                          marginBottom: 'var(--spacing-sm)',
+                          color: 'var(--color-text-secondary)'
+                        }}>
+                          Budget: {formatCurrency(budget)}
+                        </div>
+                        <div style={{ 
+                          marginBottom: 'var(--spacing-lg)',
+                          color: 'var(--color-text-secondary)'
+                        }}>
+                          Utilization: {budgetUtilization}%
+                        </div>
+                        
+                        {/* Budget Status Badge */}
+                        <div style={{
+                          padding: 'var(--spacing-xs) var(--spacing-lg)',
+                          borderRadius: 'var(--border-radius-full)',
+                          fontSize: 'var(--font-size-xs)',
+                          fontWeight: 600,
+                          textAlign: 'center',
+                          ...(budgetStatus === 'over-budget' && {
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%)',
+                            color: '#991b1b',
+                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                          }),
+                          ...(budgetStatus === 'near-budget' && {
+                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
+                            color: '#92400e',
+                            border: '1px solid rgba(245, 158, 11, 0.2)'
+                          }),
+                          ...(budgetStatus === 'under-budget' && {
+                            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                            color: '#166534',
+                            border: '1px solid rgba(34, 197, 94, 0.2)'
+                          })
+                        }}>
+                          {budgetStatus === 'over-budget' && '⚠️ Over Budget'}
+                          {budgetStatus === 'near-budget' && '⚡ Near Limit'}
+                          {budgetStatus === 'under-budget' && '✅ On Track'}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ 
+                        color: 'var(--color-text-muted)',
+                        fontStyle: 'italic',
+                        fontSize: 'var(--font-size-xs)'
+                      }}>
+                        No budget set for this category
+                      </div>
+                    )}
+                  </div>
+                )
+              }}
+            />
             <Pie
               data={enhancedPieData}
               dataKey="value"

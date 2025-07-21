@@ -440,6 +440,8 @@ const Budget = () => {
                 <CategorySpendingChart 
                   chartData={getCategoryChartData()} 
                   formatCurrency={formatCurrency}
+                  budgets={budgets}
+                  categories={categories}
                 />
               ) : (
                 <div style={{ height: '320px' }}>
