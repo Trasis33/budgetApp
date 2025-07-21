@@ -25,6 +25,8 @@ import SavingsRateTracker from '../components/SavingsRateTracker';
 import SavingsGoalsManager from '../components/SavingsGoalsManager';
 import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 import CategorySpendingChart from '../components/charts/CategorySpendingChart';
+import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
+import BudgetActualChart from '../components/charts/BudgetActualChart';
 
 ChartJS.register(
   ArcElement,
@@ -467,43 +469,58 @@ const Budget = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
               <div className="h-80">
-                {(() => {
-                  const chartData = getIncomeExpenseChartData();
-                  if (!chartData) {
-                    return (
-                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                          <div className="text-4xl mb-2">💰</div>
-                          <p>No income/expense data available</p>
-                          <p className="text-sm mt-1">Add income and expenses to see your financial overview</p>
+                {useShadcnChart ? (
+                  <IncomeExpenseChart 
+                    chartData={getIncomeExpenseChartData()} 
+                    formatCurrency={formatCurrency}
+                  />
+                ) : (
+                  (() => {
+                    const chartData = getIncomeExpenseChartData();
+                    if (!chartData) {
+                      return (
+                        <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                          <div className="text-center text-gray-500">
+                            <div className="text-4xl mb-2">💰</div>
+                            <p>No income/expense data available</p>
+                            <p className="text-sm mt-1">Add income and expenses to see your financial overview</p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  }
-                  return <Bar data={chartData} options={commonChartOptions} />;
-                })()}
+                      );
+                    }
+                    return <Bar data={chartData} options={commonChartOptions} />;
+                  })()
+                )}
               </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
-            <div className="h-80">
-              {(() => {
-                const chartData = getBudgetVsActualChartData();
-                if (!chartData) {
-                  return (
-                    <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <div className="text-4xl mb-2">🎯</div>
-                        <p>No budget comparison data available</p>
-                        <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
+            <div className="h-98">
+              {useShadcnChart ? (
+                <BudgetActualChart 
+                  chartData={getBudgetVsActualChartData()} 
+                  formatCurrency={formatCurrency}
+                  categories={categories}
+                />
+              ) : (
+                (() => {
+                  const chartData = getBudgetVsActualChartData();
+                  if (!chartData) {
+                    return (
+                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                          <div className="text-4xl mb-2">🎯</div>
+                          <p>No budget comparison data available</p>
+                          <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
-                return <Bar data={chartData} options={commonChartOptions} />;
-              })()}
+                    );
+                  }
+                  return <Bar data={chartData} options={commonChartOptions} />;
+                })()
+              )}
             </div>
           </div>
         </div>

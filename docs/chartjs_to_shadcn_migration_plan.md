@@ -63,13 +63,13 @@
 - [x] Style tooltip with additional budget performance metrics
 - [x] Add visual budget status badges with design system colors
 
-### Step 6: Income vs. Expenses Bar Chart Migration (NEW) 🔄 PLANNED
-- [ ] Create `IncomeExpenseChart.js` component using Recharts BarChart
-- [ ] Transform `getIncomeExpenseChartData()` output to Recharts format
-- [ ] Implement design system styling with glass morphism effects
-- [ ] Add enhanced tooltip showing income/expense breakdown and net savings
-- [ ] Integrate A/B testing toggle in Budget.js for Income vs. Expenses chart
-- [ ] Add visual indicators for positive/negative cash flow
+### Step 6: Income vs. Expenses Bar Chart Migration (NEW) ✅ COMPLETED
+- [x] Create `IncomeExpenseChart.js` component using Recharts BarChart
+- [x] Transform `getIncomeExpenseChartData()` output to Recharts format
+- [x] Implement design system styling with glass morphism effects
+- [x] Add enhanced tooltip showing income/expense breakdown and net savings
+- [x] Integrate A/B testing toggle in Budget.js for Income vs. Expenses chart
+- [x] Add visual indicators for positive/negative cash flow
 
 **Implementation: `client/src/components/charts/IncomeExpenseChart.js`**
 ```javascript
@@ -192,13 +192,13 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
 export default IncomeExpenseChart
 ```
 
-### Step 7: Budget vs. Actual Bar Chart Migration (NEW) 🔄 PLANNED
-- [ ] Create `BudgetActualChart.js` component using Recharts BarChart
-- [ ] Transform `getBudgetVsActualChartData()` output to Recharts format
-- [ ] Implement dual-bar display with budget performance color coding
-- [ ] Add enhanced tooltip showing budget variance and performance metrics
-- [ ] Integrate A/B testing toggle in Budget.js for Budget vs. Actual chart
-- [ ] Add budget performance indicators (over/under/on-track) per category
+### Step 7: Budget vs. Actual Bar Chart Migration (NEW) ✅ COMPLETED
+- [x] Create `BudgetActualChart.js` component using Recharts BarChart
+- [x] Transform `getBudgetVsActualChartData()` output to Recharts format
+- [x] Implement dual-bar display with budget performance color coding
+- [x] Add enhanced tooltip showing budget variance and performance metrics
+- [x] Integrate A/B testing toggle in Budget.js for Budget vs. Actual chart
+- [x] Add budget performance indicators (over/under/on-track) per category
 
 **Implementation: `client/src/components/charts/BudgetActualChart.js`**
 ```javascript
