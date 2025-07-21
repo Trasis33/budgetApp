@@ -17,6 +17,9 @@ import {
   Filler,
 } from 'chart.js';
 
+// Import shadcn/ui enhanced tabs
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
+
 // Import analytics components
 import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
 import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
@@ -70,6 +73,9 @@ const Budget = () => {
 
   // A/B testing state for charts
   const [useShadcnChart, setUseShadcnChart] = useState(false);
+
+  // A/B testing state for navbar
+  const [useShadcnNavbar, setUseShadcnNavbar] = useState(false);
 
   // Calculate date range based on selected time period
   const calculateDateRange = useCallback((period) => {
@@ -740,22 +746,76 @@ const Budget = () => {
       )}
 
       <div className="mb-6">
-        <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeSection === section.id
-                  ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <span className="mr-2 text-lg">{section.icon}</span>
-              {section.label}
-            </button>
-          ))}
-        </nav>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold" style={{
+            background: 'var(--bg-gradient-primary)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>Navigation</h2>
+          <button
+            onClick={() => setUseShadcnNavbar(!useShadcnNavbar)}
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.375rem 0.75rem',
+              background: 'var(--bg-card)',
+              backdropFilter: 'var(--backdrop-blur)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--border-radius-sm)',
+              color: 'var(--color-text-secondary)',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            className="hover-lift"
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(139, 92, 246, 0.1)'
+              e.target.style.color = 'var(--color-primary)'
+              e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'var(--bg-card)'
+              e.target.style.color = 'var(--color-text-secondary)'
+              e.target.style.borderColor = 'var(--border-color)'
+            }}
+          >
+            🎨 {useShadcnNavbar ? 'Tailwind' : 'Design System'} Version
+          </button>
+        </div>
+
+        {useShadcnNavbar ? (
+          <Tabs value={activeSection} onValueChange={setActiveSection}>
+            <TabsList>
+              {sections.map((section) => (
+                <TabsTrigger key={section.id} value={section.id}>
+                  <span style={{ 
+                    marginRight: 'var(--spacing-lg)', 
+                    fontSize: 'var(--font-size-xl)' 
+                  }}>
+                    {section.icon}
+                  </span>
+                  {section.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        ) : (
+          <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  activeSection === section.id
+                    ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <span className="mr-2 text-lg">{section.icon}</span>
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        )}
       </div>
 
       {renderContent()}
