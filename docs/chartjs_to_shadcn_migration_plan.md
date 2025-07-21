@@ -63,6 +63,275 @@
 - [x] Style tooltip with additional budget performance metrics
 - [x] Add visual budget status badges with design system colors
 
+### Step 6: Income vs. Expenses Bar Chart Migration (NEW) 🔄 PLANNED
+- [ ] Create `IncomeExpenseChart.js` component using Recharts BarChart
+- [ ] Transform `getIncomeExpenseChartData()` output to Recharts format
+- [ ] Implement design system styling with glass morphism effects
+- [ ] Add enhanced tooltip showing income/expense breakdown and net savings
+- [ ] Integrate A/B testing toggle in Budget.js for Income vs. Expenses chart
+- [ ] Add visual indicators for positive/negative cash flow
+
+**Implementation: `client/src/components/charts/IncomeExpenseChart.js`**
+```javascript
+import * as React from "react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
+import '../../styles/design-system.css'
+
+const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
+  // Transform Chart.js data format to Recharts format
+  const transformData = (chartJsData) => {
+    if (!chartJsData?.datasets) {
+      return []
+    }
+
+    const incomeData = chartJsData.datasets.find(d => d.label === 'Income')
+    const expenseData = chartJsData.datasets.find(d => d.label === 'Expenses')
+
+    return [{
+      name: 'Financial Overview',
+      income: incomeData?.data[0] || 0,
+      expenses: expenseData?.data[0] || 0,
+      net: (incomeData?.data[0] || 0) - (expenseData?.data[0] || 0)
+    }]
+  }
+
+  const barData = transformData(chartData)
+  const hasData = barData.length > 0 && (barData[0].income > 0 || barData[0].expenses > 0)
+
+  // Enhanced tooltip with financial insights
+  const renderTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null
+
+    const data = payload[0]?.payload
+    const netAmount = data?.net || 0
+    const isPositive = netAmount >= 0
+    const savingsRate = data?.income > 0 ? ((netAmount / data.income) * 100).toFixed(1) : 0
+
+    return (
+      <div style={{
+        background: 'var(--bg-card)',
+        backdropFilter: 'var(--backdrop-blur)',
+        border: '1px solid var(--border-color)',
+        borderRadius: 'var(--border-radius-md)',
+        padding: 'var(--spacing-3xl)',
+        boxShadow: 'var(--shadow-lg)',
+        fontSize: 'var(--font-size-sm)',
+        minWidth: '200px'
+      }}>
+        <div style={{ 
+          fontWeight: 600, 
+          color: 'var(--color-text-primary)',
+          marginBottom: 'var(--spacing-lg)',
+          fontSize: 'var(--font-size-base)'
+        }}>
+          Monthly Financial Summary
+        </div>
+
+        {/* Income */}
+        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }}></div>
+            <span style={{ color: 'var(--color-text-secondary)' }}>Income: </span>
+            <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>
+              {formatCurrency(data?.income || 0)}
+            </span>
+          </div>
+        </div>
+
+        {/* Financial Health Badge */}
+        <div style={{
+          padding: 'var(--spacing-xs) var(--spacing-lg)',
+          borderRadius: 'var(--border-radius-full)',
+          fontSize: 'var(--font-size-xs)',
+          fontWeight: 600,
+          textAlign: 'center',
+          ...(isPositive ? {
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+            color: '#166534',
+            border: '1px solid rgba(34, 197, 94, 0.2)'
+          } : {
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%)',
+            color: '#991b1b',
+            border: '1px solid rgba(239, 68, 68, 0.2)'
+          })
+        }}>
+          {isPositive ? '💰 Saving Money' : '⚠️ Spending More Than Earning'}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="chart-card glass-effect hover-lift">
+      <div className="chart-header">
+        <h3 className="chart-title text-gradient">Income vs. Expenses</h3>
+        <p className="chart-subtitle">
+          Net: <span style={{ 
+            fontWeight: 600, 
+            color: barData[0]?.net >= 0 ? 'var(--color-success)' : 'var(--color-error)'
+          }}>
+            {barData[0]?.net >= 0 ? '+' : ''}{formatCurrency(barData[0]?.net || 0)}
+          </span>
+        </p>
+      </div>
+      
+      <div style={{ height: '320px', position: 'relative' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
+            <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+            <Bar dataKey="income" fill="var(--color-success)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expenses" fill="var(--color-warning)" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export default IncomeExpenseChart
+```
+
+### Step 7: Budget vs. Actual Bar Chart Migration (NEW) 🔄 PLANNED
+- [ ] Create `BudgetActualChart.js` component using Recharts BarChart
+- [ ] Transform `getBudgetVsActualChartData()` output to Recharts format
+- [ ] Implement dual-bar display with budget performance color coding
+- [ ] Add enhanced tooltip showing budget variance and performance metrics
+- [ ] Integrate A/B testing toggle in Budget.js for Budget vs. Actual chart
+- [ ] Add budget performance indicators (over/under/on-track) per category
+
+**Implementation: `client/src/components/charts/BudgetActualChart.js`**
+```javascript
+import * as React from "react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
+import '../../styles/design-system.css'
+
+const BudgetActualChart = ({ chartData, formatCurrency, categories = [] }) => {
+  // Transform Chart.js data format to Recharts format
+  const transformData = (chartJsData) => {
+    if (!chartJsData?.labels || !chartJsData?.datasets) {
+      return []
+    }
+
+    const budgetedData = chartJsData.datasets.find(d => d.label === 'Budgeted')
+    const actualData = chartJsData.datasets.find(d => d.label === 'Actual Spending')
+
+    return chartJsData.labels.map((label, index) => {
+      const budgeted = budgetedData?.data[index] || 0
+      const actual = actualData?.data[index] || 0
+      const variance = budgeted > 0 ? ((actual - budgeted) / budgeted * 100) : 0
+      
+      return {
+        category: label,
+        budgeted,
+        actual,
+        variance,
+        status: budgeted === 0 ? 'no-budget' : 
+                variance > 10 ? 'over-budget' : 
+                variance > -10 ? 'on-track' : 'under-budget'
+      }
+    }).filter(item => item.budgeted > 0 || item.actual > 0) // Only show categories with data
+  }
+
+  const barData = transformData(chartData)
+  const hasData = barData.length > 0
+
+  // Enhanced tooltip with budget performance insights
+  const renderTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null
+
+    const data = payload[0]?.payload
+    const variance = data?.variance || 0
+    const isOverBudget = variance > 10
+    const isUnderBudget = variance < -10
+
+    return (
+      <div style={{
+        background: 'var(--bg-card)',
+        backdropFilter: 'var(--backdrop-blur)',
+        border: '1px solid var(--border-color)',
+        borderRadius: 'var(--border-radius-md)',
+        padding: 'var(--spacing-3xl)',
+        boxShadow: 'var(--shadow-lg)',
+        fontSize: 'var(--font-size-sm)',
+        minWidth: '220px'
+      }}>
+        <div style={{ 
+          fontWeight: 600, 
+          color: 'var(--color-text-primary)',
+          marginBottom: 'var(--spacing-lg)',
+          fontSize: 'var(--font-size-base)'
+        }}>
+          {data?.category}
+        </div>
+
+        {/* Budget Performance Badge */}
+        <div style={{
+          padding: 'var(--spacing-xs) var(--spacing-lg)',
+          borderRadius: 'var(--border-radius-full)',
+          fontSize: 'var(--font-size-xs)',
+          fontWeight: 600,
+          textAlign: 'center',
+          ...(isOverBudget ? {
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%)',
+            color: '#991b1b',
+            border: '1px solid rgba(239, 68, 68, 0.2)'
+          } : isUnderBudget ? {
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+            color: '#166534',
+            border: '1px solid rgba(34, 197, 94, 0.2)'
+          } : {
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
+            color: '#92400e',
+            border: '1px solid rgba(245, 158, 11, 0.2)'
+          })
+        }}>
+          {isOverBudget ? '⚠️ Over Budget' : 
+           isUnderBudget ? '💰 Under Budget' : '🎯 On Track'}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="chart-card glass-effect hover-lift">
+      <div className="chart-header">
+        <h3 className="chart-title text-gradient">Budget vs. Actual Spending</h3>
+        <p className="chart-subtitle">
+          {barData.filter(d => d.status === 'over-budget').length} categories over budget
+        </p>
+      </div>
+      
+      <div style={{ height: '320px', position: 'relative' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
+            <XAxis 
+              dataKey="category" 
+              axisLine={false}
+              tickLine={false}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              style={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
+            />
+            <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+            <Bar dataKey="budgeted" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+            <Bar 
+              dataKey="actual" 
+              fill="var(--color-warning)"
+              radius={[4, 4, 0, 0]} 
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export default BudgetActualChart
+```
+
 ## 🔧 Code Transformations
 
 ### Component 1: New CategorySpendingChart Component
