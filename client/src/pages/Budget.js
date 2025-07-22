@@ -352,7 +352,7 @@ const Budget = () => {
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
-            <div className="h-96">
+            <div className="h-98">
               <BudgetActualChart 
                 chartData={getBudgetVsActualChartData()} 
                 formatCurrency={formatCurrency}
