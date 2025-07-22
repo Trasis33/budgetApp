@@ -37,19 +37,21 @@
   --color-text-muted: #475569;
   
   /* Background colors */
-  --bg-primary: rgba(255, 255, 255, 0.2);
-  --bg-secondary: rgba(255, 255, 255, 0.2);
-  --bg-card: rgba(255, 255, 255, 0.2);
+  --bg-primary: rgba(255, 255, 255, 0.3);
+  --bg-secondary: rgba(255, 255, 255, 0.3);
+  --bg-card: rgba(255, 255, 255, 0.3);
   /* --bg-gradient: linear-gradient(135deg, #fbdfff 0%, #d4eeff 50%, #d1fde9 100%); */
   /* --bg-gradient: linear-gradient(45deg, rgba(65, 89, 208, 1.000) 0.000%, rgba(200, 79, 192, 1.000) 50.000%, rgba(255, 205, 112, 1.000) 100.000%); */
   /* --bg-gradient: conic-gradient(from 20deg, rgb(52, 95, 95) 0.000deg, rgb(61, 93, 54) 40.000deg, rgb(91, 53, 100) 80.000deg, rgb(119, 53, 76) 120.000deg, rgb(53, 145, 148) 160.000deg, rgb(52, 135, 174) 200.000deg, rgb(52, 185, 192) 240.000deg, rgb(52, 207, 135) 280.000deg, rgb(163, 228, 52) 320.000deg, rgb(215, 244, 51) 360.000deg); */
   /* --bg-gradient: conic-gradient(from 20deg, rgb(99, 179, 179) 0.000deg, rgb(35, 36, 59) 40.000deg, rgb(69, 37, 78) 80.000deg, rgb(92, 31, 87) 120.000deg, rgb(79, 38, 112) 160.000deg, rgb(91, 39, 115) 200.000deg, rgb(44, 150, 231) 240.000deg, rgb(113, 217, 251) 280.000deg, rgb(136, 241, 245) 320.000deg, rgb(11, 255, 206) 360.000deg); */
 /*   --bg-gradient: radial-gradient( circle 369px at -2.9% 12.9%,  rgba(247,234,163,1) 20%, rgba(236,180,238,0.56) 136.4%, rgba(163,203,247,1) 300.7% ); */
-  --bg-gradient: linear-gradient(135deg, rgba(0, 0, 65, 1.000) 0.000%, rgba(34, 87, 114, 1.000) 50.000%, rgba(91, 195, 154, 1.000) 100.000%);
+/*   --bg-gradient: linear-gradient(135deg, rgba(0, 0, 65, 1.000) 0.000%, rgba(34, 87, 114, 1.000) 50.000%, rgba(91, 195, 154, 1.000) 100.000%); */
+  --bg-gradient: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
   --bg-gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
   
   /* Border and effects */
-  --border-color: rgba(203, 213, 225, 0.3);
+/*   --border-color: rgba(203, 213, 225, 0.3); */
+  --border-color: rgba(241, 247, 255, 0.493);
   --border-radius-sm: 0.375rem;
   --border-radius-md: 0.5rem;
   --border-radius-lg: 0.75rem;
