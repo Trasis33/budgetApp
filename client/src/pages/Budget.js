@@ -2,20 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Filler,
-} from 'chart.js';
 
 // Import shadcn/ui enhanced tabs
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
@@ -30,19 +16,6 @@ import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 import CategorySpendingChart from '../components/charts/CategorySpendingChart';
 import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
 import BudgetActualChart from '../components/charts/BudgetActualChart';
-
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Filler
-);
 
 const Budget = () => {
   // Active section state for shadcn/ui tabs navigation
@@ -64,41 +37,7 @@ const Budget = () => {
   const [budgets, setBudgets] = useState({});
   
   // Analytics state
-  const [trendsData, setTrendsData] = useState(null);
-  const [categoryTrendsData, setCategoryTrendsData] = useState(null);
-  const [incomeExpensesData, setIncomeExpensesData] = useState(null);
   const [timePeriod, setTimePeriod] = useState('6months');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-
-  // Chart version toggle state
-  const [useShadcnChart, setUseShadcnChart] = useState(false);
-
-  // Calculate date range based on selected time period
-  const calculateDateRange = useCallback((period) => {
-    const today = new Date();
-    const end = today.toISOString().split('T')[0];
-    let start;
-
-    switch (period) {
-      case '3months':
-        start = new Date(today.setMonth(today.getMonth() - 3)).toISOString().split('T')[0];
-        break;
-      case '6months':
-        start = new Date(today.setMonth(today.getMonth() - 6)).toISOString().split('T')[0];
-        break;
-      case '1year':
-        start = new Date(today.setFullYear(today.getFullYear() - 1)).toISOString().split('T')[0];
-        break;
-      case '2years':
-        start = new Date(today.setFullYear(today.getFullYear() - 2)).toISOString().split('T')[0];
-        break;
-      default:
-        start = new Date(today.setMonth(today.getMonth() - 6)).toISOString().split('T')[0];
-    }
-
-    return { start, end };
-  }, []);
 
   // Navigation sections
   const sections = [
@@ -139,12 +78,6 @@ const Budget = () => {
       setLoading(false);
     }
   }, [month, year]);
-
-  useEffect(() => {
-    const { start, end } = calculateDateRange(timePeriod);
-    setStartDate(start);
-    setEndDate(end);
-  }, [timePeriod, calculateDateRange]);
 
   useEffect(() => {
     fetchBudgetData();
@@ -310,23 +243,6 @@ const Budget = () => {
     };
   };
 
-  const commonChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            return `${context.dataset.label}: ${formatCurrency(context.parsed.y || context.parsed)}`;
-          }
-        }
-      }
-    }
-  };
-
   if (!user) {
     return null;
   }
@@ -413,117 +329,35 @@ const Budget = () => {
                   WebkitTextFillColor: 'transparent',
                   margin: 0
                 }}>Spending by Category</h2>
-                <button
-                  onClick={() => setUseShadcnChart(!useShadcnChart)}
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '0.375rem 0.75rem',
-                    background: 'var(--bg-card)',
-                    backdropFilter: 'var(--backdrop-blur)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    color: 'var(--color-text-secondary)',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'rgba(139, 92, 246, 0.1)'
-                    e.target.style.color = 'var(--color-primary)'
-                    e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'var(--bg-card)'
-                    e.target.style.color = 'var(--color-text-secondary)'
-                    e.target.style.borderColor = 'var(--border-color)'
-                  }}
-                >
-                  📊 {useShadcnChart ? 'Chart.js' : 'Recharts'} Version
-                </button>
               </div>
 
-              {useShadcnChart ? (
-                <CategorySpendingChart 
-                  chartData={getCategoryChartData()} 
-                  formatCurrency={formatCurrency}
-                  budgets={budgets}
-                  categories={categories}
-                />
-              ) : (
-                <div style={{ height: '320px' }}>
-                  {(() => {
-                    const chartData = getCategoryChartData();
-                    if (!chartData) {
-                      return (
-                        <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                          <div className="text-center text-gray-500">
-                            <div className="text-4xl mb-2">🍰</div>
-                            <p>No category data available</p>
-                            <p className="text-sm mt-1">Add some expenses to see your spending breakdown</p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return <Doughnut data={chartData} options={commonChartOptions} />;
-                  })()}
-                </div>
-              )}
+              <CategorySpendingChart 
+                chartData={getCategoryChartData()} 
+                formatCurrency={formatCurrency}
+                budgets={budgets}
+                categories={categories}
+              />
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
               <div className="h-80">
-                {useShadcnChart ? (
-                  <IncomeExpenseChart 
-                    chartData={getIncomeExpenseChartData()} 
-                    formatCurrency={formatCurrency}
-                  />
-                ) : (
-                  (() => {
-                    const chartData = getIncomeExpenseChartData();
-                    if (!chartData) {
-                      return (
-                        <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                          <div className="text-center text-gray-500">
-                            <div className="text-4xl mb-2">💰</div>
-                            <p>No income/expense data available</p>
-                            <p className="text-sm mt-1">Add income and expenses to see your financial overview</p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return <Bar data={chartData} options={commonChartOptions} />;
-                  })()
-                )}
+                <IncomeExpenseChart 
+                  chartData={getIncomeExpenseChartData()} 
+                  formatCurrency={formatCurrency}
+                />
               </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
-            <div className="h-98">
-              {useShadcnChart ? (
-                <BudgetActualChart 
-                  chartData={getBudgetVsActualChartData()} 
-                  formatCurrency={formatCurrency}
-                  categories={categories}
-                />
-              ) : (
-                (() => {
-                  const chartData = getBudgetVsActualChartData();
-                  if (!chartData) {
-                    return (
-                      <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                          <div className="text-4xl mb-2">🎯</div>
-                          <p>No budget comparison data available</p>
-                          <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return <Bar data={chartData} options={commonChartOptions} />;
-                })()
-              )}
+            <div className="h-96">
+              <BudgetActualChart 
+                chartData={getBudgetVsActualChartData()} 
+                formatCurrency={formatCurrency}
+                categories={categories}
+              />
             </div>
           </div>
         </div>
