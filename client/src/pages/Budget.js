@@ -45,7 +45,7 @@ ChartJS.register(
 );
 
 const Budget = () => {
-  // Active section state for horizontal pill navigation
+  // Active section state for shadcn/ui tabs navigation
   const [activeSection, setActiveSection] = useState('budget');
   
   const [incomes, setIncomes] = useState([]);
@@ -71,11 +71,8 @@ const Budget = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // A/B testing state for charts
+  // Chart version toggle state
   const [useShadcnChart, setUseShadcnChart] = useState(false);
-
-  // A/B testing state for navbar
-  const [useShadcnNavbar, setUseShadcnNavbar] = useState(false);
 
   // Calculate date range based on selected time period
   const calculateDateRange = useCallback((period) => {
@@ -421,26 +418,26 @@ const Budget = () => {
                   style={{
                     fontSize: '0.75rem',
                     padding: '0.375rem 0.75rem',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(203, 213, 225, 0.3)',
-                    borderRadius: '0.375rem',
-                    color: '#64748b',
+                    background: 'var(--bg-card)',
+                    backdropFilter: 'var(--backdrop-blur)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    color: 'var(--color-text-secondary)',
                     transition: 'all 0.3s ease',
                     cursor: 'pointer'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = 'rgba(139, 92, 246, 0.1)'
-                    e.target.style.color = '#8b5cf6'
+                    e.target.style.color = 'var(--color-primary)'
                     e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)'
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.2)'
-                    e.target.style.color = '#64748b'
-                    e.target.style.borderColor = 'rgba(203, 213, 225, 0.3)'
+                    e.target.style.background = 'var(--bg-card)'
+                    e.target.style.color = 'var(--color-text-secondary)'
+                    e.target.style.borderColor = 'var(--border-color)'
                   }}
                 >
-                  📊 {useShadcnChart ? 'Chart.js' : 'Design System'} Version
+                  📊 {useShadcnChart ? 'Chart.js' : 'Recharts'} Version
                 </button>
               </div>
 
@@ -746,76 +743,21 @@ const Budget = () => {
       )}
 
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold" style={{
-            background: 'var(--bg-gradient-primary)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>Navigation</h2>
-          <button
-            onClick={() => setUseShadcnNavbar(!useShadcnNavbar)}
-            style={{
-              fontSize: '0.75rem',
-              padding: '0.375rem 0.75rem',
-              background: 'var(--bg-card)',
-              backdropFilter: 'var(--backdrop-blur)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--border-radius-sm)',
-              color: 'var(--color-text-secondary)',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            className="hover-lift"
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(139, 92, 246, 0.1)'
-              e.target.style.color = 'var(--color-primary)'
-              e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'var(--bg-card)'
-              e.target.style.color = 'var(--color-text-secondary)'
-              e.target.style.borderColor = 'var(--border-color)'
-            }}
-          >
-            🎨 {useShadcnNavbar ? 'Tailwind' : 'Design System'} Version
-          </button>
-        </div>
-
-        {useShadcnNavbar ? (
-          <Tabs value={activeSection} onValueChange={setActiveSection}>
-            <TabsList>
-              {sections.map((section) => (
-                <TabsTrigger key={section.id} value={section.id}>
-                  <span style={{ 
-                    marginRight: 'var(--spacing-lg)', 
-                    fontSize: 'var(--font-size-xl)' 
-                  }}>
-                    {section.icon}
-                  </span>
-                  {section.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        ) : (
-          <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+        <Tabs value={activeSection} onValueChange={setActiveSection}>
+          <TabsList>
             {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeSection === section.id
-                    ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <span className="mr-2 text-lg">{section.icon}</span>
+              <TabsTrigger key={section.id} value={section.id}>
+                <span style={{ 
+                  marginRight: 'var(--spacing-lg)', 
+                  fontSize: 'var(--font-size-xl)' 
+                }}>
+                  {section.icon}
+                </span>
                 {section.label}
-              </button>
+              </TabsTrigger>
             ))}
-          </nav>
-        )}
+          </TabsList>
+        </Tabs>
       </div>
 
       {renderContent()}
