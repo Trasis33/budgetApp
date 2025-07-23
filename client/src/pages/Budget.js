@@ -6,6 +6,9 @@ import formatCurrency from '../utils/formatCurrency';
 // Import shadcn/ui enhanced tabs
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
 
+// Import shadcn date picker
+import { MonthYearPicker } from '../components/ui/date-picker';
+
 // Import analytics components
 import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
 import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
@@ -262,41 +265,6 @@ const Budget = () => {
 
   const renderBudgetSection = () => (
     <div className="space-y-6">
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-3">Filter by Month</h3>
-        <div className="flex gap-4">
-          <div>
-            <label htmlFor="month" className="block text-sm font-medium text-gray-700">Month</label>
-            <select
-              id="month"
-              value={month}
-              onChange={(e) => setMonth(parseInt(e.target.value))}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-            >
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {new Date(0, i).toLocaleString('default', { month: 'long' })}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
-            <select
-              id="year"
-              value={year}
-              onChange={(e) => setYear(parseInt(e.target.value))}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-            >
-              {Array.from({ length: 5 }, (_, i) => {
-                const yearOption = new Date().getFullYear() - 2 + i;
-                return <option key={yearOption} value={yearOption}>{yearOption}</option>;
-              })}
-            </select>
-          </div>
-        </div>
-      </div>
-
       {loading ? (
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -577,21 +545,46 @@ const Budget = () => {
       )}
 
       <div className="mb-6">
-        <Tabs value={activeSection} onValueChange={setActiveSection}>
-          <TabsList>
-            {sections.map((section) => (
-              <TabsTrigger key={section.id} value={section.id}>
-                <span style={{ 
-                  marginRight: 'var(--spacing-lg)', 
-                  fontSize: 'var(--font-size-xl)' 
-                }}>
-                  {section.icon}
-                </span>
-                {section.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="flex justify-between items-center mb-4">
+          <Tabs value={activeSection} onValueChange={setActiveSection}>
+            <TabsList>
+              {sections.map((section) => (
+                <TabsTrigger key={section.id} value={section.id}>
+                  <span style={{ 
+                    marginRight: 'var(--spacing-lg)', 
+                    fontSize: 'var(--font-size-xl)' 
+                  }}>
+                    {section.icon}
+                  </span>
+                  {section.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          
+          <div className="flex items-center gap-2">
+            <span style={{
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-secondary)',
+              fontWeight: 500
+            }}>Filter:</span>
+            <div className="glass-effect" style={{
+              background: 'var(--bg-card)',
+              backdropFilter: 'var(--backdrop-blur)',
+              borderRadius: 'var(--border-radius-sm)',
+              border: '1px solid var(--border-color)',
+              padding: 'var(--spacing-xs)',
+            }}>
+              <MonthYearPicker 
+                month={month}
+                year={year}
+                onMonthChange={setMonth}
+                onYearChange={setYear}
+                className="w-auto"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {renderContent()}
