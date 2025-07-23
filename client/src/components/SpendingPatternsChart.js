@@ -134,63 +134,6 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       strengthText: enhancedTrend && enhancedTrend.category ? enhancedTrend.category : 'unknown'
     };
   };
-  
-  /* const options = {
-    ...modernChartOptions,
-    plugins: {
-      ...modernChartOptions.plugins,
-      legend: {
-        display: true,
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          color: 'var(--color-text-secondary)',
-          font: {
-            size: 11,
-            weight: '500',
-            family: 'var(--font-primary)'
-          },
-          padding: 16
-        }
-      },
-      tooltip: {
-        backgroundColor: 'var(--bg-card)',
-        titleColor: 'var(--color-text-primary)',
-        bodyColor: 'var(--color-text-secondary)',
-        borderColor: 'var(--border-color)',
-        borderWidth: 1,
-        cornerRadius: 8
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'var(--border-color)',
-          borderColor: 'var(--border-color)'
-        },
-        ticks: {
-          color: 'var(--color-text-secondary)',
-          font: {
-            family: 'var(--font-primary)',
-            size: 11
-          }
-        }
-      },
-      y: {
-        grid: {
-          color: 'var(--border-color)',
-          borderColor: 'var(--border-color)'
-        },
-        ticks: {
-          color: 'var(--color-text-secondary)',
-          font: {
-            family: 'var(--font-primary)',
-            size: 11
-          }
-        }
-      }
-    }
-  }; */
 
   // Optimized chart options for compact 200px height container
   const optimizedOptions = {
