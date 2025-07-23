@@ -6,8 +6,8 @@ import formatCurrency from '../utils/formatCurrency';
 // Import shadcn/ui enhanced tabs
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
 
-// Import shadcn date picker
-import { MonthYearPicker } from '../components/ui/date-picker';
+// Import month/year navigator
+import { MonthYearNavigator } from '../components/ui/month-year-navigator';
 
 // Import analytics components
 import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
@@ -568,21 +568,13 @@ const Budget = () => {
               color: 'var(--color-text-secondary)',
               fontWeight: 500
             }}>Filter:</span>
-            <div className="glass-effect" style={{
-              background: 'var(--bg-card)',
-              backdropFilter: 'var(--backdrop-blur)',
-              borderRadius: 'var(--border-radius-sm)',
-              border: '1px solid var(--border-color)',
-              padding: 'var(--spacing-xs)',
-            }}>
-              <MonthYearPicker 
-                month={month}
-                year={year}
-                onMonthChange={setMonth}
-                onYearChange={setYear}
-                className="w-auto"
-              />
-            </div>
+            <MonthYearNavigator 
+              month={month}
+              year={year}
+              onMonthChange={setMonth}
+              onYearChange={setYear}
+              className="w-auto"
+            />
           </div>
         </div>
       </div>
