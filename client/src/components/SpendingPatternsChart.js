@@ -12,16 +12,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceArea,
-  ReferenceLine,
-  Brush
+  ReferenceLine
 } from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend
-} from "./ui/chart.jsx";
 import '../styles/design-system.css';
 
 const SpendingPatternsChart = ({ patterns = null }) => {
@@ -33,8 +25,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   const [showTotal, setShowTotal] = useState(false);
   const [showAverages, setShowAverages] = useState(false);
   const [averageSpending, setAverageSpending] = useState(0);
-  const [selectedTimeRange, setSelectedTimeRange] = useState(null);
-  const [hoveredMonth, setHoveredMonth] = useState(null);
+
 
   useEffect(() => {
     if (patterns === null) {
@@ -200,42 +191,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
     }
   }, [processedPatterns, getChartData]);
 
-  // Chart configuration for shadcn
-  const chartConfig = {
-    ...Object.keys(processedPatterns || {}).slice(0, 4).reduce((acc, category, index) => {
-      const colors = [modernColors.primary, modernColors.secondary, modernColors.success, modernColors.warning, modernColors.error];
-      acc[category] = {
-        label: category,
-        color: colors[index % colors.length]
-      };
-      return acc;
-    }, {}),
-    totalSpending: {
-      label: 'Total Spending',
-      color: 'var(--color-accent)',
-      hidden: true
-    },
-    changePercentage: {
-      label: 'MoM Change %',
-      color: 'var(--color-info)',
-      hidden: true
-    }
-  };
-  
-  // Get categories for lines
-  const categories = processedPatterns ? Object.keys(processedPatterns).slice(0, 4) : [];
-  
-  /**
-   * Handle mouse move for interactive features
-   */
-  const handleMouseMove = (e) => {
-    if (e && e.activeTooltipIndex !== undefined) {
-      const chartData = getChartData();
-      if (chartData[e.activeTooltipIndex]) {
-        setHoveredMonth(chartData[e.activeTooltipIndex].month);
-      }
-    }
-  };
+
   
   /**
    * Get trend indicator information based on trend value
@@ -256,6 +212,8 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       return { icon: '↓↓', label: 'Sharp Decrease', color: 'var(--color-primary)' };
     }
   };
+
+
 
   // Render loading state
   if (loading) {
@@ -368,7 +326,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           <LineChart 
             data={getChartData()} 
             margin={{ top: 15, right: 40, left: 15, bottom: 40 }} 
-            onMouseMove={handleMouseMove}
+
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
             <XAxis 
@@ -384,21 +342,35 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               tickFormatter={(value) => formatCurrency(value).replace('$', '')}
             />
             <Tooltip 
+              contentStyle={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '12px',
+                padding: 'var(--spacing-md)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                minWidth: '220px',
+                maxWidth: '300px'
+              }}
+              labelStyle={{
+                color: 'var(--color-text-primary)',
+                fontWeight: 'var(--font-weight-bold)',
+                marginBottom: 'var(--spacing-sm)',
+                fontSize: 'var(--font-size-sm)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                paddingBottom: 'var(--spacing-xs)'
+              }}
+              itemStyle={{
+                color: 'var(--color-text-secondary)',
+                fontSize: 'var(--font-size-xs)',
+                padding: 'var(--spacing-xs) 0'
+              }}
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null;
                 
                 return (
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.3)',
-                    backdropFilter: 'var(--backdrop-blur)',
-                    WebkitBackdropFilter: 'var(--backdrop-blur)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--border-radius-md)',
-                    padding: 'var(--spacing-3xl)',
-                    boxShadow: 'var(--shadow-lg)',
-                    fontSize: 'var(--font-size-sm)',
-                    minWidth: '200px'
-                  }}>
+                  <div>
                     {/* Month Label */}
                     <div style={{ 
                       fontWeight: 600, 
@@ -469,55 +441,22 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               wrapperStyle={{ fontFamily: 'var(--font-primary)', fontSize: '12px' }}
             />
             
-            {/* Enhanced feature: Add a brush for time range selection */}
-            <Brush 
-              dataKey="month" 
-              height={30} 
-              stroke="var(--color-primary)" 
-              fill="rgba(139, 92, 246, 0.1)"
-              travellerWidth={8}
-              style={{
-                '.recharts-brush-slide': {
-                  fill: 'var(--bg-card)',
-                  stroke: 'var(--border-color)',
-                  strokeWidth: 1
-                },
-                '.recharts-brush-traveller': {
-                  fill: 'var(--color-primary)',
-                  stroke: 'var(--color-primary)',
-                  strokeWidth: 2
-                },
-                '.recharts-brush-texts': {
-                  fill: 'var(--color-text-primary)',
-                  fontSize: '12px'
-                }
-              }}
-              tickFormatter={(value) => value}
-              onChange={(brushRange) => {
-                if (brushRange && brushRange.startIndex !== undefined && brushRange.endIndex !== undefined) {
-                  const chartData = getChartData();
-                  setSelectedTimeRange({
-                    start: chartData[brushRange.startIndex].month,
-                    end: chartData[brushRange.endIndex].month
-                  });
-                }
-              }}
-            />
+
             
-            {/* Enhanced feature: Add reference line for average spending */}
-            {showAverages && (
+            {/* Enhanced feature: Add reference line for total spending */}
+            {showTotal && (
               <ReferenceLine 
-                y={averageSpending} 
-                stroke="#00ff00" 
+                y={getChartData().reduce((max, item) => Math.max(max, item.totalSpending || 0), 0) * 0.8} 
+                stroke="var(--color-accent)" 
                 strokeWidth={2}
-                strokeDasharray="3 3" 
+                strokeDasharray="5 5" 
                 label={{
-                  value: `Avg: ${formatCurrency(averageSpending)}`,
-                  position: 'topRight',
+                  value: `Avg Total: ${formatCurrency(getChartData().reduce((sum, item) => sum + (item.totalSpending || 0), 0) / Math.max(getChartData().length, 1))}`,
+                  position: 'topLeft',
                   offset: 10,
-                  fill: '#00ff00',
+                  fill: 'var(--color-accent)',
                   fontSize: 12,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   style: {
                     textAnchor: 'start',
                     dominantBaseline: 'middle'
@@ -526,8 +465,27 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               />
             )}
             
-            {/* Debug: Log average line rendering */}
-            {console.log('showAverages:', showAverages, 'averageSpending value:', averageSpending)}
+            {/* Enhanced feature: Add reference line for average spending */}
+            {showAverages && (
+              <ReferenceLine 
+                y={averageSpending} 
+                stroke="var(--color-secondary)" 
+                strokeWidth={2}
+                strokeDasharray="3 3" 
+                label={{
+                  value: `Avg: ${formatCurrency(averageSpending)}`,
+                  position: 'topRight',
+                  offset: 10,
+                  fill: 'var(--color-secondary)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  style: {
+                    textAnchor: 'start',
+                    dominantBaseline: 'middle'
+                  }
+                }}
+              />
+            )}
             
             {/* Main category lines */}
             {renderCategories.map((category, index) => {
@@ -557,29 +515,40 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               />
             )}
             
-            {/* Debug: Log when total line should render */}
-            {console.log('showTotal:', showTotal, 'averageSpending:', averageSpending)}
+
           </LineChart>
         </ResponsiveContainer>
         
         {/* Enhanced feature: Chart controls */}
         <div className="chart-controls" style={{
           display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 'var(--spacing-md)',
-          marginTop: '-30px',
+          justifyContent: 'center',
+          gap: 'var(--spacing-sm)',
+          marginTop: '-20px',
+          padding: 'var(--spacing-sm)',
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: 'var(--border-radius-lg)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          maxWidth: '300px',
+          margin: '-20px auto var(--spacing-md)'
         }}>
           <button 
             className="control-button glass-effect"
             onClick={() => setShowTotal(!showTotal)}
             style={{
               fontSize: 'var(--font-size-xs)',
-              padding: 'var(--spacing-xs) var(--spacing-sm)',
-              borderRadius: 'var(--border-radius-sm)',
+              padding: 'var(--spacing-xs) var(--spacing-md)',
+              borderRadius: 'var(--border-radius-md)',
               border: 'none',
-              color: 'var(--color-text-primary)',
-              transition: 'all 0.3s ease',
+              background: showTotal ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.1)',
+              color: showTotal ? 'white' : 'var(--color-text-primary)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               cursor: 'pointer',
+              fontWeight: 500,
+              boxShadow: showTotal ? '0 4px 12px rgba(139, 92, 246, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'blur(5px)'
             }}
           >
             {showTotal ? '✓ Total' : '◯ Total'}
@@ -589,39 +558,38 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             onClick={() => setShowAverages(!showAverages)}
             style={{
               fontSize: 'var(--font-size-xs)',
-              padding: 'var(--spacing-xs) var(--spacing-sm)',
-              borderRadius: 'var(--border-radius-sm)',
+              padding: 'var(--spacing-xs) var(--spacing-md)',
+              borderRadius: 'var(--border-radius-md)',
               border: 'none',
-              color: 'var(--color-text-primary)'
+              background: showAverages ? 'var(--color-secondary)' : 'rgba(255, 255, 255, 0.1)',
+              color: showAverages ? 'white' : 'var(--color-text-primary)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              boxShadow: showAverages ? '0 4px 12px rgba(34, 197, 94, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'blur(5px)'
             }}
           >
             {showAverages ? '✓ Averages' : '◯ Averages'}
           </button>
         </div>
         
-        {/* Time range selection info */}
-        {selectedTimeRange && (
-          <div className="time-range-info" style={{
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-secondary)',
-            marginTop: 'var(--spacing-xs)',
-            textAlign: 'center'
-          }}>
-            Viewing: {selectedTimeRange.start} to {selectedTimeRange.end}
-          </div>
-        )}
+
       </div>
       
-      <div className="stats-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: 'var(--spacing-lg)',
+      <div className="stats-container" style={{
         flex: 1,
-        overflowY: 'auto',
-        maxHeight: '300px',
-        padding: '30px',
-        margin: '-30px'
+        marginTop: 'var(--spacing-lg)'
       }}>
+        <div className="stats-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(150px, 1fr))',
+          gap: 'var(--spacing-lg)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          maxHeight: '350px',
+          padding: 'var(--spacing-lg)'
+        }}>
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
           const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
           
@@ -720,6 +688,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
