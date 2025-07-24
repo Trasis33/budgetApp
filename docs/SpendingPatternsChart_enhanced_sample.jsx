@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import formatCurrency from '../utils/formatCurrency';
 import { modernColors } from '../utils/chartConfig';
 import {
@@ -21,9 +21,22 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend
-} from "./ui/chart.jsx";
+} from "@/components/ui/chart";
 import '../styles/design-system.css';
 
+/**
+ * SpendingPatternsChart - Enhanced version with shadcn/ui and Recharts
+ * 
+ * This component visualizes spending patterns across different categories over time.
+ * Enhanced features include:
+ * - Time range selection with brush
+ * - Toggle controls for total spending and averages
+ * - Month-over-month change percentage
+ * - Expanded stats grid with additional metrics
+ * 
+ * @param {Object} props - Component props
+ * @param {Array|Object} props.patterns - Spending patterns data
+ */
 const SpendingPatternsChart = ({ patterns = null }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,115 +50,99 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   const [hoveredMonth, setHoveredMonth] = useState(null);
 
   useEffect(() => {
-    if (patterns === null) {
-      setLoading(true);
+    if (!patterns) {
+      setLoading(false);
+      setProcessedPatterns(null);
       return;
     }
 
     try {
+      setLoading(true);
+      
       // Process the patterns data
       const processed = {};
       
-      // Debug: Log the patterns data to understand its structure
-      
-      // Ensure patterns is an object
-      if (typeof patterns !== 'object' || patterns === null) {
-        throw new Error('Invalid patterns data format');
-      }
-
-      // Process each category
-      Object.keys(patterns).forEach(category => {
-        const categoryObject = patterns[category];
-        
-        // Extract the data array from the category object
-        const categoryData = categoryObject?.data;
-        
-        if (!Array.isArray(categoryData) || categoryData.length === 0) {
-          console.log(`Skipping category ${category}: no data array or empty`);
-          return; // Skip empty categories
+      Object.entries(patterns).forEach(([category, data]) => {
+        if (!data || !Array.isArray(data.monthly)) {
+          return;
         }
         
-        // Debug: Check what properties are available in the raw data
-        console.log(`Raw data sample for ${category}:`, categoryData[0]);
-        console.log(`Available properties:`, Object.keys(categoryData[0] || {}));
-
-        // Sort data by date (using month field)
-        const sortedData = [...categoryData].sort((a, b) => {
-          return new Date(a.month) - new Date(b.month);
-        });
-
-        // Calculate trend (percentage change from first to last month)
-        const firstAmount = sortedData[0].amount;
-        const lastAmount = sortedData[sortedData.length - 1].amount;
+        const monthlyData = data.monthly.map(item => ({
+          month: item.month,
+          amount: parseFloat(item.amount) || 0
+        }));
+        
+        // Calculate trend
         let trend = 0;
-        
-        if (firstAmount !== 0) {
-          trend = ((lastAmount - firstAmount) / Math.abs(firstAmount)) * 100;
-        }
-
-        // Calculate enhanced trend (weighted recent months more heavily)
         let enhancedTrend = 0;
-        if (sortedData.length >= 3) {
-          const recentMonths = sortedData.slice(-3);
-          const firstRecentAmount = recentMonths[0].amount;
-          const lastRecentAmount = recentMonths[recentMonths.length - 1].amount;
+        let lastAmount = 0;
+        
+        if (monthlyData.length >= 2) {
+          const lastMonth = monthlyData[monthlyData.length - 1];
+          const previousMonth = monthlyData[monthlyData.length - 2];
           
-          if (firstRecentAmount !== 0) {
-            enhancedTrend = ((lastRecentAmount - firstRecentAmount) / Math.abs(firstRecentAmount)) * 100;
+          lastAmount = lastMonth.amount;
+          
+          if (previousMonth.amount > 0) {
+            trend = ((lastMonth.amount - previousMonth.amount) / previousMonth.amount) * 100;
+          }
+          
+          // Enhanced trend calculation using more historical data
+          if (monthlyData.length >= 4) {
+            const last3Months = monthlyData.slice(-3);
+            const previous3Months = monthlyData.slice(-6, -3);
+            
+            const last3MonthsAvg = last3Months.reduce((sum, item) => sum + item.amount, 0) / last3Months.length;
+            const previous3MonthsAvg = previous3Months.reduce((sum, item) => sum + item.amount, 0) / previous3Months.length;
+            
+            if (previous3MonthsAvg > 0) {
+              enhancedTrend = ((last3MonthsAvg - previous3MonthsAvg) / previous3MonthsAvg) * 100;
+            }
           }
         }
-
-        // Format the data for display
-        const formattedData = sortedData.map(item => {
-          console.log(`Formatting date for ${category}:`, item.month, typeof item.month);
-          const dateObj = new Date(item.month);
-          console.log(`Date object:`, dateObj, `Is valid:`, !isNaN(dateObj.getTime()));
-          
-          return {
-            month: dateObj.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-            amount: item.amount,
-            date: dateObj
-          };
-        });
-
+        
         processed[category] = {
-          data: formattedData,
-          trend: parseFloat(trend.toFixed(1)),
-          enhancedTrend: parseFloat(enhancedTrend.toFixed(1)),
-          lastAmount: lastAmount
+          data: monthlyData,
+          trend,
+          enhancedTrend,
+          lastAmount
         };
       });
-
+      
       setProcessedPatterns(processed);
-      setLoading(false);
       setError(null);
     } catch (err) {
-      console.error('Error processing patterns data:', err);
+      console.error('Error processing spending patterns:', err);
       setError('Failed to process spending patterns data');
+    } finally {
       setLoading(false);
     }
   }, [patterns]);
   
   // Calculate averages for enhanced features
-  // Transform data for Recharts with enhanced metrics
-  const getChartData = useCallback(() => {
+  useEffect(() => {
+    if (processedPatterns && Object.keys(processedPatterns).length > 0) {
+      const chartData = getChartData();
+      const totalAvg = chartData.reduce((sum, item) => sum + item.totalSpending, 0) / chartData.length;
+      setAverageSpending(totalAvg);
+    }
+  }, [processedPatterns]);
+
+  /**
+   * Transform data for Recharts format with enhanced metrics
+   */
+  const getChartData = () => {
     if (!processedPatterns || Object.keys(processedPatterns).length === 0) {
-      console.log('getChartData: No processed patterns available');
       return [];
     }
 
     const categories = Object.keys(processedPatterns).slice(0, 4);
     const allMonths = [...new Set(
       categories.flatMap(cat => processedPatterns[cat]?.data ? processedPatterns[cat].data.map(d => d.month) : [])
-    )].sort((a, b) => {
-      // Sort months chronologically
-      const dateA = processedPatterns[categories[0]]?.data.find(d => d.month === a)?.date || new Date();
-      const dateB = processedPatterns[categories[0]]?.data.find(d => d.month === b)?.date || new Date();
-      return dateA - dateB;
-    });
+    )].sort();
     
     // Transform data for Recharts format (month-based objects with category values)
-    const finalChartData = allMonths.map(month => {
+    return allMonths.map(month => {
       const monthData = { month };
       
       // Add category values
@@ -185,21 +182,8 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       
       return monthData;
     });
-    
-    console.log('getChartData: Final chart data:', finalChartData);
-    console.log('getChartData: Chart data length:', finalChartData.length);
-    return finalChartData;
-  }, [processedPatterns]); // Only recreate when processedPatterns changes
-
-  useEffect(() => {
-    if (processedPatterns && Object.keys(processedPatterns).length > 0) {
-      const chartData = getChartData();
-      const totalAvg = chartData.reduce((sum, item) => sum + item.totalSpending, 0) / chartData.length;
-      setAverageSpending(totalAvg);
-      console.log('Average spending calculated:', totalAvg);
-    }
-  }, [processedPatterns, getChartData]);
-
+  };
+  
   // Chart configuration for shadcn
   const chartConfig = {
     ...Object.keys(processedPatterns || {}).slice(0, 4).reduce((acc, category, index) => {
@@ -349,9 +333,6 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   }
   
   // Main render with chart and stats
-  const renderCategories = Object.keys(processedPatterns || {}).slice(0, 4);
-  console.log('Render categories:', renderCategories);
-  
   return (
     <div className="chart-card glass-effect hover-lift" style={{
       display: 'flex',
@@ -374,10 +355,10 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         flexShrink: 0,
         marginBottom: 'var(--spacing-3xl)'
       }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer config={chartConfig}>
           <LineChart 
             data={getChartData()} 
-            margin={{ top: 15, right: 40, left: 15, bottom: 40 }} 
+            margin={{ top: 10, right: 10, left: 5, bottom: 10 }}
             onMouseMove={handleMouseMove}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
@@ -393,115 +374,36 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               tickLine={false}
               tickFormatter={(value) => formatCurrency(value).replace('$', '')}
             />
-            <Tooltip 
-              content={({ active, payload, label }) => {
-                if (!active || !payload?.length) return null;
-                
-                return (
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'var(--backdrop-blur)',
-                    WebkitBackdropFilter: 'var(--backdrop-blur)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--border-radius-md)',
-                    padding: 'var(--spacing-3xl)',
-                    boxShadow: 'var(--shadow-lg)',
-                    fontSize: 'var(--font-size-sm)',
-                    minWidth: '200px'
-                  }}>
-                    {/* Month Label */}
-                    <div style={{ 
-                      fontWeight: 600, 
-                      color: 'var(--color-text-primary)',
-                      marginBottom: 'var(--spacing-lg)',
-                      fontSize: 'var(--font-size-base)'
-                    }}>
-                      {label}
-                    </div>
-
-                    {/* Category Spending */}
-                    {payload.map((entry, index) => {
-                      if (entry.dataKey === 'totalSpending' || entry.dataKey === 'changePercentage') return null;
-                      
+            <ChartTooltip 
+              content={({ active, payload }) => (
+                <ChartTooltipContent 
+                  active={active} 
+                  payload={payload} 
+                  formatter={(value, name) => {
+                    if (name === 'changePercentage') {
                       return (
-                        <div key={index} style={{ 
-                          marginBottom: 'var(--spacing-lg)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 'var(--spacing-xs)'
-                        }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: entry.color
-                          }}></div>
-                          <span style={{ color: 'var(--color-text-secondary)' }}>{entry.dataKey}: </span>
-                          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            {formatCurrency(entry.value)}
-                          </span>
-                        </div>
+                        <span style={{ fontFamily: 'var(--font-primary)' }}>
+                          {value.toFixed(1)}%
+                        </span>
                       );
-                    })}
-
-                    {/* Total Spending */}
-                    {payload.find(p => p.dataKey === 'totalSpending') && (
-                      <div style={{
-                        marginTop: 'var(--spacing-lg)',
-                        paddingTop: 'var(--spacing-lg)',
-                        borderTop: '1px solid var(--border-color)',
-                        color: 'var(--color-text-secondary)'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Total:</span>
-                          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            {formatCurrency(payload.find(p => p.dataKey === 'totalSpending')?.value || 0)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Change Percentage */}
-                    {payload.find(p => p.dataKey === 'changePercentage') && (
-                      <div style={{
-                        marginTop: 'var(--spacing-sm)',
-                        color: 'var(--color-text-secondary)',
-                        fontSize: 'var(--font-size-xs)'
-                      }}>
-                        Month-over-month: {payload.find(p => p.dataKey === 'changePercentage')?.value?.toFixed(1) || 0}%
-                      </div>
-                    )}
-                  </div>
-                );
-              }}
+                    }
+                    return (
+                      <span style={{ fontFamily: 'var(--font-primary)' }}>
+                        {formatCurrency(value)}
+                      </span>
+                    );
+                  }}
+                />
+              )}
             />
-            <Legend 
-              wrapperStyle={{ fontFamily: 'var(--font-primary)', fontSize: '12px' }}
-            />
+            <ChartLegend />
             
             {/* Enhanced feature: Add a brush for time range selection */}
             <Brush 
               dataKey="month" 
               height={30} 
               stroke="var(--color-primary)" 
-              fill="rgba(139, 92, 246, 0.1)"
-              travellerWidth={8}
-              style={{
-                '.recharts-brush-slide': {
-                  fill: 'var(--bg-card)',
-                  stroke: 'var(--border-color)',
-                  strokeWidth: 1
-                },
-                '.recharts-brush-traveller': {
-                  fill: 'var(--color-primary)',
-                  stroke: 'var(--color-primary)',
-                  strokeWidth: 2
-                },
-                '.recharts-brush-texts': {
-                  fill: 'var(--color-text-primary)',
-                  fontSize: '12px'
-                }
-              }}
+              fill="var(--color-background-secondary)" 
               tickFormatter={(value) => value}
               onChange={(brushRange) => {
                 if (brushRange && brushRange.startIndex !== undefined && brushRange.endIndex !== undefined) {
@@ -518,59 +420,42 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             {showAverages && (
               <ReferenceLine 
                 y={averageSpending} 
-                stroke="#00ff00" 
-                strokeWidth={2}
+                stroke="var(--color-info)" 
                 strokeDasharray="3 3" 
                 label={{
-                  value: `Avg: ${formatCurrency(averageSpending)}`,
-                  position: 'topRight',
-                  offset: 10,
-                  fill: '#00ff00',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  style: {
-                    textAnchor: 'start',
-                    dominantBaseline: 'middle'
-                  }
+                  value: 'Avg',
+                  position: 'right',
+                  fill: 'var(--color-info)',
+                  fontSize: 10
                 }}
               />
             )}
             
-            {/* Debug: Log average line rendering */}
-            {console.log('showAverages:', showAverages, 'averageSpending value:', averageSpending)}
-            
             {/* Main category lines */}
-            {renderCategories.map((category, index) => {
-              const colors = [modernColors.primary, modernColors.secondary, modernColors.success, modernColors.warning, modernColors.error];
-              return (
-                <Line
-                  key={category}
-                  type="monotone"
-                  dataKey={category}
-                  strokeWidth={2}
-                  stroke={colors[index % colors.length]}
-                  dot={{ r: 4, strokeWidth: 1, fill: colors[index % colors.length], stroke: '#ffffff' }}
-                  activeDot={{ r: 6, strokeWidth: 1, fill: colors[index % colors.length], stroke: '#ffffff' }}
-                />
-              );
-            })}
+            {categories.map((category, index) => (
+              <Line
+                key={category}
+                type="monotone"
+                dataKey={category}
+                strokeWidth={2}
+                dot={{ r: 4, strokeWidth: 1, fill: `var(--color-${category})`, stroke: '#ffffff' }}
+                activeDot={{ r: 6, strokeWidth: 1, fill: `var(--color-${category})`, stroke: '#ffffff' }}
+              />
+            ))}
             
             {/* Enhanced feature: Optional total spending line */}
             {showTotal && (
               <Line
                 type="monotone"
                 dataKey="totalSpending"
-                strokeWidth={3}
-                stroke="#ff6b6b"
+                strokeWidth={2.5}
+                stroke="var(--color-accent)"
                 strokeDasharray="5 5"
                 dot={false}
               />
             )}
-            
-            {/* Debug: Log when total line should render */}
-            {console.log('showTotal:', showTotal, 'averageSpending:', averageSpending)}
           </LineChart>
-        </ResponsiveContainer>
+        </ChartContainer>
         
         {/* Enhanced feature: Chart controls */}
         <div className="chart-controls" style={{
