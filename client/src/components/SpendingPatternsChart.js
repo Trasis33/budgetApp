@@ -353,17 +353,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   console.log('Render categories:', renderCategories);
   
   return (
-    <div className="chart-card glass-effect hover-lift" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      padding: 'var(--spacing-xl)',
-      borderRadius: 'var(--border-radius-lg)',
-      background: 'var(--color-background-card)',
-      boxShadow: 'var(--shadow-md)',
-      gap: 'var(--spacing-lg)',
-      height: '100%',
-      overflow: 'hidden'
-    }}>
+    <div className="chart-card hover-lift">
       <div className="chart-header" style={{ flexShrink: 0 }}>
         <h3 className="chart-title text-gradient">📊 Spending Patterns</h3>
         <div className="chart-subtitle">Monthly spending trends by category</div>
@@ -399,7 +389,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                 
                 return (
                   <div style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.3)',
                     backdropFilter: 'var(--backdrop-blur)',
                     WebkitBackdropFilter: 'var(--backdrop-blur)',
                     border: '1px solid var(--border-color)',
@@ -576,8 +566,8 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         <div className="chart-controls" style={{
           display: 'flex',
           justifyContent: 'flex-end',
-          gap: 'var(--spacing-sm)',
-          marginTop: 'var(--spacing-sm)'
+          gap: 'var(--spacing-md)',
+          marginTop: '-30px',
         }}>
           <button 
             className="control-button glass-effect"
@@ -587,8 +577,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               padding: 'var(--spacing-xs) var(--spacing-sm)',
               borderRadius: 'var(--border-radius-sm)',
               border: 'none',
-              background: showTotal ? 'var(--color-accent-transparent)' : 'var(--color-background-secondary)',
-              color: 'var(--color-text-primary)'
+              color: 'var(--color-text-primary)',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
             }}
           >
             {showTotal ? '✓ Total' : '◯ Total'}
@@ -601,7 +592,6 @@ const SpendingPatternsChart = ({ patterns = null }) => {
               padding: 'var(--spacing-xs) var(--spacing-sm)',
               borderRadius: 'var(--border-radius-sm)',
               border: 'none',
-              background: showAverages ? 'var(--color-info-transparent)' : 'var(--color-background-secondary)',
               color: 'var(--color-text-primary)'
             }}
           >
@@ -628,7 +618,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         gap: 'var(--spacing-lg)',
         flex: 1,
         overflowY: 'auto',
-        maxHeight: '300px'
+        maxHeight: '300px',
+        padding: '30px',
+        margin: '-30px'
       }}>
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
           const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
@@ -641,7 +633,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           const maxMonth = categoryData.find(item => item.amount === maxSpent)?.month || '';
           
           return (
-            <div key={category} className="stat-card glass-effect">
+            <div key={category} className="stat-card" style={{
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}>
               <div className="stat-header" style={{
                 display: 'flex',
                 justifyContent: 'space-between',

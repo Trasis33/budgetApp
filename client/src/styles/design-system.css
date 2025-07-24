@@ -87,13 +87,49 @@ body {
 
 .sidebar {
   width: 15rem;
-  background: var(--bg-primary);
-  backdrop-filter: var(--backdrop-blur);
-  border-right: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
   padding: var(--spacing-6xl);
   position: fixed;
   height: 100vh;
   overflow-y: auto;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .main-content {
@@ -146,12 +182,50 @@ body {
 
 /* Card components */
 .card {
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
-  border-radius: var(--border-radius-md);
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-radius: 20px;
   padding: var(--spacing-2xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
+  position: relative;
+  overflow: hidden;
   transition: all 0.3s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .card:hover {
@@ -161,12 +235,51 @@ body {
 }
 
 .stat-card {
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
-  border-radius: var(--border-radius-md);
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-radius: var(--border-radius-lg);
   padding: var(--spacing-4xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
+  position: relative;
+  overflow: hidden;
   transition: all 0.3s ease;
+
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .stat-card:hover {
@@ -202,19 +315,36 @@ body {
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
 }
 
+.control-button {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.control-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
+}
+
 /* Grid layouts */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--spacing-3xl);
-  margin-bottom: var(--spacing-5xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   gap: var(--spacing-3xl);
-  margin-bottom: var(--spacing-5xl);
+  margin-bottom: var(--spacing-md);
   /* Ensure analytics grid items have proper height for flexbox children */
   grid-auto-rows: minmax(600px, auto);
 }
@@ -292,12 +422,50 @@ body {
 
 /* Chart containers */
 .chart-card {
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
-  border-radius: var(--border-radius-md);
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-radius: 20px;
   padding: var(--spacing-4xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
+  position: relative;
+  overflow: hidden;
   transition: all 0.3s ease;
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.chart-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .chart-card:hover {
@@ -431,13 +599,21 @@ body {
 .form-input {
   width: 100%;
   padding: var(--spacing-2xl) var(--spacing-3xl);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur-light);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .form-input:focus {
@@ -457,12 +633,20 @@ body {
 .form-select {
   width: 100%;
   padding: var(--spacing-2xl) var(--spacing-3xl);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur-light);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
+  position: relative;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -719,14 +903,51 @@ body {
 }
 
 .modal-content {
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
+  position: relative;
+  overflow: hidden;
   padding: var(--spacing-6xl);
   max-width: 90vw;
   max-height: 90vh;
-  overflow-y: auto;
+}
+
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.modal-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 /* Utility classes */
@@ -738,9 +959,48 @@ body {
 }
 
 .glass-effect {
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(17px);
+  -webkit-backdrop-filter: blur(17px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 54px 27px rgba(255, 255, 255, 0.027);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.glass-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .hover-lift {
