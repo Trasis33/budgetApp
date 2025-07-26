@@ -530,6 +530,8 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                   stroke={colors[index % colors.length]}
                   dot={{ r: 4, strokeWidth: 1, fill: colors[index % colors.length], stroke: '#ffffff' }}
                   activeDot={{ r: 6, strokeWidth: 1, fill: colors[index % colors.length], stroke: '#ffffff' }}
+                  animationDuration={500}
+                  animationEasing="ease-out"
                 />
               );
             })}
@@ -543,6 +545,8 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                 stroke="#ff6b6b"
                 strokeDasharray="5 5"
                 dot={false}
+                animationDuration={500}
+                animationEasing="ease-out"
               />
             )}
             
