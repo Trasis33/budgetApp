@@ -402,17 +402,24 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                       return (
                         <div key={index} style={{ 
                           marginBottom: 'var(--spacing-lg)',
+                          gap: 'var(--spacing-xs)',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 'var(--spacing-xs)'
+                          justifyContent: 'space-between',
                         }}>
                           <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: entry.color
-                          }}></div>
-                          <span style={{ color: 'var(--color-text-secondary)' }}>{entry.dataKey}: </span>
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--spacing-xs)',
+                          }}>
+                            <div style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              backgroundColor: entry.color
+                            }}></div>
+                            <span style={{ color: 'var(--color-text-secondary)' }}>{entry.dataKey}: </span>
+                          </div>
                           <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
                             {formatCurrency(entry.value)}
                           </span>
@@ -426,14 +433,24 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                         marginTop: 'var(--spacing-lg)',
                         paddingTop: 'var(--spacing-lg)',
                         borderTop: '1px solid var(--border-color)',
-                        color: 'var(--color-text-secondary)'
+                        color: 'var(--color-text-secondary)',
+                        gap: 'var(--spacing-xs)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: payload.find(p => p.dataKey === 'totalSpending')?.color
+                          }}></div>
                           <span>Total:</span>
-                          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            {formatCurrency(payload.find(p => p.dataKey === 'totalSpending')?.value || 0)}
-                          </span>
                         </div>
+                        <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                          {formatCurrency(payload.find(p => p.dataKey === 'totalSpending')?.value || 0)}
+                        </span>
                       </div>
                     )}
 
