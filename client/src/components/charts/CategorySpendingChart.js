@@ -146,6 +146,17 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
 
                 return (
                   <div style={{
+                    /* backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    minWidth: '180px',
+                    maxWidth: '250px',
+                    color: 'var(--color-text-primary)',
+                    fontFamily: 'inherit' */
                     background: 'var(--bg-card)',
                     backdropFilter: 'var(--backdrop-blur)',
                     border: '1px solid var(--border-color)',
@@ -159,8 +170,10 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                     <div style={{ 
                       fontWeight: 600, 
                       color: 'var(--color-text-primary)',
-                      marginBottom: 'var(--spacing-lg)',
-                      fontSize: 'var(--font-size-base)'
+                      marginBottom: 'var(--spacing-sm)',
+                      fontSize: 'var(--font-size-sm)',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      paddingBottom: 'var(--spacing-xs)'
                     }}>
                       {categoryName}
                     </div>
