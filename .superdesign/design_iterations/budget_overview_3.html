@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Overview - Minimalist Glassmorphism</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ff7a50;
+      --primary-light: rgba(255, 122, 80, 0.15);
+      --success: #00c076;
+      --warning: #ffb547;
+      --danger: #ff5a5a;
+      --background: #f9fafb;
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --text: #1f2937;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --border: rgba(0, 0, 0, 0.04);
+      --blur: 15px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e8f4ff 40%, #f8fafc 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+    
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.08),
+        0 10px 30px rgba(0, 0, 0, 0.02);
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    
+    .title-section {
+      flex: 1;
+    }
+    
+    .title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .budget-circle {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin-left: 1rem;
+    }
+    
+    .circle-bg {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #f1f5f9;
+      position: absolute;
+    }
+    
+    .circle-progress {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary) 91.3%, #f1f5f9 0);
+      position: absolute;
+      transform: rotate(-90deg);
+    }
+    
+    .circle-inner {
+      position: absolute;
+      width: 70%;
+      height: 70%;
+      background: white;
+      border-radius: 50%;
+      top: 15%;
+      left: 15%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .balance-section {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .balance-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .balance-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    
+    .balance-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    
+    .balance-value.remaining {
+      color: var(--success);
+    }
+    
+    .categories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    
+    .categories-title {
+      font-weight: 700;
+      font-size: 0.875rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    
+    .action-icon {
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    
+    .action-icon svg {
+      width: 1rem;
+      height: 1rem;
+    }
+    
+    .category-list {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .category-item {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.03);
+      transition: all 0.2s;
+    }
+    
+    .category-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+    
+    .category-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    
+    .category-icon-name {
+      display: flex;
+      align-items: center;
+    }
+    
+    .category-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      margin-right: 0.75rem;
+    }
+    
+    .food {
+      background: rgba(255, 90, 90, 0.1);
+      color: var(--danger);
+    }
+    
+    .transport {
+      background: rgba(255, 181, 71, 0.1);
+      color: var(--warning);
+    }
+    
+    .entertainment {
+      background: rgba(0, 192, 118, 0.1);
+      color: var(--success);
+    }
+    
+    .shopping {
+      background: rgba(147, 51, 234, 0.1);
+      color: #9333ea;
+    }
+    
+    .utilities {
+      background: rgba(14, 165, 233, 0.1);
+      color: #0ea5e9;
+    }
+    
+    .category-name {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    .category-amount {
+      text-align: right;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    
+    .category-amount span {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    
+    .over-amount {
+      color: var(--danger);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+    
+    .over-amount svg {
+      width: 0.75rem;
+      height: 0.75rem;
+      margin-right: 0.25rem;
+    }
+    
+    .progress-bar {
+      height: 4px;
+      background: #f1f5f9;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.75rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+    
+    .progress-fill.good {
+      background: var(--success);
+    }
+    
+    .progress-fill.warning {
+      background: var(--warning);
+    }
+    
+    .progress-fill.danger {
+      background: var(--danger);
+    }
+    
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      margin-top: 1.5rem;
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .summary-item {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    
+    .summary-value.good {
+      color: var(--success);
+    }
+    
+    .summary-value.danger {
+      color: var(--danger);
+    }
+    
+    .summary-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .adjust-button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem;
+      width: 100%;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .adjust-button:hover {
+      background: #ff6b3d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 122, 80, 0.25);
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .glass-card {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-card">
+    <!-- Header with title and progress circle -->
+    <div class="header">
+      <div class="title-section">
+        <div class="title">Budget Overview</div>
+        <div class="subtitle">December 2024</div>
+      </div>
+      <div class="budget-circle">
+        <div class="circle-bg"></div>
+        <div class="circle-progress"></div>
+        <div class="circle-inner">91%</div>
+      </div>
+    </div>
+    
+    <!-- Budget summary -->
+    <div class="balance-section">
+      <div class="balance-item">
+        <div class="balance-label">Spent</div>
+        <div class="balance-value">$2,510</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-label">Remaining</div>
+        <div class="balance-value remaining">$240</div>
+      </div>
+    </div>
+    
+    <!-- Categories -->
+    <div class="categories-header">
+      <div class="categories-title">Categories</div>
+      <div class="action-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+        </svg>
+      </div>
+    </div>
+    
+    <div class="category-list">
+      <div class="category-item">
+        <div class="category-top">
+          <div class="category-icon-name">
+            <div class="category-icon food">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                <line x1="6" y1="1" x2="6" y2="4"></line>
+                <line x1="10" y1="1" x2="10" y2="4"></line>
+                <line x1="14" y1="1" x2="14" y2="4"></line>
+              </svg>
+            </div>
+            <div class="category-name">Food & Dining</div>
+          </div>
+          <div class="category-amount">
+            $850
+            <span>of $900</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill good" style="width: 94.4%"></div>
+        </div>
+      </div>
+      
+      <div class="category-item">
+        <div class="category-top">
+          <div class="category-icon-name">
+            <div class="category-icon transport">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+            </div>
+            <div class="category-name">Transportation</div>
+          </div>
+          <div class="category-amount">
+            $420
+            <span>of $400</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill danger" style="width: 105%"></div>
+        </div>
+        <div class="over-amount">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          $20 over budget
+        </div>
+      </div>
+      
+      <div class="category-item">
+        <div class="category-top">
+          <div class="category-icon-name">
+            <div class="category-icon entertainment">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+            </div>
+            <div class="category-name">Entertainment</div>
+          </div>
+          <div class="category-amount">
+            $380
+            <span>of $500</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill good" style="width: 76%"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Summary stats -->
+    <div class="summary">
+      <div class="summary-item">
+        <div class="summary-value good">4</div>
+        <div class="summary-label">On Track</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value danger">1</div>
+        <div class="summary-label">Over Budget</div>
+      </div>
+    </div>
+    
+    <!-- Action button -->
+    <button class="adjust-button">Adjust Budgets</button>
+  </div>
+</body>
+</html>
