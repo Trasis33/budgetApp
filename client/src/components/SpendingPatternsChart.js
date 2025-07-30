@@ -321,13 +321,11 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       <div className="chart-container" style={{ 
         height: '280px', 
         flexShrink: 0,
-        marginBottom: 'var(--spacing-3xl)'
+        marginBottom: 'var(--spacing-8xl)'
       }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart 
             data={getChartData()} 
-            margin={{ top: 15, right: 40, left: 15, bottom: 40 }} 
-
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
             <XAxis 
@@ -568,7 +566,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           borderRadius: 'var(--border-radius-lg)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           maxWidth: '300px',
-          margin: '-20px auto var(--spacing-md)'
+          margin: '0px auto var(--spacing-md)'
         }}>
           <button 
             className="control-button glassmorphism-card btn"

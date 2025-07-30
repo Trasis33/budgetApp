@@ -246,15 +246,17 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         <ChartContainer config={chartConfig} className="h-80 mb-6">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={savingsData.chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
               <XAxis 
                 dataKey="month" 
-                stroke="var(--color-text-secondary)"
-                fontSize={12}
+                tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: '#897bceff' }}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis 
-                stroke="var(--color-text-secondary)"
-                fontSize={12}
+                tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: '#897bceff' }}
+                axisLine={false}
+                tickLine={false}
                 tickFormatter={(value) => `${value}%`}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
