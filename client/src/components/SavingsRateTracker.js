@@ -1,528 +1,317 @@
+"use client"
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { Line } from 'react-chartjs-2';
-import axios from '../api/axios';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart';
+import { Badge } from './ui/badge';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine
+} from "recharts";
 import formatCurrency from '../utils/formatCurrency';
+import { useAuth } from '../context/AuthContext';
+import axios from '../api/axios';
+import '../styles/design-system.css';
 
 const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
-  const [savingsData, setSavingsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savingsData, setSavingsData] = useState(null);
+  const { user } = useAuth();
 
-  const fetchSavingsData = useCallback(async (dates = {}) => {
+  // Chart configuration for shadcn
+  const chartConfig = {
+    savingsRate: {
+      label: "Savings Rate",
+      color: "hsl(var(--primary))",
+    },
+    target: {
+      label: "Target",
+      color: "hsl(var(--muted-foreground))",
+    },
+  };
+
+  const fetchSavingsData = useCallback(async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
+      // Calculate date range based on timePeriod if not provided
+      let apiStartDate = startDate;
+      let apiEndDate = endDate;
       
-      // Use provided dates or the ones passed in the function parameter
-      const start = dates.startDate || startDate;
-      const end = dates.endDate || endDate;
-      
-      if (!start || !end) {
-        console.error('Missing date parameters for savings analysis');
-        setError('Missing date parameters');
-        setLoading(false);
-        return;
+      if (!apiStartDate || !apiEndDate) {
+        const now = new Date();
+        apiEndDate = now.toISOString().split('T')[0];
+        
+        const monthsBack = timePeriod === '3months' ? 3 : timePeriod === '1year' ? 12 : 6;
+        const startDateObj = new Date(now);
+        startDateObj.setMonth(startDateObj.getMonth() - monthsBack);
+        apiStartDate = startDateObj.toISOString().split('T')[0];
       }
       
-      const response = await axios.get(`/analytics/savings-analysis/${start}/${end}`);
-      setSavingsData(response.data);
+      const response = await axios.get(`/analytics/savings-analysis/${apiStartDate}/${apiEndDate}`);
+      
+      // Transform the data to match our component's expected structure
+      const data = response.data;
+      const transformedData = {
+        summary: {
+          averageSavingsRate: data.summary?.averageSavingsRate || 0,
+          totalSavings: data.summary?.totalSavings || 0,
+          trend: data.summary?.savingsRateTrend || 0
+        },
+        chartData: data.monthlyData?.map(month => ({
+          month: month.month,
+          savingsRate: month.savingsRate || 0
+        })) || [],
+        goals: data.savingsGoals?.map(goal => ({
+          name: goal.goal_name,
+          targetAmount: goal.target_amount,
+          currentAmount: goal.current_amount || 0,
+          icon: '🎯'
+        })) || [],
+        targetRate: 20 // Default target savings rate
+      };
+      
+      setSavingsData(transformedData);
     } catch (err) {
       console.error('Error fetching savings data:', err);
       setError('Failed to load savings data');
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate]);
+  }, [user, timePeriod, startDate, endDate]);
 
   useEffect(() => {
-    // Set default dates if not provided
-    const getDefaultDates = () => {
-      const end = new Date();
-      const start = new Date();
-      
-      // Default to 6 months if not specified
-      switch(timePeriod) {
-        case '3months':
-          start.setMonth(start.getMonth() - 3);
-          break;
-        case '1year':
-          start.setFullYear(start.getFullYear() - 1);
-          break;
-        default: // '6months' or any other value
-          start.setMonth(start.getMonth() - 6);
-      }
-      
-      return {
-        startDate: startDate || start.toISOString().split('T')[0],
-        endDate: endDate || end.toISOString().split('T')[0]
-      };
-    };
-    
-    fetchSavingsData(getDefaultDates());
-  }, [startDate, endDate, timePeriod, fetchSavingsData]);
+    fetchSavingsData();
+  }, [fetchSavingsData]);
 
-  const formatMonthLabel = (monthStr) => {
-    const [year, month] = monthStr.split('-');
-    const date = new Date(year, month - 1);
-    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-  };
-
-  const getSavingsRateChartData = () => {
-    if (!savingsData || !savingsData.monthlyData) return null;
-
-    const months = savingsData.monthlyData.map(item => formatMonthLabel(item.month));
-    const savingsRates = savingsData.monthlyData.map(item => item.savingsRate);
-
-    return {
-      labels: months,
-      datasets: [
-        {
-          label: 'Savings Rate (%)',
-          data: savingsRates,
-          borderColor: '#10b981', // Keep as hex for Chart.js compatibility
-          // backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          backgroundColor: (context) => { // This sets the fill color
-            if (!context.chart) return null; // Ensure chart context is available
-            if (!context.chart.ctx) return null; // Ensure context has a canvas context
-            const chart = context.chart;
-            const {ctx, chartArea} = chart;
-            
-            if (!chartArea) return null;
-            
-            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            gradient.addColorStop(0, `${'#10b981'}30`); // More opaque at top
-            gradient.addColorStop(1, `${'#10b981'}00`); // Transparent at bottom
-            return gradient;
-          },
-          borderWidth: 3,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: savingsRates.map(rate => 
-            rate < 0 ? '#ef4444' : 
-            rate < 10 ? '#f59e0b' : 
-            '#10b981'
-          ),
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 1,
-          pointRadius: 4,
-          pointHoverRadius: 8
-        }
-      ]
-    };
-  };
-
-  /* const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          color: 'var(--color-text-secondary)',
-          font: {
-            family: 'var(--font-primary)',
-            size: 12,
-            weight: '500'
-          },
-          padding: 16,
-          usePointStyle: true
-        }
-      },
-      tooltip: {
-        backgroundColor: 'var(--bg-card)',
-        titleColor: 'var(--color-text-primary)',
-        bodyColor: 'var(--color-text-secondary)',
-        borderColor: 'var(--border-color)',
-        borderWidth: 1,
-        cornerRadius: 8,
-        callbacks: {
-          label: function(context) {
-            const value = context.parsed.y;
-            return `${context.dataset.label}: ${value.toFixed(1)}%`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'var(--border-color)',
-          borderColor: 'var(--border-color)'
-        },
-        ticks: {
-          color: 'var(--color-text-secondary)',
-          font: {
-            family: 'var(--font-primary)',
-            size: 11
-          }
-        }
-      },
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'var(--border-color)',
-          borderColor: 'var(--border-color)'
-        },
-        ticks: {
-          color: 'var(--color-text-secondary)',
-          font: {
-            family: 'var(--font-primary)',
-            size: 11
-          },
-          callback: function(value) {
-            return value + '%';
-          }
-        }
-      }
-    }
-  }; */
-
-  // Optimized chart options for compact 180px height container
-  const optimizedChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: {
-        top: 10,
-        bottom: 10,
-        left: 5,
-        right: 5
-      }
-    },
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          boxWidth: 12,
-          padding: 8,
-          font: { 
-            size: 10,
-            family: 'var(--font-primary)'
-          },
-          color: 'var(--color-text-secondary)'
-        }
-      },
-      tooltip: {
-        enabled: true,
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'var(--bg-card)',
-        titleColor: 'var(--color-text-primary)',
-        bodyColor: 'var(--color-text-secondary)',
-        borderColor: 'var(--border-color)',
-        borderWidth: 1,
-        cornerRadius: 8,
-        callbacks: {
-          label: function(context) {
-            const value = context.parsed.y;
-            return `${context.dataset.label}: ${value.toFixed(1)}%`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        ticks: { 
-          maxTicksLimit: 6,
-          font: { 
-            size: 9,
-            family: 'var(--font-primary)'
-          },
-          color: '#897bceff'
-        },
-        grid: { 
-          display: true 
-        },
-        border: {
-          display: false
-        }
-      },
-      y: {
-        beginAtZero: true,
-        ticks: { 
-          maxTicksLimit: 5,
-          font: { 
-            size: 9,
-            family: 'var(--font-primary)'
-          },
-          color: '#897bceff',
-          callback: function(value) {
-            return value + '%';
-          }
-        },
-        grid: {
-          display: true
-        },
-        border: {
-          display: false
-        }
-      }
-    }
-  };
-
-  const getSavingsRateColorVariable = (rate) => {
-    if (rate < 0) return 'var(--color-error)';
-    if (rate < 10) return 'var(--color-warning)';
-    if (rate < 20) return 'var(--color-primary)';
-    return 'var(--color-success)';
+  // Helper functions for badge variants
+  const getBadgeVariant = (rate) => {
+    if (rate >= 20) return "success";
+    if (rate >= 10) return "default"; 
+    if (rate >= 0) return "warning";
+    return "destructive";
   };
 
   const getSavingsRateStatus = (rate) => {
-    if (rate < 0) return 'Negative';
-    if (rate < 10) return 'Low';
-    if (rate < 20) return 'Good';
-    return 'Excellent';
+    if (rate >= 20) return "Excellent";
+    if (rate >= 10) return "Good";
+    if (rate >= 0) return "Fair";
+    return "Needs Improvement";
   };
 
-  const getTrendIcon = (direction) => {
-    switch(direction) {
-      case 'improving': return '📈';
-      case 'declining': return '📉';
-      default: return '➡️';
-    }
+  const getTrendText = (trend) => {
+    if (trend > 0) return `↗ +${trend.toFixed(1)}%`;
+    if (trend < 0) return `↘ ${trend.toFixed(1)}%`;
+    return "→ No change";
   };
 
-  const getTrendColor = (direction) => {
-    switch(direction) {
-      case 'improving': return 'var(--color-success)';
-      case 'declining': return 'var(--color-error)';
-      default: return 'var(--color-text-secondary)';
-    }
+  const getTrendBadgeVariant = (trend) => {
+    if (trend > 0) return "success";
+    if (trend < 0) return "destructive";
+    return "secondary";
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="chart-card">
-        <div className="chart-header">
-          <h3 className="chart-title">💰 Savings Rate Analysis</h3>
-          <div className="chart-subtitle">
-            {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
+      <Card className="glassmorphism-card">
+        <CardHeader>
+          <CardTitle>💰 Savings Rate Tracker</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading savings data...</p>
           </div>
-        </div>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p style={{
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-text-secondary)',
-            marginTop: 'var(--spacing-lg)'
-          }}>
-            Loading savings analysis...
-          </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="chart-card">
-        <div className="chart-header">
-          <h3 className="chart-title">💰 Savings Rate Analysis</h3>
-          <div className="chart-subtitle">
-            {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
+      <Card className="glassmorphism-card">
+        <CardHeader>
+          <CardTitle>💰 Savings Rate Tracker</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="error-message">
+            <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>⚠️</div>
+            <p>{error}</p>
+            <button 
+              onClick={fetchSavingsData}
+              className="btn btn-primary"
+              style={{ marginTop: 'var(--spacing-lg)' }}
+            >
+              Retry
+            </button>
           </div>
-        </div>
-        <div className="error-message">
-          <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>⚠️</div>
-          <p>{error}</p>
-          <button 
-            onClick={fetchSavingsData}
-            className="btn btn-primary"
-            style={{ marginTop: 'var(--spacing-4xl)' }}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!savingsData || !savingsData.monthlyData || savingsData.monthlyData.length === 0) {
+  // No data state
+  if (!savingsData || !savingsData.chartData || savingsData.chartData.length === 0) {
     return (
-      <div className="chart-card">
-        <div className="chart-header">
-          <h3 className="chart-title">💰 Savings Rate Analysis</h3>
-          <div className="chart-subtitle">
-            {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
+      <Card className="glassmorphism-card">
+        <CardHeader>
+          <CardTitle>💰 Savings Rate Tracker</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="no-data-message">
+            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-lg)' }}>📊</div>
+            <p>No savings data available yet</p>
+            <p className="text-sm text-muted-foreground">
+              Start tracking your expenses to see savings analysis
+            </p>
           </div>
-        </div>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 'var(--spacing-8xl) var(--spacing-4xl)',
-          color: 'var(--color-text-secondary)',
-          height: '320px'
-        }}>
-          <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>💰</div>
-          <p style={{ fontSize: 'var(--font-size-base)', marginBottom: 'var(--spacing-xs)' }}>
-            No savings data available
-          </p>
-          <p style={{ fontSize: 'var(--font-size-sm)' }}>
-            Add income and expenses to see your savings rate
-          </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
-
-  const chartData = getSavingsRateChartData();
 
   return (
-    <div className="chart-card" style={{ 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column',
-      overflow: 'hidden'
-    }}>
-      <div className="chart-header" style={{ flexShrink: 0 }}>
-        <h3 className="chart-title">💰 Savings Rate Analysis</h3>
-        <div className="chart-subtitle">
+    <Card className="glassmorphism-card py-6">
+      <CardHeader>
+        <CardTitle>💰 Savings Rate Tracker</CardTitle>
+        <div className="text-sm text-muted-foreground">
           {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
         </div>
-      </div>
+      </CardHeader>
+      <CardContent>
+        {/* Stats Grid with shadcn Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Average Savings Rate Card */}
+          <Card className="stat-card-shadcn">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">Average Savings Rate</div>
+                <div className="text-lg">💰</div>
+              </div>
+              <div className="text-2xl font-bold mb-2">
+                {savingsData.summary.averageSavingsRate.toFixed(1)}%
+              </div>
+              <Badge variant={getBadgeVariant(savingsData.summary.averageSavingsRate)}>
+                {getSavingsRateStatus(savingsData.summary.averageSavingsRate)}
+              </Badge>
+            </CardContent>
+          </Card>
 
-      <div className="stats-grid" style={{ 
-        flexShrink: 0,
-        marginBottom: 'var(--spacing-3xl)',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 'var(--spacing-md)'
-      }}>
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Average Savings Rate</span>
-            <div className="stat-icon" style={{
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%)',
-              color: 'var(--color-success)'
-            }}>
-              💰
-            </div>
-          </div>
-          <div className="stat-value" style={{
-            color: getSavingsRateColorVariable(savingsData.summary.averageSavingsRate)
-          }}>
-            {savingsData.summary.averageSavingsRate.toFixed(1)}%
-          </div>
-          <div className="stat-change">
-            {getSavingsRateStatus(savingsData.summary.averageSavingsRate)}
-          </div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Total Savings</span>
-            <div className="stat-icon" style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)',
-              color: 'var(--color-primary)'
-            }}>
-              💵
-            </div>
-          </div>
-          <div className="stat-value" style={{
-            color: savingsData.summary.totalSavings >= 0 ? 'var(--color-success)' : 'var(--color-error)'
-          }}>
-            {formatCurrency(savingsData.summary.totalSavings)}
-          </div>
-          <div className="stat-change">
-            Over {savingsData.summary.monthCount} months
-          </div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Trend</span>
-            <div className="stat-icon" style={{
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
-              color: 'var(--color-warning)'
-            }}>
-              {getTrendIcon(savingsData.summary.trendDirection)}
-            </div>
-          </div>
-          <div className="stat-value" style={{
-            color: getTrendColor(savingsData.summary.trendDirection)
-          }}>
-            {getTrendIcon(savingsData.summary.trendDirection)}
-          </div>
-          <div className="stat-change" style={{ textTransform: 'capitalize' }}>
-            {savingsData.summary.trendDirection}
-          </div>
-        </div>
-      </div>
+          {/* Total Savings Card */}
+          <Card className="stat-card-shadcn">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">Total Savings</div>
+                <div className="text-lg">💵</div>
+              </div>
+              <div className="text-2xl font-bold mb-2">
+                {formatCurrency(savingsData.summary.totalSavings)}
+              </div>
+              <Badge variant="default">
+                {savingsData.summary.totalSavings >= 0 ? 'Positive' : 'Negative'}
+              </Badge>
+            </CardContent>
+          </Card>
 
-      <div className="chart-container" style={{ 
-        height: '280px', 
-        flexShrink: 0,
-        marginBottom: 'var(--spacing-3xl)'
-      }}>
-        {chartData ? (
-          <Line data={chartData} options={optimizedChartOptions} />
-        ) : (
-          <div className="error-message" style={{
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>📊</div>
-            <p>Unable to render chart</p>
-          </div>
-        )}
-      </div>
+          {/* Trend Card */}
+          <Card className="stat-card-shadcn">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">Trend</div>
+                <div className="text-lg">📈</div>
+              </div>
+              <div className="text-2xl font-bold mb-2">
+                {getTrendText(savingsData.summary.trend || 0)}
+              </div>
+              <Badge variant={getTrendBadgeVariant(savingsData.summary.trend || 0)}>
+                {savingsData.summary.trend > 0 ? 'Improving' : savingsData.summary.trend < 0 ? 'Declining' : 'Stable'}
+              </Badge>
+            </CardContent>
+          </Card>
+        </div>
 
-      {savingsData.savingsGoals && savingsData.savingsGoals.length > 0 && (
-        <div style={{ 
-          flex: 1,
-          overflowY: 'auto',
-          paddingTop: 'var(--spacing-3xl)',
-          borderTop: `1px solid var(--border-color)`
-        }}>
-          <details>
-            <summary className="section-title" style={{ 
-              cursor: 'pointer', 
-              marginBottom: 'var(--spacing-3xl)'
-            }}>
-              🎯 Savings Goals ({savingsData.savingsGoals.length})
-            </summary>
-            <div className="stats-grid" style={{
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: 'var(--spacing-md)'
-            }}>
-              {savingsData.savingsGoals.map(goal => (
-                <div key={goal.id} className="stat-card">
-                  <div className="stat-header">
-                    <span className="stat-title">{goal.goal_name}</span>
-                    <div className="stat-icon" style={{
-                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
-                      color: 'var(--color-warning)'
-                    }}>
-                      🎯
+        {/* Chart with shadcn ChartContainer */}
+        <ChartContainer config={chartConfig} className="h-80 mb-6">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={savingsData.chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
+              <XAxis 
+                dataKey="month" 
+                stroke="var(--color-text-secondary)"
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="var(--color-text-secondary)"
+                fontSize={12}
+                tickFormatter={(value) => `${value}%`}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="savingsRate" 
+                stroke="var(--color-primary)" 
+                strokeWidth={3}
+                dot={{ fill: 'var(--color-primary)', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: 'var(--color-primary)', strokeWidth: 2 }}
+                name="Savings Rate"
+              />
+              {savingsData.targetRate && (
+                <ReferenceLine 
+                  y={savingsData.targetRate} 
+                  stroke="var(--color-warning)" 
+                  strokeDasharray="5 5"
+                  label={{ value: `Target: ${savingsData.targetRate}%`, position: "topRight" }}
+                />
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+
+        {/* Savings Goals Section */}
+        {savingsData.goals && savingsData.goals.length > 0 && (
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Savings Goals</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {savingsData.goals.map((goal, index) => (
+                <Card key={index} className="stat-card-shadcn">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium">{goal.name}</div>
+                      <div className="text-lg">{goal.icon || '🎯'}</div>
                     </div>
-                  </div>
-                  <div className="stat-value">{formatCurrency(goal.target_amount)}</div>
-                  <div className="stat-change">
-                    <div style={{ 
-                      fontSize: 'var(--font-size-sm)', 
-                      color: 'var(--color-text-secondary)',
-                      marginBottom: 'var(--spacing-xs)'
-                    }}>
-                      {goal.category}
+                    <div className="text-xl font-bold mb-2">
+                      {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
                     </div>
-                    <div style={{ 
-                      fontSize: 'var(--font-size-xs)', 
-                      color: 'var(--color-text-muted)'
-                    }}>
-                      {goal.target_date && new Date(goal.target_date).toLocaleDateString()}
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)}%` }}
+                      ></div>
                     </div>
-                  </div>
-                </div>
+                    <Badge variant={goal.currentAmount >= goal.targetAmount ? "success" : "secondary"}>
+                      {((goal.currentAmount / goal.targetAmount) * 100).toFixed(1)}% Complete
+                    </Badge>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-          </details>
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

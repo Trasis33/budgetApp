@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import formatCurrency from '../utils/formatCurrency';
 import { modernColors } from '../utils/chartConfig';
 import {
@@ -311,12 +312,12 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   console.log('Render categories:', renderCategories);
   
   return (
-    <div className="chart-card hover-lift">
-      <div className="chart-header" style={{ flexShrink: 0 }}>
-        <h3 className="chart-title text-gradient">📊 Spending Patterns</h3>
+    <Card className="glassmorphism-card py-6 hover-lift">
+    <CardHeader>
+        <CardTitle className="chart-title text-gradient">📊 Spending Patterns</CardTitle>
         <div className="chart-subtitle">Monthly spending trends by category</div>
-      </div>
-      
+    </CardHeader>
+    <CardContent>
       <div className="chart-container" style={{ 
         height: '280px', 
         flexShrink: 0,
@@ -570,10 +571,10 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           margin: '-20px auto var(--spacing-md)'
         }}>
           <button 
-            className="control-button glass-effect"
+            className="control-button glassmorphism-card btn"
             onClick={() => setShowTotal(!showTotal)}
             style={{
-              fontSize: 'var(--font-size-xs)',
+              fontSize: 'var(--font-size-sm)',
               padding: 'var(--spacing-xs) var(--spacing-md)',
               borderRadius: 'var(--border-radius-md)',
               border: 'none',
@@ -589,10 +590,10 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             {showTotal ? '✓ Total' : '◯ Total'}
           </button>
           <button 
-            className="control-button glass-effect"
+            className="control-button glassmorphism-card btn"
             onClick={() => setShowAverages(!showAverages)}
             style={{
-              fontSize: 'var(--font-size-xs)',
+              fontSize: 'var(--font-size-sm)',
               padding: 'var(--spacing-xs) var(--spacing-md)',
               borderRadius: 'var(--border-radius-md)',
               border: 'none',
@@ -636,96 +637,99 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           const maxMonth = categoryData.find(item => item.amount === maxSpent)?.month || '';
           
           return (
-            <div key={category} className="stat-card" style={{
+            <Card key={category} className="stat-card-shadcn" style={{
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)'
             }}>
-              <div className="stat-header" style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 'var(--spacing-sm)'
-              }}>
-                <h4 style={{
-                  margin: 0,
-                  fontSize: 'var(--font-size-md)',
-                  fontWeight: 'var(--font-weight-bold)',
-                  color: 'var(--color-text-primary)'
-                }}>{category}</h4>
-                <div className="trend-indicator" style={{
+              <CardContent className="p-4">
+                <CardHeader className="stat-header" style={{
                   display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: 'var(--spacing-xs)',
-                  fontSize: 'var(--font-size-sm)',
-                  color: trendInfo.color
+                  marginBottom: 'var(--spacing-sm)'
                 }}>
-                  {trendInfo.icon} {trendInfo.label}
-                </div>
-              </div>
-              
-              <div className="stat-body" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--spacing-xs)'
-              }}>
-                <div className="stat-row" style={{
-                  display: 'flex',
-                  justifyContent: 'space-between'
-                }}>
-                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                    Average:
-                  </span>
-                  <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                    {formatCurrency(avgSpent)}
-                  </span>
-                </div>
+                  <h4 style={{
+                    margin: 0,
+                    fontSize: 'var(--font-size-md)',
+                    fontWeight: 'var(--font-weight-bold)',
+                    color: 'var(--color-text-primary)'
+                  }}>{category}</h4>
+                  <div className="trend-indicator" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--spacing-xs)',
+                    fontSize: 'var(--font-size-sm)',
+                    color: trendInfo.color
+                  }}>
+                    {trendInfo.icon} {trendInfo.label}
+                  </div>
+                </CardHeader>
                 
-                <div className="stat-row" style={{
+                <div className="stat-body" style={{
                   display: 'flex',
-                  justifyContent: 'space-between'
+                  flexDirection: 'column',
+                  gap: 'var(--spacing-xs)'
                 }}>
-                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                    Highest:
-                  </span>
-                  <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                    {formatCurrency(maxSpent)}
-                  </span>
-                </div>
-                
-                {maxMonth && (
                   <div className="stat-row" style={{
                     display: 'flex',
                     justifyContent: 'space-between'
                   }}>
                     <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                      Peak Month:
+                      Average:
                     </span>
                     <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                      {maxMonth}
+                      {formatCurrency(avgSpent)}
                     </span>
                   </div>
-                )}
-                
-                <div className="stat-row" style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginTop: 'var(--spacing-xs)',
-                  paddingTop: 'var(--spacing-xs)',
-                  borderTop: '1px solid var(--color-border)'
-                }}>
-                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                    Last Month:
-                  </span>
-                  <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                    {formatCurrency(pattern?.lastAmount || 0)}
-                  </span>
+                  
+                  <div className="stat-row" style={{
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                      Highest:
+                    </span>
+                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                      {formatCurrency(maxSpent)}
+                    </span>
+                  </div>
+                  
+                  {maxMonth && (
+                    <div className="stat-row" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                        Peak Month:
+                      </span>
+                      <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                        {maxMonth}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="stat-row" style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: 'var(--spacing-xs)',
+                    paddingTop: 'var(--spacing-xs)',
+                    borderTop: '1px solid var(--color-border)'
+                  }}>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                      Last Month:
+                    </span>
+                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                      {formatCurrency(pattern?.lastAmount || 0)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           );
         })}
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
   );
 };
 

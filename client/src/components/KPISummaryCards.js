@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card } from './ui/card';
 import PropTypes from 'prop-types';
 import { 
   TrendingUp, 
@@ -25,7 +26,7 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
 
   return (
     <div className="stats-grid">
-      <div className="stat-card">
+      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
         <div className="stat-header">
           <span className="stat-title">Total Spending</span>
           <div className="stat-icon" style={{
@@ -47,9 +48,9 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
             {formatTrend(analytics?.summary?.trendPercentage || 0)} vs last year
           </span>
         </div>
-      </div>
+      </Card>
 
-      <div className="stat-card">
+      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
         <div className="stat-header">
           <span className="stat-title">Avg Monthly</span>
           <div className="stat-icon" style={{
@@ -65,9 +66,9 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
         <div className="stat-change" style={{color: '#64748b'}}>
           Across {analytics?.summary?.monthCount || 0} months
         </div>
-      </div>
+      </Card>
 
-      <div className="stat-card">
+      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
         <div className="stat-header">
           <span className="stat-title">Months Tracked</span>
           <div className="stat-icon" style={{
@@ -83,9 +84,9 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
         <div className="stat-change" style={{color: '#64748b'}}>
           Complete data coverage
         </div>
-      </div>
+      </Card>
 
-      <div className="stat-card">
+      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
         <div className="stat-header">
           <span className="stat-title">Status</span>
           <div className="stat-icon" style={{
@@ -104,7 +105,7 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
         <div className="stat-change" style={{color: '#64748b'}}>
           Pattern
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
