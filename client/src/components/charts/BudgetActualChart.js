@@ -1,44 +1,16 @@
 import * as React from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
 import '../../styles/design-system.css'
+import { buildBudgetActualData, computeYDomain, currencyTickFormatter, commonMargins } from "./chartUtils"
 
-const BudgetActualChart = ({ chartData, formatCurrency, categories = [] }) => {
-  // Transform Chart.js data format to Recharts format
-  const transformData = (chartJsData) => {
-    if (!chartJsData?.labels || !chartJsData?.datasets) {
-      return []
-    }
-
-    const budgetedData = chartJsData.datasets.find(d => d.label === 'Budgeted')
-    const actualData = chartJsData.datasets.find(d => d.label === 'Actual Spending')
-
-    return chartJsData.labels.map((label, index) => {
-      const budgeted = budgetedData?.data[index] || 0
-      const actual = actualData?.data[index] || 0
-      const variance = budgeted > 0 ? ((actual - budgeted) / budgeted * 100) : 0
-      
-      const status = budgeted === 0 ? 'no-budget' : 
-                     variance > 10 ? 'over-budget' : 
-                     variance > -10 ? 'on-track' : 'under-budget'
-      
-      // Determine color based on status
-      const actualColor = status === 'over-budget' ? '#ef4444' : // red
-                          status === 'under-budget' ? '#22c55e' : // green  
-                          '#f59e0b' // amber/warning
-      
-      return {
-        category: label,
-        budgeted,
-        actual,
-        variance,
-        status,
-        actualColor
-      }
-    }).filter(item => item.budgeted > 0 || item.actual > 0) // Only show categories with data
-  }
-
-  const barData = transformData(chartData)
+const BudgetActualChart = ({ chartData, formatCurrency }) => {
+  // Transform using shared utils
+  const barData = React.useMemo(() => buildBudgetActualData(chartData), [chartData])
   const hasData = barData.length > 0
+
+  // Scales and ticks
+  const yDomain = React.useMemo(() => computeYDomain(barData, ['budgeted', 'actual'], 0.15), [barData])
+  const yTickFormatter = React.useMemo(() => currencyTickFormatter(formatCurrency, true), [formatCurrency])
 
   // Custom shape for actual spending bars with dynamic colors
   const ActualBar = (props) => {
@@ -214,7 +186,7 @@ const BudgetActualChart = ({ chartData, formatCurrency, categories = [] }) => {
       
       <div style={{ height: '350px', position: 'relative' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+          <BarChart data={barData} margin={commonMargins} barCategoryGap="30%" barGap="10%">
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
             <XAxis 
               dataKey="category" 
@@ -225,22 +197,25 @@ const BudgetActualChart = ({ chartData, formatCurrency, categories = [] }) => {
               height={80}
               style={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
             />
-            <YAxis 
+            <YAxis
+              domain={yDomain}
               axisLine={false}
               tickLine={false}
               style={{ fontSize: 'var(--font-size-sm)', fill: 'var(--color-text-secondary)' }}
-              tickFormatter={(value) => formatCurrency(value).replace('$', '$')}
+              tickFormatter={yTickFormatter}
             />
             <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
-            <Bar 
-              dataKey="budgeted" 
+            <Bar
+              dataKey="budgeted"
               fill="#8b5cf6"
               radius={[4, 4, 0, 0]}
+              maxBarSize={48}
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
             />
-            <Bar 
+            <Bar
               dataKey="actual"
               shape={ActualBar}
+              maxBarSize={48}
             />
           </BarChart>
         </ResponsiveContainer>

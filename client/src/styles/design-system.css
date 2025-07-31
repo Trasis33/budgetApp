@@ -67,6 +67,10 @@
   /* Backdrop blur */
   --backdrop-blur: blur(12px);
   --backdrop-blur-light: blur(8px);
+
+  /* Layout constants */
+  --sidebar-width: 15rem;
+  --header-height: 3.5rem;
 }
 
 /* Base body styling from template */
@@ -86,7 +90,7 @@ body {
 }
 
 .sidebar {
-  width: 15rem;
+  width: var(--sidebar-width);
   background: var(--bg-primary);
   backdrop-filter: var(--backdrop-blur);
   border-right: 1px solid var(--border-color);
@@ -98,8 +102,8 @@ body {
 
 .main-content {
   flex: 1;
-  margin-left: 15rem;
-  margin-top: 3.5rem; /* Adjusted for fixed header */
+  margin-left: var(--sidebar-width);
+  margin-top: var(--header-height); /* Adjusted for fixed header */
   padding: 0;
 }
 
@@ -113,8 +117,8 @@ body {
   align-items: center;
   position: fixed;
   top: 0;
-  left: 15rem;
-  width: calc(100% - 15rem);
+  left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
   z-index: 1000;
 }
 
@@ -643,10 +647,7 @@ body {
   color: var(--color-text-secondary);
 }
 
-.chart-container {
-  height: 140px;
-  position: relative;
-}
+/* .chart-container sizing moved to index.css to avoid duplicate rules */
 
 /* Loading states */
 .loading-container {
@@ -762,6 +763,7 @@ body {
   
   .main-content {
     margin-left: 0;
+    margin-top: 0;
   }
   
   .stats-grid {
@@ -772,6 +774,7 @@ body {
   .analytics-grid {
     grid-template-columns: 1fr;
     gap: var(--spacing-2xl);
+    grid-auto-rows: auto;
   }
   
   .dashboard-content {
@@ -779,15 +782,28 @@ body {
   }
   
   .header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
     padding: var(--spacing-3xl) var(--spacing-4xl);
   }
   
   .sidebar {
     padding: var(--spacing-4xl);
   }
-  
-  .chart-container {
-    height: 280px;
+
+  /* Tone down heavy glass/blur on small screens for performance */
+  .glassmorphism-card {
+    background: rgba(255, 255, 255, 0.28) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  .stat-card-shadcn {
+    background: rgba(255, 255, 255, 0.22) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 }
 
@@ -925,4 +941,22 @@ body {
   background: rgba(138, 92, 246, 0.411) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift,
+  .card,
+  .stat-card,
+  .chart-card,
+  .btn {
+    transition: none !important;
+  }
+  .card:hover,
+  .stat-card:hover,
+  .chart-card:hover,
+  .btn:hover,
+  .hover-lift:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }

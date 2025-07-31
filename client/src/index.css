@@ -48,7 +48,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.5;
-    color: #374151;
+    color: var(--color-text-primary);
     /* background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 50%, #ecfdf5 100%); */
     min-height: 100vh;
   }
@@ -82,7 +82,10 @@
   } */
   
   .card {
-    @apply /*bg-white*/ rounded-lg shadow-sm border border-gray-200;
+    @apply rounded-lg shadow-sm border;
+    border-color: var(--border-color);
+    background: var(--bg-card);
+    backdrop-filter: var(--backdrop-blur-light);
   }
   
   .card-hover {
@@ -104,15 +107,11 @@
 /* Chart.js custom styles */
 .chart-container {
   position: relative;
-  height: 400px;
   width: 100%;
+  height: clamp(260px, 42vh, 440px);
 }
 
-@media (max-width: 768px) {
-  .chart-container {
-    height: 300px;
-  }
-}
+/* Height now driven by clamp in .chart-container; previous media query removed */
 
 /* Loading animations */
 .loading-dots {
@@ -269,5 +268,8 @@
   .animate-pulse-slow {
     transition: none;
     animation: none;
+  }
+  .loading-dots div {
+    animation: none !important;
   }
 }

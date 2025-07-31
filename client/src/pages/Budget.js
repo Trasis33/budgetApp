@@ -16,7 +16,7 @@ import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
 import SavingsRateTracker from '../components/SavingsRateTracker';
 import SavingsGoalsManager from '../components/SavingsGoalsManager';
 import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
-import CategorySpendingChart from '../components/charts/CategorySpendingChart';
+import EnhancedCategorySpendingChart from '../components/charts/EnhancedCategorySpendingChart';
 import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
 import BudgetActualChart from '../components/charts/BudgetActualChart';
 
@@ -299,11 +299,11 @@ const Budget = () => {
                 }}>Spending by Category</h2>
               </div>
 
-              <CategorySpendingChart 
-                chartData={getCategoryChartData()} 
+              <EnhancedCategorySpendingChart
+                chartData={getCategoryChartData()}
                 formatCurrency={formatCurrency}
-                budgets={budgets}
-                categories={categories}
+                selectedMonth={month - 1}
+                onMonthChange={(m) => setMonth(m + 1)}
               />
             </div>
 
