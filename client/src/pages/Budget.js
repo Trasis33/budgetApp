@@ -19,11 +19,12 @@ import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 import EnhancedCategorySpendingChart from '../components/charts/EnhancedCategorySpendingChart';
 import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
 import BudgetActualChart from '../components/charts/BudgetActualChart';
+import BudgetAccordion from '../components/ui/BudgetAccordion';
+import useLazyLoad from '../hooks/useLazyLoad';
+import { SkeletonChart } from '../components/ui/Skeletons';
 
 const Budget = () => {
-  // Active section state for shadcn/ui tabs navigation
   const [activeSection, setActiveSection] = useState('budget');
-  
   const [incomes, setIncomes] = useState([]);
   const [source, setSource] = useState('');
   const [amount, setAmount] = useState('');
@@ -38,11 +39,8 @@ const Budget = () => {
   const [chartData, setChartData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [budgets, setBudgets] = useState({});
-  
-  // Analytics state
   const [timePeriod, setTimePeriod] = useState('6months');
 
-  // Navigation sections
   const sections = [
     { id: 'budget', label: 'Budget Overview', icon: '💰' },
     { id: 'analytics', label: 'Analytics', icon: '📊' },
@@ -85,6 +83,11 @@ const Budget = () => {
   useEffect(() => {
     fetchBudgetData();
   }, [month, year, fetchBudgetData]);
+
+  // Lazy-load refs (single declaration)
+  const { ref: catRef, isVisible: catVisible } = useLazyLoad();
+  const { ref: ieRef, isVisible: ieVisible } = useLazyLoad();
+  const { ref: bvaRef, isVisible: bvaVisible } = useLazyLoad();
 
   const handleAddIncome = async (e) => {
     e.preventDefault();
@@ -267,65 +270,61 @@ const Budget = () => {
     <div className="space-y-6">
       {loading ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-80 bg-gray-200 rounded"></div>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-80 bg-gray-200 rounded"></div>
-            </div>
-          </div>
+          <SkeletonChart />
+          <SkeletonChart />
         </div>
       ) : (
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="section-header" style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginBottom: '1rem'
-              }}>
+              <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 className="section-title" style={{
-                  fontSize: 'var(--font-size-xl)',
-                  fontWeight: 600,
+                  fontSize: 'var(--font-size-xl)', fontWeight: 600,
                   background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  margin: 0
+                  backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0
                 }}>Spending by Category</h2>
               </div>
-
-              <EnhancedCategorySpendingChart
-                chartData={getCategoryChartData()}
-                formatCurrency={formatCurrency}
-                selectedMonth={month - 1}
-                onMonthChange={(m) => setMonth(m + 1)}
-              />
+              <div ref={catRef}>
+                {catVisible ? (
+                  <EnhancedCategorySpendingChart
+                    chartData={getCategoryChartData()}
+                    formatCurrency={formatCurrency}
+                    selectedMonth={month - 1}
+                    onMonthChange={(m) => setMonth(m + 1)}
+                  />
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
-              <div className="h-80">
-                <IncomeExpenseChart 
-                  chartData={getIncomeExpenseChartData()} 
-                  formatCurrency={formatCurrency}
-                />
+              <div className="h-80" ref={ieRef}>
+                {ieVisible ? (
+                  <IncomeExpenseChart
+                    chartData={getIncomeExpenseChartData()}
+                    formatCurrency={formatCurrency}
+                  />
+                ) : (
+                  <SkeletonChart />
+                )}
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md" ref={bvaRef}>
             <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
             <div className="h-98">
-              <BudgetActualChart 
-                chartData={getBudgetVsActualChartData()} 
-                formatCurrency={formatCurrency}
-                categories={categories}
-              />
+              {bvaVisible ? (
+                <BudgetActualChart
+                  chartData={getBudgetVsActualChartData()}
+                  formatCurrency={formatCurrency}
+                  categories={categories}
+                />
+              ) : (
+                <SkeletonChart />
+              )}
             </div>
           </div>
         </div>
@@ -341,19 +340,29 @@ const Budget = () => {
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-lg font-semibold mb-4">Manage Budgets</h2>
           <div className="space-y-4">
-            {categories.map(category => (
-              <div key={category.id} className="flex items-center gap-2">
-                <label className="flex-1 text-sm font-medium text-gray-700">{category.name}</label>
-                <input
-                  type="number"
-                  value={budgets[category.id] || ''}
-                  onChange={(e) => handleBudgetChange(category.id, e.target.value)}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded-md"
-                  placeholder="0.00"
-                />
-                <button onClick={() => handleSaveBudget(category.id)} className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm">Save</button>
-              </div>
-            ))}
+            <BudgetAccordion
+              sections={categories.map(category => {
+                const categoryBudget = budgets[category.id] || '';
+                return {
+                  id: String(category.id),
+                  title: category.name,
+                  spent: chartData?.categorySpending?.find(c => c.category === category.name)?.total ?? 0,
+                  budget: Number(categoryBudget || 0),
+                  children: (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={categoryBudget}
+                        onChange={(e) => handleBudgetChange(category.id, e.target.value)}
+                        className="w-24 px-2 py-1 border border-gray-300 rounded-md"
+                        placeholder="0.00"
+                      />
+                      <span className="text-sm text-gray-600">kr</span>
+                    </div>
+                  )
+                };
+              })}
+            />
           </div>
         </div>
 

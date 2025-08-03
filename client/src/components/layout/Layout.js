@@ -4,7 +4,6 @@ import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import BottomNavigationBar from '../navigation/BottomNavigationBar';
 import FloatingActionButton from '../ui/FloatingActionButton';
-import useSwipeNavigation from '../../hooks/useSwipeNavigation';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -12,9 +11,6 @@ const Layout = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-
-  // enable lightweight swipe navigation on mobile
-  useSwipeNavigation();
 
   return (
     // <div className="flex h-screen bg-gray-100">

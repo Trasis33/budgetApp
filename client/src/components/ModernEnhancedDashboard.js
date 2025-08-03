@@ -9,14 +9,18 @@ import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import KPISummaryCards from './KPISummaryCards';
-import { 
-  RefreshCw, 
+import {
+  RefreshCw,
   Download,
   TrendingUp,
   Target,
   AlertTriangle,
   DollarSign
 } from 'lucide-react';
+
+// Phase 2: lazy-loading and skeletons
+import useLazyLoad from '../hooks/useLazyLoad';
+import { SkeletonChart } from './ui/Skeletons';
 
 const ModernEnhancedDashboard = () => {
   const { user } = useAuth();
@@ -99,6 +103,13 @@ const ModernEnhancedDashboard = () => {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  // Declare lazy-load refs before any early returns (Rules of Hooks)
+  const { ref: patternsRef, isVisible: patternsVisible } = useLazyLoad();
+  const { ref: savingsRef, isVisible: savingsVisible } = useLazyLoad();
+  const { ref: perfCardsRef, isVisible: perfCardsVisible } = useLazyLoad();
+  const { ref: perfBadgesRef, isVisible: perfBadgesVisible } = useLazyLoad();
+  const { ref: analyticsRef, isVisible: analyticsVisible } = useLazyLoad();
 
   if (loading && !dashboardData) {
     return (
@@ -236,19 +247,35 @@ const ModernEnhancedDashboard = () => {
         </div>
 
         <div className="analytics-grid">
-          <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
-          <SavingsRateTracker />
-          <BudgetPerformanceCards />
-          <BudgetPerformanceBadges />
+          <div ref={patternsRef}>
+            {patternsVisible ? (
+              <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
+            ) : (
+              <SkeletonChart />
+            )}
+          </div>
+          <div ref={savingsRef}>
+            {savingsVisible ? <SavingsRateTracker /> : <SkeletonChart />}
+          </div>
+          <div ref={perfCardsRef}>
+            {perfCardsVisible ? <BudgetPerformanceCards /> : <SkeletonChart />}
+          </div>
+          <div ref={perfBadgesRef}>
+            {perfBadgesVisible ? <BudgetPerformanceBadges /> : <SkeletonChart />}
+          </div>
         </div>
       </div>
 
       {/* Main Dashboard Analytics Component */}
-      <div className="card">
+      <div className="card" ref={analyticsRef}>
         <div className="chart-header">
           <h3 className="section-title">Detailed Analytics</h3>
         </div>
-        <DashboardAnalytics data={dashboardData?.analytics} />
+        {analyticsVisible ? (
+          <DashboardAnalytics data={dashboardData?.analytics} />
+        ) : (
+          <SkeletonChart />
+        )}
       </div>
 
       {/* Optimization Tips */}

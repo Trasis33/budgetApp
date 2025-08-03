@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ModernLayout from './components/layout/ModernLayout';
-import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
-import Expenses from './pages/Expenses';
-import AddExpense from './pages/AddExpense';
-import Budget from './pages/Budget';
-import Settings from './pages/Settings';
-import Login from './pages/Login';
-import NotFound from './pages/NotFound';
-import MonthlyStatement from './pages/MonthlyStatement';
+
+// Route-level code splitting
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Expenses = lazy(() => import('./pages/Expenses'));
+const AddExpense = lazy(() => import('./pages/AddExpense'));
+const Budget = lazy(() => import('./pages/Budget'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Login = lazy(() => import('./pages/Login'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const MonthlyStatement = lazy(() => import('./pages/MonthlyStatement'));
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -29,25 +30,27 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        <Route path="/" element={
-          <ProtectedRoute>
-            <ModernLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Dashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="expenses/add" element={<AddExpense />} />
-          <Route path="budget" element={<Budget />} />
-          <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<div className="p-4">Loading…</div>}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/" element={
+            <ProtectedRoute>
+              <ModernLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="expenses/add" element={<AddExpense />} />
+            <Route path="budget" element={<Budget />} />
+            <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

@@ -12,14 +12,10 @@ import {
 
 import BottomNavigationBar from '../navigation/BottomNavigationBar';
 import FloatingActionButton from '../ui/FloatingActionButton';
-import useSwipeNavigation from '../../hooks/useSwipeNavigation';
 
 const ModernLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-
-  // enable lightweight swipe navigation on mobile
-  useSwipeNavigation();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: BarChart3, current: location.pathname === '/' },
