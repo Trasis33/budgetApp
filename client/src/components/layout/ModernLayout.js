@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { 
+import {
   BarChart3,
   DollarSign,
   CreditCard,
@@ -10,9 +10,16 @@ import {
   LogOut
 } from 'lucide-react';
 
+import BottomNavigationBar from '../navigation/BottomNavigationBar';
+import FloatingActionButton from '../ui/FloatingActionButton';
+import useSwipeNavigation from '../../hooks/useSwipeNavigation';
+
 const ModernLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+
+  // enable lightweight swipe navigation on mobile
+  useSwipeNavigation();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: BarChart3, current: location.pathname === '/' },
@@ -69,6 +76,10 @@ const ModernLayout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Mobile-only utilities */}
+      <FloatingActionButton />
+      <BottomNavigationBar />
     </div>
   );
 };

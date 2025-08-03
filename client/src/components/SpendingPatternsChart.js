@@ -613,7 +613,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       
       <div className="stats-container" style={{
         flex: 1,
-        marginTop: 'var(--spacing-lg)'
+        marginTop: '3.5rem'
       }}>
         <div className="stats-grid" style={{
           display: 'grid',

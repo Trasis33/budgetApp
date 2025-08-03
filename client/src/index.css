@@ -5,6 +5,8 @@
 @import './styles/design-system.css';
 @import './styles/dashboard.css';
 /* @import './styles/typography.css'; Temporarily disabled - using design-system.css values */
+/* Touch-first utilities and mobile components */
+@import './styles/touch.css';
 
 /* Custom base styles */
 @layer base {

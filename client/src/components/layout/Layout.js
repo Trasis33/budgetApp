@@ -2,6 +2,9 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import BottomNavigationBar from '../navigation/BottomNavigationBar';
+import FloatingActionButton from '../ui/FloatingActionButton';
+import useSwipeNavigation from '../../hooks/useSwipeNavigation';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -9,6 +12,9 @@ const Layout = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  // enable lightweight swipe navigation on mobile
+  useSwipeNavigation();
 
   return (
     // <div className="flex h-screen bg-gray-100">
@@ -22,8 +28,8 @@ const Layout = () => {
       {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div 
-            className="fixed inset-0 bg-gray-600 bg-opacity-75" 
+          <div
+            className="fixed inset-0 bg-gray-600 bg-opacity-75"
             onClick={toggleSidebar}
           ></div>
           <div className="relative flex flex-col flex-1 w-full max-w-xs bg-white">
@@ -54,6 +60,10 @@ const Layout = () => {
           </div>
         </main>
       </div>
+
+      {/* Mobile-only utilities */}
+      <FloatingActionButton />
+      <BottomNavigationBar />
     </div>
   );
 };

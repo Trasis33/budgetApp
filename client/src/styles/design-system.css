@@ -89,6 +89,7 @@ body {
   min-height: 100vh;
 }
 
+/* Sidebar defaults for desktop */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-primary);
@@ -105,6 +106,26 @@ body {
   margin-left: var(--sidebar-width);
   margin-top: var(--header-height); /* Adjusted for fixed header */
   padding: 0;
+}
+
+/* Mobile breakpoint adjustments:
+   - Hide fixed sidebar
+   - Remove left margin from main-content so content spans full width
+   - Header becomes full width */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .main-content {
+    margin-left: 0;
+    margin-top: 0;
+  }
+  .header {
+    left: 0;
+    width: 100%;
+    position: sticky;
+    top: 0;
+  }
 }
 
 .header {

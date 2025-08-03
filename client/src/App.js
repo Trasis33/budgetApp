@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ModernLayout from './components/layout/ModernLayout';
+import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import AddExpense from './pages/AddExpense';
