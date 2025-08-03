@@ -1,6 +1,5 @@
 import React from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './enhanced-tabs'
-import '../../styles/design-system.css'
 
 const TabsShowcase = () => {
   return (

@@ -2,7 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-@import './styles/design-system.css';
+/* Establish layer order - later layers have higher priority */
+@layer design-system, budget-enhancements;
+
+@layer design-system {
+  @import './styles/design-system.css';
+}
+@import './styles/budget-enhancements.css';
 @import './styles/dashboard.css';
 /* @import './styles/typography.css'; Temporarily disabled - using design-system.css values */
 /* Touch-first utilities and mobile components */

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
 import '../../styles/design-system.css'
+import { commonMargins } from "./chartUtils"
 
 const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
   // Transform Chart.js data format to Recharts format
@@ -43,8 +44,8 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
         fontSize: 'var(--font-size-sm)',
         minWidth: '200px'
       }}>
-        <div style={{ 
-          fontWeight: 600, 
+        <div style={{
+          fontWeight: 600,
           color: 'var(--color-text-primary)',
           marginBottom: 'var(--spacing-lg)',
           fontSize: 'var(--font-size-base)'
@@ -78,8 +79,8 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
             <span style={{ color: 'var(--color-text-secondary)' }}>Net: </span>
-            <span style={{ 
-              fontWeight: 600, 
+            <span style={{
+              fontWeight: 600,
               color: isPositive ? 'var(--color-success)' : 'var(--color-error)'
             }}>
               {isPositive ? '+' : ''}{formatCurrency(netAmount)}
@@ -121,25 +122,25 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
   // Empty state
   if (!hasData) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="chart-card glassmorphism-card p-4 hover-lift">
         <div className="chart-header">
           <h3 className="chart-title text-gradient">Income vs. Expenses</h3>
           <p className="chart-subtitle">Monthly financial overview</p>
         </div>
         <div className="loading-container" style={{ height: '320px' }}>
-          <div style={{ 
-            fontSize: 'var(--font-size-3xl)', 
+          <div style={{
+            fontSize: 'var(--font-size-3xl)',
             marginBottom: 'var(--spacing-3xl)',
             filter: 'grayscale(0.3)'
           }}>💰</div>
-          <p style={{ 
+          <p style={{
             color: 'var(--color-text-secondary)',
             fontSize: 'var(--font-size-base)',
             textAlign: 'center'
           }}>
             No financial data available
           </p>
-          <p style={{ 
+          <p style={{
             color: 'var(--color-text-muted)',
             fontSize: 'var(--font-size-sm)',
             marginTop: 'var(--spacing-sm)',
@@ -153,53 +154,85 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
   }
 
   return (
-    <div className="chart-card glass-effect hover-lift">
+    <div className="glassmorphism-card p-4">
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Income vs. Expenses</h3>
         <p className="chart-subtitle">
-          Net: <span style={{ 
-            fontWeight: 600, 
+          Net: <span style={{
+            fontWeight: 600,
             color: barData[0].net >= 0 ? 'var(--color-success)' : 'var(--color-error)'
           }}>
             {barData[0].net >= 0 ? '+' : ''}{formatCurrency(barData[0].net)}
           </span>
         </p>
       </div>
-      
-      <div style={{ height: '320px', position: 'relative' }}>
+
+      <div style={{ height: '420px', marginTop: 'var(--spacing-3xl)' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart
+            data={barData}
+            margin={commonMargins}
+            barCategoryGap="26%"
+            barGap="10%">
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               axisLine={false}
               tickLine={false}
-              style={{ fontSize: 'var(--font-size-sm)', fill: 'var(--color-text-secondary)' }}
+              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
             />
-            <YAxis 
+            <YAxis
               axisLine={false}
               tickLine={false}
-              style={{ fontSize: 'var(--font-size-sm)', fill: 'var(--color-text-secondary)' }}
+              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
               tickFormatter={(value) => formatCurrency(value).replace('$', '$')}
             />
             <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
-            <Bar 
-              dataKey="income" 
-              fill="var(--color-success)" 
+            <Bar
+              dataKey="income"
+              fill="var(--color-success)"
               radius={[4, 4, 0, 0]}
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
             />
-            <Bar 
-              dataKey="expenses" 
-              fill="var(--color-warning)" 
+            <Bar
+              dataKey="expenses"
+              fill="var(--color-warning)"
               radius={[4, 4, 0, 0]}
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
+      {/* Legend (top 5 categories) */}
+      {/* <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 'var(--spacing-3xl)',
+        marginTop: 'var(--spacing-3xl)',
+        flexWrap: 'wrap'
+      }}>
+          <Legend
+            key={"Income"}
+            color="var(--color-success)"
+            label="Income"
+          />
+          <Legend
+            key={"Expenses"}
+            color="var(--color-warning)"
+            label="Expenses"
+          />
+      </div> */}
     </div>
   )
 }
+
+const Legend = ({ color, label, styleOverride }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+    <div style={{
+      width: 12, height: 12, borderRadius: 2, backgroundColor: color, ...(styleOverride || {})
+    }} />
+    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{label}</span>
+  </div>
+)
 
 export default IncomeExpenseChart

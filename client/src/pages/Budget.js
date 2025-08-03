@@ -269,21 +269,13 @@ const Budget = () => {
   const renderBudgetSection = () => (
     <div className="space-y-6">
       {loading ? (
-        <div className="space-y-8">
+        <div className="space-y-4">
           <SkeletonChart />
           <SkeletonChart />
         </div>
       ) : (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 className="section-title" style={{
-                  fontSize: 'var(--font-size-xl)', fontWeight: 600,
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
-                  backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0
-                }}>Spending by Category</h2>
-              </div>
+        <div className="space-y-6 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div ref={catRef}>
                 {catVisible ? (
                   <EnhancedCategorySpendingChart
@@ -296,10 +288,7 @@ const Budget = () => {
                   <SkeletonChart />
                 )}
               </div>
-            </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
               <div className="h-80" ref={ieRef}>
                 {ieVisible ? (
                   <IncomeExpenseChart
@@ -310,11 +299,9 @@ const Budget = () => {
                   <SkeletonChart />
                 )}
               </div>
-            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md" ref={bvaRef}>
-            <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
+          <div className="glass-card" ref={bvaRef}>
             <div className="h-98">
               {bvaVisible ? (
                 <BudgetActualChart
@@ -338,7 +325,9 @@ const Budget = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Manage Budgets</h2>
+          <div className="section-header">
+            <h2 className="section-title gradient-text">Manage Budgets</h2>
+          </div>
           <div className="space-y-4">
             <BudgetAccordion
               sections={categories.map(category => {
@@ -367,7 +356,9 @@ const Budget = () => {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-4">Manage Income</h2>
+          <div className="section-header">
+            <h2 className="section-title gradient-text">Manage Income</h2>
+          </div>
           <form onSubmit={handleAddIncome} className="bg-white p-6 rounded-lg shadow-md">
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Income Source</label>
@@ -409,7 +400,9 @@ const Budget = () => {
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Income This Month</h2>
+        <div className="section-header">
+          <h2 className="section-title gradient-text">Income This Month</h2>
+        </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
           <ul className="space-y-4">
             {incomes.map((income) => (
@@ -434,12 +427,12 @@ const Budget = () => {
 
   const renderAnalyticsSection = () => (
     <div className="space-y-6">
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-3">Time Period</h3>
+      <div className="glass-card hover-lift">
+        <h3 className="section-title gradient-text">Time Period</h3>
         <select
           value={timePeriod}
           onChange={(e) => setTimePeriod(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="form-select"
         >
           <option value="3months">Last 3 Months</option>
           <option value="6months">Last 6 Months</option>
@@ -532,52 +525,13 @@ const Budget = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Management</h1>
-        <p className="text-gray-600">Manage your budget, track performance, and analyze spending patterns</p>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-          <div className="flex">
-            <div className="text-red-400">⚠️</div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-              <button onClick={fetchBudgetData} className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded">
-                Retry
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <Tabs value={activeSection} onValueChange={setActiveSection}>
-            <TabsList>
-              {sections.map((section) => (
-                <TabsTrigger key={section.id} value={section.id}>
-                  <span style={{ 
-                    marginRight: 'var(--spacing-lg)', 
-                    fontSize: 'var(--font-size-xl)' 
-                  }}>
-                    {section.icon}
-                  </span>
-                  {section.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          
-          <div className="flex items-center gap-2">
-            <span style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--color-text-secondary)',
-              fontWeight: 500
-            }}>Filter:</span>
-            <MonthYearNavigator 
+    <div className="dashboard-content">
+      {/* Page Header */}
+      <div className="dashboard-header">
+        <h2 className="dashboard-title">Financial Management</h2>
+        <div className="dashboard-header-right">
+          <div className="dashboard-actions">
+            <MonthYearNavigator
               month={month}
               year={year}
               onMonthChange={setMonth}
@@ -587,6 +541,31 @@ const Budget = () => {
           </div>
         </div>
       </div>
+
+      {/* Error card */}
+      {error && (
+        <div className="glass-card error-card">
+          <div className="section-header">
+            <h3 className="section-title gradient-text">Error</h3>
+          </div>
+          <p className="error-message-text">{error}</p>
+          <button onClick={fetchBudgetData} className="btn btn-secondary">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Tabs card */}
+        <Tabs value={activeSection} onValueChange={setActiveSection}>
+          <TabsList className="tabs-list-enhanced">
+            {sections.map((section) => (
+              <TabsTrigger key={section.id} value={section.id} className="tab-trigger-enhanced">
+                <span className="tab-icon">{section.icon}</span>
+                {section.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
       {renderContent()}
     </div>

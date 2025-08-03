@@ -42,7 +42,7 @@ const EnhancedCategorySpendingChart = ({
   const yTickFormatter = React.useMemo(() => currencyTickFormatter(formatCurrency, true), [formatCurrency])
 
   // Month switcher
-  const MonthSwitcher = () => {
+  /* const MonthSwitcher = () => {
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
@@ -89,7 +89,7 @@ const EnhancedCategorySpendingChart = ({
         >→</button>
       </div>
     )
-  }
+  } */
 
   const EnhancedTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
@@ -116,13 +116,13 @@ const EnhancedCategorySpendingChart = ({
   // Empty state
   if (!distributionData.length) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="chart-card glassmorphism-card hover-lift">
         <div className="chart-header">
           <h3 className="chart-title text-gradient">Spending Distribution by Category</h3>
           <p className="chart-subtitle">Relative spending by category</p>
         </div>
 
-        <MonthSwitcher />
+        {/* <MonthSwitcher /> */}
 
         <div className="loading-container" style={{ height: '400px' }}>
           <div style={{ fontSize: 'var(--font-size-3xl)', marginBottom: 'var(--spacing-3xl)', filter: 'grayscale(0.3)' }}>📊</div>
@@ -138,13 +138,13 @@ const EnhancedCategorySpendingChart = ({
   }
 
   return (
-    <div className="chart-card glass-effect hover-lift">
+    <div className="glassmorphism-card p-4">
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Spending Distribution by Category</h3>
         <p className="chart-subtitle">Relative spending by category</p>
       </div>
 
-      <MonthSwitcher />
+      {/* <MonthSwitcher /> */}
 
       <div style={{ height: '420px', marginTop: 'var(--spacing-3xl)' }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -163,8 +163,6 @@ const EnhancedCategorySpendingChart = ({
               tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
               angle={-45}
               textAnchor="end"
-              height={80}
-              interval={0}
             />
 
             <YAxis
@@ -181,6 +179,7 @@ const EnhancedCategorySpendingChart = ({
               dataKey="value"
               radius={[4, 4, 0, 0]}
               maxBarSize={48}
+              style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
             >
               {distributionData.map((entry, index) => (
                 <Cell key={`cell-${entry.category}-${index}`} fill={distributionPalette[index % distributionPalette.length]} />
@@ -191,7 +190,7 @@ const EnhancedCategorySpendingChart = ({
       </div>
 
       {/* Legend (top 5 categories) */}
-      <div style={{
+      {/* <div style={{
         display: 'flex',
         justifyContent: 'center',
         gap: 'var(--spacing-3xl)',
@@ -205,7 +204,7 @@ const EnhancedCategorySpendingChart = ({
             label={`${item.category} (${item.percentage.toFixed(0)}%)`}
           />
         ))}
-      </div>
+      </div> */}
     </div>
   )
 }
