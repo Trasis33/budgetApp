@@ -289,7 +289,7 @@ const Budget = () => {
                 )}
               </div>
 
-              <div className="h-80" ref={ieRef}>
+              <div ref={ieRef}>
                 {ieVisible ? (
                   <IncomeExpenseChart
                     chartData={getIncomeExpenseChartData()}
@@ -301,8 +301,7 @@ const Budget = () => {
               </div>
           </div>
 
-          <div className="glass-card" ref={bvaRef}>
-            <div className="h-98">
+          <div ref={bvaRef}>
               {bvaVisible ? (
                 <BudgetActualChart
                   chartData={getBudgetVsActualChartData()}
@@ -312,7 +311,6 @@ const Budget = () => {
               ) : (
                 <SkeletonChart />
               )}
-            </div>
           </div>
         </div>
       )}
@@ -324,7 +322,7 @@ const Budget = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="card hover-lift">
           <div className="section-header">
             <h2 className="section-title gradient-text">Manage Budgets</h2>
           </div>
@@ -359,7 +357,7 @@ const Budget = () => {
           <div className="section-header">
             <h2 className="section-title gradient-text">Manage Income</h2>
           </div>
-          <form onSubmit={handleAddIncome} className="bg-white p-6 rounded-lg shadow-md">
+          <form onSubmit={handleAddIncome} className="card hover-lift">
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Income Source</label>
               <input
@@ -392,18 +390,18 @@ const Budget = () => {
                 required
               />
             </div>
-            <button type="submit" className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">
+            <button type="submit" className="w-full btn btn-primary flex items-center justify-center">
               Add Income
             </button>
           </form>
         </div>
       </div>
 
-      <div>
+      <div className="card hover-lift">
         <div className="section-header">
-          <h2 className="section-title gradient-text">Income This Month</h2>
+          <h2 className="section-title">Income This Month</h2>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div>
           <ul className="space-y-4">
             {incomes.map((income) => (
               <li key={income.id} className="flex justify-between items-center">
@@ -413,7 +411,11 @@ const Budget = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg text-green-600">{formatCurrency(income.amount)}</p>
-                  <button onClick={() => handleDeleteIncome(income.id)} className="text-red-500 hover:text-red-700 text-sm">
+                  <button
+                    onClick={() => handleDeleteIncome(income.id)}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.375rem 0.75rem' }}
+                  >
                     Delete
                   </button>
                 </div>

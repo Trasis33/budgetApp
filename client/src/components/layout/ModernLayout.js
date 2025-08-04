@@ -47,27 +47,23 @@ const ModernLayout = () => {
             </Link>
           );
         })}
+        {/* User info and logout at the bottom of sidebar */}
+        <div className="mt-auto pt-8">
+          <div className="user-info mb-4">
+            <div className="user-avatar">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+            <span>{user?.name || 'User'}</span>
+          </div>
+          <button onClick={handleLogout} className="btn btn-secondary w-full">
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
       </nav>
 
       <main className="main-content">
-        {/* Header */}
-        <header className="header">
-          <h1 className="header-title">Expense Tracker</h1>
-          <div className="header-actions">
-            <div className="user-info">
-              <div className="user-avatar">
-                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
-              <span>{user?.name || 'User'}</span>
-            </div>
-            <button onClick={handleLogout} className="btn btn-secondary">
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
-        </header>
-
-        {/* Page Content */}
+        {/* Page Content - Header removed */}
         <div className="dashboard-content">
           <Outlet />
         </div>

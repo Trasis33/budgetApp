@@ -144,7 +144,7 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
   // Empty state
   if (!hasData) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="glassmorphism-card p-4 hover-lift">
         <div className="chart-header">
           <h3 className="chart-title text-gradient">Budget vs. Actual Spending</h3>
           <p className="chart-subtitle">Budget performance by category</p>
@@ -176,7 +176,7 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
   }
 
   return (
-    <div className="chart-card glass-effect hover-lift">
+    <div className="glassmorphism-card p-4 hover-lift">
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Budget vs. Actual Spending</h3>
         <p className="chart-subtitle">
@@ -194,7 +194,6 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
               tickLine={false}
               angle={-45}
               textAnchor="end"
-              height={80}
               style={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
             />
             <YAxis
