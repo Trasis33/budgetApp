@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mockup C — Inbox‑to‑Budget</title>
+<style>
+  :root{
+    --bg:#f5f7fa;--surface:#ffffff;--ink:#0b1320;--muted:#5d6475;
+    --primary:#1463ff;--success:#169b62;--warn:#f0a500;--danger:#d7263d;--info:#4a4e69;
+    --radius:12px;--shadow:0 8px 24px rgba(16,24,40,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .app{max-width:420px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+  header{position:sticky;top:0;background:var(--surface);box-shadow:var(--shadow);z-index:5}
+  .top{display:flex;align-items:center;gap:10px;padding:12px 16px}
+  .scope{display:flex;gap:6px}
+  .scope button{border:1px solid #dfe5f1;background:#eff3fa;color:var(--muted);padding:6px 10px;border-radius:999px;font-weight:700}
+  .scope button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .content{flex:1;overflow:auto;padding:12px 16px 90px}
+  .banner{padding:10px;border-radius:10px;margin-bottom:8px}
+  .banner.info{background:#eef4ff;color:#1b3fb3}
+  .section{margin:10px 0}
+  .section h3{margin:8px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+  .inbox{display:flex;flex-direction:column;gap:10px}
+  .item{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;display:grid;grid-template-columns:1fr auto;gap:8px}
+  .meta{color:var(--muted);font-size:12px}
+  .actions{display:flex;gap:8px;align-items:center}
+  .btn{border:0;border-radius:10px;padding:8px 10px;font-weight:700}
+  .btn.primary{background:var(--primary);color:#fff}
+  .btn.ghost{background:#eef2ff;color:#1d3fd6}
+  .btn.success{background:#e8f7ee;color:#0f6a38}
+  .btn.danger{background:#ffe8ea;color:#a3202a}
+  .chip{padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+  .c-ours{background:#e9efff;color:#2143c5}
+  .c-mine{background:#e8f7ee;color:#176f3d}
+  .c-partner{background:#fff1e6;color:#8a4b0f}
+  .filters{display:flex;gap:8px;flex-wrap:wrap}
+  .filter{border:1px dashed #cfd7e6;border-radius:999px;padding:6px 10px;color:#42506b;background:#f3f6fd}
+  .budget-list{display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:10px 12px}
+  .left{display:flex;align-items:center;gap:10px}
+  .icon{width:34px;height:34px;border-radius:10px;background:#eef2ff;display:grid;place-items:center;color:#3246c6;font-weight:800}
+  .amount{font-variant-numeric:tabular-nums;font-weight:800}
+  .flag.over{color:var(--danger)}
+  .flag.under{color:var(--success)}
+  nav{position:sticky;bottom:0;background:var(--surface);box-shadow:0 -8px 24px rgba(16,24,40,.08)}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr)}
+  .tabs button{padding:10px 6px;border:0;background:transparent;color:var(--muted);font-size:12px}
+  .tabs button[aria-current="page"]{color:var(--primary);font-weight:800}
+  .fab{position:fixed;inset:auto 16px 84px auto;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 12px 34px rgba(20,99,255,.45)}
+  /* composer */
+  .composer{position:fixed;inset:auto 0 0 0;background:#fff;border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -20px 40px rgba(0,0,0,.18);padding:12px 16px 20px;display:none}
+  .composer.active{display:block}
+  .handle{width:44px;height:5px;border-radius:999px;background:#d9deea;margin:8px auto}
+  .field{margin:8px 0}
+  .label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid #e1e6f0;border-radius:10px;font-size:16px}
+  .num{font-size:28px;font-weight:800}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:150px;background:#0f6a38;color:#fff;padding:10px 14px;border-radius:999px;display:none}
+  .toast.show{display:block}
+  /* simple dual-pane hint for tablet */
+  @media (min-width:768px){
+    .app{max-width:900px}
+    .two{display:grid;grid-template-columns:320px 1fr;gap:16px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="top">
+      <div class="scope" role="tablist" aria-label="Scope">
+        <button role="tab" aria-pressed="true" aria-selected="true">Ours</button>
+        <button role="tab" aria-pressed="false">Mine</button>
+        <button role="tab" aria-pressed="false">Partner</button>
+      </div>
+      <div class="filters" aria-label="Quick filters">
+        <div class="filter">CSV</div>
+        <div class="filter">Bank</div>
+        <div class="filter">Approvals</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="content two" role="main">
+    <section>
+      <div class="banner info" aria-live="polite">Inbox sync: 5 new items imported</div>
+
+      <div class="section">
+        <h3>Needs Review</h3>
+        <div class="inbox">
+          <article class="item" aria-label="Groceries 420 SEK guessed split">
+            <div>
+              <strong>Groceries</strong> <span class="chip c-ours">OURS</span>
+              <div class="meta">420 SEK • Split guess 50/50 • Today</div>
+            </div>
+            <div class="actions">
+              <button class="btn success" onclick="accept(this)">Accept</button>
+              <button class="btn ghost">Edit</button>
+            </div>
+          </article>
+          <article class="item" aria-label="Dining 120 SEK personal mine">
+            <div>
+              <strong>Dining Out</strong> <span class="chip c-mine">MINE</span>
+              <div class="meta">120 SEK • Personal • Yesterday</div>
+            </div>
+            <div class="actions">
+              <button class="btn success" onclick="accept(this)">Accept</button>
+              <button class="btn ghost">Edit</button>
+            </div>
+          </article>
+          <article class="item" aria-label="Approval stroller 2500 SEK">
+            <div>
+              <strong>Approval • Stroller 2 500 SEK</strong> <span class="chip c-ours">OURS</span>
+              <div class="meta">Proposed by Partner • 50/50 • Includes photo</div>
+            </div>
+            <div class="actions">
+              <button class="btn danger">Decline</button>
+              <button class="btn success" onclick="approve(this)">Approve</button>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Errors</h3>
+        <article class="item">
+          <div>
+            <strong>Bank sync failed</strong>
+            <div class="meta">Re-authenticate to resume</div>
+          </div>
+          <div class="actions">
+            <button class="btn primary">Retry</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section aria-label="Budget">
+      <div class="section">
+        <h3>Budget — August</h3>
+        <div class="budget-list">
+          <div class="row">
+            <div class="left">
+              <div class="icon">G</div>
+              <div>
+                <strong>Groceries</strong> <span class="chip c-ours">OURS</span>
+                <div class="meta">Allocated 4 500 • Spent 3 980</div>
+              </div>
+            </div>
+            <div class="amount"><span class="flag under">+520</span></div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <div class="icon">D</div>
+              <div>
+                <strong>Dining Out</strong> <span class="chip c-ours">OURS</span>
+                <div class="meta">Allocated 1 200 • Spent 1 050</div>
+              </div>
+            </div>
+            <div class="amount"><span class="flag under">+150</span></div>
+          </div>
+          <div class="row">
+            <div class="left">
+              <div class="icon">U</div>
+              <div>
+                <strong>Utilities</strong> <span class="chip c-ours">OURS</span>
+                <div class="meta">Allocated 450 • Spent 449 (Recurring)</div>
+              </div>
+            </div>
+            <div class="amount"><span class="flag under">+1</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Settlements</h3>
+        <article class="item">
+          <div>
+            <strong>Settle 320 SEK</strong>
+            <div class="meta">Equalize shared expenses • Suggest Swish</div>
+          </div>
+          <div class="actions">
+            <button class="btn ghost">Details</button>
+            <button class="btn primary">Request to settle</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <a class="fab" href="#" aria-label="Add" onclick="openComposer()">+</a>
+
+  <nav aria-label="Bottom navigation">
+    <div class="tabs">
+      <button aria-current="page">Inbox</button>
+      <button>Budget</button>
+      <button>Add</button>
+      <button>Analytics</button>
+      <button>Profile</button>
+    </div>
+  </nav>
+
+  <!-- Composer -->
+  <section id="composer" class="composer" role="dialog" aria-modal="true" aria-label="Compose expense">
+    <div class="handle" aria-hidden="true"></div>
+    <div class="field">
+      <div class="label">Type '/' commands (e.g., /ours /private /split 70)</div>
+      <input id="amt" class="num" placeholder="Amount (SEK)"/>
+    </div>
+    <div class="field">
+      <div class="label">Category</div>
+      <select>
+        <option>Groceries</option>
+        <option>Dining Out</option>
+        <option>Utilities</option>
+        <option>Kids Clothes</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="label">Split</div>
+      <select>
+        <option>50/50</option>
+        <option>Custom</option>
+        <option>Personal (Mine)</option>
+        <option>Personal (Partner)</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="label">Notes</div>
+      <textarea rows="2" placeholder="Optional"></textarea>
+    </div>
+    <button class="btn primary" onclick="save()">Save</button>
+  </section>
+
+  <div id="toast" class="toast" role="status">Saved</div>
+</div>
+
+<script>
+  function openComposer(){document.getElementById('composer').classList.add('active')}
+  function save(){
+    document.getElementById('composer').classList.remove('active');
+    const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);
+  }
+  function accept(el){
+    const card=el.closest('.item'); card.querySelector('.meta').textContent='Accepted • Added to budget';
+    el.parentElement.innerHTML='<span class="chip" style="background:#e8f7ee;color:#0f6a38">Success</span>';
+  }
+  function approve(el){
+    const card=el.closest('.item'); card.querySelector('.meta').textContent='Approved • Partner notified';
+    el.parentElement.innerHTML='<span class="chip" style="background:#e8f7ee;color:#0f6a38">Approved</span>';
+  }
+</script>
+</body>
+</html>
