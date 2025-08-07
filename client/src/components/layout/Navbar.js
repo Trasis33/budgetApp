@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const Navbar = ({ toggleSidebar }) => {
+const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [scope, setScope] = useState('Ours');
 
   const handleLogout = () => {
     logout();
@@ -12,23 +13,23 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    // <nav className="bg-white shadow-md">
     <nav className="header">
-      {/* Navbar content */}
-      <div className="px-4 py-3 flex items-center justify-between">
-        <div className="header-title">
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
-            onClick={toggleSidebar}
-          >
-            <span className="sr-only">Open main menu</span>
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <h1 className="ml-2 md:ml-0 text-xl font-semibold text-gray-800">Expense Tracker</h1>
+      <div className="px-4 py-3 flex items-center justify-between topbar">
+        <div className="flex items-center gap-3">
+          <div className="avatar" aria-hidden="true"></div>
+          <div className="segmented" role="tablist" aria-label="Scope">
+            {['Ours','Mine','Partner'].map(label => (
+              <button
+                key={label}
+                type="button"
+                role="tab"
+                aria-selected={scope === label}
+                onClick={() => setScope(label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         
         {/* User Profile Dropdown */}
