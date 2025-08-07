@@ -7,7 +7,9 @@ import {
   Minus, 
   DollarSign, 
   Target, 
-  Clock
+  Clock,
+  Users,
+  ArrowRightLeft
 } from 'lucide-react';
 
 const KPISummaryCards = ({ analytics, formatCurrency }) => {
@@ -88,22 +90,25 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
 
       <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
         <div className="stat-header">
-          <span className="stat-title">Status</span>
+          <span className="stat-title">Who Owes Who</span>
           <div className="stat-icon" style={{
             background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%)', 
             color: '#f59e0b'
           }}>
-            {analytics?.summary?.trendDirection === 'stable' ? <Minus className="h-4 w-4" /> :
-             analytics?.summary?.trendDirection === 'up' ? <TrendingUp className="h-4 w-4" /> :
-             <TrendingDown className="h-4 w-4" />}
+            {analytics?.settlement?.settlement?.amount === '0.00' ? 
+              <Users className="h-4 w-4" /> : 
+              <ArrowRightLeft className="h-4 w-4" />
+            }
           </div>
         </div>
         <div className="stat-value">
-          {analytics?.summary?.trendDirection === 'stable' ? 'Stable' :
-           analytics?.summary?.trendDirection === 'up' ? 'Rising' : 'Declining'}
+          {analytics?.settlement?.settlement?.amount === '0.00' ? 
+            'All settled!' : 
+            formatCurrency(analytics?.settlement?.settlement?.amount || 0)
+          }
         </div>
         <div className="stat-change" style={{color: '#64748b'}}>
-          Pattern
+          {analytics?.settlement?.settlement?.message || 'No pending settlements'}
         </div>
       </Card>
     </div>
@@ -118,6 +123,16 @@ KPISummaryCards.propTypes = {
       monthCount: PropTypes.number,
       trendDirection: PropTypes.string,
       trendPercentage: PropTypes.number
+    }),
+    settlement: PropTypes.shape({
+      settlement: PropTypes.shape({
+        amount: PropTypes.string,
+        message: PropTypes.string,
+        creditor: PropTypes.string,
+        debtor: PropTypes.string
+      }),
+      totalSharedExpenses: PropTypes.string,
+      monthYear: PropTypes.string
     })
   }),
   formatCurrency: PropTypes.func.isRequired

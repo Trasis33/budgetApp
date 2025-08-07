@@ -62,11 +62,12 @@ const ModernEnhancedDashboard = () => {
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
       
-      const [chartsRes, analyticsRes, patternsRes, optimizationRes] = await Promise.all([
+      const [chartsRes, analyticsRes, patternsRes, optimizationRes, settlementRes] = await Promise.all([
         axios.get(`/summary/charts/${currentYear}/${currentMonth}`),
         axios.get(`/analytics/trends/${startDate}/${endDate}`),
         axios.get('/optimization/analyze'),
-        axios.get('/optimization/tips').catch(() => ({ data: { tips: [] } }))
+        axios.get('/optimization/tips').catch(() => ({ data: { tips: [] } })),
+        axios.get('/analytics/current-settlement')
       ]);
 
       setDashboardData({
@@ -75,7 +76,10 @@ const ModernEnhancedDashboard = () => {
           income: chartsRes.data.monthlyTotals?.income || 0,
           totalExpenses: chartsRes.data.monthlyTotals?.expenses || 0
         },
-        analytics: analyticsRes.data,
+        analytics: {
+          ...analyticsRes.data,
+          settlement: settlementRes.data
+        },
         patterns: patternsRes.data,
         optimization: optimizationRes.data
       });

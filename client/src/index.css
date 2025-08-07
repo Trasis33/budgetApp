@@ -8,6 +8,8 @@
 @layer design-system {
   @import './styles/design-system.css';
 }
+/* Mockup D dark-neon theme (opt-in via .theme-dark-neon on html/body) */
+@import './styles/mockup-d-theme.css';
 @import './styles/budget-enhancements.css';
 @import './styles/dashboard.css';
 /* @import './styles/typography.css'; Temporarily disabled - using design-system.css values */

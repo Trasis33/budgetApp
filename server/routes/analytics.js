@@ -516,4 +516,96 @@ router.get('/savings-analysis/:startDate/:endDate', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/analytics/current-settlement
+ * Returns current settlement status between users
+ */
+router.get('/current-settlement', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Get all users for reference
+    const users = await db('users').select('id', 'name');
+    if (users.length < 2) {
+      return res.json({
+        settlement: {
+          message: 'Need at least two users for settlements',
+          amount: 0,
+          creditor: null,
+          debtor: null
+        }
+      });
+    }
+
+    const [user1, user2] = users;
+    
+    // Get current month's expenses for settlement calculation
+    const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+    const endDate = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0];
+
+    const expenses = await db('expenses').whereBetween('date', [startDate, endDate]);
+
+    let totalSharedExpenses = 0;
+    const userShares = { [user1.id]: 0, [user2.id]: 0 };
+    const userPaid = { [user1.id]: 0, [user2.id]: 0 };
+
+    for (const expense of expenses) {
+      const amount = parseFloat(expense.amount);
+
+      // Skip personal expenses entirely when calculating settlement
+      if (expense.split_type === 'personal') {
+        continue;
+      }
+
+      // Only count shared expenses towards what each user has paid
+      userPaid[expense.paid_by_user_id] += amount;
+      totalSharedExpenses += amount;
+
+      if (expense.split_type === '50/50') {
+        userShares[user1.id] += amount / 2;
+        userShares[user2.id] += amount / 2;
+      } else if (expense.split_type === 'custom') {
+        userShares[user1.id] += amount * (expense.split_ratio_user1 / 100);
+        userShares[user2.id] += amount * (expense.split_ratio_user2 / 100);
+      }
+    }
+
+    const balance1 = userPaid[user1.id] - userShares[user1.id];
+    const amountOwed = Math.abs(balance1);
+
+    let settlement = {
+      amount: amountOwed.toFixed(2),
+      creditor: null,
+      debtor: null,
+      message: ''
+    };
+
+    if (balance1 > 0) {
+      settlement.creditor = user1.name;
+      settlement.debtor = user2.name;
+      settlement.message = `${user2.name} owes ${user1.name}`;
+    } else if (balance1 < 0) {
+      settlement.creditor = user2.name;
+      settlement.debtor = user1.name;
+      settlement.message = `${user1.name} owes ${user2.name}`;
+    } else {
+      settlement.message = 'All settled up!';
+      settlement.amount = '0.00';
+    }
+
+    res.json({
+      settlement,
+      totalSharedExpenses: totalSharedExpenses.toFixed(2),
+      monthYear: `${currentYear}-${String(currentMonth).padStart(2, '0')}`
+    });
+
+  } catch (error) {
+    console.error('Error fetching current settlement:', error);
+    res.status(500).json({ error: 'Failed to fetch current settlement data' });
+  }
+});
+
 module.exports = router;
