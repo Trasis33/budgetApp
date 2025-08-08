@@ -9,14 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import KPISummaryCards from './KPISummaryCards';
-import {
-  RefreshCw,
-  Download,
-  TrendingUp,
-  Target,
-  AlertTriangle,
-  DollarSign
-} from 'lucide-react';
+ 
 
 // Phase 2: lazy-loading and skeletons
 import useLazyLoad from '../hooks/useLazyLoad';
@@ -27,8 +20,7 @@ const ModernEnhancedDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
+  // Auto-refresh controls removed per design choice
 
   // Helper function to safely calculate numbers and avoid NaN
   const getSafeNumber = (spending, income) => {
@@ -39,15 +31,7 @@ const ModernEnhancedDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    
-    if (autoRefresh) {
-      const interval = setInterval(() => {
-        fetchDashboardData();
-      }, refreshInterval);
-      
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, refreshInterval]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -92,21 +76,7 @@ const ModernEnhancedDashboard = () => {
     }
   };
 
-  const handleManualRefresh = () => {
-    setLoading(true);
-    fetchDashboardData();
-  };
-
-  const handleExportData = () => {
-    const dataStr = JSON.stringify(dashboardData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `dashboard-data-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
+  
 
   // Declare lazy-load refs before any early returns (Rules of Hooks)
   const { ref: patternsRef, isVisible: patternsVisible } = useLazyLoad();
@@ -134,33 +104,6 @@ const ModernEnhancedDashboard = () => {
           <p className="dashboard-subtitle">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </p>
-          <div className="dashboard-actions">
-            <button 
-              onClick={handleManualRefresh}
-              className="btn btn-secondary"
-              disabled={loading}
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
-            <button 
-              onClick={handleExportData}
-              className="btn btn-secondary"
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </button>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                id="autoRefresh"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="rounded"
-              />
-              <span>Auto-refresh</span>
-            </label>
-          </div>
         </div>
       </div>
 

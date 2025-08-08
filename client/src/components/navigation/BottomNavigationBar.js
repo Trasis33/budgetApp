@@ -19,28 +19,30 @@ const BottomNavigationBar = () => {
       aria-label="Primary"
       className="bn-container"
     >
-      {items.map(({ to, label, icon: Icon, isPrimary }) => {
-        const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
-        return (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              [
-                'bn-item',
-                (isActive || active) ? 'bn-active' : '',
-                isPrimary ? 'bn-primary' : '',
-              ].join(' ')
-            }
-            aria-label={label}
-          >
-            <span className="bn-icon-wrap">
-              <Icon className="bn-icon" aria-hidden="true" />
-            </span>
-            <span className="bn-label">{label}</span>
-          </NavLink>
-        );
-      })}
+      <div className="bn-inner">
+        {items.map(({ to, label, icon: Icon, isPrimary }) => {
+          const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                [
+                  'bn-item',
+                  (isActive || active) ? 'bn-active' : '',
+                  isPrimary ? 'bn-primary' : '',
+                ].join(' ')
+              }
+              aria-label={label}
+            >
+              <span className="bn-icon-wrap">
+                <Icon className="bn-icon" aria-hidden="true" />
+              </span>
+              <span className="bn-label">{label}</span>
+            </NavLink>
+          );
+        })}
+      </div>
     </nav>
   );
 };
