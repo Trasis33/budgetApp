@@ -15,9 +15,9 @@ import {
 const KPISummaryCards = ({ analytics, formatCurrency }) => {
   const getTrendIcon = (trend) => {
     switch(trend) {
-      case 'up': return <TrendingUp className="w-4 h-4 text-red-500" />;
-      case 'down': return <TrendingDown className="w-4 h-4 text-green-500" />;
-      default: return <Minus className="w-4 h-4 text-gray-500" />;
+      case 'up': return <TrendingUp className="w-4 h-4 kpi-up" />;
+      case 'down': return <TrendingDown className="w-4 h-4 kpi-down" />;
+      default: return <Minus className="w-4 h-4 kpi-neutral" />;
     }
   };
 
@@ -28,23 +28,17 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
 
   return (
     <div className="stats-grid">
-      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
+      <Card className="stat-card">
         <div className="stat-header">
           <span className="stat-title">Total Spending</span>
-          <div className="stat-icon" style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)', 
-            color: '#3b82f6'
-          }}>
+          <div className="stat-icon">
             <DollarSign className="h-4 w-4" />
           </div>
         </div>
         <div className="stat-value">
           {formatCurrency(analytics?.summary?.totalSpending || 0)}
         </div>
-        <div className="stat-change" style={{
-          color: analytics?.summary?.trendDirection === 'up' ? '#ef4444' : 
-                 analytics?.summary?.trendDirection === 'down' ? '#10b981' : '#64748b'
-        }}>
+        <div className={`stat-change ${analytics?.summary?.trendDirection || 'neutral'}`}>
           {getTrendIcon(analytics?.summary?.trendDirection)}
           <span style={{ marginLeft: 'var(--spacing-xs)' }}>
             {formatTrend(analytics?.summary?.trendPercentage || 0)} vs last year
@@ -52,49 +46,40 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
         </div>
       </Card>
 
-      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
+      <Card className="stat-card">
         <div className="stat-header">
           <span className="stat-title">Avg Monthly</span>
-          <div className="stat-icon" style={{
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(134, 239, 172, 0.1) 100%)', 
-            color: '#22c55e'
-          }}>
+          <div className="stat-icon">
             <Target className="h-4 w-4" />
           </div>
         </div>
         <div className="stat-value">
           {formatCurrency(analytics?.summary?.avgMonthlySpending || 0)}
         </div>
-        <div className="stat-change" style={{color: '#64748b'}}>
+        <div className="stat-change">
           Across {analytics?.summary?.monthCount || 0} months
         </div>
       </Card>
 
-      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
+      <Card className="stat-card">
         <div className="stat-header">
           <span className="stat-title">Months Tracked</span>
-          <div className="stat-icon" style={{
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%)', 
-            color: '#8b5cf6'
-          }}>
+          <div className="stat-icon">
             <Clock className="h-4 w-4" />
           </div>
         </div>
         <div className="stat-value">
           {analytics?.summary?.monthCount || 0}
         </div>
-        <div className="stat-change" style={{color: '#64748b'}}>
+        <div className="stat-change">
           Complete data coverage
         </div>
       </Card>
 
-      <Card className="glassmorphism-card stat-card-shadcn py-2 px-4">
+      <Card className="stat-card">
         <div className="stat-header">
           <span className="stat-title">Who Owes Who</span>
-          <div className="stat-icon" style={{
-            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%)', 
-            color: '#f59e0b'
-          }}>
+          <div className="stat-icon">
             {analytics?.settlement?.settlement?.amount === '0.00' ? 
               <Users className="h-4 w-4" /> : 
               <ArrowRightLeft className="h-4 w-4" />
@@ -107,7 +92,7 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
             formatCurrency(analytics?.settlement?.settlement?.amount || 0)
           }
         </div>
-        <div className="stat-change" style={{color: '#64748b'}}>
+        <div className="stat-change">
           {analytics?.settlement?.settlement?.message || 'No pending settlements'}
         </div>
       </Card>
