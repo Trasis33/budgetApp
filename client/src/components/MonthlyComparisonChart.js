@@ -3,6 +3,36 @@ import PropTypes from 'prop-types';
 import { Bar } from 'react-chartjs-2';
 
 const MonthlyComparisonChart = ({ monthlyTotals, formatCurrency }) => {
+  // Resolve CSS variables to concrete colors for canvas (Chart.js)
+  const cssVar = (name, fallback) => {
+    try {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return val || fallback;
+    } catch (_) {
+      return fallback;
+    }
+  };
+
+  const toAlpha = (color, alpha, fallback) => {
+    if (!color) return fallback;
+    const a = Math.max(0, Math.min(1, alpha));
+    if (color.startsWith('#') && color.length === 7) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+    if (color.startsWith('rgb(')) {
+      return color.replace('rgb(', 'rgba(').replace(')', `, ${a})`);
+    }
+    return fallback;
+  };
+
+  const danger = cssVar('--danger', '#ef4444');
+  const success = cssVar('--success', '#10b981');
+  const border = cssVar('--border-color', 'rgba(226, 232, 240, 0.5)');
+  const ink = cssVar('--ink', '#0f172a');
+  const surface = cssVar('--surface', '#ffffff');
   const chartData = () => {
     if (!monthlyTotals) return null;
     
@@ -15,15 +45,15 @@ const MonthlyComparisonChart = ({ monthlyTotals, formatCurrency }) => {
         {
           label: 'Expenses',
           data: monthlyTotals.map(m => m.total_spending),
-          backgroundColor: 'rgba(239, 68, 68, 0.8)',
-          borderColor: 'rgba(239, 68, 68, 1)',
+          backgroundColor: toAlpha(danger, 0.8, 'rgba(239, 68, 68, 0.8)'),
+          borderColor: danger,
           borderWidth: 1,
         },
         {
           label: 'Budget',
           data: monthlyTotals.map(m => m.total_budget || 0),
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
-          borderColor: 'rgba(16, 185, 129, 1)',
+          backgroundColor: toAlpha(success, 0.8, 'rgba(16, 185, 129, 0.8)'),
+          borderColor: success,
           borderWidth: 1,
         }
       ]
@@ -45,10 +75,10 @@ const MonthlyComparisonChart = ({ monthlyTotals, formatCurrency }) => {
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#e5e7eb',
+        backgroundColor: surface,
+        titleColor: ink,
+        bodyColor: ink,
+        borderColor: border,
         borderWidth: 1,
         callbacks: {
           label: function(context) {
@@ -69,7 +99,7 @@ const MonthlyComparisonChart = ({ monthlyTotals, formatCurrency }) => {
           }
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: border,
         }
       },
       x: {

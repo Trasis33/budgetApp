@@ -100,14 +100,14 @@ const EnhancedCategorySpendingChart = ({
       <div style={tooltipContainerStyle}>
         <div style={{
           fontWeight: 600,
-          color: 'var(--color-text-primary)',
+          color: 'var(--ink)',
           marginBottom: 'var(--spacing-lg)',
           fontSize: 'var(--font-size-base)'
         }}>{label}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-          <Row label="Amount" value={formatCurrency(d.value)} color="var(--color-primary)" />
-          <Row label="Share" value={`${d.percentage.toFixed(1)}%`} color="var(--color-secondary)" />
+          <Row label="Amount" value={formatCurrency(d.value)} color="var(--primary)" />
+          <Row label="Share" value={`${d.percentage.toFixed(1)}%`} color="var(--success)" />
         </div>
       </div>
     )
@@ -116,7 +116,7 @@ const EnhancedCategorySpendingChart = ({
   // Empty state
   if (!distributionData.length) {
     return (
-      <div className="chart-card glassmorphism-card hover-lift">
+      <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
         <div className="chart-header">
           <h3 className="chart-title text-gradient">Spending Distribution by Category</h3>
           <p className="chart-subtitle">Relative spending by category</p>
@@ -126,10 +126,10 @@ const EnhancedCategorySpendingChart = ({
 
         <div className="loading-container" style={{ height: '400px' }}>
           <div style={{ fontSize: 'var(--font-size-3xl)', marginBottom: 'var(--spacing-3xl)', filter: 'grayscale(0.3)' }}>📊</div>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)', textAlign: 'center' }}>
+          <p style={{ color: 'var(--muted)', fontSize: 'var(--font-size-base)', textAlign: 'center' }}>
             No spending data available for this month
           </p>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-sm)', textAlign: 'center' }}>
+          <p style={{ color: 'var(--muted)', fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-sm)', textAlign: 'center' }}>
             Add some expenses to see your category distribution
           </p>
         </div>
@@ -138,7 +138,7 @@ const EnhancedCategorySpendingChart = ({
   }
 
   return (
-    <div className="glassmorphism-card p-4">
+    <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Spending Distribution by Category</h3>
         <p className="chart-subtitle">Relative spending by category</p>
@@ -154,13 +154,13 @@ const EnhancedCategorySpendingChart = ({
             barCategoryGap="26%"
             barGap="10%"
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
 
             <XAxis
               dataKey="category"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
+              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--muted)' }}
               angle={-45}
               textAnchor="end"
             />
@@ -169,11 +169,11 @@ const EnhancedCategorySpendingChart = ({
               domain={yDomain}
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
+              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--muted)' }}
               tickFormatter={yTickFormatter}
             />
 
-            <Tooltip content={<EnhancedTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+            <Tooltip content={<EnhancedTooltip />} cursor={false} />
 
             <Bar
               dataKey="value"
@@ -210,32 +210,9 @@ const EnhancedCategorySpendingChart = ({
 }
 
 /** UI helpers */
-const baseBg = 'rgba(255, 255, 255, 0.1)'
-const hoverBg = 'rgba(255, 255, 255, 0.2)'
-
-const navButtonStyle = {
-  padding: 'var(--spacing-sm) var(--spacing-lg)',
-  border: '1px solid var(--border-color)',
-  borderRadius: 'var(--border-radius-sm)',
-  background: baseBg,
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  transition: 'all 0.2s ease'
-}
-
-const selectStyle = {
-  padding: 'var(--spacing-sm) var(--spacing-lg)',
-  border: '1px solid var(--border-color)',
-  borderRadius: 'var(--border-radius-sm)',
-  background: baseBg,
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer'
-}
-
 const tooltipContainerStyle = {
-  background: 'var(--bg-card)',
-  backdropFilter: 'var(--backdrop-blur)',
-  border: '1px solid ' + (typeof window !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--border-color') || 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.1)'),
+  background: 'var(--surface)',
+  border: '1px solid var(--border-color)',
   borderRadius: 'var(--border-radius-md)',
   padding: 'var(--spacing-3xl)',
   boxShadow: 'var(--shadow-lg)',
@@ -244,17 +221,8 @@ const tooltipContainerStyle = {
 
 const Row = ({ label, value, color }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-    <span style={{ color: 'var(--color-text-secondary)' }}>{label}:</span>
+    <span style={{ color: 'var(--muted)' }}>{label}:</span>
     <span style={{ fontWeight: 600, color }}>{value}</span>
-  </div>
-)
-
-const LegendSwatch = ({ color, label, styleOverride }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-    <div style={{
-      width: 12, height: 12, borderRadius: 2, backgroundColor: color, ...(styleOverride || {})
-    }} />
-    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{label}</span>
   </div>
 )
 

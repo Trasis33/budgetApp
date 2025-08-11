@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import formatCurrency from '../utils/formatCurrency';
-import { modernColors } from '../utils/chartConfig';
 import {
   LineChart,
   Line,
@@ -16,6 +15,15 @@ import {
   ReferenceLine
 } from "recharts";
 import '../styles/design-system.css';
+
+// Dual Ledger token-based color palette for category lines
+const tokenColors = [
+  'var(--primary)',
+  'var(--success)',
+  'var(--warn)',
+  'var(--danger)',
+  'var(--ink)'
+];
 
 const SpendingPatternsChart = ({ patterns = null }) => {
   const [loading, setLoading] = useState(true);
@@ -202,15 +210,15 @@ const SpendingPatternsChart = ({ patterns = null }) => {
     const trendValue = enhancedTrend !== 0 ? enhancedTrend : trend;
     
     if (trendValue > 15) {
-      return { icon: '↑↑', label: 'Sharp Increase', color: 'var(--color-error)' };
+      return { icon: '↑↑', label: 'Sharp Increase', color: 'var(--danger)' };
     } else if (trendValue > 5) {
-      return { icon: '↑', label: 'Increasing', color: 'var(--color-warning)' };
+      return { icon: '↑', label: 'Increasing', color: 'var(--warn)' };
     } else if (trendValue > -5) {
-      return { icon: '→', label: 'Stable', color: 'var(--color-success)' };
+      return { icon: '→', label: 'Stable', color: 'var(--success)' };
     } else if (trendValue > -15) {
-      return { icon: '↓', label: 'Decreasing', color: 'var(--color-info)' };
+      return { icon: '↓', label: 'Decreasing', color: 'var(--muted)' };
     } else {
-      return { icon: '↓↓', label: 'Sharp Decrease', color: 'var(--color-primary)' };
+      return { icon: '↓↓', label: 'Sharp Decrease', color: 'var(--primary)' };
     }
   };
 
@@ -219,16 +227,16 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   // Render loading state
   if (loading) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="chart-card">
         <div className="chart-header">
-          <h3 className="chart-title text-gradient">📊 Spending Patterns</h3>
+          <h3 className="section-title">📊 Spending Patterns</h3>
           <div className="chart-subtitle">Monthly spending trends by category</div>
         </div>
         <div className="loading-container">
           <div className="loading-spinner"></div>
           <p style={{ 
             fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-text-secondary)',
+            color: 'var(--muted)',
             marginTop: 'var(--spacing-lg)'
           }}>
             Loading spending patterns...
@@ -241,44 +249,28 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   // Render error state
   if (error) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="chart-card">
         <div className="chart-header">
-          <h3 className="chart-title text-gradient">📊 Spending Patterns</h3>
+          <h3 className="section-title">📊 Spending Patterns</h3>
           <div className="chart-subtitle">Monthly spending trends by category</div>
         </div>
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <p style={{ 
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-error)',
-            marginTop: 'var(--spacing-md)'
-          }}>
-            {error}
-          </p>
-          <button 
-            className="retry-button glass-effect"
-            onClick={() => {
-              setLoading(true);
-              // Retry loading data
-              setTimeout(() => {
-                // This would normally be a re-fetch of data
-                setLoading(false);
-                setError(null);
-              }, 1000);
-            }}
-            style={{
-              marginTop: 'var(--spacing-lg)',
-              padding: 'var(--spacing-sm) var(--spacing-lg)',
-              borderRadius: 'var(--border-radius-md)',
-              border: 'none',
-              background: 'var(--color-primary-transparent)',
-              color: 'var(--color-text-primary)',
-              cursor: 'pointer'
-            }}
-          >
-            Retry
-          </button>
+        <div className="banner banner-danger" style={{ marginTop: 'var(--spacing-md)' }}>
+          <div className="icon">⚠️</div>
+          <div>{error}</div>
         </div>
+        <button 
+          className="btn"
+          onClick={() => {
+            setLoading(true);
+            setTimeout(() => {
+              setLoading(false);
+              setError(null);
+            }, 1000);
+          }}
+          style={{ marginTop: 'var(--spacing-lg)' }}
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -286,16 +278,16 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   // Render empty state
   if (!processedPatterns || Object.keys(processedPatterns).length === 0) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="chart-card">
         <div className="chart-header">
-          <h3 className="chart-title text-gradient">📊 Spending Patterns</h3>
+          <h3 className="section-title">📊 Spending Patterns</h3>
           <div className="chart-subtitle">Monthly spending trends by category</div>
         </div>
         <div className="empty-container">
           <div className="empty-icon">📈</div>
           <p style={{ 
             fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-text-secondary)',
+            color: 'var(--muted)',
             marginTop: 'var(--spacing-md)',
             textAlign: 'center'
           }}>
@@ -312,12 +304,12 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   console.log('Render categories:', renderCategories);
   
   return (
-    <Card className="glassmorphism-card py-6 hover-lift">
-    <CardHeader>
-        <CardTitle className="chart-title text-gradient">📊 Spending Patterns</CardTitle>
+    <Card className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
+      <CardHeader>
+        <CardTitle className="section-title">📊 Spending Patterns</CardTitle>
         <div className="chart-subtitle">Monthly spending trends by category</div>
-    </CardHeader>
-    <CardContent>
+      </CardHeader>
+      <CardContent>
       <div className="chart-container" style={{ 
         height: '280px', 
         flexShrink: 0,
@@ -327,41 +319,37 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           <LineChart 
             data={getChartData()} 
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis 
               dataKey="month" 
-              tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: '#897bceff' }}
+              tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: 'var(--muted)' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis 
-              tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: '#897bceff' }}
+              tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: 'var(--muted)' }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(value) => formatCurrency(value).replace('$', '')}
             />
             <Tooltip 
               contentStyle={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '12px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
                 padding: 'var(--spacing-md)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                 minWidth: '220px',
                 maxWidth: '300px'
               }}
               labelStyle={{
-                color: 'var(--color-text-primary)',
-                fontWeight: 'var(--font-weight-bold)',
+                color: 'var(--ink)',
                 marginBottom: 'var(--spacing-sm)',
                 fontSize: 'var(--font-size-sm)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                borderBottom: '1px solid var(--border-color)',
                 paddingBottom: 'var(--spacing-xs)'
               }}
               itemStyle={{
-                color: 'var(--color-text-secondary)',
+                color: 'var(--muted)',
                 fontSize: 'var(--font-size-xs)',
                 padding: 'var(--spacing-xs) 0'
               }}
@@ -370,25 +358,22 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                 
                 return (
                   <div style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '8px',
                     padding: '12px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
                     minWidth: '200px',
                     maxWidth: '280px',
-                    color: 'var(--color-text-primary)',
+                    color: 'var(--ink)',
                     fontFamily: 'inherit'
                   }}>
                     {/* Month Label */}
                     <div style={{ 
                       fontWeight: 600, 
-                      color: 'var(--color-text-primary)',
+                      color: 'var(--ink)',
                       marginBottom: 'var(--spacing-sm)',
                       fontSize: 'var(--font-size-sm)',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderBottom: '1px solid var(--border-color)',
                       paddingBottom: 'var(--spacing-xs)'
                     }}>
                       {label}
@@ -417,9 +402,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                               borderRadius: '50%',
                               backgroundColor: entry.color
                             }}></div>
-                            <span style={{ color: 'var(--color-text-secondary)' }}>{entry.dataKey}: </span>
+                            <span style={{ color: 'var(--muted)' }}>{entry.dataKey}: </span>
                           </div>
-                          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
                             {formatCurrency(entry.value)}
                           </span>
                         </div>
@@ -432,7 +417,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                         marginTop: 'var(--spacing-lg)',
                         paddingTop: 'var(--spacing-lg)',
                         borderTop: '1px solid var(--border-color)',
-                        color: 'var(--color-text-secondary)',
+                        color: 'var(--muted)',
                         gap: 'var(--spacing-xs)',
                         display: 'flex',
                         alignItems: 'center',
@@ -447,7 +432,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                           }}></div>
                           <span>Total:</span>
                         </div>
-                        <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
                           {formatCurrency(payload.find(p => p.dataKey === 'totalSpending')?.value || 0)}
                         </span>
                       </div>
@@ -457,7 +442,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                     {payload.find(p => p.dataKey === 'changePercentage') && (
                       <div style={{
                         marginTop: 'var(--spacing-sm)',
-                        color: 'var(--color-text-secondary)',
+                        color: 'var(--muted)',
                         fontSize: 'var(--font-size-xs)'
                       }}>
                         Month-over-month: {payload.find(p => p.dataKey === 'changePercentage')?.value?.toFixed(1) || 0}%
@@ -477,14 +462,14 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             {showTotal && (
               <ReferenceLine 
                 y={getChartData().reduce((max, item) => Math.max(max, item.totalSpending || 0), 0) * 0.8} 
-                stroke="var(--color-accent)" 
+                stroke="var(--primary)" 
                 strokeWidth={2}
                 strokeDasharray="5 5" 
                 label={{
                   value: `Avg Total: ${formatCurrency(getChartData().reduce((sum, item) => sum + (item.totalSpending || 0), 0) / Math.max(getChartData().length, 1))}`,
                   position: 'topLeft',
                   offset: 10,
-                  fill: 'var(--color-accent)',
+                  fill: 'var(--primary)',
                   fontSize: 12,
                   fontWeight: 600,
                   style: {
@@ -499,14 +484,14 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             {showAverages && (
               <ReferenceLine 
                 y={averageSpending} 
-                stroke="var(--color-secondary)" 
+                stroke="var(--success)" 
                 strokeWidth={2}
                 strokeDasharray="3 3" 
                 label={{
                   value: `Avg: ${formatCurrency(averageSpending)}`,
                   position: 'topRight',
                   offset: 10,
-                  fill: 'var(--color-secondary)',
+                  fill: 'var(--success)',
                   fontSize: 12,
                   fontWeight: 600,
                   style: {
@@ -519,7 +504,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
             
             {/* Main category lines */}
             {renderCategories.map((category, index) => {
-              const colors = [modernColors.primary, modernColors.secondary, modernColors.success, modernColors.warning, modernColors.error];
+              const colors = tokenColors;
               return (
                 <Line
                   key={category}
@@ -527,8 +512,8 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                   dataKey={category}
                   strokeWidth={2}
                   stroke={colors[index % colors.length]}
-                  dot={{ r: 4, strokeWidth: 1, fill: colors[index % colors.length], stroke: '#ffffff' }}
-                  activeDot={{ r: 6, strokeWidth: 1, fill: colors[index % colors.length], stroke: '#ffffff' }}
+                  dot={{ r: 4, strokeWidth: 1, fill: colors[index % colors.length], stroke: 'var(--surface)' }}
+                  activeDot={{ r: 6, strokeWidth: 1, fill: colors[index % colors.length], stroke: 'var(--surface)' }}
                   animationDuration={500}
                   animationEasing="ease-out"
                 />
@@ -541,7 +526,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                 type="monotone"
                 dataKey="totalSpending"
                 strokeWidth={3}
-                stroke="#ff6b6b"
+                stroke="var(--danger)"
                 strokeDasharray="5 5"
                 dot={false}
                 animationDuration={500}
@@ -560,48 +545,42 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           gap: 'var(--spacing-sm)',
           marginTop: '-20px',
           padding: 'var(--spacing-sm)',
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: 'var(--surface)',
           borderRadius: 'var(--border-radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid var(--border-color)',
           maxWidth: '300px',
           margin: '0px auto var(--spacing-md)'
         }}>
           <button 
-            className="control-button glassmorphism-card btn"
+            className="control-button btn"
             onClick={() => setShowTotal(!showTotal)}
             style={{
               fontSize: 'var(--font-size-sm)',
               padding: 'var(--spacing-xs) var(--spacing-md)',
               borderRadius: 'var(--border-radius-md)',
-              border: 'none',
-              background: showTotal ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.1)',
-              color: showTotal ? 'white' : 'var(--color-text-primary)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              border: '1px solid var(--border-color)',
+              background: showTotal ? 'var(--primary)' : 'transparent',
+              color: showTotal ? '#fff' : 'var(--ink)',
+              transition: 'all 0.2s ease',
               cursor: 'pointer',
-              fontWeight: 500,
-              boxShadow: showTotal ? '0 4px 12px rgba(139, 92, 246, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-              backdropFilter: 'blur(5px)'
+              fontWeight: 600
             }}
           >
             {showTotal ? '✓ Total' : '◯ Total'}
           </button>
           <button 
-            className="control-button glassmorphism-card btn"
+            className="control-button btn"
             onClick={() => setShowAverages(!showAverages)}
             style={{
               fontSize: 'var(--font-size-sm)',
               padding: 'var(--spacing-xs) var(--spacing-md)',
               borderRadius: 'var(--border-radius-md)',
-              border: 'none',
-              background: showAverages ? 'var(--color-secondary)' : 'rgba(255, 255, 255, 0.1)',
-              color: showAverages ? 'white' : 'var(--color-text-primary)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              border: '1px solid var(--border-color)',
+              background: showAverages ? 'var(--primary)' : 'transparent',
+              color: showAverages ? '#fff' : 'var(--ink)',
+              transition: 'all 0.2s ease',
               cursor: 'pointer',
-              fontWeight: 500,
-              boxShadow: showAverages ? '0 4px 12px rgba(34, 197, 94, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-              backdropFilter: 'blur(5px)'
+              fontWeight: 600
             }}
           >
             {showAverages ? '✓ Averages' : '◯ Averages'}
@@ -633,12 +612,10 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           const avgSpent = categoryData.length > 0 ? totalSpent / categoryData.length : 0;
           const maxSpent = categoryData.length > 0 ? Math.max(...categoryData.map(item => item.amount)) : 0;
           const maxMonth = categoryData.find(item => item.amount === maxSpent)?.month || '';
-          
-          return (
-            <Card key={category} className="stat-card-shadcn" style={{
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)'
-            }}>
-              <CardContent className="p-4">
+         
+         return (
+            <Card key={category} className="stat-card">
+              <CardContent>
                 <CardHeader className="stat-header" style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -647,9 +624,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                 }}>
                   <h4 style={{
                     margin: 0,
-                    fontSize: 'var(--font-size-md)',
-                    fontWeight: 'var(--font-weight-bold)',
-                    color: 'var(--color-text-primary)'
+                    fontSize: 'var(--font-size-base)',
+                    fontWeight: 700,
+                    color: 'var(--ink)'
                   }}>{category}</h4>
                   <div className="trend-indicator" style={{
                     display: 'flex',
@@ -671,7 +648,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                     display: 'flex',
                     justifyContent: 'space-between'
                   }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
                       Average:
                     </span>
                     <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
@@ -683,7 +660,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                     display: 'flex',
                     justifyContent: 'space-between'
                   }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
                       Highest:
                     </span>
                     <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
@@ -696,7 +673,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                       display: 'flex',
                       justifyContent: 'space-between'
                     }}>
-                      <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                      <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
                         Peak Month:
                       </span>
                       <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
@@ -710,9 +687,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                     justifyContent: 'space-between',
                     marginTop: 'var(--spacing-xs)',
                     paddingTop: 'var(--spacing-xs)',
-                    borderTop: '1px solid var(--color-border)'
+                    borderTop: '1px solid var(--border-color)'
                   }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
                       Last Month:
                     </span>
                     <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
@@ -726,7 +703,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         })}
         </div>
       </div>
-    </CardContent>
+      </CardContent>
     </Card>
   );
 };

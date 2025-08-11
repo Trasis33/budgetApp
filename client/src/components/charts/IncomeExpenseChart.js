@@ -35,18 +35,17 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
 
     return (
       <div style={{
-        background: 'var(--bg-card)',
-        backdropFilter: 'var(--backdrop-blur)',
+        background: 'var(--surface)',
         border: '1px solid var(--border-color)',
         borderRadius: 'var(--border-radius-md)',
         padding: 'var(--spacing-3xl)',
         boxShadow: 'var(--shadow-lg)',
         fontSize: 'var(--font-size-sm)',
-        minWidth: '200px'
+        minWidth: '220px'
       }}>
         <div style={{
           fontWeight: 600,
-          color: 'var(--color-text-primary)',
+          color: 'var(--ink)',
           marginBottom: 'var(--spacing-lg)',
           fontSize: 'var(--font-size-base)'
         }}>
@@ -56,9 +55,9 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
         {/* Income */}
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }}></div>
-            <span style={{ color: 'var(--color-text-secondary)' }}>Income: </span>
-            <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }}></div>
+            <span style={{ color: 'var(--muted)' }}>Income: </span>
+            <span style={{ fontWeight: 600, color: 'var(--success)' }}>
               {formatCurrency(data?.income || 0)}
             </span>
           </div>
@@ -67,9 +66,9 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
         {/* Expenses */}
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-warning)' }}></div>
-            <span style={{ color: 'var(--color-text-secondary)' }}>Expenses: </span>
-            <span style={{ fontWeight: 600, color: 'var(--color-warning)' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--warn)' }}></div>
+            <span style={{ color: 'var(--muted)' }}>Expenses: </span>
+            <span style={{ fontWeight: 600, color: 'var(--warn)' }}>
               {formatCurrency(data?.expenses || 0)}
             </span>
           </div>
@@ -78,10 +77,10 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
         {/* Net Amount */}
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <span style={{ color: 'var(--color-text-secondary)' }}>Net: </span>
+            <span style={{ color: 'var(--muted)' }}>Net: </span>
             <span style={{
               fontWeight: 600,
-              color: isPositive ? 'var(--color-success)' : 'var(--color-error)'
+              color: isPositive ? 'var(--success)' : 'var(--danger)'
             }}>
               {isPositive ? '+' : ''}{formatCurrency(netAmount)}
             </span>
@@ -90,8 +89,8 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
 
         {/* Savings Rate */}
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}>Savings Rate: </span>
-          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+          <span style={{ color: 'var(--muted)' }}>Savings Rate: </span>
+          <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
             {savingsRate}%
           </span>
         </div>
@@ -103,15 +102,11 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
           fontSize: 'var(--font-size-xs)',
           fontWeight: 600,
           textAlign: 'center',
-          ...(isPositive ? {
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-            color: '#166534',
-            border: '1px solid rgba(34, 197, 94, 0.2)'
-          } : {
-            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%)',
-            color: '#991b1b',
-            border: '1px solid rgba(239, 68, 68, 0.2)'
-          })
+          background: 'transparent',
+          ...(isPositive
+            ? { color: 'var(--success)', border: '1px solid var(--success)' }
+            : { color: 'var(--danger)', border: '1px solid var(--danger)' }
+          )
         }}>
           {isPositive ? '💰 Saving Money' : '⚠️ Spending More Than Earning'}
         </div>
@@ -122,10 +117,10 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
   // Empty state
   if (!hasData) {
     return (
-      <div className="chart-card glassmorphism-card p-4 hover-lift">
+      <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
         <div className="chart-header">
-          <h3 className="chart-title text-gradient">Income vs. Expenses</h3>
-          <p className="chart-subtitle">Monthly financial overview</p>
+          <h3 className="chart-title" style={{ color: 'var(--ink)' }}>Income vs. Expenses</h3>
+          <p className="chart-subtitle" style={{ color: 'var(--muted)' }}>Monthly financial overview</p>
         </div>
         <div className="loading-container" style={{ height: '320px' }}>
           <div style={{
@@ -134,14 +129,14 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
             filter: 'grayscale(0.3)'
           }}>💰</div>
           <p style={{
-            color: 'var(--color-text-secondary)',
+            color: 'var(--muted)',
             fontSize: 'var(--font-size-base)',
             textAlign: 'center'
           }}>
             No financial data available
           </p>
           <p style={{
-            color: 'var(--color-text-muted)',
+            color: 'var(--muted)',
             fontSize: 'var(--font-size-sm)',
             marginTop: 'var(--spacing-sm)',
             textAlign: 'center'
@@ -154,13 +149,13 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
   }
 
   return (
-    <div className="glassmorphism-card p-4">
+    <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Income vs. Expenses</h3>
         <p className="chart-subtitle">
           Net: <span style={{
             fontWeight: 600,
-            color: barData[0].net >= 0 ? 'var(--color-success)' : 'var(--color-error)'
+            color: barData[0].net >= 0 ? 'var(--success)' : 'var(--danger)'
           }}>
             {barData[0].net >= 0 ? '+' : ''}{formatCurrency(barData[0].net)}
           </span>
@@ -174,7 +169,7 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
             margin={commonMargins}
             barCategoryGap="26%"
             barGap="10%">
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis
               dataKey="name"
               axisLine={false}
@@ -187,16 +182,16 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
               tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
               tickFormatter={(value) => formatCurrency(value).replace('$', '$')}
             />
-            <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+            <Tooltip content={renderTooltip} cursor={false} />
             <Bar
               dataKey="income"
-              fill="var(--color-success)"
+              fill="var(--success)"
               radius={[4, 4, 0, 0]}
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
             />
             <Bar
               dataKey="expenses"
-              fill="var(--color-warning)"
+              fill="var(--warn)"
               radius={[4, 4, 0, 0]}
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
             />
@@ -225,14 +220,5 @@ const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
     </div>
   )
 }
-
-const Legend = ({ color, label, styleOverride }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-    <div style={{
-      width: 12, height: 12, borderRadius: 2, backgroundColor: color, ...(styleOverride || {})
-    }} />
-    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{label}</span>
-  </div>
-)
 
 export default IncomeExpenseChart

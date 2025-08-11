@@ -26,24 +26,19 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
 
   const pieData = transformData(chartData)
 
-  // Design system color palette for chart
-  const designSystemColors = [
-    'var(--color-primary)',      // #8b5cf6
-    'var(--color-secondary)',    // #06b6d4
-    'var(--color-success)',      // #10b981
-    'var(--color-warning)',      // #f59e0b
-    'var(--color-error)',        // #ef4444
-    '#8b5cf6',  // Purple variant
-    '#ec4899',  // Pink
-    '#f97316',  // Orange
-    '#22c55e',  // Green variant
-    '#6b7280'   // Gray
+  // Dual Ledger core token palette for chart (cycled)
+  const tokenPalette = [
+    'var(--primary)',
+    'var(--success)',
+    'var(--warn)',
+    'var(--danger)',
+    'var(--muted)'
   ]
 
-  // Apply design system colors to pie data
+  // Apply token palette colors to pie data
   const enhancedPieData = pieData.map((item, index) => ({
     ...item,
-    fill: designSystemColors[index % designSystemColors.length]
+    fill: tokenPalette[index % tokenPalette.length]
   }))
 
   const totalValue = React.useMemo(() => {
@@ -83,7 +78,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
   // Empty state with design system styling
   if (!enhancedPieData || enhancedPieData.length === 0) {
     return (
-      <div className="chart-card glass-effect hover-lift">
+      <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
         <div className="chart-header">
           <h3 className="chart-title text-gradient">Spending by Category</h3>
           <p className="chart-subtitle">Breakdown of your expenses</p>
@@ -95,14 +90,14 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
             filter: 'grayscale(0.3)'
           }}>🍰</div>
           <p style={{ 
-            color: 'var(--color-text-secondary)',
+            color: 'var(--muted)',
             fontSize: 'var(--font-size-base)',
             textAlign: 'center'
           }}>
             No spending data available
           </p>
           <p style={{ 
-            color: 'var(--color-text-muted)',
+            color: 'var(--muted)',
             fontSize: 'var(--font-size-sm)',
             marginTop: 'var(--spacing-sm)',
             textAlign: 'center'
@@ -115,13 +110,13 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
   }
 
   return (
-    <div className="chart-card glass-effect hover-lift">
+    <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Spending by Category</h3>
         <p className="chart-subtitle">
           Total: <span style={{ 
             fontWeight: 600, 
-            color: 'var(--color-text-primary)' 
+            color: 'var(--ink)'
           }}>
             {formatCurrency(totalValue)}
           </span>
@@ -147,7 +142,6 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                 return (
                   <div style={{
                     background: 'var(--bg-card)',
-                    backdropFilter: 'var(--backdrop-blur)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--border-radius-md)',
                     padding: 'var(--spacing-3xl)',
@@ -158,10 +152,10 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                     {/* Category Name */}
                     <div style={{ 
                       fontWeight: 600, 
-                      color: 'var(--color-text-primary)',
+                      color: 'var(--ink)',
                       marginBottom: 'var(--spacing-sm)',
                       fontSize: 'var(--font-size-sm)',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderBottom: '1px solid var(--border-color)',
                       paddingBottom: 'var(--spacing-xs)'
                     }}>
                       {categoryName}
@@ -180,8 +174,8 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                         borderRadius: '50%',
                         backgroundColor: data.payload.fill
                       }}></div>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Spent: </span>
-                      <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                      <span style={{ color: 'var(--muted)' }}>Spent: </span>
+                      <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
                         {formatCurrency(spentAmount)}
                       </span>
                     </div>
@@ -189,7 +183,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                     {/* Percentage of Total */}
                     <div style={{ 
                       marginBottom: 'var(--spacing-lg)',
-                      color: 'var(--color-text-secondary)'
+                      color: 'var(--muted)'
                     }}>
                       {spendingPercentage}% of total expenses
                     </div>
@@ -199,13 +193,13 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                       <>
                         <div style={{ 
                           marginBottom: 'var(--spacing-sm)',
-                          color: 'var(--color-text-secondary)'
+                          color: 'var(--muted)'
                         }}>
                           Budget: {formatCurrency(budget)}
                         </div>
                         <div style={{ 
                           marginBottom: 'var(--spacing-lg)',
-                          color: 'var(--color-text-secondary)'
+                          color: 'var(--muted)'
                         }}>
                           Utilization: {budgetUtilization}%
                         </div>
@@ -217,20 +211,18 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                           fontSize: 'var(--font-size-xs)',
                           fontWeight: 600,
                           textAlign: 'center',
+                          background: 'transparent',
                           ...(budgetStatus === 'over-budget' && {
-                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%)',
-                            color: '#991b1b',
-                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                            color: 'var(--danger)',
+                            border: '1px solid var(--danger)'
                           }),
                           ...(budgetStatus === 'near-budget' && {
-                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
-                            color: '#92400e',
-                            border: '1px solid rgba(245, 158, 11, 0.2)'
+                            color: 'var(--warn)',
+                            border: '1px solid var(--warn)'
                           }),
                           ...(budgetStatus === 'under-budget' && {
-                            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-                            color: '#166534',
-                            border: '1px solid rgba(34, 197, 94, 0.2)'
+                            color: 'var(--success)',
+                            border: '1px solid var(--success)'
                           })
                         }}>
                           {budgetStatus === 'over-budget' && '⚠️ Over Budget'}
@@ -240,7 +232,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
                       </>
                     ) : (
                       <div style={{ 
-                        color: 'var(--color-text-muted)',
+                        color: 'var(--muted)',
                         fontStyle: 'italic',
                         fontSize: 'var(--font-size-xs)'
                       }}>
@@ -260,7 +252,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
               innerRadius={65}
               outerRadius={130}
               paddingAngle={3}
-              stroke="rgba(255, 255, 255, 0.2)"
+              stroke="var(--border-color)"
               strokeWidth={2}
               animationDuration={500}
               animationEasing="ease-out"
@@ -289,7 +281,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
         </ResponsiveContainer>
       </div>
 
-      {/* Legend with design system styling */}
+      {/* Legend with Dual Ledger styling */}
       <div style={{ 
         marginTop: 'var(--spacing-4xl)',
         display: 'grid',
@@ -303,17 +295,17 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
             gap: 'var(--spacing-lg)',
             padding: 'var(--spacing-lg)',
             borderRadius: 'var(--border-radius-sm)',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
             transition: 'all 0.3s ease',
             cursor: 'pointer'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'
+            e.currentTarget.style.background = 'var(--bg-card)'
             e.currentTarget.style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+            e.currentTarget.style.background = 'var(--bg-card)'
             e.currentTarget.style.transform = 'translateY(0)'
           }}>
             <div style={{
@@ -326,7 +318,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
             }}></div>
             <div style={{ 
               fontSize: 'var(--font-size-sm)',
-              color: 'var(--color-text-primary)',
+              color: 'var(--ink)',
               fontWeight: 500,
               overflow: 'hidden',
               textOverflow: 'ellipsis',

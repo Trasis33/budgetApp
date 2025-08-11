@@ -29,11 +29,11 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const chartConfig = {
     savingsRate: {
       label: "Savings Rate",
-      color: "hsl(var(--primary))",
+      color: "var(--primary)",
     },
     target: {
       label: "Target",
-      color: "hsl(var(--muted-foreground))",
+      color: "var(--muted)",
     },
   };
 
@@ -124,14 +124,14 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   // Loading state
   if (loading) {
     return (
-      <Card className="glassmorphism-card">
+      <Card className="chart-card">
         <CardHeader>
-          <CardTitle>💰 Savings Rate Tracker</CardTitle>
+          <CardTitle className="section-title">💰 Savings Rate Tracker</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p>Loading savings data...</p>
+            <p style={{ color: 'var(--muted)' }}>Loading savings data...</p>
           </div>
         </CardContent>
       </Card>
@@ -141,22 +141,22 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   // Error state
   if (error) {
     return (
-      <Card className="glassmorphism-card">
+      <Card className="chart-card">
         <CardHeader>
-          <CardTitle>💰 Savings Rate Tracker</CardTitle>
+          <CardTitle className="section-title">💰 Savings Rate Tracker</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="error-message">
-            <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)' }}>⚠️</div>
-            <p>{error}</p>
-            <button 
-              onClick={fetchSavingsData}
-              className="btn btn-primary"
-              style={{ marginTop: 'var(--spacing-lg)' }}
-            >
-              Retry
-            </button>
+          <div className="banner banner-danger" style={{ marginTop: 'var(--spacing-md)' }}>
+            <div className="icon">⚠️</div>
+            <div>{error}</div>
           </div>
+          <button 
+            onClick={fetchSavingsData}
+            className="btn"
+            style={{ marginTop: 'var(--spacing-lg)' }}
+          >
+            Retry
+          </button>
         </CardContent>
       </Card>
     );
@@ -165,15 +165,17 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   // No data state
   if (!savingsData || !savingsData.chartData || savingsData.chartData.length === 0) {
     return (
-      <Card className="glassmorphism-card">
+      <Card className="chart-card">
         <CardHeader>
-          <CardTitle>💰 Savings Rate Tracker</CardTitle>
+          <CardTitle className="section-title">💰 Savings Rate Tracker</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="no-data-message">
-            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-lg)' }}>📊</div>
-            <p>No savings data available yet</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="empty-container">
+            <div className="empty-icon">📊</div>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)', marginTop: 'var(--spacing-md)' }}>
+              No savings data available yet
+            </p>
+            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--muted)' }}>
               Start tracking your expenses to see savings analysis
             </p>
           </div>
@@ -183,24 +185,24 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   }
 
   return (
-    <Card className="glassmorphism-card py-6">
+    <Card className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
       <CardHeader>
-        <CardTitle>💰 Savings Rate Tracker</CardTitle>
-        <div className="text-sm text-muted-foreground">
+        <CardTitle className="section-title">💰 Savings Rate Tracker</CardTitle>
+        <div className="chart-subtitle">
           {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
         </div>
       </CardHeader>
       <CardContent>
         {/* Stats Grid with shadcn Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'var(--spacing-4xl)', marginBottom: 'var(--spacing-6xl)' }}>
           {/* Average Savings Rate Card */}
-          <Card className="stat-card-shadcn">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">Average Savings Rate</div>
-                <div className="text-lg">💰</div>
+          <Card className="stat-card">
+            <CardContent>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Average Savings Rate</div>
+                <div style={{ fontSize: 'var(--font-size-lg)' }}>💰</div>
               </div>
-              <div className="text-2xl font-bold mb-2">
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
                 {savingsData.summary.averageSavingsRate.toFixed(1)}%
               </div>
               <Badge variant={getBadgeVariant(savingsData.summary.averageSavingsRate)}>
@@ -210,13 +212,13 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
           </Card>
 
           {/* Total Savings Card */}
-          <Card className="stat-card-shadcn">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">Total Savings</div>
-                <div className="text-lg">💵</div>
+          <Card className="stat-card">
+            <CardContent>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Total Savings</div>
+                <div style={{ fontSize: 'var(--font-size-lg)' }}>💵</div>
               </div>
-              <div className="text-2xl font-bold mb-2">
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
                 {formatCurrency(savingsData.summary.totalSavings)}
               </div>
               <Badge variant="default">
@@ -226,13 +228,13 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
           </Card>
 
           {/* Trend Card */}
-          <Card className="stat-card-shadcn">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">Trend</div>
-                <div className="text-lg">📈</div>
+          <Card className="stat-card">
+            <CardContent>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Trend</div>
+                <div style={{ fontSize: 'var(--font-size-lg)' }}>📈</div>
               </div>
-              <div className="text-2xl font-bold mb-2">
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
                 {getTrendText(savingsData.summary.trend || 0)}
               </div>
               <Badge variant={getTrendBadgeVariant(savingsData.summary.trend || 0)}>
@@ -243,18 +245,18 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         </div>
 
         {/* Chart with shadcn ChartContainer */}
-        <ChartContainer config={chartConfig} className="h-80 mb-6">
+        <ChartContainer config={chartConfig} className="h-80" style={{ marginBottom: 'var(--spacing-6xl)' }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={savingsData.chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
               <XAxis 
                 dataKey="month" 
-                tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: '#897bceff' }}
+                tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: 'var(--muted)' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis 
-                tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: '#897bceff' }}
+                tick={{ fontSize: 9, fontFamily: 'var(--font-primary)', fill: 'var(--muted)' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => `${value}%`}
@@ -264,16 +266,16 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
               <Line 
                 type="monotone" 
                 dataKey="savingsRate" 
-                stroke="var(--color-primary)" 
+                stroke="var(--primary)" 
                 strokeWidth={3}
-                dot={{ fill: 'var(--color-primary)', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: 'var(--color-primary)', strokeWidth: 2 }}
+                dot={{ fill: 'var(--primary)', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: 'var(--primary)', strokeWidth: 2 }}
                 name="Savings Rate"
               />
               {savingsData.targetRate && (
                 <ReferenceLine 
                   y={savingsData.targetRate} 
-                  stroke="var(--color-warning)" 
+                  stroke="var(--warn)" 
                   strokeDasharray="5 5"
                   label={{ value: `Target: ${savingsData.targetRate}%`, position: "topRight" }}
                 />
@@ -285,22 +287,22 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         {/* Savings Goals Section */}
         {savingsData.goals && savingsData.goals.length > 0 && (
           <div>
-            <h4 className="text-lg font-semibold mb-4">Savings Goals</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <h4 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--spacing-4xl)' }}>Savings Goals</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--spacing-4xl)' }}>
               {savingsData.goals.map((goal, index) => (
-                <Card key={index} className="stat-card-shadcn">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-medium">{goal.name}</div>
-                      <div className="text-lg">{goal.icon || '🎯'}</div>
+                <Card key={index} className="stat-card">
+                  <CardContent>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500 }}>{goal.name}</div>
+                      <div style={{ fontSize: 'var(--font-size-lg)' }}>{goal.icon || '🎯'}</div>
                     </div>
-                    <div className="text-xl font-bold mb-2">
+                    <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
                       {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--border-color)', marginBottom: 'var(--spacing-lg)' }}>
                       <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)}%` }}
+                        className="h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)}%`, backgroundColor: 'var(--primary)' }}
                       ></div>
                     </div>
                     <Badge variant={goal.currentAmount >= goal.targetAmount ? "success" : "secondary"}>

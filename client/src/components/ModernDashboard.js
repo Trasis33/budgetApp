@@ -203,17 +203,14 @@ const ModernDashboard = () => {
             <div className="stat-card">
               <div className="stat-header">
                 <span className="stat-title">This Month</span>
-                <div className="stat-icon" style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)',
-                  color: '#3b82f6'
-                }}>
+                <div className="stat-icon">
                   <DollarSign className="w-4 h-4" />
                 </div>
               </div>
               <div className="stat-value">
                 {formatCurrency(dashboardData?.summary?.expenses?.reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0)}
               </div>
-              <div className="stat-change" style={{ color: '#10b981' }}>
+              <div className="stat-change up">
                 +2.5% from last month
               </div>
             </div>
@@ -221,17 +218,14 @@ const ModernDashboard = () => {
             <div className="stat-card">
               <div className="stat-header">
                 <span className="stat-title">Savings Rate</span>
-                <div className="stat-icon" style={{
-                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(134, 239, 172, 0.1) 100%)',
-                  color: '#22c55e'
-                }}>
+                <div className="stat-icon">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
               <div className="stat-value">
                 {getSafeNumber(dashboardData?.patterns?.summary?.avgMonthlySpending, dashboardData?.summary?.income)}%
               </div>
-              <div className="stat-change" style={{ color: '#64748b' }}>
+              <div className="stat-change neutral">
                 No change
               </div>
             </div>
@@ -239,17 +233,14 @@ const ModernDashboard = () => {
             <div className="stat-card">
               <div className="stat-header">
                 <span className="stat-title">Budget Status</span>
-                <div className="stat-icon" style={{
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%)',
-                  color: '#8b5cf6'
-                }}>
+                <div className="stat-icon">
                   <Target className="w-4 h-4" />
                 </div>
               </div>
               <div className="stat-value">
                 {dashboardData?.summary?.budgetStatus || 'On Track'}
               </div>
-              <div className="stat-change" style={{ color: '#10b981' }}>
+              <div className="stat-change up">
                 Within budget
               </div>
             </div>
@@ -257,17 +248,14 @@ const ModernDashboard = () => {
             <div className="stat-card">
               <div className="stat-header">
                 <span className="stat-title">Alerts</span>
-                <div className="stat-icon" style={{
-                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%)',
-                  color: '#f59e0b'
-                }}>
+                <div className="stat-icon">
                   <AlertTriangle className="w-4 h-4" />
                 </div>
               </div>
               <div className="stat-value">
                 {dashboardData?.optimization?.alerts?.length || 0}
               </div>
-              <div className="stat-change" style={{ color: '#64748b' }}>
+              <div className="stat-change neutral">
                 No alerts
               </div>
             </div>

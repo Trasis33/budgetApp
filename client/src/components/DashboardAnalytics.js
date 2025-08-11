@@ -94,26 +94,20 @@ const DashboardAnalytics = () => {
         {/* <div className="section-header">
           <h2 className="dashboard-title">Analytics Dashboard</h2>
         </div> */}
-        <div className="error-message">
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            marginBottom: 'var(--spacing-lg)'
-          }}>
-            <AlertCircle style={{ 
-              width: '1rem', 
-              height: '1rem', 
-              color: 'var(--color-error)',
-              marginRight: 'var(--spacing-lg)'
-            }} />
-            <span>{error}</span>
+        <div className="banner banner-danger">
+          <AlertCircle className="icon text-danger" />
+          <div>
+            <div className="text-danger" style={{ fontWeight: 600 }}>Error</div>
+            <div className="text-muted">{error}</div>
+            <div style={{ marginTop: 'var(--spacing-md)' }}>
+              <button 
+                onClick={fetchAnalytics}
+                className="btn btn-primary"
+              >
+                Retry Loading Analytics
+              </button>
+            </div>
           </div>
-          <button 
-            onClick={fetchAnalytics}
-            className="btn btn-primary"
-          >
-            Retry Loading Analytics
-          </button>
         </div>
       </div>
     );

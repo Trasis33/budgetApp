@@ -18,12 +18,12 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
     if (!payload) return null
     
     const status = payload.status
-    let fillColor = '#f59e0b' // amber/warning default
+    let fillColor = 'var(--warn)' // token warning default
     
     if (status === 'over-budget') {
-      fillColor = '#ef4444' // red
+      fillColor = 'var(--danger)'
     } else if (status === 'under-budget') {
-      fillColor = '#22c55e' // green
+      fillColor = 'var(--success)'
     }
     
     return (
@@ -51,8 +51,7 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
 
     return (
       <div style={{
-        background: 'var(--bg-card)',
-        backdropFilter: 'var(--backdrop-blur)',
+        background: 'var(--surface)',
         border: '1px solid var(--border-color)',
         borderRadius: 'var(--border-radius-md)',
         padding: 'var(--spacing-3xl)',
@@ -62,7 +61,7 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
       }}>
         <div style={{ 
           fontWeight: 600, 
-          color: 'var(--color-text-primary)',
+          color: 'var(--ink)',
           marginBottom: 'var(--spacing-lg)',
           fontSize: 'var(--font-size-base)'
         }}>
@@ -72,9 +71,9 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
         {/* Budgeted Amount */}
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }}></div>
-            <span style={{ color: 'var(--color-text-secondary)' }}>Budgeted: </span>
-            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary)' }}></div>
+            <span style={{ color: 'var(--muted)' }}>Budgeted: </span>
+            <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
               {formatCurrency(data?.budgeted || 0)}
             </span>
           </div>
@@ -87,14 +86,14 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
               width: '8px', 
               height: '8px', 
               borderRadius: '50%', 
-              backgroundColor: isOverBudget ? 'var(--color-error)' : 
-                               isUnderBudget ? 'var(--color-success)' : 'var(--color-warning)'
+              backgroundColor: isOverBudget ? 'var(--danger)' : 
+                               isUnderBudget ? 'var(--success)' : 'var(--warn)'
             }}></div>
-            <span style={{ color: 'var(--color-text-secondary)' }}>Actual: </span>
+            <span style={{ color: 'var(--muted)' }}>Actual: </span>
             <span style={{ 
               fontWeight: 600, 
-              color: isOverBudget ? 'var(--color-error)' : 
-                     isUnderBudget ? 'var(--color-success)' : 'var(--color-warning)'
+              color: isOverBudget ? 'var(--danger)' : 
+                     isUnderBudget ? 'var(--success)' : 'var(--warn)'
             }}>
               {formatCurrency(data?.actual || 0)}
             </span>
@@ -103,11 +102,11 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
 
         {/* Variance */}
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}>Variance: </span>
+          <span style={{ color: 'var(--muted)' }}>Variance: </span>
           <span style={{ 
             fontWeight: 600, 
-            color: isOverBudget ? 'var(--color-error)' : 
-                   isUnderBudget ? 'var(--color-success)' : 'var(--color-text-primary)'
+            color: isOverBudget ? 'var(--danger)' : 
+                   isUnderBudget ? 'var(--success)' : 'var(--ink)'
           }}>
             {variance > 0 ? '+' : ''}{variance.toFixed(1)}%
           </span>
@@ -121,17 +120,17 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
           fontWeight: 600,
           textAlign: 'center',
           ...(isOverBudget ? {
-            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%)',
-            color: '#991b1b',
-            border: '1px solid rgba(239, 68, 68, 0.2)'
+            color: 'var(--danger)',
+            border: '1px solid var(--danger)',
+            background: 'transparent'
           } : isUnderBudget ? {
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-            color: '#166534',
-            border: '1px solid rgba(34, 197, 94, 0.2)'
+            color: 'var(--success)',
+            border: '1px solid var(--success)',
+            background: 'transparent'
           } : {
-            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%)',
-            color: '#92400e',
-            border: '1px solid rgba(245, 158, 11, 0.2)'
+            color: 'var(--warn)',
+            border: '1px solid var(--warn)',
+            background: 'transparent'
           })
         }}>
           {isOverBudget ? '⚠️ Over Budget' : 
@@ -144,7 +143,7 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
   // Empty state
   if (!hasData) {
     return (
-      <div className="glassmorphism-card p-4 hover-lift">
+      <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
         <div className="chart-header">
           <h3 className="chart-title text-gradient">Budget vs. Actual Spending</h3>
           <p className="chart-subtitle">Budget performance by category</p>
@@ -156,14 +155,14 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
             filter: 'grayscale(0.3)'
           }}>🎯</div>
           <p style={{ 
-            color: 'var(--color-text-secondary)',
+            color: 'var(--muted)',
             fontSize: 'var(--font-size-base)',
             textAlign: 'center'
           }}>
             No budget comparison data available
           </p>
           <p style={{ 
-            color: 'var(--color-text-muted)',
+            color: 'var(--muted)',
             fontSize: 'var(--font-size-sm)',
             marginTop: 'var(--spacing-sm)',
             textAlign: 'center'
@@ -176,7 +175,7 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
   }
 
   return (
-    <div className="glassmorphism-card p-4 hover-lift">
+    <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
       <div className="chart-header">
         <h3 className="chart-title text-gradient">Budget vs. Actual Spending</h3>
         <p className="chart-subtitle">
@@ -187,26 +186,26 @@ const BudgetActualChart = ({ chartData, formatCurrency }) => {
       <div style={{ height: '350px', position: 'relative' }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={barData} margin={commonMargins} barCategoryGap="30%" barGap="10%">
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(203, 213, 225, 0.3)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis 
               dataKey="category" 
               axisLine={false}
               tickLine={false}
               angle={-45}
               textAnchor="end"
-              style={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
+              style={{ fontSize: 'var(--font-size-xs)', fill: 'var(--muted)' }}
             />
             <YAxis
               domain={yDomain}
               axisLine={false}
               tickLine={false}
-              style={{ fontSize: 'var(--font-size-sm)', fill: 'var(--color-text-secondary)' }}
+              style={{ fontSize: 'var(--font-size-sm)', fill: 'var(--muted)' }}
               tickFormatter={yTickFormatter}
             />
-            <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+            <Tooltip content={renderTooltip} cursor={false} />
             <Bar
               dataKey="budgeted"
-              fill="#8b5cf6"
+              fill="var(--primary)"
               radius={[4, 4, 0, 0]}
               maxBarSize={48}
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}

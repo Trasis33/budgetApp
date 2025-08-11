@@ -34,26 +34,33 @@ const ChartTooltipContent = React.forwardRef(({ active, payload, formatter, clas
     <div
       ref={ref}
       className={cn(
-        "rounded-lg border bg-background p-2 shadow-md",
+        "rounded-lg",
         className
       )}
+      style={{
+        padding: 'var(--spacing-md)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border-color)',
+        boxShadow: 'var(--shadow)',
+        color: 'var(--ink)'
+      }}
       {...props}
     >
-      <div className="grid gap-0.5">
+      <div className="grid" style={{ gap: 'var(--spacing-xs)' }}>
         {payload.map((item, index) => {
           const { name, value, color, dataKey } = item
           if (!value) return null
 
           return (
-            <div key={`item-${index}`} className="flex items-center gap-2">
+            <div key={`item-${index}`} className="flex items-center" style={{ gap: 'var(--spacing-lg)' }}>
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-xs font-medium">
+              <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500, color: 'var(--muted)' }}>
                 {name}:
               </span>
-              <span className="text-xs font-medium">
+              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--ink)', fontWeight: 600 }}>
                 {formatter ? formatter(value, dataKey) : value}
               </span>
             </div>
@@ -71,19 +78,20 @@ const ChartLegend = React.forwardRef(({ className, ...props }, ref) => {
   return (
     <div
       ref={ref}
-      className={cn("flex flex-wrap items-center gap-4", className)}
+      className={cn("flex flex-wrap items-center", className)}
+      style={{ color: 'var(--muted)', gap: 'var(--spacing-4xl)' }}
       {...props}
     >
       {Object.entries(config || {}).map(([key, value]) => {
         if (value.hidden) return null
 
         return (
-          <div key={key} className="flex items-center gap-2">
+          <div key={key} className="flex items-center" style={{ gap: 'var(--spacing-lg)' }}>
             <div
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: value.color }}
             />
-            <span className="text-xs font-medium">{value.label}</span>
+            <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500, color: 'var(--muted)' }}>{value.label}</span>
           </div>
         )
       })}

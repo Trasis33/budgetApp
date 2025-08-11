@@ -3,6 +3,40 @@ import PropTypes from 'prop-types';
 import { Line } from 'react-chartjs-2';
 
 const SpendingTrendsChart = ({ monthlyTotals, formatCurrency }) => {
+  // Resolve CSS variables to concrete colors for canvas (Chart.js)
+  const cssVar = (name, fallback) => {
+    try {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return val || fallback;
+    } catch (_) {
+      return fallback;
+    }
+  };
+
+  const toAlpha = (color, alpha, fallback) => {
+    if (!color) return fallback;
+    const a = Math.max(0, Math.min(1, alpha));
+    // #rrggbb
+    if (color.startsWith('#') && color.length === 7) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+    // rgb(r,g,b)
+    if (color.startsWith('rgb(')) {
+      return color.replace('rgb(', 'rgba(').replace(')', `, ${a})`);
+    }
+    // Fallback
+    return fallback;
+  };
+
+  const primary = cssVar('--primary', '#3b82f6');
+  const success = cssVar('--success', '#10b981');
+  const border = cssVar('--border-color', 'rgba(226, 232, 240, 0.5)');
+  const ink = cssVar('--ink', '#0f172a');
+  const surface = cssVar('--surface', '#ffffff');
+
   const chartData = () => {
     if (!monthlyTotals) return null;
     
@@ -15,11 +49,11 @@ const SpendingTrendsChart = ({ monthlyTotals, formatCurrency }) => {
         {
           label: 'Monthly Spending',
           data: monthlyTotals.map(m => m.total_spending),
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: primary,
+          backgroundColor: toAlpha(primary, 0.12, 'rgba(59, 130, 246, 0.12)'),
           fill: true,
           tension: 0.4,
-          pointBackgroundColor: '#3b82f6',
+          pointBackgroundColor: primary,
           pointBorderColor: '#ffffff',
           pointBorderWidth: 2,
           pointRadius: 4,
@@ -27,8 +61,8 @@ const SpendingTrendsChart = ({ monthlyTotals, formatCurrency }) => {
         {
           label: 'Budget',
           data: monthlyTotals.map(m => m.total_budget || 0),
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderColor: success,
+          backgroundColor: toAlpha(success, 0.12, 'rgba(16, 185, 129, 0.12)'),
           borderDash: [5, 5],
           fill: false,
           tension: 0.4,
@@ -52,10 +86,10 @@ const SpendingTrendsChart = ({ monthlyTotals, formatCurrency }) => {
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#e5e7eb',
+        backgroundColor: surface,
+        titleColor: ink,
+        bodyColor: ink,
+        borderColor: border,
         borderWidth: 1,
         callbacks: {
           label: function(context) {
@@ -76,7 +110,7 @@ const SpendingTrendsChart = ({ monthlyTotals, formatCurrency }) => {
           }
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: toAlpha(border, 1, 'rgba(226, 232, 240, 0.5)'),
         }
       },
       x: {

@@ -80,16 +80,11 @@ export function currencyTickFormatter(formatCurrency, compact) {
 
 // Shared design palette for per-category coloring
 export const distributionPalette = [
-  'var(--color-primary)',
-  'var(--color-secondary)',
-  'var(--color-success)',
-  'var(--color-warning)',
-  'var(--color-error)',
-  '#8b5cf6', // purple variant
-  '#ec4899', // pink
-  '#f97316', // orange
-  '#22c55e', // green variant
-  '#6b7280'  // gray
+  'var(--primary)',
+  'var(--success)',
+  'var(--warn)',
+  'var(--danger)',
+  'var(--muted)'
 ]
 
 // Common margins for consistent look
