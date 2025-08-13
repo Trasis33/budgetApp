@@ -1,3 +1,11 @@
+### 5) `client/src/pages/Expenses.js`
+- Replace hardcoded px margins with spacing tokens (`var(--spacing-*)`).
+- Ensure usage of solid surface components: `.card`, `.table-card`, `.table-header`, `.data-table`, `.status-badge`, `.btn-*`.
+- No logic changes.
+
+### 6) `client/src/index.css`
+- Remove `@import './styles/budget-enhancements.css'`.
+- Update Tailwind `@layer` declaration to drop `budget-enhancements` layer.
 # PR: Dual‑Ledger Design System Transition (Design‑Only)
 
 - Type: UI/Design refresh
@@ -18,6 +26,11 @@ Aligns UI with the approved Dual‑Ledger mockup for a trustworthy, banking‑ap
 ## Changes Overview
 - Design tokens: add new mockup‑aligned tokens while preserving old ones for compatibility
 - Components restyled to use `--surface` + `--shadow` instead of glass backgrounds
+- Chart tooltips and legends: backgrounds switched from `var(--bg-card)` (translucent) to solid `var(--surface)`; tooltip cursor shading disabled; status badges use transparent bg with token borders/text (`var(--success|warn|danger)`).
+- Token hardening: remapped `--bg-card` to `var(--surface)` in `client/src/styles/design-system.css` to prevent future translucent surfaces by default.
+- Removed blur: purged `backdrop-filter`/`-webkit-backdrop-filter` from `client/src/styles/design-system.css`, `client/src/index.css`, `client/src/styles/budget-enhancements.css`, and `client/src/styles/touch.css` to eliminate glassmorphism globally.
+- Expenses page: migrated table/cards/buttons to Dual‑Ledger classes and spacing tokens; removed dependency on `budget-enhancements.css`.
+- Removed `budget-enhancements.css` import from `client/src/index.css`; collapsed Tailwind layer to `@layer design-system` only.
 - Introduce missing utility classes seen in mockup (feed, list rows, badges, banners, FAB)
 - Keep all logic and routes unchanged
 

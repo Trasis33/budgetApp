@@ -141,7 +141,7 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
 
                 return (
                   <div style={{
-                    background: 'var(--bg-card)',
+                    background: 'var(--surface)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--border-radius-md)',
                     padding: 'var(--spacing-3xl)',
@@ -295,17 +295,17 @@ const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, catego
             gap: 'var(--spacing-lg)',
             padding: 'var(--spacing-lg)',
             borderRadius: 'var(--border-radius-sm)',
-            background: 'var(--bg-card)',
+            background: 'var(--surface)',
             border: '1px solid var(--border-color)',
             transition: 'all 0.3s ease',
             cursor: 'pointer'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--bg-card)'
+            e.currentTarget.style.background = 'var(--surface)'
             e.currentTarget.style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'var(--bg-card)'
+            e.currentTarget.style.background = 'var(--surface)'
             e.currentTarget.style.transform = 'translateY(0)'
           }}>
             <div style={{

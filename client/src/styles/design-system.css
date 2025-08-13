@@ -44,7 +44,7 @@
     /* Background colors */
   --bg-primary: rgba(255, 255, 255, 0.3);
   --bg-secondary: rgba(255, 255, 255, 0.3);
-  --bg-card: rgba(255, 255, 255, 0.3);
+  --bg-card: var(--surface);
   /* --bg-gradient: linear-gradient(135deg, #fbdfff 0%, #d4eeff 50%, #d1fde9 100%); */
   /* --bg-gradient: linear-gradient(45deg, rgba(65, 89, 208, 1.000) 0.000%, rgba(200, 79, 192, 1.000) 50.000%, rgba(255, 205, 112, 1.000) 100.000%); */
   /* --bg-gradient: conic-gradient(from 20deg, rgb(52, 95, 95) 0.000deg, rgb(61, 93, 54) 40.000deg, rgb(91, 53, 100) 80.000deg, rgb(119, 53, 76) 120.000deg, rgb(53, 145, 148) 160.000deg, rgb(52, 135, 174) 200.000deg, rgb(52, 185, 192) 240.000deg, rgb(52, 207, 135) 280.000deg, rgb(163, 228, 52) 320.000deg, rgb(215, 244, 51) 360.000deg); */
@@ -90,6 +90,13 @@
   --shadow: 0 8px 24px rgba(16,24,40,0.08);
 }
 
+/* Global override: disable any remaining blur/backdrop filters app-wide */
+/* This ensures no glassmorphism persists even if legacy styles are imported */
+*:not(svg) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Base body styling from template */
 body {
   font-family: var(--font-primary);
@@ -110,7 +117,7 @@ body {
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-primary);
-  backdrop-filter: var(--backdrop-blur);
+  backdrop-filter: none;
   border-right: 1px solid var(--border-color);
   padding: var(--spacing-6xl);
   position: fixed;
@@ -201,8 +208,8 @@ body {
   margin: 0 auto;
   width: 100%;
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: var(--backdrop-blur);
-  -webkit-backdrop-filter: var(--backdrop-blur);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(203, 213, 225, 0.5);
   border-radius: 12px;
   padding: 4px 8px !important;
@@ -381,7 +388,7 @@ body {
   background: var(--bg-card);
   color: var(--color-text-muted);
   border: 1px solid var(--border-color);
-  backdrop-filter: var(--backdrop-blur-light);
+  backdrop-filter: none;
 } */
 
 .btn-secondary {
@@ -740,7 +747,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur-light);
+  backdrop-filter: none;
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   transition: all 0.3s ease;
@@ -766,7 +773,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur-light);
+  backdrop-filter: none;
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   cursor: pointer;
@@ -777,7 +784,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur-light);
+  backdrop-filter: none;
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
 }
@@ -813,7 +820,7 @@ body {
 }
 
 .table th {
-  background: rgba(248, 250, 252, 0.5);
+  background: var(--bg);
   padding: var(--spacing-xl) var(--spacing-3xl);
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -827,7 +834,7 @@ body {
   padding: var(--spacing-2xl) var(--spacing-3xl);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  border-bottom: 1px solid rgba(203, 213, 225, 0.2);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .table tr:last-child td {
@@ -852,7 +859,7 @@ body {
 }
 
 .table-header {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+  background: var(--bg);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -868,7 +875,7 @@ body {
 
 .table-body {
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur-light);
+  backdrop-filter: none;
 }
 
 .table-row {
@@ -877,7 +884,7 @@ body {
 }
 
 .table-row:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.02) 0%, rgba(6, 182, 212, 0.02) 100%);
+  background: var(--bg);
   transform: translateY(-1px);
 }
 
@@ -1037,7 +1044,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1046,7 +1053,7 @@ body {
 
 .modal-content {
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
+  backdrop-filter: none;
   border-radius: var(--border-radius-lg);
   border: 1px solid var(--border-color);
   padding: var(--spacing-6xl);
@@ -1065,7 +1072,7 @@ body {
 
 .glass-effect {
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-blur);
+  backdrop-filter: none;
   border: 1px solid var(--border-color);
 }
 
@@ -1126,14 +1133,14 @@ body {
   /* Tone down heavy glass/blur on small screens for performance */
   .glassmorphism-card {
     background: rgba(255, 255, 255, 0.28) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .stat-card-shadcn {
     background: rgba(255, 255, 255, 0.22) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
@@ -1162,8 +1169,8 @@ body {
 /* SavingsRateTracker shadcn/ui glassmorphism styling */
 .glassmorphism-card {
   background: rgba(255, 255, 255, 0.33) !important;
-  backdrop-filter: blur(17px) !important;
-  -webkit-backdrop-filter: blur(17px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   border-radius: 20px !important;
   box-shadow: 
@@ -1197,8 +1204,8 @@ body {
 
 .stat-card-shadcn {
   background: rgba(255, 255, 255, 0.25) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 16px !important;
   box-shadow: 
@@ -1246,8 +1253,8 @@ body {
 
 .glassmorphism-card .error-message {
   background: rgba(239, 68, 68, 0.1) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(239, 68, 68, 0.2) !important;
   border-radius: 12px !important;
   margin: var(--spacing-4xl);
@@ -1256,8 +1263,8 @@ body {
 /* Button styling for glassmorphism context */
 .glassmorphism-card .btn {
   background: rgba(138, 92, 246, 0.325) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(139, 92, 246, 0.3);
   color: white;
   padding: var(--spacing-2xl) var(--spacing-4xl);

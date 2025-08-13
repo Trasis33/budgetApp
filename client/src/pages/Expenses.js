@@ -198,7 +198,7 @@ const Expenses = () => {
   if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
-    <div className="dashboard-content">
+    <>
       {/* Page Header */}
       <div className="dashboard-header">
         <h2 className="dashboard-title">Expenses</h2>
@@ -218,7 +218,7 @@ const Expenses = () => {
       </div>
 
       {/* Filters card */}
-      <div className="card hover-lift" style={{ marginBottom: '1.25rem' }}>
+      <div className="card hover-lift" style={{ marginBottom: 'var(--spacing-xl)' }}>
         <div className="section-header">
           <h3 className="section-title">Filters</h3>
         </div>
@@ -279,7 +279,7 @@ const Expenses = () => {
 
       {/* Recurring Management */}
       {showRecurringManagement && (
-        <div className="card hover-lift" style={{ marginBottom: '1.25rem' }}>
+        <div className="card hover-lift" style={{ marginBottom: 'var(--spacing-xl)' }}>
           <div className="section-header">
             <h3 className="section-title">Recurring Bills</h3>
           </div>
@@ -318,7 +318,7 @@ const Expenses = () => {
                     <td className="table-cell">
                       <span className="table-cell-primary">{expense.description}</span>
                       {expense.recurring_expense_id && (
-                        <span className="status-badge status-success" style={{ marginLeft: 8 }}>
+                        <span className="status-badge status-success" style={{ marginLeft: 'var(--spacing-sm)' }}>
                           Recurring
                         </span>
                       )}
@@ -326,7 +326,7 @@ const Expenses = () => {
                     <td className="table-cell">{expense.category_name}</td>
                     <td className="table-cell table-cell-primary">{formatCurrency(expense.amount)}</td>
                     <td className="table-cell">
-                      <Link to={`/expenses/edit/${expense.id}`} className="btn btn-ghost" style={{ marginRight: 8 }}>
+                      <Link to={`/expenses/edit/${expense.id}`} className="btn btn-ghost" style={{ marginRight: 'var(--spacing-sm)' }}>
                         Edit
                       </Link>
                       <button onClick={() => handleDelete(expense.id)} className="btn btn-secondary">
@@ -340,7 +340,7 @@ const Expenses = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

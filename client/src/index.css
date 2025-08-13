@@ -2,19 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Establish layer order - later layers have higher priority */
-@layer design-system, budget-enhancements;
-
-@layer design-system {
-  @import './styles/design-system.css';
-}
 /* Mockup D dark-neon theme (opt-in via .theme-dark-neon on html/body) */
 @import './styles/mockup-d-theme.css';
-@import './styles/budget-enhancements.css';
 @import './styles/dashboard.css';
 /* @import './styles/typography.css'; Temporarily disabled - using design-system.css values */
 /* Touch-first utilities and mobile components */
 @import './styles/touch.css';
+
+/* Import design-system last so it overrides previous styles */
+@import './styles/design-system.css';
 
 /* Custom base styles */
 @layer base {
@@ -94,8 +90,8 @@
   .card {
     @apply rounded-lg shadow-sm border;
     border-color: var(--border-color);
-    background: var(--bg-card);
-    backdrop-filter: var(--backdrop-blur-light);
+    background: var(--surface);
+    backdrop-filter: none;
   }
   
   .card-hover {
@@ -110,7 +106,7 @@
   }
   
   .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
+    backdrop-filter: none;
   }
 }
 
