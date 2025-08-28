@@ -4,7 +4,7 @@ import ModernLayout from './components/layout/ModernLayout';
 
 // Route-level code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Expenses = lazy(() => import('./pages/Expenses'));
+const Expenses = lazy(() => import('./pages/ExpensesV2'));
 const AddExpense = lazy(() => import('./pages/AddExpense'));
 const Budget = lazy(() => import('./pages/Budget'));
 const Settings = lazy(() => import('./pages/Settings'));

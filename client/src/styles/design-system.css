@@ -56,7 +56,8 @@
   
   /* Border and effects */
 /*   --border-color: rgba(203, 213, 225, 0.3); */
-  --border-color: rgba(241, 247, 255, 0.493);
+  /* App-wide border color tuned for visibility on white surfaces */
+  --border-color: rgba(16, 24, 40, 0.12);
   --border-radius-sm: 0.375rem;
   --border-radius-md: 0.5rem;
   --border-radius-lg: 0.75rem;
@@ -88,6 +89,11 @@
   --danger: #E5484D;
   --card-radius: 12px;
   --shadow: 0 8px 24px rgba(16,24,40,0.08);
+
+  /* Form-specific tokens */
+  --input-bg: var(--bg); /* Light canvas to differentiate from white card surface */
+  --input-border-color: rgba(16, 24, 40, 0.14); /* Subtle but visible */
+  --focus-ring: 0 0 0 3px rgba(139, 92, 246, 0.12);
 }
 
 /* Global override: disable any remaining blur/backdrop filters app-wide */
@@ -342,10 +348,18 @@ body {
   border-radius: var(--card-radius);
   padding: var(--spacing-2xl);
   box-shadow: var(--shadow);
-  border: none;
+  border: 1px solid var(--border-color);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   transition: all 0.3s ease;
+}
+
+/* Ensure card visuals override Tailwind utilities by upping specificity */
+.card.card,
+[data-slot="card"] {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-radius);
 }
 
 .card:hover {
@@ -443,6 +457,27 @@ body {
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--ink);
+  margin: 0 0 var(--spacing-xl) 0;
+}
+
+/* Title spacing inside cards */
+.card .section-title {
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Improve separation for nested cards (card-inside-card) */
+.card .card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  margin-top: var(--spacing-2xl);
+}
+
+/* Align header/footer gutters with card content */
+.card [data-slot="card-header"],
+.card [data-slot="card-footer"] {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .stat-title {
@@ -744,9 +779,9 @@ body {
 .form-input {
   width: 100%;
   padding: var(--spacing-2xl) var(--spacing-3xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--input-border-color);
   border-radius: var(--border-radius-sm);
-  background: var(--bg-card);
+  background: var(--input-bg);
   backdrop-filter: none;
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
@@ -756,7 +791,7 @@ body {
 .form-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: var(--focus-ring);
 }
 
 .form-label {
@@ -770,13 +805,19 @@ body {
 .form-select {
   width: 100%;
   padding: var(--spacing-2xl) var(--spacing-3xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--input-border-color);
   border-radius: var(--border-radius-sm);
-  background: var(--bg-card);
+  background: var(--input-bg);
   backdrop-filter: none;
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .time-filter {
@@ -1089,6 +1130,157 @@ body {
 .card-tone-success { border-left: 4px solid var(--success); }
 .card-tone-warning { border-left: 4px solid var(--warn); }
 .card-tone-danger { border-left: 4px solid var(--danger); }
+
+/* Accessibility utilities */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Form layout utilities */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-3xl);
+}
+
+.filters-grid {
+  display: grid;
+  gap: var(--spacing-3xl);
+}
+
+@media (min-width: 768px) {
+  .filters-grid {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: end;
+  }
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3xl);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg);
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--border-radius-sm);
+}
+
+/* Enhance radio pill state for selection and keyboard focus */
+.label-inline input:checked + span {
+  background: var(--surface);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  box-shadow: 0 0 0 1px var(--color-primary) inset;
+}
+
+.label-inline input:focus-visible + span {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--border-radius-sm);
+}
+
+.form-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: end;
+  gap: var(--spacing-xl);
+}
+
+/* Filters card specific adjustments to avoid edge-to-edge content */
+.filters-card {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.filters-card [data-slot="card-header"],
+.filters-card [data-slot="card-content"],
+.filters-card [data-slot="card-footer"] {
+  padding-left: var(--spacing-lg) !important;
+  padding-right: var(--spacing-lg) !important;
+  /* align vertical gutters */
+  padding-top: var(--spacing-lg) !important;
+  padding-bottom: var(--spacing-lg) !important;
+}
+@media (max-width: 768px) {
+  .filters-card [data-slot="card-header"],
+  .filters-card [data-slot="card-content"],
+  .filters-card [data-slot="card-footer"] {
+    padding-left: var(--spacing-md) !important;
+    padding-right: var(--spacing-md) !important;
+    padding-top: var(--spacing-md) !important;
+    padding-bottom: var(--spacing-md) !important;
+  }
+}
+
+/* Recurring bills card — mirror Filters spacing and width constraints */
+.recurring-bills-card {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.recurring-bills-card [data-slot="card-header"],
+.recurring-bills-card [data-slot="card-content"],
+.recurring-bills-card [data-slot="card-footer"] {
+  padding-left: var(--spacing-lg) !important;
+  padding-right: var(--spacing-lg) !important;
+  /* align vertical gutters */
+  padding-top: var(--spacing-lg) !important;
+  padding-bottom: var(--spacing-lg) !important;
+}
+@media (max-width: 768px) {
+  .recurring-bills-card [data-slot="card-header"],
+  .recurring-bills-card [data-slot="card-content"],
+  .recurring-bills-card [data-slot="card-footer"] {
+    padding-left: var(--spacing-md) !important;
+    padding-right: var(--spacing-md) !important;
+    padding-top: var(--spacing-md) !important;
+    padding-bottom: var(--spacing-md) !important;
+  }
+}
+
+/* Expenses table card — mirror Filters spacing and width constraints */
+.expenses-card {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.expenses-card [data-slot="card-header"],
+.expenses-card [data-slot="card-content"],
+.expenses-card [data-slot="card-footer"] {
+  padding-left: var(--spacing-lg) !important;
+  padding-right: var(--spacing-lg) !important;
+  padding-top: var(--spacing-lg) !important;
+  padding-bottom: var(--spacing-lg) !important;
+}
+@media (max-width: 768px) {
+  .expenses-card [data-slot="card-header"],
+  .expenses-card [data-slot="card-content"],
+  .expenses-card [data-slot="card-footer"] {
+    padding-left: var(--spacing-md) !important;
+    padding-right: var(--spacing-md) !important;
+    padding-top: var(--spacing-md) !important;
+    padding-bottom: var(--spacing-md) !important;
+  }
+}
 
 /* Responsive design */
 @media (max-width: 768px) {

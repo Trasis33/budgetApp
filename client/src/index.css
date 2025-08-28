@@ -3,14 +3,13 @@
 @tailwind utilities;
 
 /* Mockup D dark-neon theme (opt-in via .theme-dark-neon on html/body) */
-@import './styles/mockup-d-theme.css';
-@import './styles/dashboard.css';
+/* @import './styles/mockup-d-theme.css'; */
+/* @import './styles/dashboard.css'; */
 /* @import './styles/typography.css'; Temporarily disabled - using design-system.css values */
 /* Touch-first utilities and mobile components */
-@import './styles/touch.css';
+/* @import './styles/touch.css'; */
 
 /* Import design-system last so it overrides previous styles */
-@import './styles/design-system.css';
 
 /* Custom base styles */
 @layer base {
@@ -115,6 +114,52 @@
   position: relative;
   width: 100%;
   height: clamp(260px, 42vh, 440px);
+}
+
+/* Filters card layout fixes */
+.filters-card {
+  /* Constrain inner width and center content */
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* .filters-card [data-slot="card-header"],
+.filters-card [data-slot="card-content"],
+.filters-card [data-slot="card-footer"] {
+  padding-left: var(--spacing-16) !important;
+  padding-right: var(--spacing-16) !important;
+} */
+/* @media (max-width: 768px) {
+  .filters-card [data-slot="card-header"],
+  .filters-card [data-slot="card-content"],
+  .filters-card [data-slot="card-footer"] {
+    padding-left: var(--spacing-8) !important;
+    padding-right: var(--spacing-8) !important;
+  }
+} */
+.filters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: var(--spacing-12);
+}
+@media (max-width: 1024px) {
+  .filters-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .filters-grid .form-actions {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+@media (max-width: 640px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-8);
+  }
+  .filters-grid .form-actions {
+    justify-self: stretch;
+  }
 }
 
 /* Height now driven by clamp in .chart-container; previous media query removed */
@@ -279,3 +324,7 @@
     animation: none !important;
   }
 }
+
+/* Import design-system last so it overrides previous styles */
+@import './styles/design-system.css';
+@import './styles/expenses-v2.css';

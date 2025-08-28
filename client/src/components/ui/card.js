@@ -24,9 +24,8 @@ function CardHeader({ className, style, ...props }) {
         className
       )}
       style={{
-        paddingInline: 'var(--spacing-6xl)',
         gap: 'var(--spacing-md)',
-        paddingBottom: 'var(--spacing-6xl)',
+  paddingBottom: 'var(--spacing-2xl)',
         ...style,
       }}
       {...props}
@@ -71,7 +70,7 @@ function CardContent({ className, ...props }) {
   return (
     <div
       data-slot="card-content"
-      className={cn("", className)}
+  className={cn("", className)}
       {...props}
     />
   )
@@ -83,8 +82,7 @@ function CardFooter({ className, style, ...props }) {
       data-slot="card-footer"
       className={cn("flex items-center", className)}
       style={{
-        paddingInline: 'var(--spacing-6xl)',
-        paddingTop: 'var(--spacing-6xl)',
+  paddingTop: 'var(--spacing-2xl)',
         ...style,
       }}
       {...props}
