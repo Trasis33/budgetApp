@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
-import { Table, TableHead, TableBody, TableRow, TableCell, TableHeadCell, Select } from 'flowbite-react';
+import { Select } from 'flowbite-react';
 import CategoryBoard from '../components/ui/CategoryBoard';
 import '../styles/expenses-v2.css';
 
@@ -53,7 +53,7 @@ const ExpensesV2 = () => {
   const resetFilters = () => setFilters({ month: '', year: String(today.getFullYear()), category: '' });
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((exp) => {
+    const filtered = expenses.filter((exp) => {
       if (!exp || !exp.date) return false;
       const d = new Date(exp.date);
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -63,6 +63,7 @@ const ExpensesV2 = () => {
       if (filters.category && String(exp.category_id) !== String(filters.category)) return false;
       return true;
     });
+    return filtered;
   }, [expenses, filters]);
 
   const handleDelete = async (id) => {
@@ -204,43 +205,47 @@ const ExpensesV2 = () => {
               <h2>Expenses</h2>
               <div className="table-count" aria-live="polite">Showing {filteredExpenses.length}</div>
             </div>
-            <div className="table-wrapper">
-              <Table hoverable className="table-sticky">
-                <TableHead>
-                  <TableHeadCell>Date</TableHeadCell>
-                  <TableHeadCell>Description</TableHeadCell>
-                  <TableHeadCell>Category</TableHeadCell>
-                  <TableHeadCell>Amount</TableHeadCell>
-                  <TableHeadCell>Actions</TableHeadCell>
-                </TableHead>
-                <TableBody>
+            <div className="table-wrapper overflow-auto max-h-[60vh]">
+              <table className="min-w-full text-sm table-sticky">
+                <thead>
+                  <tr className="text-left text-[12px] text-neutral-600">
+                    <th className="px-4 py-2">Date</th>
+                    <th className="px-4 py-2">Description</th>
+                    <th className="px-4 py-2">Category</th>
+                    <th className="px-4 py-2">Amount</th>
+                    <th className="px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
                   {filteredExpenses.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-neutral-500">
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-neutral-500">
                         No expenses found for the selected filters.
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ) : (
-                    filteredExpenses.map((e) => (
-                      <TableRow key={e.id}>
-                        <TableCell>{new Date(e.date).toLocaleDateString('en-CA')}</TableCell>
-                        <TableCell>
+                    filteredExpenses.map((e, index) => (
+                      <tr key={e.id || index} className="hover:bg-neutral-50">
+                        <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900">
+                          {new Date(e.date).toLocaleDateString('en-CA')}
+                        </td>
+                        <td className="px-4 py-2">
                           {e.description}
                           {e.recurring_expense_id && <span className="badge-rec">Recurring</span>}
-                        </TableCell>
-                        <TableCell>{e.category_name || categories.find((c) => c.id === e.category_id)?.name || '—'}</TableCell>
-                        <TableCell className="font-semibold">{formatCurrency(e.amount)}</TableCell>
-                        <TableCell>
+                        </td>
+                        <td className="px-4 py-2">{e.category_name || categories.find((c) => c.id === e.category_id)?.name || '—'}</td>
+                        <td className="px-4 py-2 font-semibold">{formatCurrency(e.amount)}</td>
+                        <td className="px-4 py-2">
                           <div className="flex items-center gap-2">
                             <Link to={`/expenses/edit/${e.id}`} className="btn btn-secondary btn-xs">Edit</Link>
                             <button onClick={() => handleDelete(e.id)} className="btn btn-secondary btn-xs">Delete</button>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
