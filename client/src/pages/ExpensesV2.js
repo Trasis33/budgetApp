@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
-import { Select } from 'flowbite-react';
+import { Select, Accordion, AccordionPanel, AccordionTitle, AccordionContent } from 'flowbite-react';
 import CategoryBoard from '../components/ui/CategoryBoard';
 import '../styles/expenses-v2.css';
 
@@ -265,28 +265,34 @@ const ExpensesV2 = () => {
         {/* Right rail */}
         <aside className="right-rail space-y-4">
           <section className="card">
-            <div className="flex items-center justify-between">
-              <h2>Recurring Templates</h2>
-              <button onClick={handleGenerateRecurring} className="btn btn-primary btn-xs">Generate for month</button>
-            </div>
-            <div className="mt-3 space-y-3">
-              {recurringTemplates.length === 0 ? (
-                <div className="text-sm text-neutral-500">No templates yet.</div>
-              ) : (
-                recurringTemplates.map((r) => (
-                  <div key={r.id} className="recurring-item">
-                    <div>
-                      <div className="item-name">{r.description}</div>
-                      <div className="item-category">{categories.find((c) => c.id === r.category_id)?.name || '—'}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="item-amount">{formatCurrency(r.default_amount)}</div>
-                      <div className="item-status">Active</div>
-                    </div>
+            <Accordion collapseAll>
+              <AccordionPanel>
+                <AccordionTitle className="flex items-center justify-between w-full">
+                  <span>Recurring Templates</span>
+                  <button onClick={handleGenerateRecurring} className="btn btn-primary btn-xs ml-2">Generate for month</button>
+                </AccordionTitle>
+                <AccordionContent>
+                  <div className="mt-3 space-y-3">
+                    {recurringTemplates.length === 0 ? (
+                      <div className="text-sm text-neutral-500">No templates yet.</div>
+                    ) : (
+                      recurringTemplates.map((r) => (
+                        <div key={r.id} className="recurring-item">
+                          <div>
+                            <div className="item-name">{r.description}</div>
+                            <div className="item-category">{categories.find((c) => c.id === r.category_id)?.name || '—'}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="item-amount">{formatCurrency(r.default_amount)}</div>
+                            <div className="item-status">Active</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                ))
-              )}
-            </div>
+                </AccordionContent>
+              </AccordionPanel>
+            </Accordion>
           </section>
 
           <section className="card">
