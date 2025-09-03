@@ -192,9 +192,21 @@ const ExpensesV2 = () => {
             </summary>
             <div className="category-boards-content">
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {categories.map((c) => (
-                  <CategoryBoard key={c.id} category={c} expenses={expenses.filter((e) => String(e.category_id) === String(c.id)).slice(0,3)} total={expenses.filter((e) => String(e.category_id) === String(c.id)).reduce((s, x) => s + (parseFloat(x.amount)||0),0)} />
-                ))}
+                {categories
+                  .map((c) => {
+                    const categoryExpenses = filteredExpenses.filter((e) => String(e.category_id) === String(c.id));
+                    const categoryTotal = categoryExpenses.reduce((s, x) => s + (parseFloat(x.amount)||0), 0);
+                    return { category: c, expenses: categoryExpenses, total: categoryTotal };
+                  })
+                  .filter(({ expenses }) => expenses.length > 0)
+                  .map(({ category, expenses, total }) => (
+                    <CategoryBoard 
+                      key={category.id} 
+                      category={category} 
+                      expenses={expenses} 
+                      total={total} 
+                    />
+                  ))}
               </div>
             </div>
           </details>
