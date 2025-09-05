@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
+import AddContributionModal from './AddContributionModal';
 
 const SavingsGoalsManager = () => {
   const [goals, setGoals] = useState([]);
@@ -13,6 +14,8 @@ const SavingsGoalsManager = () => {
     target_date: '',
     category: 'general'
   });
+  const [contribOpen, setContribOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
 
   useEffect(() => {
     fetchGoals();
@@ -77,6 +80,15 @@ const SavingsGoalsManager = () => {
     if (progress >= 75) return 'bg-blue-500';
     if (progress >= 50) return 'bg-yellow-500';
     return 'bg-gray-400';
+  };
+
+  const openContribution = (goal) => {
+    setSelectedGoal(goal);
+    setContribOpen(true);
+  };
+
+  const onContributionSuccess = (updatedGoal) => {
+    setGoals((prev) => prev.map((g) => g.id === updatedGoal.id ? { ...g, current_amount: updatedGoal.current_amount } : g));
   };
 
   const categoryOptions = [
@@ -226,6 +238,12 @@ const SavingsGoalsManager = () => {
                     <p className="text-sm text-gray-600 capitalize">{goal.category}</p>
                   </div>
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openContribution(goal)}
+                      className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      ➕ Add
+                    </button>
                     <div className="text-right">
                       <div className="font-bold">{formatCurrency(goal.target_amount)}</div>
                       {goal.target_date && (
@@ -277,6 +295,15 @@ const SavingsGoalsManager = () => {
           })
         )}
       </div>
+
+      <AddContributionModal
+        open={contribOpen}
+        onClose={() => setContribOpen(false)}
+        goal={selectedGoal ? { id: selectedGoal.id, name: selectedGoal.goal_name } : null}
+        onSuccess={(goal) => onContributionSuccess(goal)}
+        capAmount={selectedGoal ? Math.max(0, parseFloat(selectedGoal.target_amount) - parseFloat(selectedGoal.current_amount || 0)) : null}
+        enforceCap={true}
+      />
     </div>
   );
 };

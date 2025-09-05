@@ -445,6 +445,18 @@ body {
   grid-auto-rows: minmax(380px, auto);
 }
 
+/* Force exactly two columns at md+ breakpoints regardless of container width */
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-4xl);
+}
+@media (min-width: 768px) {
+  .two-col-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Typography */
 .dashboard-title {
   font-size: var(--font-size-2xl);

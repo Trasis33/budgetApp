@@ -68,6 +68,119 @@ router.delete('/goals/:id', async (req, res) => {
   }
 });
 
+// List contributions for a goal
+router.get('/goals/:id/contributions', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    // Ensure goal belongs to user
+    const goal = await db('savings_goals').where({ id, user_id: userId }).first();
+    if (!goal) return res.status(404).json({ error: 'Goal not found' });
+
+    const contributions = await db('savings_contributions')
+      .where({ goal_id: id, user_id: userId })
+      .orderBy('date', 'desc')
+      .orderBy('id', 'desc');
+
+    res.json(contributions);
+  } catch (error) {
+    console.error('Error fetching savings contributions:', error);
+    res.status(500).json({ error: 'Failed to fetch contributions' });
+  }
+});
+
+// Add a contribution to a goal and increment current_amount
+router.post('/goals/:id/contributions', async (req, res) => {
+  const trx = await db.transaction();
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { amount, date, note } = req.body;
+
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      await trx.rollback();
+      return res.status(400).json({ error: 'Amount must be a positive number' });
+    }
+
+    // Ensure goal belongs to user
+    const goal = await trx('savings_goals').where({ id, user_id: userId }).first();
+    if (!goal) {
+      await trx.rollback();
+      return res.status(404).json({ error: 'Goal not found' });
+    }
+
+    // Optional date validation (not in the DB layer)
+    const now = new Date();
+    const contributionDate = date || now.toISOString().split('T')[0];
+    const chosen = new Date(contributionDate);
+    if (isNaN(chosen.getTime()) || chosen > now) {
+      await trx.rollback();
+      return res.status(400).json({ error: 'Date must be today or earlier' });
+    }
+
+    // Enforce cap so current_amount never exceeds target_amount
+    const current = parseFloat(goal.current_amount || 0);
+    const target = parseFloat(goal.target_amount || 0);
+    const remaining = Math.max(0, target - current);
+    const addAmount = Math.min(parseFloat(amount), remaining);
+    const wasCapped = addAmount < parseFloat(amount);
+
+    const [contributionId] = await trx('savings_contributions').insert({
+      goal_id: id,
+      user_id: userId,
+      amount: addAmount,
+      date: contributionDate,
+      note: note || null
+    });
+
+    // Increment goal current_amount
+    await trx('savings_goals')
+      .where({ id })
+      .update({ current_amount: db.raw('COALESCE(current_amount, 0) + ?', [addAmount]) });
+
+    const updatedGoal = await trx('savings_goals').where({ id }).first();
+    const contribution = await trx('savings_contributions').where({ id: contributionId }).first();
+
+    await trx.commit();
+    res.status(201).json({ goal: updatedGoal, contribution, capped: wasCapped, remainingBefore: remaining });
+  } catch (error) {
+    console.error('Error adding savings contribution:', error);
+    try { await trx.rollback(); } catch (e) {}
+    res.status(500).json({ error: 'Failed to add contribution' });
+  }
+});
+
+// Delete a contribution and decrement current_amount
+router.delete('/contributions/:contributionId', async (req, res) => {
+  const trx = await db.transaction();
+  try {
+    const userId = req.user.id;
+    const { contributionId } = req.params;
+
+    const contribution = await trx('savings_contributions')
+      .where({ id: contributionId, user_id: userId })
+      .first();
+    if (!contribution) {
+      await trx.rollback();
+      return res.status(404).json({ error: 'Contribution not found' });
+    }
+
+    await trx('savings_contributions').where({ id: contributionId }).del();
+    await trx('savings_goals')
+      .where({ id: contribution.goal_id, user_id: userId })
+      .update({ current_amount: db.raw('COALESCE(current_amount, 0) - ?', [parseFloat(contribution.amount)]) });
+
+    const updatedGoal = await trx('savings_goals').where({ id: contribution.goal_id }).first();
+    await trx.commit();
+    res.status(200).json({ goal: updatedGoal });
+  } catch (error) {
+    console.error('Error deleting savings contribution:', error);
+    try { await trx.rollback(); } catch (e) {}
+    res.status(500).json({ error: 'Failed to delete contribution' });
+  }
+});
+
 // Get savings rate over time
 router.get('/rate/:startDate/:endDate', async (req, res) => {
   try {

@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart';
-import { Badge } from './ui/badge';
+import { PiggyBank, Wallet, TrendingUp, TrendingDown, PlusCircle, Calendar } from 'lucide-react';
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   ReferenceLine
 } from "recharts";
@@ -18,12 +17,18 @@ import formatCurrency from '../utils/formatCurrency';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import '../styles/design-system.css';
+import AddContributionModal from './AddContributionModal';
 
 const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savingsData, setSavingsData] = useState(null);
+  // Modal state must be declared before any conditional returns
+  const [contribOpen, setContribOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
   const { user } = useAuth();
+  // Local period state to control the time filter UI and fetching
+  const [period, setPeriod] = useState(timePeriod);
 
   // Chart configuration for shadcn
   const chartConfig = {
@@ -52,7 +57,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         const now = new Date();
         apiEndDate = now.toISOString().split('T')[0];
         
-        const monthsBack = timePeriod === '3months' ? 3 : timePeriod === '1year' ? 12 : 6;
+        const monthsBack = period === '3months' ? 3 : period === '1year' ? 12 : 6;
         const startDateObj = new Date(now);
         startDateObj.setMonth(startDateObj.getMonth() - monthsBack);
         apiStartDate = startDateObj.toISOString().split('T')[0];
@@ -73,10 +78,13 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
           savingsRate: month.savingsRate || 0
         })) || [],
         goals: data.savingsGoals?.map(goal => ({
+          id: goal.id,
           name: goal.goal_name,
-          targetAmount: goal.target_amount,
-          currentAmount: goal.current_amount || 0,
-          icon: '🎯'
+          targetAmount: parseFloat(goal.target_amount || 0),
+          currentAmount: parseFloat(goal.current_amount || 0),
+          icon: '🎯',
+          category: goal.category,
+          targetDate: goal.target_date
         })) || [],
         targetRate: 20 // Default target savings rate
       };
@@ -88,11 +96,16 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     } finally {
       setLoading(false);
     }
-  }, [user, timePeriod, startDate, endDate]);
+  }, [user, period, startDate, endDate]);
 
   useEffect(() => {
     fetchSavingsData();
   }, [fetchSavingsData]);
+
+  // Sync local period if parent prop changes
+  useEffect(() => {
+    setPeriod(timePeriod);
+  }, [timePeriod]);
 
   // Helper functions for badge variants
   const getBadgeVariant = (rate) => {
@@ -119,6 +132,69 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     if (trend > 0) return "success";
     if (trend < 0) return "destructive";
     return "secondary";
+  };
+
+  // Segmented control inline styles (clean, non-glass)
+  const segmentedStyles = {
+    display: 'inline-flex',
+    background: 'rgba(148,163,184,0.10)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 9999,
+    padding: 4,
+    gap: 4,
+  };
+  const segBtn = (active) => ({
+    border: 0,
+    background: active ? 'var(--surface)' : 'transparent',
+    padding: '6px 10px',
+    borderRadius: 9999,
+    color: active ? 'var(--primary)' : 'var(--muted)',
+    fontWeight: 700,
+    fontSize: 12,
+    cursor: 'pointer',
+    boxShadow: active ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+  });
+
+  // Pill styles to mirror design iteration
+  const pillBase = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '4px 10px',
+    borderRadius: 9999,
+    fontSize: 12,
+    fontWeight: 700,
+  };
+  const getPillStyle = (variant) => {
+    switch (variant) {
+      case 'success':
+        return { ...pillBase, background: 'rgba(16,185,129,0.12)', color: 'var(--success)' };
+      case 'warning':
+        return { ...pillBase, background: 'rgba(245,158,11,0.12)', color: 'var(--warn)' };
+      case 'destructive':
+        return { ...pillBase, background: 'rgba(229,72,77,0.12)', color: 'var(--danger)' };
+      default:
+        return { ...pillBase, background: 'rgba(148,163,184,0.2)', color: 'var(--muted)' };
+    }
+  };
+  const toPill = (v) => (v === 'default' || v === 'secondary') ? 'neutral' : v;
+  const computePercent = (g) => {
+    const t = parseFloat(g?.targetAmount || 0);
+    const c = parseFloat(g?.currentAmount || 0);
+    if (!t || t <= 0) return 0;
+    return Math.min((c / t) * 100, 100);
+  };
+
+  const openContribution = (goal) => {
+    setSelectedGoal(goal);
+    setContribOpen(true);
+  };
+
+  const onContributionSuccess = (updatedGoal, _contribution) => {
+    setSavingsData((prev) => ({
+      ...prev,
+      goals: prev.goals.map((g) => g.id === updatedGoal.id ? { ...g, currentAmount: parseFloat(updatedGoal.current_amount || 0) } : g)
+    }));
   };
 
   // Loading state
@@ -187,64 +263,45 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   return (
     <Card className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
       <CardHeader>
-        <CardTitle className="section-title">💰 Savings Rate Tracker</CardTitle>
-        <div className="chart-subtitle">
-          {timePeriod ? timePeriod.replace('months', 'mo').replace('year', 'yr') : 'Period'}
+        <div className="flex items-center justify-between flex-wrap" style={{ gap: 8 }}>
+          <div>
+            <CardTitle className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <PiggyBank size={18} /> Savings Rate Tracker
+            </CardTitle>
+            <div className="chart-subtitle">Monthly savings rate</div>
+          </div>
+          <div>
+            <div style={segmentedStyles} role="tablist" aria-label="Time range">
+              <button
+                style={segBtn(period === '3months')}
+                onClick={() => setPeriod('3months')}
+                role="tab"
+                aria-selected={period === '3months'}
+              >
+                3M
+              </button>
+              <button
+                style={segBtn(period === '6months')}
+                onClick={() => setPeriod('6months')}
+                role="tab"
+                aria-selected={period === '6months'}
+              >
+                6M
+              </button>
+              <button
+                style={segBtn(period === '1year')}
+                onClick={() => setPeriod('1year')}
+                role="tab"
+                aria-selected={period === '1year'}
+              >
+                1Y
+              </button>
+            </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        {/* Stats Grid with shadcn Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'var(--spacing-4xl)', marginBottom: 'var(--spacing-6xl)' }}>
-          {/* Average Savings Rate Card */}
-          <Card className="stat-card">
-            <CardContent>
-              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Average Savings Rate</div>
-                <div style={{ fontSize: 'var(--font-size-lg)' }}>💰</div>
-              </div>
-              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
-                {savingsData.summary.averageSavingsRate.toFixed(1)}%
-              </div>
-              <Badge variant={getBadgeVariant(savingsData.summary.averageSavingsRate)}>
-                {getSavingsRateStatus(savingsData.summary.averageSavingsRate)}
-              </Badge>
-            </CardContent>
-          </Card>
-
-          {/* Total Savings Card */}
-          <Card className="stat-card">
-            <CardContent>
-              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Total Savings</div>
-                <div style={{ fontSize: 'var(--font-size-lg)' }}>💵</div>
-              </div>
-              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
-                {formatCurrency(savingsData.summary.totalSavings)}
-              </div>
-              <Badge variant="default">
-                {savingsData.summary.totalSavings >= 0 ? 'Positive' : 'Negative'}
-              </Badge>
-            </CardContent>
-          </Card>
-
-          {/* Trend Card */}
-          <Card className="stat-card">
-            <CardContent>
-              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Trend</div>
-                <div style={{ fontSize: 'var(--font-size-lg)' }}>📈</div>
-              </div>
-              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
-                {getTrendText(savingsData.summary.trend || 0)}
-              </div>
-              <Badge variant={getTrendBadgeVariant(savingsData.summary.trend || 0)}>
-                {savingsData.summary.trend > 0 ? 'Improving' : savingsData.summary.trend < 0 ? 'Declining' : 'Stable'}
-              </Badge>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Chart with shadcn ChartContainer */}
+        {/* Chart now sits on top for alignment with dashboard */}
         <ChartContainer config={chartConfig} className="h-80" style={{ marginBottom: 'var(--spacing-6xl)' }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={savingsData.chartData}>
@@ -262,7 +319,6 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
                 tickFormatter={(value) => `${value}%`}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Legend />
               <Line 
                 type="monotone" 
                 dataKey="savingsRate" 
@@ -283,37 +339,117 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
             </LineChart>
           </ResponsiveContainer>
         </ChartContainer>
+        {/* Custom legend pills below chart */}
+        <div className="flex items-center justify-center" style={{ gap: 12, marginTop: 'var(--spacing-xl)', marginBottom: 'var(--spacing-6xl)' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: 9999, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
+            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--primary)', display: 'inline-block' }} />
+            Savings Rate
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: 9999, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
+            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--warn)', display: 'inline-block' }} />
+            Target 20%
+          </div>
+        </div>
+
+        {/* Stats Grid following design iteration (clean card, pill labels) */}
+        <div className="two-col-grid" style={{ marginBottom: 'var(--spacing-6xl)' }}>
+          {/* Average Savings Rate Card */}
+          <Card className="stat-card" style={{ border: '1px solid var(--border-color)' }}>
+            <CardContent>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Avg Savings Rate</div>
+                <PiggyBank size={18} color="var(--muted)" />
+              </div>
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, marginBottom: 'var(--spacing-md)' }}>
+                {savingsData.summary.averageSavingsRate.toFixed(1)}%
+              </div>
+              <span style={getPillStyle(toPill(getBadgeVariant(savingsData.summary.averageSavingsRate)))}>
+                {getSavingsRateStatus(savingsData.summary.averageSavingsRate)}
+              </span>
+            </CardContent>
+          </Card>
+
+          {/* Total Savings Card */}
+          <Card className="stat-card" style={{ border: '1px solid var(--border-color)' }}>
+            <CardContent>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Total Savings</div>
+                <Wallet size={18} color="var(--muted)" />
+              </div>
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, marginBottom: 'var(--spacing-md)' }}>
+                {formatCurrency(savingsData.summary.totalSavings)}
+              </div>
+              <span style={getPillStyle(savingsData.summary.totalSavings >= 0 ? 'neutral' : 'destructive')}>
+                {savingsData.summary.totalSavings >= 0 ? 'Positive' : 'Negative'}
+              </span>
+            </CardContent>
+          </Card>
+
+          {/* Trend Card */}
+          <Card className="stat-card" style={{ border: '1px solid var(--border-color)' }}>
+            <CardContent>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>Trend</div>
+                {(savingsData.summary.trend || 0) >= 0 ? (
+                  <TrendingUp size={18} color="var(--muted)" />
+                ) : (
+                  <TrendingDown size={18} color="var(--muted)" />
+                )}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, marginBottom: 'var(--spacing-md)' }}>
+                {getTrendText(savingsData.summary.trend || 0)}
+              </div>
+              <span style={getPillStyle(toPill(getTrendBadgeVariant(savingsData.summary.trend || 0)))}>
+                {savingsData.summary.trend > 0 ? 'Improving' : savingsData.summary.trend < 0 ? 'Declining' : 'Stable'}
+              </span>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Savings Goals Section */}
         {savingsData.goals && savingsData.goals.length > 0 && (
           <div>
             <h4 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--spacing-4xl)' }}>Savings Goals</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--spacing-4xl)' }}>
+            <div className="two-col-grid">
               {savingsData.goals.map((goal, index) => (
-                <Card key={index} className="stat-card">
+                <Card key={goal.id || index} className="stat-card hover-lift" style={{ border: '1px solid var(--border-color)' }}>
                   <CardContent>
                     <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500 }}>{goal.name}</div>
-                      <div style={{ fontSize: 'var(--font-size-lg)' }}>{goal.icon || '🎯'}</div>
+                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>{goal.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button onClick={() => openContribution(goal)} title="Add contribution" style={{ border: '1px solid var(--border-color)', background: 'var(--surface)', borderRadius: 10, padding: '6px 10px', fontSize: 12, fontWeight: 700, color: 'var(--muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <PlusCircle size={16} /> Add
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+                    <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, marginBottom: 'var(--spacing-md)' }}>
                       {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
                     </div>
-                    <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--border-color)', marginBottom: 'var(--spacing-lg)' }}>
-                      <div 
-                        className="h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)}%`, backgroundColor: 'var(--primary)' }}
-                      ></div>
+                    <div style={{ width: '100%', borderRadius: 9999, height: 6, background: 'rgba(16,24,40,0.08)', marginBottom: 'var(--spacing-lg)' }}>
+                      <div className="transition-all duration-300" style={{ height: '100%', borderRadius: 9999, width: `${computePercent(goal)}%`, background: 'var(--primary)' }} />
                     </div>
-                    <Badge variant={goal.currentAmount >= goal.targetAmount ? "success" : "secondary"}>
-                      {((goal.currentAmount / goal.targetAmount) * 100).toFixed(1)}% Complete
-                    </Badge>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--muted)', fontSize: 12 }}>
+                      <span>{computePercent(goal).toFixed(1)}% Complete</span>
+                      {goal.targetDate && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <Calendar size={14} /> Target: {new Date(goal.targetDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
         )}
+        <AddContributionModal
+          open={contribOpen}
+          onClose={() => setContribOpen(false)}
+          goal={selectedGoal}
+          onSuccess={onContributionSuccess}
+          capAmount={selectedGoal ? Math.max(0, parseFloat(selectedGoal.targetAmount) - parseFloat(selectedGoal.currentAmount || 0)) : null}
+          enforceCap={true}
+        />
       </CardContent>
     </Card>
   );

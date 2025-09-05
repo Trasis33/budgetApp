@@ -14,6 +14,18 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from "recharts";
+import {
+  Home,
+  Car,
+  Zap,
+  Heart,
+  Shirt,
+  ShoppingCart,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  BarChart3
+} from 'lucide-react';
 import '../styles/design-system.css';
 
 // Dual Ledger token-based color palette for category lines
@@ -24,6 +36,25 @@ const tokenColors = [
   'var(--danger)',
   'var(--ink)'
 ];
+
+// Category icon mapping
+const getCategoryIcon = (category) => {
+  const categoryLower = category.toLowerCase();
+  if (categoryLower.includes('mortgage') || categoryLower.includes('home')) {
+    return { icon: Home, color: '#3b82f6' };
+  } else if (categoryLower.includes('transport') || categoryLower.includes('car')) {
+    return { icon: Car, color: '#ef4444' };
+  } else if (categoryLower.includes('utilit')) {
+    return { icon: Zap, color: '#06b6d4' };
+  } else if (categoryLower.includes('healthcare') || categoryLower.includes('medical')) {
+    return { icon: Heart, color: '#f59e0b' };
+  } else if (categoryLower.includes('cloth') || categoryLower.includes('kid')) {
+    return { icon: Shirt, color: '#8b5cf6' };
+  } else if (categoryLower.includes('groc')) {
+    return { icon: ShoppingCart, color: '#10b981' };
+  }
+  return { icon: BarChart3, color: '#64748b' };
+};
 
 const SpendingPatternsChart = ({ patterns = null }) => {
   const [loading, setLoading] = useState(true);
@@ -83,16 +114,22 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           trend = ((lastAmount - firstAmount) / Math.abs(firstAmount)) * 100;
         }
 
-        // Calculate enhanced trend (weighted recent months more heavily)
+        // Calculate fallback enhanced trend (weighted recent months more heavily)
         let enhancedTrend = 0;
         if (sortedData.length >= 3) {
           const recentMonths = sortedData.slice(-3);
           const firstRecentAmount = recentMonths[0].amount;
           const lastRecentAmount = recentMonths[recentMonths.length - 1].amount;
-          
           if (firstRecentAmount !== 0) {
             enhancedTrend = ((lastRecentAmount - firstRecentAmount) / Math.abs(firstRecentAmount)) * 100;
           }
+        }
+
+        // Prefer backend enhanced metrics when available
+        const backendEnhanced = categoryObject?.enhancedTrend;
+        if (backendEnhanced && typeof backendEnhanced === 'object' && typeof backendEnhanced.percentageChange === 'number') {
+          trend = backendEnhanced.percentageChange;
+          enhancedTrend = backendEnhanced.percentageChange;
         }
 
         // Format the data for display
@@ -112,7 +149,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           data: formattedData,
           trend: parseFloat(trend.toFixed(1)),
           enhancedTrend: parseFloat(enhancedTrend.toFixed(1)),
-          lastAmount: lastAmount
+          enhanced: backendEnhanced || null,
+          lastAmount: lastAmount,
+          direction: typeof categoryObject?.trend === 'string' ? categoryObject.trend : null
         };
       });
 
@@ -205,24 +244,68 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   /**
    * Get trend indicator information based on trend value
    */
-  const getTrendIndicator = (trend = 0, enhancedTrend = 0) => {
-    // Use enhanced trend if available, otherwise fall back to regular trend
-    const trendValue = enhancedTrend !== 0 ? enhancedTrend : trend;
+  const getTrendIndicator = (trend = 0, enhancedTrend = 0, direction = null) => {
+    // Determine trend value percentage from enhanced object if present
+    let trendValue = 0;
+    if (enhancedTrend && typeof enhancedTrend === 'object' && typeof enhancedTrend.percentageChange === 'number') {
+      trendValue = enhancedTrend.percentageChange;
+    } else if (typeof enhancedTrend === 'number' && enhancedTrend !== 0) {
+      trendValue = enhancedTrend;
+    } else {
+      trendValue = typeof trend === 'number' ? trend : 0;
+    }
     
     if (trendValue > 15) {
-      return { icon: '↑↑', label: 'Sharp Increase', color: 'var(--danger)' };
+      return { icon: TrendingUp, label: 'Sharp Increase', color: 'var(--danger)' };
     } else if (trendValue > 5) {
-      return { icon: '↑', label: 'Increasing', color: 'var(--warn)' };
+      return { icon: TrendingUp, label: 'Increasing', color: 'var(--warn)' };
     } else if (trendValue > -5) {
-      return { icon: '→', label: 'Stable', color: 'var(--success)' };
+      return { icon: Minus, label: 'Stable', color: 'var(--success)' };
     } else if (trendValue > -15) {
-      return { icon: '↓', label: 'Decreasing', color: 'var(--muted)' };
+      return { icon: TrendingDown, label: 'Decreasing', color: 'var(--muted)' };
     } else {
-      return { icon: '↓↓', label: 'Sharp Decrease', color: 'var(--primary)' };
+      return { icon: TrendingDown, label: 'Sharp Decrease', color: 'var(--primary)' };
     }
   };
 
+  /**
+   * Get confidence level and insight text based on data quality
+   */
+  const getConfidenceInfo = (categoryData = [], enhanced = null) => {
+    // Prefer backend-provided confidence when available
+    if (enhanced && typeof enhanced === 'object' && typeof enhanced.confidence === 'number') {
+      const level = Math.max(0, Math.min(100, enhanced.confidence));
+      let text = 'Limited data available';
+      if (level >= 80) text = 'Strong data foundation with recent activity';
+      else if (level >= 60) text = 'Moderate data with recent trends';
+      else if (level > 0) text = 'Limited data available';
+      else text = 'Not enough data to calculate trend';
+      return { level, text };
+    }
 
+    // Fallback heuristic if backend confidence is not available
+    if (!categoryData || categoryData.length === 0) {
+      return { level: 0, text: 'Not enough data to calculate trend' };
+    }
+
+    const dataPoints = categoryData.length;
+    const hasRecentData = categoryData.some(item => {
+      const itemDate = new Date(item.date || item.month);
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      return itemDate >= threeMonthsAgo;
+    });
+
+    if (dataPoints >= 6 && hasRecentData) {
+      return { level: 85, text: 'Strong data foundation with recent activity' };
+    } else if (dataPoints >= 3 && hasRecentData) {
+      return { level: 65, text: 'Moderate data with recent trends' };
+    } else if (dataPoints >= 2) {
+      return { level: 45, text: 'Limited data available' };
+    } else {
+      return { level: 0, text: 'Not enough data to calculate trend' };
+    }
+  };
 
   // Render loading state
   if (loading) {
@@ -596,108 +679,171 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       }}>
         <div className="stats-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(150px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: 'var(--spacing-lg)',
           overflowY: 'auto',
           overflowX: 'hidden',
-          maxHeight: '350px',
+          maxHeight: '600px',
           padding: 'var(--spacing-lg)'
         }}>
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
-          const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
-          
-          // Enhanced feature: Calculate additional metrics
+          const trendInfo = getTrendIndicator(
+            pattern?.trend,
+            (pattern?.enhanced || pattern?.enhancedTrend),
+            pattern?.direction
+          );
+          const categoryIcon = getCategoryIcon(category);
           const categoryData = pattern?.data || [];
-          const totalSpent = categoryData.reduce((sum, item) => sum + item.amount, 0);
-          const avgSpent = categoryData.length > 0 ? totalSpent / categoryData.length : 0;
-          const maxSpent = categoryData.length > 0 ? Math.max(...categoryData.map(item => item.amount)) : 0;
-          const maxMonth = categoryData.find(item => item.amount === maxSpent)?.month || '';
-         
-         return (
-            <Card key={category} className="stat-card">
-              <CardContent>
-                <CardHeader className="stat-header" style={{
+          
+          // Calculate metrics for the new design
+          const { level: confidenceLevel, text: confidenceText } = getConfidenceInfo(categoryData, pattern?.enhanced);
+          
+          // Calculate strength as percentage change magnitude
+          const strengthValue = typeof pattern?.enhanced?.normalizedStrength === 'number'
+            ? pattern.enhanced.normalizedStrength
+            : Math.abs(pattern?.enhancedTrend || pattern?.trend || 0);
+          
+          return (
+            <Card key={category} className="stat-card" style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: '4px 4px 8px var(--shadow-color)',
+              transition: 'transform 0.2s',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            >
+              <div className="stat-header" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '1rem'
+              }}>
+                <div className="category-info" style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: 'var(--spacing-sm)'
+                  gap: '0.75rem'
                 }}>
-                  <h4 style={{
-                    margin: 0,
-                    fontSize: 'var(--font-size-base)',
-                    fontWeight: 700,
-                    color: 'var(--ink)'
-                  }}>{category}</h4>
-                  <div className="trend-indicator" style={{
+                  <div className="category-icon" style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 'var(--spacing-xs)',
-                    fontSize: 'var(--font-size-sm)',
-                    color: trendInfo.color
+                    justifyContent: 'center',
+                    backgroundColor: `${categoryIcon.color}20`,
+                    color: categoryIcon.color,
+                    boxShadow: '2px 2px 4px rgba(0,0,0,0.1)'
                   }}>
-                    {trendInfo.icon} {trendInfo.label}
+                    {React.createElement(categoryIcon.icon, { size: 20 })}
                   </div>
-                </CardHeader>
-                
-                <div className="stat-body" style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--spacing-xs)'
-                }}>
-                  <div className="stat-row" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between'
+                  <div className="category-name" style={{
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    color: 'var(--ink)'
                   }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
-                      Average:
-                    </span>
-                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                      {formatCurrency(avgSpent)}
-                    </span>
-                  </div>
-                  
-                  <div className="stat-row" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between'
-                  }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
-                      Highest:
-                    </span>
-                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                      {formatCurrency(maxSpent)}
-                    </span>
-                  </div>
-                  
-                  {maxMonth && (
-                    <div className="stat-row" style={{
-                      display: 'flex',
-                      justifyContent: 'space-between'
-                    }}>
-                      <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
-                        Peak Month:
-                      </span>
-                      <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                        {maxMonth}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="stat-row" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: 'var(--spacing-xs)',
-                    paddingTop: 'var(--spacing-xs)',
-                    borderTop: '1px solid var(--border-color)'
-                  }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--muted)' }}>
-                      Last Month:
-                    </span>
-                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
-                      {formatCurrency(pattern?.lastAmount || 0)}
-                    </span>
+                    {category}
                   </div>
                 </div>
-              </CardContent>
+                <div className="trend-indicator" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '6px',
+                  backgroundColor: `${trendInfo.color}20`,
+                  color: trendInfo.color
+                }}>
+                  {React.createElement(trendInfo.icon, { size: 14 })}
+                  {trendInfo.label}
+                </div>
+              </div>
+              
+              <div className="stat-metrics" style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <div className="metric" style={{ textAlign: 'center' }}>
+                  <div className="metric-label" style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--muted)',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Strength
+                  </div>
+                  <div className="metric-value" style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: 'var(--ink)'
+                  }}>
+                    {strengthValue.toFixed(1)}%
+                  </div>
+                </div>
+                <div className="metric" style={{ textAlign: 'center' }}>
+                  <div className="metric-label" style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--muted)',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Change
+                  </div>
+                  <div className="metric-value" style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: 'var(--ink)'
+                  }}>
+                    {(
+                      typeof pattern?.enhanced?.percentageChange === 'number'
+                        ? pattern.enhanced.percentageChange
+                        : (pattern?.enhancedTrend || pattern?.trend || 0)
+                    ).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+              
+              <div className="confidence-bar" style={{
+                width: '100%',
+                height: '4px',
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                borderRadius: '2px',
+                overflow: 'hidden',
+                marginBottom: '0.5rem'
+              }}>
+                <div className="confidence-fill" style={{
+                  height: '100%',
+                  borderRadius: '2px',
+                  backgroundColor: confidenceLevel > 70 ? 'var(--success)' : 
+                                   confidenceLevel > 40 ? 'var(--warn)' : 'var(--danger)',
+                  width: `${confidenceLevel}%`,
+                  transition: 'width 0.3s ease'
+                }}></div>
+              </div>
+              
+              <div className="insight-text" style={{
+                fontSize: '0.8rem',
+                color: 'var(--muted)',
+                fontStyle: 'italic',
+                lineHeight: 1.4
+              }}>
+                {confidenceText}
+              </div>
             </Card>
           );
         })}
