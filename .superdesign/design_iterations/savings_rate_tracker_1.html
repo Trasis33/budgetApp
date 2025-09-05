@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Savings Rate Tracker - Clean Card Design</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Flowbite (base) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.5.1/flowbite.min.css" rel="stylesheet" />
+  <!-- Chart.js and annotation plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <style>
+    :root {
+      /* Palette: avoid pure blue, use violet/teal, amber for target */
+      --primary: #8b5cf6; /* violet */
+      --teal: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --ink: #0b1320;
+      --muted: #64748b;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --border: rgba(16, 24, 40, 0.12);
+      --radius: 14px;
+      --shadow: 0 8px 24px rgba(16,24,40,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important; background: var(--bg) !important; color: var(--ink) !important; padding: 24px !important; display: flex !important; justify-content: center !important; }
+
+    .container { width: 100%; max-width: 1040px; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid rgba(16,24,40,0.06); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .title { font-weight: 700; font-size: 18px !important; display: flex; align-items: center; gap: 10px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+    .header-left { display: flex; flex-direction: column; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .segmented { display: inline-flex; background: #eef2ff55; border: 1px solid var(--border); border-radius: 999px; padding: 4px; gap: 4px; }
+    .segmented button { border: 0; background: transparent; padding: 6px 10px; border-radius: 999px; color: var(--muted); font-weight: 700; font-size: 12px; }
+    .segmented button.active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+    .card-body { padding: 20px; }
+
+    .chart-wrap { height: 320px; border: 1px dashed rgba(16,24,40,0.08); border-radius: 12px; padding: 10px; }
+
+    .legend { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--muted); }
+    .dot { width: 10px; height: 10px; border-radius: 999px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .stat-label { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .stat-value { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .pill.success { background: rgba(16,185,129,0.12); color: var(--success); }
+    .pill.neutral { background: rgba(148,163,184,0.2); color: var(--muted); }
+    .pill.warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+
+    .section-label { font-weight: 700; font-size: 16px; margin: 18px 0 12px; }
+
+    .goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .goal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); }
+    .goal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .goal-name { font-weight: 700; font-size: 14px; }
+    .goal-actions { display: flex; gap: 8px; align-items: center; }
+    .add { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 4px 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+    .amount { font-size: 16px; font-weight: 800; margin: 6px 0 8px; }
+    .progress { height: 6px; background: rgba(16,24,40,0.08); border-radius: 999px; overflow: hidden; }
+    .progress > span { display: block; height: 100%; background: var(--primary); width: 0; }
+    .goal-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+    @media (max-width: 768px) {
+      body { padding: 16px !important; }
+      .chart-wrap { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div class="header-left">
+          <div class="title">💰 Savings Rate Tracker</div>
+          <div class="subtitle">Monthly savings rate</div>
+        </div>
+        <div class="header-right">
+          <div class="segmented" role="tablist" aria-label="Time range">
+            <button class="active" data-range="3m" role="tab" aria-selected="true">3M</button>
+            <button data-range="6m" role="tab" aria-selected="false">6M</button>
+            <button data-range="1y" role="tab" aria-selected="false">1Y</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="srChart"></canvas>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="dot" style="background: var(--primary);"></span> Savings Rate</div>
+          <div class="legend-item"><span class="dot" style="background: var(--warning);"></span> Target 20%</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-top">
+              <div class="stat-label">Average Savings Rate</div>
+              <div style="color: var(--muted);">🏦</div>
+            </div>
+            <div class="stat-value" id="avgRate">29.2%</div>
+            <span class="pill success">Excellent</span>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <div class="stat-label">Total Savings</div>
+              <div style="color: var(--muted);">💼</div>
+            </div>
+            <div class="stat-value" id="totalSavings">57 868,00 kr</div>
+            <span class="pill neutral">Positive</span>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <div class="stat-label">Trend</div>
+              <div style="color: var(--muted);">↗</div>
+            </div>
+            <div class="stat-value" id="trendLabel">+181.7%</div>
+            <span class="pill success">Improving</span>
+          </div>
+        </div>
+
+        <div class="section-label">Savings Goals</div>
+        <div class="goals-grid">
+          <div class="goal">
+            <div class="goal-head">
+              <div class="goal-name">Emergency fund</div>
+              <div class="goal-actions">
+                <button class="add">+ Add</button>
+              </div>
+            </div>
+            <div class="amount">2 500,00 kr / 50 000,00 kr</div>
+            <div class="progress"><span style="width: 5%;"></span></div>
+            <div class="goal-meta"><span>5.0% Complete</span><span>Target: 2026-06-01</span></div>
+          </div>
+          <div class="goal">
+            <div class="goal-head">
+              <div class="goal-name">Byrå</div>
+              <div class="goal-actions">
+                <button class="add">+ Add</button>
+              </div>
+            </div>
+            <div class="amount">0,00 kr / 5 000,00 kr</div>
+            <div class="progress"><span style="width: 0%;"></span></div>
+            <div class="goal-meta"><span>0.0% Complete</span><span>Target: 2025-10-01</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('srChart').getContext('2d');
+    const dataSetsByRange = {
+      '3m': {
+        labels: ['2025-07', '2025-08', '2025-09'],
+        data: [28, 70, 40]
+      },
+      '6m': {
+        labels: ['2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09'],
+        data: [0, 39, 27, 30, 70, 40]
+      },
+      '1y': {
+        labels: ['2024-10','2024-11','2024-12','2025-01','2025-02','2025-03','2025-04','2025-05','2025-06','2025-07','2025-08','2025-09'],
+        data: [12,13,15,14,12,0,39,27,30,30,70,40]
+      }
+    };
+
+    const baseConfig = (labels, data) => ({
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Savings Rate',
+            data,
+            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+            backgroundColor: 'rgba(139, 92, 246, 0.08)',
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.35,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            titleColor: '#0b1320',
+            bodyColor: '#475569',
+            borderColor: 'rgba(16,24,40,0.12)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%` }
+          },
+          annotation: {
+            annotations: {
+              target: {
+                type: 'line',
+                yMin: 20,
+                yMax: 20,
+                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--warning').trim(),
+                borderDash: [6, 6],
+                borderWidth: 2,
+                label: {
+                  display: true,
+                  content: 'Target: 20%',
+                  backgroundColor: 'rgba(0,0,0,0)',
+                  color: '#94a3b8',
+                  position: 'end',
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(203,213,225,0.3)', drawBorder: false },
+            ticks: { color: '#64748b', font: { family: 'Plus Jakarta Sans', size: 11 } }
+          },
+          y: {
+            grid: { color: 'rgba(203,213,225,0.3)', drawBorder: false },
+            ticks: { color: '#64748b', callback: v => `${v}%`, font: { family: 'Plus Jakarta Sans', size: 11 } }
+          }
+        },
+        interaction: { intersect: false, mode: 'index' }
+      }
+    });
+
+    let current = '6m';
+    const chart = new Chart(ctx, baseConfig(dataSetsByRange[current].labels, dataSetsByRange[current].data));
+
+    document.querySelectorAll('.segmented button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.segmented button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        current = btn.dataset.range;
+        const { labels, data } = dataSetsByRange[current];
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = data;
+        chart.update();
+      });
+    });
+  </script>
+</body>
+</html>
