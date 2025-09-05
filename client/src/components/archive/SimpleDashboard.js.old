@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../api/axios';
-import formatCurrency from '../utils/formatCurrency';
+import axios from '../../api/axios';
+import formatCurrency from '../../utils/formatCurrency';
 import { DollarSign, Calendar, TrendingUp } from 'lucide-react';
 
 const SimpleDashboard = () => {

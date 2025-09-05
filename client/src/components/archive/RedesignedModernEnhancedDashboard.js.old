@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import DashboardAnalytics from './DashboardAnalytics';
-import BudgetPerformanceCards from './BudgetPerformanceCards';
-import BudgetPerformanceBadges from './BudgetPerformanceBadges';
-import OptimizationTipCard from './OptimizationTipCard';
-import axios from '../api/axios';
-import formatCurrency from '../utils/formatCurrency';
-import KPISummaryCards from './KPISummaryCards';
+import DashboardAnalytics from '../DashboardAnalytics';
+import BudgetPerformanceCards from '../BudgetPerformanceCards';
+import BudgetPerformanceBadges from '../BudgetPerformanceBadges';
+import OptimizationTipCard from '../OptimizationTipCard';
+import axios from '../../api/axios';
+import formatCurrency from '../../utils/formatCurrency';
+import KPISummaryCards from '../KPISummaryCards';
 import { 
   RefreshCw, 
   Download,
