@@ -347,7 +347,7 @@ body {
   background: var(--surface);
   border-radius: var(--card-radius);
   padding: var(--spacing-2xl);
-  box-shadow: var(--shadow);
+  /* box-shadow: var(--shadow); */
   border: 1px solid var(--border-color);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -364,14 +364,14 @@ body {
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(16,24,40,0.12);
+  /* box-shadow: 0 12px 28px rgba(16,24,40,0.12); */
 }
 
 .stat-card {
   background: var(--surface);
   border-radius: var(--card-radius);
   padding: var(--spacing-4xl);
-  box-shadow: var(--shadow);
+  /* box-shadow: var(--shadow); */
   border: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -380,7 +380,7 @@ body {
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(16,24,40,0.12);
+  /* box-shadow: 0 12px 28px rgba(16,24,40,0.12); */
 }
 
 /* Button components */
@@ -449,7 +449,7 @@ body {
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--spacing-4xl);
+  gap: var(--spacing-md);
 }
 @media (min-width: 768px) {
   .two-col-grid {
@@ -589,13 +589,13 @@ body {
   border-radius: var(--card-radius);
   padding: var(--spacing-4xl);
   border: none;
-  box-shadow: var(--shadow);
+  /* box-shadow: var(--shadow); */
   transition: all 0.3s ease;
 }
 
 .chart-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(16,24,40,0.12);
+  /* box-shadow: 0 12px 28px rgba(16,24,40,0.12);*/
 }
 
 /* Additional component styles */

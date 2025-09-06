@@ -27,6 +27,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import '../styles/design-system.css';
+import { ChartContainer } from './ui/chart';
 
 // Dual Ledger token-based color palette for category lines
 const tokenColors = [
@@ -393,11 +394,12 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         <div className="chart-subtitle">Monthly spending trends by category</div>
       </CardHeader>
       <CardContent>
-      <div className="chart-container" style={{ 
+      {/* <div className="chart-container" style={{ 
         height: '280px', 
         flexShrink: 0,
         marginBottom: 'var(--spacing-8xl)'
-      }}>
+      }}> */}
+      <ChartContainer /* config={chartConfig} */ className="h-80" style={{ marginBottom: 'var(--spacing-6xl)' }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart 
             data={getChartData()} 
@@ -625,53 +627,60 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         <div className="chart-controls" style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: 'var(--spacing-sm)',
+          gap: 12,
           marginTop: '-20px',
           padding: 'var(--spacing-sm)',
-          background: 'var(--surface)',
-          borderRadius: 'var(--border-radius-lg)',
-          border: '1px solid var(--border-color)',
-          maxWidth: '300px',
+          maxWidth: 'fit-content',
           margin: '0px auto var(--spacing-md)'
         }}>
           <button 
             className="control-button btn"
             onClick={() => setShowTotal(!showTotal)}
+            aria-pressed={showTotal}
             style={{
-              fontSize: 'var(--font-size-sm)',
-              padding: 'var(--spacing-xs) var(--spacing-md)',
-              borderRadius: 'var(--border-radius-md)',
-              border: '1px solid var(--border-color)',
-              background: showTotal ? 'var(--primary)' : 'transparent',
-              color: showTotal ? '#fff' : 'var(--ink)',
-              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'var(--bg)',
+              border: `1px solid ${showTotal ? 'var(--primary)' : 'var(--border-color)'}`,
+              padding: '6px 12px',
+              borderRadius: 9999,
+              fontSize: 12,
+              fontWeight: 700,
+              color: showTotal ? 'var(--ink)' : 'var(--muted)',
               cursor: 'pointer',
-              fontWeight: 600
+              transition: 'all 0.2s ease'
             }}
           >
-            {showTotal ? '✓ Total' : '◯ Total'}
+            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--danger)', display: 'inline-block' }} />
+            Total
           </button>
           <button 
             className="control-button btn"
             onClick={() => setShowAverages(!showAverages)}
+            aria-pressed={showAverages}
             style={{
-              fontSize: 'var(--font-size-sm)',
-              padding: 'var(--spacing-xs) var(--spacing-md)',
-              borderRadius: 'var(--border-radius-md)',
-              border: '1px solid var(--border-color)',
-              background: showAverages ? 'var(--primary)' : 'transparent',
-              color: showAverages ? '#fff' : 'var(--ink)',
-              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'var(--bg)',
+              border: `1px solid ${showAverages ? 'var(--primary)' : 'var(--border-color)'}`,
+              padding: '6px 12px',
+              borderRadius: 9999,
+              fontSize: 12,
+              fontWeight: 700,
+              color: showAverages ? 'var(--ink)' : 'var(--muted)',
               cursor: 'pointer',
-              fontWeight: 600
+              transition: 'all 0.2s ease'
             }}
           >
-            {showAverages ? '✓ Averages' : '◯ Averages'}
+            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--success)', display: 'inline-block' }} />
+            Averages
           </button>
         </div>
         
-
-      </div>
+      </ChartContainer>
+      {/* </div> */}
       
       <div className="stats-container" style={{
         flex: 1,

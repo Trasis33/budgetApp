@@ -11,6 +11,7 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
+  Legend,
   ReferenceLine
 } from "recharts";
 import formatCurrency from '../utils/formatCurrency';
@@ -319,6 +320,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
                 tickFormatter={(value) => `${value}%`}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend wrapperStyle={{ fontFamily: 'var(--font-primary)', fontSize: 12 }} />
               <Line 
                 type="monotone" 
                 dataKey="savingsRate" 
@@ -339,17 +341,6 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
             </LineChart>
           </ResponsiveContainer>
         </ChartContainer>
-        {/* Custom legend pills below chart */}
-        <div className="flex items-center justify-center" style={{ gap: 12, marginTop: 'var(--spacing-xl)', marginBottom: 'var(--spacing-6xl)' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: 9999, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--primary)', display: 'inline-block' }} />
-            Savings Rate
-          </div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: 9999, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--warn)', display: 'inline-block' }} />
-            Target 20%
-          </div>
-        </div>
 
         {/* Stats Grid following design iteration (clean card, pill labels) */}
         <div className="two-col-grid" style={{ marginBottom: 'var(--spacing-6xl)' }}>
