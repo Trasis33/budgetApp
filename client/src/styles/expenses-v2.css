@@ -11,6 +11,13 @@
   font-family: 'DM Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* Center this page within the app shell and allow a bit more width
+   without affecting other routes. The :has() selector scopes the
+   wider max-width to when this component is present. */
+.dashboard-content:has(.expenses-v2-container) {
+  max-width: 1200px; /* was 1040px globally */
+}
+
 /* Typography */
 .expenses-v2-container h1,
 .expenses-v2-container h2,
@@ -71,7 +78,8 @@
 
 @media (min-width: 1024px) {
   .expenses-v2-container .main-grid {
-    grid-template-columns: 1fr 360px;
+    /* Make the main (left) column a touch wider by slimming the rail */
+    grid-template-columns: minmax(0, 1fr) 320px;
   }
 }
 

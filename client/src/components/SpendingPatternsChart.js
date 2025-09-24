@@ -27,7 +27,6 @@ import {
   BarChart3
 } from 'lucide-react';
 import '../styles/design-system.css';
-import { ChartContainer } from './ui/chart';
 
 // Dual Ledger token-based color palette for category lines
 const tokenColors = [
@@ -47,7 +46,7 @@ const getCategoryIcon = (category) => {
     return { icon: Car, color: '#ef4444' };
   } else if (categoryLower.includes('utilit')) {
     return { icon: Zap, color: '#06b6d4' };
-  } else if (categoryLower.includes('healthcare') || categoryLower.includes('medical')) {
+  } else if (categoryLower.includes('health') || categoryLower.includes('medical')) {
     return { icon: Heart, color: '#f59e0b' };
   } else if (categoryLower.includes('cloth') || categoryLower.includes('kid')) {
     return { icon: Shirt, color: '#8b5cf6' };
@@ -115,22 +114,16 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           trend = ((lastAmount - firstAmount) / Math.abs(firstAmount)) * 100;
         }
 
-        // Calculate fallback enhanced trend (weighted recent months more heavily)
+        // Calculate enhanced trend (weighted recent months more heavily)
         let enhancedTrend = 0;
         if (sortedData.length >= 3) {
           const recentMonths = sortedData.slice(-3);
           const firstRecentAmount = recentMonths[0].amount;
           const lastRecentAmount = recentMonths[recentMonths.length - 1].amount;
+          
           if (firstRecentAmount !== 0) {
             enhancedTrend = ((lastRecentAmount - firstRecentAmount) / Math.abs(firstRecentAmount)) * 100;
           }
-        }
-
-        // Prefer backend enhanced metrics when available
-        const backendEnhanced = categoryObject?.enhancedTrend;
-        if (backendEnhanced && typeof backendEnhanced === 'object' && typeof backendEnhanced.percentageChange === 'number') {
-          trend = backendEnhanced.percentageChange;
-          enhancedTrend = backendEnhanced.percentageChange;
         }
 
         // Format the data for display
@@ -150,9 +143,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           data: formattedData,
           trend: parseFloat(trend.toFixed(1)),
           enhancedTrend: parseFloat(enhancedTrend.toFixed(1)),
-          enhanced: backendEnhanced || null,
-          lastAmount: lastAmount,
-          direction: typeof categoryObject?.trend === 'string' ? categoryObject.trend : null
+          lastAmount: lastAmount
         };
       });
 
@@ -245,16 +236,9 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   /**
    * Get trend indicator information based on trend value
    */
-  const getTrendIndicator = (trend = 0, enhancedTrend = 0, direction = null) => {
-    // Determine trend value percentage from enhanced object if present
-    let trendValue = 0;
-    if (enhancedTrend && typeof enhancedTrend === 'object' && typeof enhancedTrend.percentageChange === 'number') {
-      trendValue = enhancedTrend.percentageChange;
-    } else if (typeof enhancedTrend === 'number' && enhancedTrend !== 0) {
-      trendValue = enhancedTrend;
-    } else {
-      trendValue = typeof trend === 'number' ? trend : 0;
-    }
+  const getTrendIndicator = (trend = 0, enhancedTrend = 0) => {
+    // Use enhanced trend if available, otherwise fall back to regular trend
+    const trendValue = enhancedTrend !== 0 ? enhancedTrend : trend;
     
     if (trendValue > 15) {
       return { icon: TrendingUp, label: 'Sharp Increase', color: 'var(--danger)' };
@@ -272,23 +256,11 @@ const SpendingPatternsChart = ({ patterns = null }) => {
   /**
    * Get confidence level and insight text based on data quality
    */
-  const getConfidenceInfo = (categoryData = [], enhanced = null) => {
-    // Prefer backend-provided confidence when available
-    if (enhanced && typeof enhanced === 'object' && typeof enhanced.confidence === 'number') {
-      const level = Math.max(0, Math.min(100, enhanced.confidence));
-      let text = 'Limited data available';
-      if (level >= 80) text = 'Strong data foundation with recent activity';
-      else if (level >= 60) text = 'Moderate data with recent trends';
-      else if (level > 0) text = 'Limited data available';
-      else text = 'Not enough data to calculate trend';
-      return { level, text };
-    }
-
-    // Fallback heuristic if backend confidence is not available
+  const getConfidenceInfo = (categoryData = []) => {
     if (!categoryData || categoryData.length === 0) {
       return { level: 0, text: 'Not enough data to calculate trend' };
     }
-
+    
     const dataPoints = categoryData.length;
     const hasRecentData = categoryData.some(item => {
       const itemDate = new Date(item.date || item.month);
@@ -296,7 +268,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       return itemDate >= threeMonthsAgo;
     });
-
+    
     if (dataPoints >= 6 && hasRecentData) {
       return { level: 85, text: 'Strong data foundation with recent activity' };
     } else if (dataPoints >= 3 && hasRecentData) {
@@ -394,12 +366,11 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         <div className="chart-subtitle">Monthly spending trends by category</div>
       </CardHeader>
       <CardContent>
-      {/* <div className="chart-container" style={{ 
+      <div className="chart-container" style={{ 
         height: '280px', 
         flexShrink: 0,
         marginBottom: 'var(--spacing-8xl)'
-      }}> */}
-      <ChartContainer /* config={chartConfig} */ className="h-80" style={{ marginBottom: 'var(--spacing-6xl)' }}>
+      }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart 
             data={getChartData()} 
@@ -627,60 +598,53 @@ const SpendingPatternsChart = ({ patterns = null }) => {
         <div className="chart-controls" style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: 12,
+          gap: 'var(--spacing-sm)',
           marginTop: '-20px',
           padding: 'var(--spacing-sm)',
-          maxWidth: 'fit-content',
+          background: 'var(--surface)',
+          borderRadius: 'var(--border-radius-lg)',
+          border: '1px solid var(--border-color)',
+          maxWidth: '300px',
           margin: '0px auto var(--spacing-md)'
         }}>
           <button 
             className="control-button btn"
             onClick={() => setShowTotal(!showTotal)}
-            aria-pressed={showTotal}
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'var(--bg)',
-              border: `1px solid ${showTotal ? 'var(--primary)' : 'var(--border-color)'}`,
-              padding: '6px 12px',
-              borderRadius: 9999,
-              fontSize: 12,
-              fontWeight: 700,
-              color: showTotal ? 'var(--ink)' : 'var(--muted)',
+              fontSize: 'var(--font-size-sm)',
+              padding: 'var(--spacing-xs) var(--spacing-md)',
+              borderRadius: 'var(--border-radius-md)',
+              border: '1px solid var(--border-color)',
+              background: showTotal ? 'var(--primary)' : 'transparent',
+              color: showTotal ? '#fff' : 'var(--ink)',
+              transition: 'all 0.2s ease',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              fontWeight: 600
             }}
           >
-            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--danger)', display: 'inline-block' }} />
-            Total
+            {showTotal ? '✓ Total' : '◯ Total'}
           </button>
           <button 
             className="control-button btn"
             onClick={() => setShowAverages(!showAverages)}
-            aria-pressed={showAverages}
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'var(--bg)',
-              border: `1px solid ${showAverages ? 'var(--primary)' : 'var(--border-color)'}`,
-              padding: '6px 12px',
-              borderRadius: 9999,
-              fontSize: 12,
-              fontWeight: 700,
-              color: showAverages ? 'var(--ink)' : 'var(--muted)',
+              fontSize: 'var(--font-size-sm)',
+              padding: 'var(--spacing-xs) var(--spacing-md)',
+              borderRadius: 'var(--border-radius-md)',
+              border: '1px solid var(--border-color)',
+              background: showAverages ? 'var(--primary)' : 'transparent',
+              color: showAverages ? '#fff' : 'var(--ink)',
+              transition: 'all 0.2s ease',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              fontWeight: 600
             }}
           >
-            <span style={{ width: 10, height: 10, borderRadius: 9999, background: 'var(--success)', display: 'inline-block' }} />
-            Averages
+            {showAverages ? '✓ Averages' : '◯ Averages'}
           </button>
         </div>
         
-      </ChartContainer>
-      {/* </div> */}
+
+      </div>
       
       <div className="stats-container" style={{
         flex: 1,
@@ -696,21 +660,15 @@ const SpendingPatternsChart = ({ patterns = null }) => {
           padding: 'var(--spacing-lg)'
         }}>
         {Object.entries(processedPatterns || {}).slice(0, 6).map(([category, pattern]) => {
-          const trendInfo = getTrendIndicator(
-            pattern?.trend,
-            (pattern?.enhanced || pattern?.enhancedTrend),
-            pattern?.direction
-          );
+          const trendInfo = getTrendIndicator(pattern?.trend, pattern?.enhancedTrend);
           const categoryIcon = getCategoryIcon(category);
           const categoryData = pattern?.data || [];
           
           // Calculate metrics for the new design
-          const { level: confidenceLevel, text: confidenceText } = getConfidenceInfo(categoryData, pattern?.enhanced);
+          const { level: confidenceLevel, text: confidenceText } = getConfidenceInfo(categoryData);
           
           // Calculate strength as percentage change magnitude
-          const strengthValue = typeof pattern?.enhanced?.normalizedStrength === 'number'
-            ? pattern.enhanced.normalizedStrength
-            : Math.abs(pattern?.enhancedTrend || pattern?.trend || 0);
+          const strengthValue = Math.abs(pattern?.enhancedTrend || pattern?.trend || 0);
           
           return (
             <Card key={category} className="stat-card" style={{
@@ -818,11 +776,7 @@ const SpendingPatternsChart = ({ patterns = null }) => {
                     fontWeight: 700,
                     color: 'var(--ink)'
                   }}>
-                    {(
-                      typeof pattern?.enhanced?.percentageChange === 'number'
-                        ? pattern.enhanced.percentageChange
-                        : (pattern?.enhancedTrend || pattern?.trend || 0)
-                    ).toFixed(1)}%
+                    {(pattern?.enhancedTrend || pattern?.trend || 0).toFixed(1)}%
                   </div>
                 </div>
               </div>
