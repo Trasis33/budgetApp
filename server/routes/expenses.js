@@ -81,6 +81,11 @@ router.get('/:id', auth, async (req, res) => {
 // @desc    Create a new expense
 // @access  Private
 router.post('/', auth, async (req, res) => {
+  // TODO(modal-expense-create): Client optimistic creation will insert a temporary expense
+  // with a generated tempId. This endpoint's response (canonical expense record with DB id
+  // and joined category/user names) is used to reconcile & replace the temp client entry.
+  // If additional normalization fields are ever added, update contract tests (T006) and
+  // optimistic reconciliation logic accordingly.
   const {
     date,
     amount,

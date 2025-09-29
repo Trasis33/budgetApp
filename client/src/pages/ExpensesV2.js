@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ENABLE_EXPENSE_MODAL } from '../config/featureFlags';
+import ExpenseCreateModal from '../components/expenses/ExpenseCreateModal';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import { Select, Accordion, AccordionPanel, AccordionTitle, AccordionContent } from 'flowbite-react';
@@ -14,6 +16,7 @@ const ExpensesV2 = () => {
   const [recurringTemplates, setRecurringTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const today = new Date();
   const [filters, setFilters] = useState({ month: '', year: String(today.getFullYear()), category: '' });
@@ -121,10 +124,23 @@ const ExpensesV2 = () => {
           </div>
           <div role="toolbar" aria-label="Top actions" className="flex items-center gap-2">
             <button onClick={exportCsv} className="btn btn-secondary">Export CSV</button>
-            <Link to="/expenses/add" className="btn btn-primary">Add Expense</Link>
+            {ENABLE_EXPENSE_MODAL ? (
+              <button onClick={()=>setShowCreate(true)} className="btn btn-primary" data-testid="add-expense-modal-trigger">Add Expense</button>
+            ) : (
+              <Link to="/expenses/add" className="btn btn-primary" data-testid="add-expense-legacy-link">Add Expense</Link>
+            )}
           </div>
         </div>
       </header>
+      {ENABLE_EXPENSE_MODAL && (
+        <ExpenseCreateModal
+          isOpen={showCreate}
+          onClose={()=>setShowCreate(false)}
+          expenses={expenses}
+          setExpenses={setExpenses}
+          categories={categories}
+        />
+      )}
 
       <main className="main-grid container-max-width">
         <section className="space-y-4">
