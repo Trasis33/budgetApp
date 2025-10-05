@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * @deprecated This page has been replaced with AddExpenseModal.js
+ * All add/edit expense functionality now uses a modal triggered from various parts of the app.
+ * This file is kept for reference only and should be removed in a future cleanup.
+ * See: /client/src/components/AddExpenseModal.js
+ *      /client/src/context/ExpenseModalContext.js
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import formatCurrency from '../utils/formatCurrency';
 
 const AddExpense = () => {
   const { user } = useAuth();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditMode = !!id;
+  
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     amount: '',
@@ -15,10 +27,6 @@ const AddExpense = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
   const fetchCategories = async () => {
     try {
       const response = await axios.get('/categories');
@@ -27,6 +35,32 @@ const AddExpense = () => {
       console.error('Error fetching categories:', err);
     }
   };
+
+  const fetchExpense = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/expenses/${id}`);
+      const expense = response.data;
+      setFormData({
+        amount: expense.amount.toString(),
+        description: expense.description || '',
+        category_id: expense.category_id.toString(),
+        date: new Date(expense.date).toISOString().split('T')[0]
+      });
+    } catch (err) {
+      console.error('Error fetching expense:', err);
+      setMessage('Failed to load expense');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchCategories();
+    if (isEditMode) {
+      fetchExpense();
+    }
+  }, [isEditMode, fetchExpense]);
 
   const handleChange = (e) => {
     setFormData({
@@ -40,21 +74,32 @@ const AddExpense = () => {
     
     try {
       setLoading(true);
-      await axios.post('/expenses', {
-        ...formData,
-        amount: parseFloat(formData.amount)
-      });
       
-      setMessage('Expense added successfully!');
-      setFormData({
-        amount: '',
-        description: '',
-        category_id: '',
-        date: new Date().toISOString().split('T')[0]
-      });
+      if (isEditMode) {
+        await axios.put(`/expenses/${id}`, {
+          ...formData,
+          amount: parseFloat(formData.amount),
+          paid_by_user_id: user?.id || 1
+        });
+        setMessage('Expense updated successfully!');
+        setTimeout(() => navigate('/expenses'), 1500);
+      } else {
+        await axios.post('/expenses', {
+          ...formData,
+          amount: parseFloat(formData.amount),
+          paid_by_user_id: user?.id || 1
+        });
+        setMessage('Expense added successfully!');
+        setFormData({
+          amount: '',
+          description: '',
+          category_id: '',
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
     } catch (err) {
-      console.error('Error adding expense:', err);
-      setMessage('Failed to add expense');
+      console.error(`Error ${isEditMode ? 'updating' : 'adding'} expense:`, err);
+      setMessage(`Failed to ${isEditMode ? 'update' : 'add'} expense`);
     } finally {
       setLoading(false);
     }
@@ -62,7 +107,7 @@ const AddExpense = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Add New Expense</h1>
+      <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? 'Edit Expense' : 'Add New Expense'}</h1>
       
       <div className="bg-white rounded-lg shadow p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -140,7 +185,7 @@ const AddExpense = () => {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? 'Adding...' : 'Add Expense'}
+            {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Expense' : 'Add Expense')}
           </button>
 
           {message && (

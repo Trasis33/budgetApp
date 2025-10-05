@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { MonthYearNavigator } from '../components/ui/month-year-navigator';
+import { useExpenseModal } from '../context/ExpenseModalContext';
 
 /**
  * Expenses page — rewritten for clarity and accessibility.
@@ -22,6 +22,7 @@ const Expenses = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showRecurring, setShowRecurring] = useState(true);
+  const { openAddModal, openEditModal } = useExpenseModal();
 
   const today = new Date();
   const [filters, setFilters] = useState({
@@ -90,6 +91,19 @@ const Expenses = () => {
     }
   };
 
+  const handleExpenseSuccess = (savedExpense) => {
+    // Refresh expenses list after add/edit
+    const fetchExpenses = async () => {
+      try {
+        const expRes = await axios.get('/expenses');
+        setExpenses(Array.isArray(expRes.data) ? expRes.data : []);
+      } catch (err) {
+        console.error('Failed to refresh expenses', err);
+      }
+    };
+    fetchExpenses();
+  };
+
   const exportCsv = () => {
     const headers = ['date', 'description', 'category', 'amount'];
     const rows = filteredExpenses.map((r) => [
@@ -134,7 +148,7 @@ const Expenses = () => {
         <h2 className="dashboard-title">Expenses</h2>
         <div className="dashboard-header-right">
           <div className="dashboard-actions" role="toolbar" aria-label="Expenses actions">
-            <Link to="/expenses/add" className="btn btn-primary">Add Expense</Link>
+            <button type="button" className="btn btn-primary" onClick={() => openAddModal(handleExpenseSuccess)}>Add Expense</button>
             <button type="button" className="btn btn-secondary" onClick={exportCsv} aria-label="Export filtered expenses">Export CSV</button>
           </div>
         </div>
@@ -261,7 +275,7 @@ const Expenses = () => {
                       <td className="table-cell">{e.category_name || categories.find((c) => c.id === e.category_id)?.name || '—'}</td>
                       <td className="table-cell table-cell-primary">{formatCurrency(e.amount)}</td>
                       <td className="table-cell">
-                        <Link to={`/expenses/edit/${e.id}`} className="btn btn-ghost" style={{ marginRight: 'var(--spacing-sm)' }}>Edit</Link>
+                        <button type="button" className="btn btn-ghost" style={{ marginRight: 'var(--spacing-sm)' }} onClick={() => openEditModal(e, handleExpenseSuccess)}>Edit</button>
                         <button type="button" className="btn btn-secondary" onClick={() => handleDelete(e.id)}>Delete</button>
                       </td>
                     </tr>
