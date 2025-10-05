@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ENABLE_EXPENSE_MODAL } from '../config/featureFlags';
-import ExpenseCreateModal from '../components/expenses/ExpenseCreateModal';
+import { useExpenseModal } from '../context/ExpenseModalContext';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import { Select, Accordion, AccordionPanel, AccordionTitle, AccordionContent } from 'flowbite-react';
@@ -16,7 +14,7 @@ const ExpensesV2 = () => {
   const [recurringTemplates, setRecurringTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const { openAddModal, openEditModal } = useExpenseModal();
 
   const today = new Date();
   const [filters, setFilters] = useState({ month: '', year: String(today.getFullYear()), category: '' });
@@ -80,6 +78,19 @@ const ExpensesV2 = () => {
     }
   };
 
+  const handleExpenseSuccess = (savedExpense) => {
+    // Refresh expenses list after add/edit
+    const fetchExpenses = async () => {
+      try {
+        const expRes = await axios.get('/expenses');
+        setExpenses(Array.isArray(expRes.data) ? expRes.data : []);
+      } catch (err) {
+        console.error('Failed to refresh expenses', err);
+      }
+    };
+    fetchExpenses();
+  };
+
   const exportCsv = () => {
     const headers = ['date', 'description', 'category', 'amount'];
     const rows = filteredExpenses.map((r) => [
@@ -124,23 +135,10 @@ const ExpensesV2 = () => {
           </div>
           <div role="toolbar" aria-label="Top actions" className="flex items-center gap-2">
             <button onClick={exportCsv} className="btn btn-secondary">Export CSV</button>
-            {ENABLE_EXPENSE_MODAL ? (
-              <button onClick={()=>setShowCreate(true)} className="btn btn-primary" data-testid="add-expense-modal-trigger">Add Expense</button>
-            ) : (
-              <Link to="/expenses/add" className="btn btn-primary" data-testid="add-expense-legacy-link">Add Expense</Link>
-            )}
+            <button onClick={() => openAddModal(handleExpenseSuccess)} className="btn btn-primary" data-testid="add-expense-modal-trigger">Add Expense</button>
           </div>
         </div>
       </header>
-      {ENABLE_EXPENSE_MODAL && (
-        <ExpenseCreateModal
-          isOpen={showCreate}
-          onClose={()=>setShowCreate(false)}
-          expenses={expenses}
-          setExpenses={setExpenses}
-          categories={categories}
-        />
-      )}
 
       <main className="main-grid container-max-width">
         <section className="space-y-4">
@@ -265,7 +263,7 @@ const ExpensesV2 = () => {
                         <td className="px-4 py-2 font-semibold">{formatCurrency(e.amount)}</td>
                         <td className="px-4 py-2">
                           <div className="flex items-center gap-2">
-                            <Link to={`/expenses/edit/${e.id}`} className="btn btn-secondary btn-xs">Edit</Link>
+                            <button onClick={() => openEditModal(e, handleExpenseSuccess)} className="btn btn-secondary btn-xs">Edit</button>
                             <button onClick={() => handleDelete(e.id)} className="btn btn-secondary btn-xs">Delete</button>
                           </div>
                         </td>
