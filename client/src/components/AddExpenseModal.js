@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import { useAuth } from '../context/AuthContext';
-import '../styles/design-system.css';
 
 const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
   const { user } = useAuth();

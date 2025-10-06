@@ -17,7 +17,6 @@ import {
 import formatCurrency from '../utils/formatCurrency';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
-import '../styles/design-system.css';
 import AddContributionModal from './AddContributionModal';
 
 const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {

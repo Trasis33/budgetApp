@@ -1,6 +1,5 @@
 import * as React from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import '../../styles/design-system.css'
 
 const CategorySpendingChart = ({ chartData, formatCurrency, budgets = {}, categories = [] }) => {
   // Transform Chart.js data format to Recharts format with filtering

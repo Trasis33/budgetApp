@@ -26,7 +26,6 @@ import {
   Minus,
   BarChart3
 } from 'lucide-react';
-import '../styles/design-system.css';
 
 // Dual Ledger token-based color palette for category lines
 const tokenColors = [

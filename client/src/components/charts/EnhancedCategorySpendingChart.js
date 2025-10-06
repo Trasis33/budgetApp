@@ -1,6 +1,5 @@
 import * as React from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
-import '../../styles/design-system.css'
 import { buildDistributionData, computeYDomain, currencyTickFormatter, distributionPalette, commonMargins } from "./chartUtils"
 
 /**

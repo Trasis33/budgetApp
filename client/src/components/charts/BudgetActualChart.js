@@ -1,6 +1,5 @@
 import * as React from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
-import '../../styles/design-system.css'
 import { buildBudgetActualData, computeYDomain, currencyTickFormatter, commonMargins } from "./chartUtils"
 
 const BudgetActualChart = ({ chartData, formatCurrency }) => {
