@@ -44,6 +44,9 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
             {formatTrend(analytics?.summary?.trendPercentage || 0)} vs last year
           </span>
         </div>
+        <div className="stat-title">
+          {analytics?.summary?.monthCount || 0} months tracked
+        </div>
       </Card>
 
       <Card className="stat-card">
@@ -57,22 +60,7 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
           {formatCurrency(analytics?.summary?.avgMonthlySpending || 0)}
         </div>
         <div className="stat-change">
-          Across {analytics?.summary?.monthCount || 0} months
-        </div>
-      </Card>
-
-      <Card className="stat-card">
-        <div className="stat-header">
-          <span className="stat-title">Months Tracked</span>
-          <div className="stat-icon">
-            <Clock className="h-4 w-4" />
-          </div>
-        </div>
-        <div className="stat-value">
-          {analytics?.summary?.monthCount || 0}
-        </div>
-        <div className="stat-change">
-          Complete data coverage
+          Based on tracked data
         </div>
       </Card>
 
@@ -80,15 +68,15 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
         <div className="stat-header">
           <span className="stat-title">Who Owes Who</span>
           <div className="stat-icon">
-            {analytics?.settlement?.settlement?.amount === '0.00' ? 
-              <Users className="h-4 w-4" /> : 
+            {analytics?.settlement?.settlement?.amount === '0.00' ?
+              <Users className="h-4 w-4" /> :
               <ArrowRightLeft className="h-4 w-4" />
             }
           </div>
         </div>
         <div className="stat-value">
-          {analytics?.settlement?.settlement?.amount === '0.00' ? 
-            'All settled!' : 
+          {analytics?.settlement?.settlement?.amount === '0.00' ?
+            'All settled!' :
             formatCurrency(analytics?.settlement?.settlement?.amount || 0)
           }
         </div>

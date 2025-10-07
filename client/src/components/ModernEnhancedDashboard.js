@@ -64,7 +64,7 @@ const ModernEnhancedDashboard = () => {
           ...analyticsRes.data,
           settlement: settlementRes.data
         },
-        patterns: patternsRes.data,
+        patterns: patternsRes.data || { patterns: {} },
         optimization: optimizationRes.data
       });
       
@@ -190,7 +190,7 @@ const ModernEnhancedDashboard = () => {
         <div className="analytics-grid">
           <div ref={patternsRef}>
             {patternsVisible ? (
-              <SpendingPatternsChart patterns={dashboardData.patterns.patterns || {}} />
+              <SpendingPatternsChart patterns={dashboardData?.patterns?.patterns || {}} />
             ) : (
               <SkeletonChart />
             )}
