@@ -977,7 +977,7 @@
     margin-bottom: var(--spacing-3xl);
   }
   
-  .dashboard-header-right {
+  .dashboard-header-left {
     display: flex;
     flex-direction: column;
     align-items: flex-end;

@@ -529,9 +529,9 @@ const Budget = () => {
   return (
     <div className="dashboard-content">
       {/* Page Header */}
-      <div className="dashboard-header">
-        <h2 className="dashboard-title">Financial Management</h2>
-        <div className="dashboard-header-right">
+      {/*<div className="dashboard-header">
+         <h2 className="dashboard-title">Financial Management</h2>
+         <div className="dashboard-header-right">
           <div className="dashboard-actions">
             <MonthYearNavigator
               month={month}
@@ -541,8 +541,8 @@ const Budget = () => {
               className="w-auto"
             />
           </div>
-        </div>
-      </div>
+        </div> 
+      </div>*/}
 
       {/* Error card */}
       {error && (
@@ -558,6 +558,7 @@ const Budget = () => {
       )}
 
       {/* Tabs card */}
+      <div className="dashboard-header">
         <Tabs value={activeSection} onValueChange={setActiveSection}>
           <TabsList className="tabs-list-enhanced">
             {sections.map((section) => (
@@ -568,7 +569,18 @@ const Budget = () => {
             ))}
           </TabsList>
         </Tabs>
-
+        <div className="dashboard-header-left">
+          <div className="dashboard-actions">
+            <MonthYearNavigator
+              month={month}
+              year={year}
+              onMonthChange={setMonth}
+              onYearChange={setYear}
+              className="w-auto"
+            />
+          </div>
+        </div>
+        </div>
       {renderContent()}
     </div>
   );

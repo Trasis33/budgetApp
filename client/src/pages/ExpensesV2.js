@@ -127,7 +127,7 @@ const ExpensesV2 = () => {
 
   return (
     <div className="expenses-v2-container">
-      <header className="page-header">
+{/*       <header className="page-header">
         <div className="container-max-width flex items-center justify-between">
           <div>
             <h1>Expenses</h1>
@@ -138,7 +138,7 @@ const ExpensesV2 = () => {
             <button onClick={() => openAddModal(handleExpenseSuccess)} className="btn btn-primary" data-testid="add-expense-modal-trigger">Add Expense</button>
           </div>
         </div>
-      </header>
+      </header> */}
 
       <main className="main-grid container-max-width">
         <section className="space-y-4">

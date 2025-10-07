@@ -98,14 +98,14 @@ const ModernEnhancedDashboard = () => {
   return (
     <div className="dashboard-content">
       {/* Dashboard Header */}
-      <div className="dashboard-header">
+{/*       <div className="dashboard-header">
         <h2 className="dashboard-title">Enhanced Dashboard</h2>
         <div className="dashboard-header-right">
           <p className="dashboard-subtitle">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Quick Stats Grid */}
       <div className="stats-grid">
