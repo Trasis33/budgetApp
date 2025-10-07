@@ -127,19 +127,6 @@ const ExpensesV2 = () => {
 
   return (
     <div className="expenses-v2-container">
-{/*       <header className="page-header">
-        <div className="container-max-width flex items-center justify-between">
-          <div>
-            <h1>Expenses</h1>
-            <p className="header-subtitle">Hybrid B · Table-first with collapsible Category Boards</p>
-          </div>
-          <div role="toolbar" aria-label="Top actions" className="flex items-center gap-2">
-            <button onClick={exportCsv} className="btn btn-secondary">Export CSV</button>
-            <button onClick={() => openAddModal(handleExpenseSuccess)} className="btn btn-primary" data-testid="add-expense-modal-trigger">Add Expense</button>
-          </div>
-        </div>
-      </header> */}
-
       <main className="main-grid container-max-width">
         <section className="space-y-4">
           {/* Filters toolbar */}

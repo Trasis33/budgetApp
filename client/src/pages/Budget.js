@@ -528,22 +528,6 @@ const Budget = () => {
 
   return (
     <div className="dashboard-content">
-      {/* Page Header */}
-      {/*<div className="dashboard-header">
-         <h2 className="dashboard-title">Financial Management</h2>
-         <div className="dashboard-header-right">
-          <div className="dashboard-actions">
-            <MonthYearNavigator
-              month={month}
-              year={year}
-              onMonthChange={setMonth}
-              onYearChange={setYear}
-              className="w-auto"
-            />
-          </div>
-        </div> 
-      </div>*/}
-
       {/* Error card */}
       {error && (
         <div className="glass-card error-card">
@@ -580,7 +564,7 @@ const Budget = () => {
             />
           </div>
         </div>
-        </div>
+      </div>
       {renderContent()}
     </div>
   );
