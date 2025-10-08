@@ -1,0 +1,67 @@
+tasks:
+  - id: scope-task-001
+    description: Add users.partner_id migration and reciprocal linking validation helper on server startup
+    task_dependencies: []
+    priority: high
+    risk_score: 12
+    status: complete
+    owner: copilot
+    time_estimate: 2h
+    validation_criteria:
+      test_types: [migration]
+      expected_outcomes: ["Knex migration executes up and down without data loss", "Seeded demo users remain accessible"]
+  - id: scope-task-002
+    description: Implement couple linking and summary endpoints with scope-aware expense querying
+    task_dependencies: [scope-task-001]
+    priority: high
+    risk_score: 15
+    status: complete
+    owner: copilot
+    time_estimate: 4h
+    validation_criteria:
+      test_types: [api]
+      expected_outcomes: ["POST /api/couple/link links users bi-directionally", "GET /api/couple/summary returns shared/mine/partner totals"]
+  - id: scope-task-003
+    description: Create ScopeContext with persistence and loading state management
+    task_dependencies: [scope-task-002]
+    priority: high
+    risk_score: 10
+    status: complete
+    owner: copilot
+    time_estimate: 2h
+    validation_criteria:
+      test_types: [unit]
+      expected_outcomes: ["Context defaults to shared scope", "Setter notifies subscribers"]
+  - id: scope-task-004
+    description: Refactor Navbar scope selector to use ScopeContext with disabled Partner handling and ARIA compliance
+    task_dependencies: [scope-task-003]
+    priority: medium
+    risk_score: 8
+    status: complete
+    owner: copilot
+    time_estimate: 1.5h
+    validation_criteria:
+      test_types: [ui]
+      expected_outcomes: ["Keyboard navigation cycles correctly", "Partner option disabled without link"]
+  - id: scope-task-005
+    description: Update expense-related components to respect active scope and display aggregated totals
+    task_dependencies: [scope-task-004]
+    priority: high
+    risk_score: 14
+    status: complete
+    owner: copilot
+    time_estimate: 4h
+    validation_criteria:
+      test_types: [integration]
+      expected_outcomes: ["ExpensesV2 filters rows by scope", "Summary KPIs update when scope changes"]
+  - id: scope-task-006
+    description: Add regression coverage, manual test plan, and documentation updates for scope selector rollout
+    task_dependencies: [scope-task-005]
+    priority: medium
+    risk_score: 6
+    status: complete
+    owner: copilot
+    time_estimate: 1.5h
+    validation_criteria:
+      test_types: [manual,docs]
+      expected_outcomes: ["Manual checklist executed", "README or docs updated with scope instructions"]

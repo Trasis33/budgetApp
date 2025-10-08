@@ -4,6 +4,7 @@ import ModernLayout from './components/layout/ModernLayout';
 import { ExpenseModalProvider } from './context/ExpenseModalContext';
 import AddExpenseModal from './components/AddExpenseModal';
 import { useExpenseModal } from './context/ExpenseModalContext';
+import { ScopeProvider } from './context/ScopeContext';
 
 // Route-level code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -47,27 +48,29 @@ function App() {
   return (
     <Router>
       <ExpenseModalProvider>
-        <Suspense fallback={<div className="p-4">Loading…</div>}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            
-            <Route path="/" element={
-              <ProtectedRoute>
-                <ModernLayout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Dashboard />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="expenses" element={<Expenses />} />
-              <Route path="budget" element={<Budget />} />
-              <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <GlobalExpenseModal />
-        </Suspense>
+        <ScopeProvider>
+          <Suspense fallback={<div className="p-4">Loading…</div>}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <ModernLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="expenses" element={<Expenses />} />
+                <Route path="budget" element={<Budget />} />
+                <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <GlobalExpenseModal />
+          </Suspense>
+        </ScopeProvider>
       </ExpenseModalProvider>
     </Router>
   );

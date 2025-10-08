@@ -7,14 +7,22 @@ import formatCurrency from '../utils/formatCurrency';
 import { Select, Accordion, AccordionPanel, AccordionTitle, AccordionContent } from 'flowbite-react';
 import CategoryBoard from '../components/ui/CategoryBoard';
 import '../styles/expenses-v2.css';
+import useScopedExpenses from '../hooks/useScopedExpenses';
+import { useScope } from '../context/ScopeContext';
 
 const ExpensesV2 = () => {
-  const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [recurringTemplates, setRecurringTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { openAddModal, openEditModal } = useExpenseModal();
+  const [metaLoading, setMetaLoading] = useState(true);
+  const [metaError, setMetaError] = useState(null);
+  const { scope, totals, isPartnerConnected } = useScope();
+  const {
+    expenses,
+    loading: expensesLoading,
+    error: expensesError,
+    refresh: refreshExpenses,
+  } = useScopedExpenses();
+  const { openEditModal } = useExpenseModal();
 
   const today = new Date();
   const [filters, setFilters] = useState({ month: '', year: String(today.getFullYear()), category: '' });
@@ -22,24 +30,22 @@ const ExpensesV2 = () => {
   useEffect(() => {
     let mounted = true;
     const fetchAll = async () => {
-      setLoading(true);
-      setError(null);
+      setMetaLoading(true);
+      setMetaError(null);
       try {
-        const [expRes, catRes, recRes] = await Promise.all([
-          axios.get('/expenses'),
+        const [catRes, recRes] = await Promise.all([
           axios.get('/categories'),
           axios.get('/recurring-expenses'),
         ]);
         if (!mounted) return;
-        setExpenses(Array.isArray(expRes.data) ? expRes.data : []);
         setCategories(Array.isArray(catRes.data) ? catRes.data : []);
         setRecurringTemplates(Array.isArray(recRes.data) ? recRes.data : []);
       } catch (err) {
         console.error(err);
         if (!mounted) return;
-        setError('Unable to load expenses.');
+        setMetaError('Unable to load expense metadata.');
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setMetaLoading(false);
       }
     };
     fetchAll();
@@ -71,42 +77,17 @@ const ExpensesV2 = () => {
     if (!window.confirm('Delete this expense?')) return;
     try {
       await axios.delete(`/expenses/${id}`);
-      setExpenses((prev) => prev.filter((p) => p.id !== id));
+      refreshExpenses();
     } catch (err) {
       console.error(err);
-      setError('Failed to delete expense.');
+      setMetaError('Failed to delete expense.');
     }
   };
 
   const handleExpenseSuccess = (savedExpense) => {
-    // Refresh expenses list after add/edit
-    const fetchExpenses = async () => {
-      try {
-        const expRes = await axios.get('/expenses');
-        setExpenses(Array.isArray(expRes.data) ? expRes.data : []);
-      } catch (err) {
-        console.error('Failed to refresh expenses', err);
-      }
-    };
-    fetchExpenses();
-  };
-
-  const exportCsv = () => {
-    const headers = ['date', 'description', 'category', 'amount'];
-    const rows = filteredExpenses.map((r) => [
-      new Date(r.date).toISOString().slice(0, 10),
-      (r.description || '').replace(/\n/g, ' '),
-      r.category_name || (categories.find((c) => c.id === r.category_id)?.name || ''),
-      String(r.amount || ''),
-    ]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expenses-${filters.year || 'all'}-${filters.month || 'all'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (savedExpense) {
+      refreshExpenses();
+    }
   };
 
   const handleGenerateRecurring = async () => {
@@ -114,13 +95,34 @@ const ExpensesV2 = () => {
     const month = (filters.month ? String(parseInt(filters.month, 10)) : String(today.getMonth() + 1));
     try {
       await axios.get(`/summary/monthly/${year}/${month}`);
-      const expRes = await axios.get('/expenses');
-      setExpenses(Array.isArray(expRes.data) ? expRes.data : []);
+      refreshExpenses();
     } catch (err) {
       console.error(err);
-      setError('Could not generate recurring bills right now.');
+      setMetaError('Could not generate recurring bills right now.');
     }
   };
+
+  const loading = metaLoading || expensesLoading;
+  const error = expensesError || metaError;
+
+  const scopeLabel = useMemo(() => {
+    if (scope === 'mine') return 'My expenses';
+    if (scope === 'partner') {
+      return isPartnerConnected ? "Partner's expenses" : 'Partner scope unavailable';
+    }
+    return 'Shared expenses';
+  }, [isPartnerConnected, scope]);
+
+  const scopedTotal = useMemo(() => {
+    switch (scope) {
+      case 'mine':
+        return totals?.mine || 0;
+      case 'partner':
+        return totals?.partner || 0;
+      default:
+        return totals?.ours || 0;
+    }
+  }, [scope, totals]);
 
   if (loading) return <div className="p-4">Loading expenses…</div>;
   if (error) return <div className="p-4 text-danger">{error}</div>;
@@ -165,8 +167,9 @@ const ExpensesV2 = () => {
           {/* Summary KPI cards */}
           <div className="kpi-grid">
             <div className="card kpi-card">
-              <div className="kpi-label">Total (Aug 2025)</div>
-              <div className="kpi-value">{formatCurrency(filteredExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0))}</div>
+              <div className="kpi-label">{scopeLabel}</div>
+              <div className="kpi-value">{formatCurrency(scopedTotal)}</div>
+              <div className="kpi-subtext text-xs text-neutral-500">Server totals for active scope</div>
             </div>
             <div className="card kpi-card">
               <div className="kpi-label">Recurring</div>

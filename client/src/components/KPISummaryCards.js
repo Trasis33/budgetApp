@@ -12,7 +12,7 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 
-const KPISummaryCards = ({ analytics, formatCurrency }) => {
+const KPISummaryCards = ({ analytics, formatCurrency, scopeMeta }) => {
   const getTrendIcon = (trend) => {
     switch(trend) {
       case 'up': return <TrendingUp className="w-4 h-4 kpi-up" />;
@@ -26,18 +26,27 @@ const KPISummaryCards = ({ analytics, formatCurrency }) => {
     return `${percentage}%`;
   };
 
+  const activeScopeAmount = scopeMeta?.amount ?? analytics?.summary?.totalSpending ?? 0;
+  const activeScopeLabel = scopeMeta?.label || 'Total Spending';
+  const scopeDisabledHelper = scopeMeta?.key === 'partner' && scopeMeta?.disabled;
+
   return (
     <div className="stats-grid">
       <Card className="stat-card">
         <div className="stat-header">
-          <span className="stat-title">Total Spending</span>
+          <span className="stat-title">{activeScopeLabel}</span>
           <div className="stat-icon">
             <DollarSign className="h-4 w-4" />
           </div>
         </div>
         <div className="stat-value">
-          {formatCurrency(analytics?.summary?.totalSpending || 0)}
+          {formatCurrency(activeScopeAmount)}
         </div>
+        {scopeDisabledHelper && (
+          <div className="stat-change neutral text-xs text-neutral-500">
+            Link a partner account in Settings to unlock partner totals
+          </div>
+        )}
         <div className={`stat-change ${analytics?.summary?.trendDirection || 'neutral'}`}>
           {getTrendIcon(analytics?.summary?.trendDirection)}
           <span style={{ marginLeft: 'var(--spacing-xs)' }}>
@@ -108,7 +117,13 @@ KPISummaryCards.propTypes = {
       monthYear: PropTypes.string
     })
   }),
-  formatCurrency: PropTypes.func.isRequired
+  formatCurrency: PropTypes.func.isRequired,
+  scopeMeta: PropTypes.shape({
+    key: PropTypes.string,
+    label: PropTypes.string,
+    amount: PropTypes.number,
+    disabled: PropTypes.bool
+  })
 };
 
 export default KPISummaryCards;

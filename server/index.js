@@ -10,6 +10,7 @@ const recurringExpenseRoutes = require('./routes/recurringExpenses');
 const incomeRoutes = require('./routes/incomes');
 const userRoutes = require('./routes/users');
 const budgetRoutes = require('./routes/budgets');
+const coupleRoutes = require('./routes/couple');
 const { setupDatabase } = require('./db/setup');
 
 const app = express();
@@ -36,6 +37,7 @@ const startServer = async () => {
     app.use('/api/incomes', auth, incomeRoutes);
     app.use('/api/users', auth, userRoutes);
     app.use('/api/budgets', auth, budgetRoutes);
+    app.use('/api/couple', auth, coupleRoutes);
     app.use('/api/analytics', auth, require('./routes/analytics'));
     app.use('/api/savings', auth, require('./routes/savings'));
     app.use('/api/optimization', auth, require('./routes/optimization'));

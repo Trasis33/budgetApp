@@ -17,6 +17,24 @@ const setupDatabase = async () => {
       });
     }
 
+    // Ensure partner_id column exists for couple linkage
+    const hasPartnerColumnAtStartup = await db.schema.hasColumn('users', 'partner_id');
+    if (!hasPartnerColumnAtStartup) {
+      console.log('Adding partner_id column to users table...');
+      await db.schema.alterTable('users', (table) => {
+        table
+          .integer('partner_id')
+          .unsigned()
+          .nullable()
+          .references('id')
+          .inTable('users')
+          .onDelete('SET NULL');
+      });
+      await db.schema.alterTable('users', (table) => {
+        table.unique(['partner_id']);
+      });
+    }
+
     // Create categories table if it doesn't exist
     if (!(await db.schema.hasTable('categories'))) {
       console.log('Creating categories table...');
@@ -135,6 +153,22 @@ const setupDatabase = async () => {
           password: hashedPassword_2
         });
         console.log('Demo user 2 created successfully');
+      }
+
+      // Ensure demo users are linked as partners when the schema supports it
+      const hasPartnerColumn = await db.schema.hasColumn('users', 'partner_id');
+      if (hasPartnerColumn) {
+        const demoOne = await db('users').where('email', 'user1@example.com').first();
+        const demoTwo = await db('users').where('email', 'user2@example.com').first();
+
+        if (demoOne && demoTwo) {
+          if (demoOne.partner_id !== demoTwo.id) {
+            await db('users').where('id', demoOne.id).update({ partner_id: demoTwo.id });
+          }
+          if (demoTwo.partner_id !== demoOne.id) {
+            await db('users').where('id', demoTwo.id).update({ partner_id: demoOne.id });
+          }
+        }
       }
     } catch (userErr) {
       console.error('Error creating demo user:', userErr);

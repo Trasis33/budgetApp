@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DashboardAnalytics from './DashboardAnalytics';
 import SpendingPatternsChart from './SpendingPatternsChart';
 import BudgetPerformanceCards from './BudgetPerformanceCards';
 import BudgetPerformanceBadges from './BudgetPerformanceBadges';
 import SavingsRateTracker from './SavingsRateTracker';
 import OptimizationTipCard from './OptimizationTipCard';
-import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import KPISummaryCards from './KPISummaryCards';
+import { useScope } from '../context/ScopeContext';
  
 
 // Phase 2: lazy-loading and skeletons
@@ -16,18 +16,24 @@ import useLazyLoad from '../hooks/useLazyLoad';
 import { SkeletonChart } from './ui/Skeletons';
 
 const ModernEnhancedDashboard = () => {
-  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const { scope, totals, isPartnerConnected } = useScope();
   // Auto-refresh controls removed per design choice
 
-  // Helper function to safely calculate numbers and avoid NaN
-  const getSafeNumber = (spending, income) => {
-    if (!spending || !income || income === 0) return 0;
-    const rate = ((income - spending) / income) * 100;
-    return isNaN(rate) ? 0 : Math.round(rate);
-  };
+  const scopeMeta = useMemo(() => {
+    const base = {
+      ours: { key: 'ours', label: 'Shared scope', amount: totals?.ours || 0, disabled: false },
+      mine: { key: 'mine', label: 'My scope', amount: totals?.mine || 0, disabled: false },
+      partner: {
+        key: 'partner',
+        label: isPartnerConnected ? "Partner scope" : 'Partner scope (link required)',
+        amount: totals?.partner || 0,
+        disabled: !isPartnerConnected,
+      },
+    };
+    return base[scope] || base.ours;
+  }, [isPartnerConnected, scope, totals]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -68,7 +74,6 @@ const ModernEnhancedDashboard = () => {
         optimization: optimizationRes.data
       });
       
-      setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -112,6 +117,7 @@ const ModernEnhancedDashboard = () => {
         <KPISummaryCards 
             analytics={dashboardData?.analytics}
             formatCurrency={formatCurrency}
+      scopeMeta={scopeMeta}
         />
         {/* <div className="stat-card">
           <div className="stat-header">

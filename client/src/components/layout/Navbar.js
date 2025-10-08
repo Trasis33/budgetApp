@@ -1,6 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useScope } from '../../context/ScopeContext';
+import formatCurrency from '../../utils/formatCurrency';
 
 // Utility function to get current page title based on pathname
 const getPageTitle = (pathname) => {
@@ -28,7 +30,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [scope, setScope] = useState('Ours');
+  const { scope, setScope: setActiveScope, totals, isPartnerConnected, loading: scopeLoading } = useScope();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -63,10 +65,27 @@ const Navbar = () => {
   };
 
   // Handle scope selector keyboard navigation
-  const handleScopeKeyDown = (event, label) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+  const scopeOptions = useMemo(() => ([
+    { key: 'ours', label: 'Ours', amount: totals?.ours || 0, disabled: false },
+    { key: 'mine', label: 'Mine', amount: totals?.mine || 0, disabled: false },
+    { key: 'partner', label: 'Partner', amount: totals?.partner || 0, disabled: !isPartnerConnected }
+  ]), [totals, isPartnerConnected]);
+
+  const activeScopeMeta = useMemo(() => {
+    return scopeOptions.find((option) => option.key === scope) || scopeOptions[0];
+  }, [scope, scopeOptions]);
+
+  const handleScopeSelect = (option) => {
+    if (option.disabled) {
+      return;
+    }
+    setActiveScope(option.key);
+  };
+
+  const handleScopeKeyDown = (event, option) => {
+    if ((event.key === 'Enter' || event.key === ' ') && !option.disabled) {
       event.preventDefault();
-      setScope(label);
+      setActiveScope(option.key);
     }
   };
 
@@ -82,24 +101,34 @@ const Navbar = () => {
           {/* Left Section - Scope Selector */}
           <div className="flex items-center gap-3">
             <div className="segmented" role="tablist" aria-label="Expense scope selector">
-              {['Ours', 'Mine', 'Partner'].map((label) => (
+              {scopeOptions.map((option) => (
                 <button
-                  key={label}
+                  key={option.key}
                   type="button"
                   role="tab"
-                  aria-selected={scope === label}
-                  aria-label={`View ${label.toLowerCase()} expenses`}
+                  aria-selected={scope === option.key}
+                  aria-disabled={option.disabled}
+                  aria-label={`View ${option.label.toLowerCase()} expenses`}
                   className={`segmented-button ${
-                    scope === label
+                    scope === option.key
                       ? 'bg-white text-primary-700 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  onClick={() => setScope(label)}
-                  onKeyDown={(e) => handleScopeKeyDown(e, label)}
+                  } ${option.disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  title={option.disabled ? 'Link a partner account in Settings to enable' : undefined}
+                  onClick={() => handleScopeSelect(option)}
+                  onKeyDown={(e) => handleScopeKeyDown(e, option)}
+                  disabled={option.disabled}
                 >
-                  {label}
+                  <span className="block leading-tight">{option.label}</span>
+                  <span className="block text-[11px] text-gray-500">
+                    {scopeLoading ? '…' : formatCurrency(option.amount)}
+                  </span>
                 </button>
               ))}
+            </div>
+            <div className="hidden md:block text-xs text-gray-500" aria-live="polite">
+              <span className="font-medium text-gray-700">{activeScopeMeta?.label || 'Ours'}</span>
+              <span className="ml-1">{scopeLoading ? '…' : formatCurrency(activeScopeMeta?.amount || 0)}</span>
             </div>
           </div>
 
@@ -216,24 +245,29 @@ const Navbar = () => {
           <div className="md:hidden mt-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
             <div className="space-y-3">
               <div className="text-sm text-gray-500">
-                Viewing: <span className="font-medium text-gray-900">{scope}</span>
+                Viewing: <span className="font-medium text-gray-900">{activeScopeMeta?.label || 'Ours'}</span>
               </div>
               <div className="flex space-x-2">
-                {['Ours', 'Mine', 'Partner'].map((label) => (
+                {scopeOptions.map((option) => (
                   <button
-                    key={label}
+                    key={option.key}
                     type="button"
                     className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                      scope === label
+                      scope === option.key
                         ? 'bg-primary-100 text-primary-700 border border-primary-200'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                    } ${option.disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                     onClick={() => {
-                      setScope(label);
+                      if (option.disabled) {
+                        return;
+                      }
+                      handleScopeSelect(option);
                       setIsMobileMenuOpen(false);
                     }}
+                    disabled={option.disabled}
+                    title={option.disabled ? 'Link a partner account in Settings to enable' : undefined}
                   >
-                    {label}
+                    {option.label}
                   </button>
                 ))}
               </div>
