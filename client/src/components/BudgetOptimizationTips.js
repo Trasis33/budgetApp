@@ -16,6 +16,17 @@ import {
   Bar,
   CartesianGrid
 } from 'recharts';
+import {
+  CalendarClock,
+  Lightbulb,
+  RefreshCcw,
+  Sparkles,
+  Target,
+  TrendingDown,
+  Trophy,
+  PiggyBank,
+  ShieldCheck
+} from 'lucide-react';
 
 const ANALYSIS_STEPS = [
   'Connecting to your financial data…',
@@ -28,27 +39,32 @@ const ANALYSIS_STEPS = [
 const TIP_TYPE_CONFIG = {
   reduction: {
     label: 'Opportunities to reduce spending',
-    icon: '💡',
+    Icon: Lightbulb,
+    iconClass: 'text-amber-500',
     accentClass: 'from-rose-100 to-pink-50'
   },
   reallocation: {
     label: 'Rebalance your budgets',
-    icon: '🔄',
+    Icon: RefreshCcw,
+    iconClass: 'text-indigo-500',
     accentClass: 'from-violet-100 to-indigo-50'
   },
   seasonal: {
     label: 'Seasonal heads-up',
-    icon: '📅',
+    Icon: CalendarClock,
+    iconClass: 'text-amber-500',
     accentClass: 'from-amber-100 to-yellow-50'
   },
   goal_based: {
     label: 'Keep savings goals on track',
-    icon: '🎯',
+    Icon: Target,
+    iconClass: 'text-emerald-500',
     accentClass: 'from-emerald-100 to-green-50'
   },
   general: {
     label: 'Opportunities',
-    icon: '✨',
+    Icon: Sparkles,
+    iconClass: 'text-sky-500',
     accentClass: 'from-blue-100 to-sky-50'
   }
 };
@@ -242,7 +258,8 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
       .forEach((variance) => {
         list.push({
           id: `variance-${variance.name}-${variance.month}`,
-          icon: '🏆',
+          Icon: Trophy,
+          iconClass: 'text-emerald-500',
           title: `You stayed under budget in ${variance.name}`,
           highlight: `${formatCurrencySafe(variance.budgetAmount - variance.actualAmount)} saved`,
           description: `${formatMonthLabel(variance.month)} budget: ${formatCurrencySafe(variance.actualAmount)} spent of ${formatCurrencySafe(variance.budgetAmount)}`
@@ -253,7 +270,8 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
       if (pattern?.trend === 'decreasing') {
         list.push({
           id: `pattern-${category}`,
-          icon: '📉',
+          Icon: TrendingDown,
+          iconClass: 'text-sky-500',
           title: `${category} spending is trending down`,
           highlight: `${Math.abs(Number(pattern.enhancedTrend?.percentageChange || 0))}% lower`,
           description: 'Great job keeping this category in check.'
@@ -268,7 +286,8 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
         const progress = Math.min(100, Math.round((Number(goal.current_amount) / Number(goal.target_amount)) * 100));
         list.push({
           id: `goal-${goal.id}`,
-          icon: '🥇',
+          Icon: PiggyBank,
+          iconClass: 'text-emerald-500',
           title: `Progress on ${goal.goal_name}`,
           highlight: `${progress}% complete`,
           description: `Saved ${formatCurrencySafe(goal.current_amount)} of ${formatCurrencySafe(goal.target_amount)} so far.`
@@ -420,7 +439,11 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {wins.map((win) => (
                 <div key={win.id} className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 p-5 shadow-sm">
-                  <div className="text-2xl">{win.icon}</div>
+                  {win.Icon ? (
+                    <win.Icon className={`h-5 w-5 ${win.iconClass || 'text-emerald-500'}`} />
+                  ) : (
+                    <Sparkles className="h-5 w-5 text-emerald-500" />
+                  )}
                   <h4 className="mt-3 text-base font-semibold text-slate-800">{win.title}</h4>
                   <p className="mt-1 text-sm font-medium text-emerald-600">{win.highlight}</p>
                   <p className="mt-2 text-sm text-slate-500">{win.description}</p>
@@ -438,10 +461,11 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
           {Object.keys(groupedOpportunities).length ? (
             Object.entries(groupedOpportunities).map(([type, items]) => {
               const config = TIP_TYPE_CONFIG[type] || TIP_TYPE_CONFIG.general;
+              const HeaderIcon = config.Icon || TIP_TYPE_CONFIG.general.Icon;
               return (
                 <div key={type}>
                   <div className={`rounded-3xl bg-gradient-to-r ${config.accentClass} px-6 py-5 mb-5 border border-slate-100 flex items-center gap-3 shadow-sm`}>
-                    <span className="text-2xl">{config.icon}</span>
+                    <HeaderIcon className={`h-5 w-5 ${config.iconClass || TIP_TYPE_CONFIG.general.iconClass}`} />
                     <div>
                       <h3 className="text-lg font-semibold text-slate-800">{config.label}</h3>
                       <p className="text-sm text-slate-600">{copyForType(type)}</p>
@@ -469,7 +493,7 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
             })
           ) : (
             <div className="rounded-3xl border border-blue-100 bg-blue-50 px-6 py-10 text-center">
-              <div className="text-4xl mb-3">💪</div>
+              <ShieldCheck className="mx-auto mb-3 h-8 w-8 text-emerald-500" />
               <h3 className="text-xl font-semibold text-slate-800">Your financial health is strong!</h3>
               <p className="mt-2 text-sm text-slate-600">We analyzed your recent spending and everything looks perfectly balanced. Keep it up and check back soon.</p>
               <button
