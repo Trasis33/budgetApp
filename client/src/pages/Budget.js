@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
@@ -13,8 +13,6 @@ import { MonthYearNavigator } from '../components/ui/month-year-navigator';
 import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
 import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
 import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
-import SavingsRateTracker from '../components/SavingsRateTracker';
-import SavingsGoalsManager from '../components/SavingsGoalsManager';
 import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 import EnhancedCategorySpendingChart from '../components/charts/EnhancedCategorySpendingChart';
 import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
@@ -46,6 +44,11 @@ const Budget = () => {
     { id: 'analytics', label: 'Analytics', icon: '📊' },
     { id: 'income', label: 'Income Management', icon: '💼' }
   ];
+
+  const manageBudgetsSectionRef = useRef(null);
+  const budgetInputRefs = useRef({});
+  const highlightTimeoutRef = useRef(null);
+  const [highlightCategoryId, setHighlightCategoryId] = useState(null);
 
   const fetchBudgetData = useCallback(async () => {
     setLoading(true);
@@ -84,6 +87,14 @@ const Budget = () => {
     fetchBudgetData();
   }, [month, year, fetchBudgetData]);
 
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Lazy-load refs (single declaration)
   const { ref: catRef, isVisible: catVisible } = useLazyLoad();
   const { ref: ieRef, isVisible: ieVisible } = useLazyLoad();
@@ -114,25 +125,41 @@ const Budget = () => {
     setBudgets(prev => ({ ...prev, [categoryId]: value }));
   };
 
-  const handleSaveBudget = async (categoryId) => {
-    try {
-      const amount = budgets[categoryId];
-      if (amount === '' || isNaN(parseFloat(amount))) {
-        alert('Please enter a valid number for the budget.');
-        return;
-      }
-      await axios.post('/budgets', {
-        category_id: categoryId,
-        amount: parseFloat(amount),
-        month,
-        year,
-      });
-      alert('Budget saved!');
-      fetchBudgetData();
-    } catch (err) {
-      console.error('Failed to save budget:', err);
-      alert('Failed to save budget.');
+  const handleFocusBudgetInput = (categoryName) => {
+    if (!categoryName) {
+      return;
     }
+
+    const category = categories.find((item) => item.name === categoryName);
+    if (!category) {
+      return;
+    }
+
+    if (manageBudgetsSectionRef.current) {
+      manageBudgetsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const input = budgetInputRefs.current[category.id];
+    if (input) {
+      window.requestAnimationFrame(() => {
+        try {
+          input.focus({ preventScroll: true });
+        } catch (err) {
+          input.focus();
+        }
+        if (typeof input.select === 'function') {
+          input.select();
+        }
+      });
+    }
+
+    setHighlightCategoryId(category.id);
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightCategoryId(null);
+    }, 4000);
   };
 
   // Chart colors
@@ -322,7 +349,7 @@ const Budget = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card hover-lift">
+        <div ref={manageBudgetsSectionRef} className="card hover-lift">
           <div className="section-header">
             <h2 className="section-title gradient-text">Manage Budgets</h2>
           </div>
@@ -330,18 +357,26 @@ const Budget = () => {
             <BudgetAccordion
               sections={categories.map(category => {
                 const categoryBudget = budgets[category.id] || '';
+                const isHighlighted = highlightCategoryId === category.id;
                 return {
                   id: String(category.id),
                   title: category.name,
                   spent: chartData?.categorySpending?.find(c => c.category === category.name)?.total ?? 0,
                   budget: Number(categoryBudget || 0),
                   children: (
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isHighlighted ? 'rounded-md bg-blue-50/80 px-2 py-2 ring-2 ring-blue-300 transition' : ''}`}>
                       <input
                         type="number"
                         value={categoryBudget}
+                        ref={(node) => {
+                          if (node) {
+                            budgetInputRefs.current[category.id] = node;
+                          }
+                        }}
                         onChange={(e) => handleBudgetChange(category.id, e.target.value)}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded-md"
+                        className={`w-24 px-2 py-1 rounded-md border transition focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 ${
+                          isHighlighted ? 'border-blue-400 bg-blue-50 shadow-md' : 'border-gray-300'
+                        }`}
                         placeholder="0.00"
                       />
                       <span className="text-sm text-gray-600">kr</span>
@@ -448,7 +483,12 @@ const Budget = () => {
         <SavingsGoalsManager />
       </div> */}
 
-      <BudgetOptimizationTips />
+      <BudgetOptimizationTips
+        categories={categories}
+        onAdjustBudget={handleFocusBudgetInput}
+        currentMonth={month}
+        currentYear={year}
+      />
     </div>
   );
 

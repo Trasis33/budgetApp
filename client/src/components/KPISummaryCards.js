@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from './ui/card';
 import PropTypes from 'prop-types';
 import { 
@@ -7,7 +6,6 @@ import {
   Minus, 
   DollarSign, 
   Target, 
-  Clock,
   Users,
   ArrowRightLeft
 } from 'lucide-react';

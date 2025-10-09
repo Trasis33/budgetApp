@@ -9,6 +9,7 @@ import CategoryBoard from '../components/ui/CategoryBoard';
 import '../styles/expenses-v2.css';
 import useScopedExpenses from '../hooks/useScopedExpenses';
 import { useScope } from '../context/ScopeContext';
+import { useLocation } from 'react-router-dom';
 
 const ExpensesV2 = () => {
   const [categories, setCategories] = useState([]);
@@ -23,9 +24,32 @@ const ExpensesV2 = () => {
     refresh: refreshExpenses,
   } = useScopedExpenses();
   const { openEditModal } = useExpenseModal();
+  const location = useLocation();
 
   const today = new Date();
   const [filters, setFilters] = useState({ month: '', year: String(today.getFullYear()), category: '' });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const monthParam = params.get('month') || '';
+    const yearParam = params.get('year') || String(new Date().getFullYear());
+    const categoryParam = params.get('category') || '';
+
+    setFilters((current) => {
+      if (
+        current.month === monthParam &&
+        current.year === yearParam &&
+        current.category === categoryParam
+      ) {
+        return current;
+      }
+      return {
+        month: monthParam,
+        year: yearParam,
+        category: categoryParam
+      };
+    });
+  }, [location.search]);
 
   useEffect(() => {
     let mounted = true;
