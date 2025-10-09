@@ -126,10 +126,6 @@ const Navbar = () => {
                 </button>
               ))}
             </div>
-            <div className="hidden md:block text-xs text-gray-500" aria-live="polite">
-              <span className="font-medium text-gray-700">{activeScopeMeta?.label || 'Ours'}</span>
-              <span className="ml-1">{scopeLoading ? '…' : formatCurrency(activeScopeMeta?.amount || 0)}</span>
-            </div>
           </div>
 
           {/* Center Section - Page Title */}
