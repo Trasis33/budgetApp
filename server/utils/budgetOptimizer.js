@@ -166,16 +166,28 @@ class BudgetOptimizer {
 
     // 4. Goal-based optimization
     if (savingsGoals.length > 0) {
-      const shortfall = this.calculateGoalShortfall(savingsGoals[0]);
-      if (shortfall > 0) {
+      savingsGoals.forEach(goal => {
+        const plan = this.calculateGoalSavingsPlan(goal);
+        if (!plan) {
+          return;
+        }
+
         recommendations.push({
           type: 'goal_based',
-          title: 'Adjust spending to meet savings goal',
-          description: `To reach your goal of ${this.formatCurrency(savingsGoals[0].target_amount)}, consider reducing spending by ${this.formatCurrency(shortfall)} per month.`,
-          impact_amount: shortfall,
-          confidence_score: 0.9
+          goal_id: goal.id,
+          goal_name: goal.goal_name,
+          target_amount: plan.targetAmount,
+          current_amount: plan.currentAmount,
+          remaining_amount: plan.remainingAmount,
+          months_remaining: plan.monthsRemaining,
+          recommended_monthly: plan.recommendedMonthly,
+          monthly_needed: plan.monthlyNeeded,
+          title: goal.goal_name ? `Keep ${goal.goal_name} on track` : 'Keep your savings goal on track',
+          description: this.buildGoalRecommendationCopy(goal, plan),
+          impact_amount: plan.recommendedMonthly,
+          confidence_score: plan.confidence
         });
-      }
+      });
     }
 
     return recommendations;
@@ -367,16 +379,72 @@ class BudgetOptimizer {
   }
 
   // Calculate shortfall for savings goal
-  calculateGoalShortfall(goal) {
+  calculateGoalSavingsPlan(goal) {
+    const targetAmount = Number(goal.target_amount || 0);
+    const currentAmount = Number(goal.current_amount || 0);
+    const remainingAmount = Math.max(0, targetAmount - currentAmount);
+
+    if (remainingAmount <= 0) {
+      return null;
+    }
+
     const today = new Date();
-    const targetDate = new Date(goal.target_date);
-    const monthsRemaining = Math.max(1, (targetDate.getFullYear() - today.getFullYear()) * 12 + targetDate.getMonth() - today.getMonth());
-    
-    const remainingAmount = goal.target_amount - goal.current_amount;
-    const monthlyRequired = remainingAmount / monthsRemaining;
-    
-    // Assuming current monthly savings of 0 for simplicity
-    return Math.max(0, monthlyRequired);
+    let monthsRemaining = null;
+
+    if (goal.target_date) {
+      const targetDate = new Date(goal.target_date);
+      if (!Number.isNaN(targetDate.getTime())) {
+        monthsRemaining = (targetDate.getFullYear() - today.getFullYear()) * 12 + (targetDate.getMonth() - today.getMonth());
+
+        // Include the current month if there is still time left in the target month
+        if (targetDate.getDate() >= today.getDate()) {
+          monthsRemaining += 1;
+        }
+      }
+    }
+
+    if (!monthsRemaining || monthsRemaining <= 0) {
+      monthsRemaining = 6; // Default horizon if no valid target date
+    }
+
+    const monthlyNeededRaw = remainingAmount / monthsRemaining;
+    const smoothingWindow = Math.max(monthsRemaining, 6);
+    const recommendedMonthlyRaw = remainingAmount / smoothingWindow;
+
+    const monthlyNeeded = Math.max(0, Math.round(monthlyNeededRaw * 100) / 100);
+    const recommendedMonthly = Math.max(0, Math.round(recommendedMonthlyRaw * 100) / 100);
+
+    const confidence = smoothingWindow >= 12 ? 0.92 : smoothingWindow >= 6 ? 0.88 : 0.82;
+
+    return {
+      targetAmount,
+      currentAmount,
+      remainingAmount,
+      monthsRemaining,
+      monthlyNeeded,
+      smoothingWindow,
+      recommendedMonthly,
+      confidence,
+      targetDate: goal.target_date || null
+    };
+  }
+
+  buildGoalRecommendationCopy(goal, plan) {
+    const { monthsRemaining, recommendedMonthly, monthlyNeeded, targetDate } = plan;
+    const monthsLabel = monthsRemaining === 1 ? 'month' : 'months';
+    const recommendedText = this.formatCurrency(recommendedMonthly);
+    const neededText = this.formatCurrency(monthlyNeeded);
+    const goalName = goal.goal_name || 'your savings goal';
+
+    if (monthsRemaining <= 2) {
+      return `Only ${monthsRemaining} ${monthsLabel} remain for ${goalName}. You'd need about ${neededText} each month to hit the target—consider setting aside at least ${recommendedText} or updating the target date.`;
+    }
+
+    if (targetDate) {
+      return `You have ${monthsRemaining} ${monthsLabel} until ${goalName} reaches its target (${new Date(targetDate).toLocaleDateString('en')}). Setting aside around ${recommendedText} each month keeps you on track (current pace requires ${neededText}).`;
+    }
+
+    return `Setting aside around ${recommendedText} each month will keep ${goalName} on track (target pace requires ${neededText}).`;
   }
 
   // Format currency

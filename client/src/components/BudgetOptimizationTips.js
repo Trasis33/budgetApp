@@ -53,6 +53,35 @@ const TIP_TYPE_CONFIG = {
   }
 };
 
+const buildRecommendationKeys = (item) => {
+  if (!item) return [];
+
+  const type = (item.tip_type || item.type || 'general').toLowerCase();
+  const clean = (value) => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    const str = String(value).trim();
+    return str.length ? str.toLowerCase() : null;
+  };
+
+  const keys = new Set();
+  const push = (label, value) => {
+    const cleaned = clean(value);
+    if (cleaned !== null) {
+      keys.add(`${type}:${label}:${cleaned}`);
+    }
+  };
+
+  push('goal_id', item.goal_id);
+  push('goal_name', item.goal_name);
+  push('category', item.category);
+  push('title', item.title);
+  push('id', item.id);
+
+  return Array.from(keys);
+};
+
 const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth, currentYear }) => {
   const navigate = useNavigate();
   const [tips, setTips] = useState([]);
@@ -148,19 +177,44 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
     return () => clearInterval(timer);
   }, [inProgress, stepCycle]);
 
+  const recommendationMetaMap = useMemo(() => {
+    if (!analysis?.recommendations) {
+      return {};
+    }
+
+    return analysis.recommendations.reduce((acc, item) => {
+      const keys = buildRecommendationKeys(item);
+      keys.forEach((key) => {
+        acc[key] = item;
+      });
+      return acc;
+    }, {});
+  }, [analysis]);
+
   const opportunities = useMemo(() => {
-    if (tips.length > 0) {
-      return tips;
-    }
-    if (analysis?.recommendations?.length) {
-      return analysis.recommendations.map((item, index) => ({
+    const source = tips.length > 0 ? tips : (analysis?.recommendations || []);
+
+    return source.map((item, index) => {
+      const baseItem = {
         ...item,
-        tip_type: item.type,
-        id: `recommendation-${index}`
-      }));
-    }
-    return [];
-  }, [tips, analysis]);
+        tip_type: item.tip_type || item.type || 'general',
+        id: item.id || `recommendation-${index}`
+      };
+
+      const keys = buildRecommendationKeys(baseItem);
+      const metaKey = keys.find((key) => recommendationMetaMap[key]);
+      const meta = metaKey ? recommendationMetaMap[metaKey] : (tips.length === 0 ? baseItem : null);
+
+      if (baseItem.tip_type === 'goal_based' && meta) {
+        return enhanceGoalOpportunity(baseItem, meta);
+      }
+
+      return {
+        ...baseItem,
+        meta
+      };
+    });
+  }, [tips, analysis, recommendationMetaMap]);
 
   const groupedOpportunities = useMemo(() => {
     return opportunities.reduce((acc, opportunity) => {
@@ -470,7 +524,8 @@ const OpportunityCard = ({
   const impact = Number(opportunity.impact_amount || 0);
   const patternSeries = opportunity.category ? buildTrendSeries(analysis?.patterns?.[opportunity.category]) : null;
   const reallocation = type === 'reallocation' ? buildReallocationData(opportunity, analysis) : null;
-  const goalInfo = type === 'goal_based' ? resolveGoalInfo(goals) : null;
+  const goalPlan = type === 'goal_based' ? opportunity.meta : null;
+  const goalInfo = type === 'goal_based' ? resolveGoalInfo(opportunity, goals) : null;
   const actionDisabled = !opportunity.id;
 
   return (
@@ -487,10 +542,11 @@ const OpportunityCard = ({
 
           {impact > 0 && (
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-600">
-              Potential impact: {formatCurrencySafe(impact)}
+              {type === 'goal_based' && goalPlan ? 'Suggested monthly contribution: ' : 'Potential impact: '}
+              {formatCurrencySafe(impact)}
             </div>
           )}
-        </div>
+      </div>
 
         {type === 'reduction' && patternSeries && (
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
@@ -561,6 +617,11 @@ const OpportunityCard = ({
               />
             </div>
             <p className="mt-2 text-xs font-medium text-emerald-700">{goalInfo.progress}% complete</p>
+            {goalPlan?.months_remaining && goalPlan?.remaining_amount !== null && (
+              <p className="mt-2 text-xs text-emerald-700">
+                {goalPlan.months_remaining} {goalPlan.months_remaining === 1 ? 'month' : 'months'} remaining · Remaining balance {formatCurrencySafe(goalPlan.remaining_amount)}
+              </p>
+            )}
           </div>
         )}
 
@@ -709,20 +770,79 @@ const buildReallocationData = (opportunity, analysis) => {
     }));
 };
 
-const resolveGoalInfo = (goals = []) => {
-  if (!goals.length) {
-    return null;
+const resolveGoalInfo = (opportunity, goals = []) => {
+  const meta = opportunity?.meta || {};
+  const inferredName = meta.goal_name || extractGoalNameFromTitle(opportunity?.title);
+
+  const normalize = (value) => (value === null || value === undefined ? null : String(value).trim().toLowerCase());
+
+  const findGoalMatch = () => {
+    if (!Array.isArray(goals) || goals.length === 0) {
+      return null;
+    }
+
+    if (meta.goal_id !== undefined && meta.goal_id !== null) {
+      const byId = goals.find((goal) => String(goal.id) === String(meta.goal_id));
+      if (byId) {
+        return byId;
+      }
+    }
+
+    if (inferredName) {
+      const targetName = normalize(inferredName);
+      const byName = goals.find((goal) => normalize(goal.goal_name) === targetName);
+      if (byName) {
+        return byName;
+      }
+    }
+
+    if (meta.target_amount) {
+      const target = Number(meta.target_amount);
+      const byTarget = goals.find((goal) => Math.abs(Number(goal.target_amount || 0) - target) < 1);
+      if (byTarget) {
+        return byTarget;
+      }
+    }
+
+    return goals.length === 1 ? goals[0] : null;
+  };
+
+  const matchedGoal = findGoalMatch();
+
+  if (matchedGoal) {
+    const target = Number(matchedGoal.target_amount || meta.target_amount || 0);
+    const current = Number(matchedGoal.current_amount || meta.current_amount || 0);
+    const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    return {
+      goal_name: matchedGoal.goal_name || inferredName || 'Savings goal',
+      target_amount: target,
+      current_amount: current,
+      progress
+    };
   }
 
-  const primary = goals.find((goal) => goal.goal_name) || goals[0];
-  const target = Number(primary.target_amount || 0);
-  const current = Number(primary.current_amount || 0);
-  const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  if (meta.target_amount) {
+    const target = Number(meta.target_amount);
+    const current = Number(meta.current_amount || 0);
+    const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    return {
+      goal_name: inferredName || 'Savings goal',
+      target_amount: target,
+      current_amount: current,
+      progress
+    };
+  }
 
-  return {
-    ...primary,
-    progress
-  };
+  if (inferredName) {
+    return {
+      goal_name: inferredName,
+      target_amount: null,
+      current_amount: null,
+      progress: 0
+    };
+  }
+
+  return null;
 };
 
 const copyForType = (type) => {
@@ -734,7 +854,7 @@ const copyForType = (type) => {
     case 'seasonal':
       return 'We spotted seasonal trends so you can plan ahead with confidence.';
     case 'goal_based':
-      return 'Keep savings milestones on track with a few focused adjustments.';
+      return 'Stay on track with a clearer monthly contribution plan for your goals.';
     default:
       return 'Explore opportunities tailored to your current spending patterns.';
   }
@@ -788,6 +908,73 @@ const formatMonthShort = (value) => {
 const formatCurrencySafe = (value) => {
   const amount = Number(value) || 0;
   return formatCurrency(amount);
+};
+
+const enhanceGoalOpportunity = (opportunity, meta) => {
+  const sanitizedMeta = sanitizeGoalMeta(meta);
+  const description = buildGoalOpportunityDescription(sanitizedMeta, opportunity.description);
+  const impactAmount = sanitizedMeta.recommended_monthly || sanitizedMeta.monthly_needed || opportunity.impact_amount;
+
+  return {
+    ...opportunity,
+    description,
+    impact_amount: impactAmount,
+    meta: sanitizedMeta
+  };
+};
+
+const sanitizeGoalMeta = (meta = {}) => {
+  const numberOr = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  return {
+    ...meta,
+    target_amount: numberOr(meta.target_amount) ?? null,
+    current_amount: numberOr(meta.current_amount) ?? null,
+    remaining_amount: numberOr(meta.remaining_amount) ?? null,
+    months_remaining: meta.months_remaining ? Math.max(0, Math.round(Number(meta.months_remaining))) : null,
+    recommended_monthly: numberOr(meta.recommended_monthly) ?? null,
+    monthly_needed: numberOr(meta.monthly_needed) ?? null
+  };
+};
+
+const buildGoalOpportunityDescription = (meta = {}, fallback) => {
+  const {
+    months_remaining: monthsRemaining,
+    recommended_monthly: recommendedMonthly,
+    monthly_needed: monthlyNeeded
+  } = meta;
+
+  if (!monthsRemaining || !recommendedMonthly) {
+    return fallback;
+  }
+
+  const monthsLabel = monthsRemaining === 1 ? 'month' : 'months';
+  const recommendedText = formatCurrencySafe(recommendedMonthly);
+  const neededText = monthlyNeeded ? formatCurrencySafe(monthlyNeeded) : null;
+
+  if (monthsRemaining <= 2 && neededText) {
+    return `Only ${monthsRemaining} ${monthsLabel} left to hit this goal. You would need about ${neededText} each month—try to set aside at least ${recommendedText} or adjust the target date.`;
+  }
+
+  if (neededText) {
+    return `You have ${monthsRemaining} ${monthsLabel} remaining. Setting aside roughly ${recommendedText} each month keeps you on track (target pace: ${neededText}).`;
+  }
+
+  return `You have ${monthsRemaining} ${monthsLabel} remaining. Setting aside roughly ${recommendedText} each month keeps you on track.`;
+};
+
+const extractGoalNameFromTitle = (title) => {
+  if (!title) {
+    return null;
+  }
+  const match = String(title).match(/keep\s+(.+?)\s+on\s+track/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return null;
 };
 
 const formatCurrencyShort = (value) => {
