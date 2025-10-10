@@ -49,8 +49,9 @@ export function buildBudgetActualData(chartJsData) {
         variance > -10 ? 'on-track' : 'under-budget'
 
       const actualColor =
-        status === 'over-budget' ? '#ef4444' :
-        status === 'under-budget' ? '#22c55e' : '#f59e0b'
+        status === 'over-budget' ? '#fb7185' :
+        status === 'under-budget' ? '#10b981' :
+        status === 'no-budget' ? '#94a3b8' : '#f59e0b'
 
       return { category: label, budgeted, actual, variance, status, actualColor }
     })
@@ -80,12 +81,15 @@ export function currencyTickFormatter(formatCurrency, compact) {
 
 // Shared design palette for per-category coloring
 export const distributionPalette = [
-  'var(--primary)',
-  'var(--success)',
-  'var(--warn)',
-  'var(--danger)',
-  'var(--muted)'
+  '#6366f1',
+  '#22c55e',
+  '#f97316',
+  '#0ea5e9',
+  '#facc15',
+  '#f43f5e',
+  '#a855f7',
+  '#14b8a6'
 ]
 
 // Common margins for consistent look
-export const commonMargins = { top: 20, right: 24, left: 12, bottom: 64 }
+export const commonMargins = { top: 20, right: 24, left: 16, bottom: 40 }

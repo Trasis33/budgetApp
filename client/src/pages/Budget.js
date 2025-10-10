@@ -643,8 +643,6 @@ const Budget = () => {
                     <EnhancedCategorySpendingChart
                       chartData={categoryChartData}
                       formatCurrency={formatCurrency}
-                      selectedMonth={month - 1}
-                      onMonthChange={(m) => setMonth(m + 1)}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
@@ -707,7 +705,6 @@ const Budget = () => {
                     <BudgetActualChart
                       chartData={budgetVsActualChartData}
                       formatCurrency={formatCurrency}
-                      categories={categories}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">

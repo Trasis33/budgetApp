@@ -58,17 +58,16 @@ describe('chartUtils', () => {
       expect(a.status).toBe('over-budget')
       expect(a.actual).toBe(120)
       expect(a.budgeted).toBe(100)
-      expect(a.actualColor).toBe('#ef4444') // red
+      expect(a.actualColor).toBe('#fb7185') // rose
 
       expect(b.status).toBe('on-track')
       expect(b.actualColor).toBe('#f59e0b') // amber
 
       expect(c.status).toBe('under-budget')
-      expect(c.actualColor).toBe('#22c55e') // green
+      expect(c.actualColor).toBe('#10b981') // emerald
 
       expect(d.status).toBe('no-budget')
-      // falls back to amber for no-budget
-      expect(d.actualColor).toBe('#f59e0b')
+      expect(d.actualColor).toBe('#94a3b8')
     })
 
     it('filters out rows with no values correctly', () => {

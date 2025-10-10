@@ -1,223 +1,148 @@
-import * as React from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
-import { commonMargins } from "./chartUtils"
+import React, { useMemo } from 'react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip
+} from 'recharts';
+import { cn } from '../../lib/utils';
+import { commonMargins } from './chartUtils';
 
-const IncomeExpenseChart = ({ chartData, formatCurrency }) => {
-  // Transform Chart.js data format to Recharts format
-  const transformData = (chartJsData) => {
-    if (!chartJsData?.datasets) {
-      return []
-    }
+const palette = {
+  income: '#10b981',
+  expenses: '#fb7185'
+};
 
-    const incomeData = chartJsData.datasets.find(d => d.label === 'Income')
-    const expenseData = chartJsData.datasets.find(d => d.label === 'Expenses')
+const formatCompactCurrency = (value) => {
+  return new Intl.NumberFormat('sv-SE', {
+    style: 'currency',
+    currency: 'SEK',
+    notation: 'compact',
+    maximumFractionDigits: 1
+  }).format(value);
+};
 
-    return [{
-      name: 'Financial Overview',
-      income: incomeData?.data[0] || 0,
-      expenses: expenseData?.data[0] || 0,
-      net: (incomeData?.data[0] || 0) - (expenseData?.data[0] || 0)
-    }]
-  }
+const EmptyState = () => (
+  <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center text-sm text-slate-500">
+    <span className="text-2xl">💰</span>
+    <p className="mt-3 font-medium text-slate-600">Add income and expenses to view your cash flow.</p>
+    <p className="mt-1 text-xs text-slate-400">We’ll chart the surplus or deficit once data arrives.</p>
+  </div>
+);
 
-  const barData = transformData(chartData)
-  const hasData = barData.length > 0 && (barData[0].income > 0 || barData[0].expenses > 0)
+const TooltipContent = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const record = payload[0]?.payload;
+  if (!record) return null;
 
-  // Enhanced tooltip with financial insights
-  const renderTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null
+  const net = record.income - record.expenses;
+  const isPositive = net >= 0;
+  const savingsRate = record.income > 0 ? ((net / record.income) * 100).toFixed(1) : 0;
 
-    const data = payload[0]?.payload
-    const netAmount = data?.net || 0
-    const isPositive = netAmount >= 0
-    const savingsRate = data?.income > 0 ? ((netAmount / data.income) * 100).toFixed(1) : 0
-
-    return (
-      <div style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--border-radius-md)',
-        padding: 'var(--spacing-3xl)',
-        boxShadow: 'var(--shadow-lg)',
-        fontSize: 'var(--font-size-sm)',
-        minWidth: '220px'
-      }}>
-        <div style={{
-          fontWeight: 600,
-          color: 'var(--ink)',
-          marginBottom: 'var(--spacing-lg)',
-          fontSize: 'var(--font-size-base)'
-        }}>
-          Monthly Financial Summary
+  return (
+    <div className="min-w-[220px] rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-600 shadow-lg">
+      <p className="text-sm font-semibold text-slate-900">Monthly Cash Flow</p>
+      <div className="mt-3 space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2 text-slate-500">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            Income
+          </span>
+          <span className="font-semibold text-emerald-600">{record.formattedIncome}</span>
         </div>
-
-        {/* Income */}
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }}></div>
-            <span style={{ color: 'var(--muted)' }}>Income: </span>
-            <span style={{ fontWeight: 600, color: 'var(--success)' }}>
-              {formatCurrency(data?.income || 0)}
-            </span>
-          </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2 text-slate-500">
+            <span className="h-2 w-2 rounded-full bg-rose-400" />
+            Expenses
+          </span>
+          <span className="font-semibold text-rose-500">{record.formattedExpenses}</span>
         </div>
-
-        {/* Expenses */}
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--warn)' }}></div>
-            <span style={{ color: 'var(--muted)' }}>Expenses: </span>
-            <span style={{ fontWeight: 600, color: 'var(--warn)' }}>
-              {formatCurrency(data?.expenses || 0)}
-            </span>
-          </div>
-        </div>
-
-        {/* Net Amount */}
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-            <span style={{ color: 'var(--muted)' }}>Net: </span>
-            <span style={{
-              fontWeight: 600,
-              color: isPositive ? 'var(--success)' : 'var(--danger)'
-            }}>
-              {isPositive ? '+' : ''}{formatCurrency(netAmount)}
-            </span>
-          </div>
-        </div>
-
-        {/* Savings Rate */}
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <span style={{ color: 'var(--muted)' }}>Savings Rate: </span>
-          <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
-            {savingsRate}%
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-500">Net result</span>
+          <span className={cn('font-semibold', isPositive ? 'text-emerald-600' : 'text-rose-500')}>
+            {isPositive ? '+' : ''}
+            {record.formattedNet}
           </span>
         </div>
-
-        {/* Financial Health Badge */}
-        <div style={{
-          padding: 'var(--spacing-xs) var(--spacing-lg)',
-          borderRadius: 'var(--border-radius-full)',
-          fontSize: 'var(--font-size-xs)',
-          fontWeight: 600,
-          textAlign: 'center',
-          background: 'transparent',
-          ...(isPositive
-            ? { color: 'var(--success)', border: '1px solid var(--success)' }
-            : { color: 'var(--danger)', border: '1px solid var(--danger)' }
-          )
-        }}>
-          {isPositive ? '💰 Saving Money' : '⚠️ Spending More Than Earning'}
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-400">
+          <span>Savings rate</span>
+          <span className="text-slate-600">{Number.isFinite(Number(savingsRate)) ? `${savingsRate}%` : '—'}</span>
         </div>
       </div>
-    )
-  }
+    </div>
+  );
+};
 
-  // Empty state
+const CHART_HEIGHT = 260;
+
+const IncomeExpenseChart = ({ chartData, formatCurrency, className }) => {
+  const barData = useMemo(() => {
+    if (!chartData?.datasets) return [];
+    const income = chartData.datasets.find((dataset) => dataset.label === 'Income')?.data?.[0] || 0;
+    const expenses = chartData.datasets.find((dataset) => dataset.label === 'Expenses')?.data?.[0] || 0;
+
+    return [
+      {
+        name: 'Cash Flow',
+        income,
+        expenses,
+        formattedIncome: formatCurrency(income),
+        formattedExpenses: formatCurrency(expenses),
+        formattedNet: formatCurrency(income - expenses)
+      }
+    ];
+  }, [chartData, formatCurrency]);
+
+  const hasData = barData.length > 0 && (barData[0].income > 0 || barData[0].expenses > 0);
+
   if (!hasData) {
-    return (
-      <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
-        <div className="chart-header">
-          <h3 className="chart-title" style={{ color: 'var(--ink)' }}>Income vs. Expenses</h3>
-          <p className="chart-subtitle" style={{ color: 'var(--muted)' }}>Monthly financial overview</p>
-        </div>
-        <div className="loading-container" style={{ height: '320px' }}>
-          <div style={{
-            fontSize: 'var(--font-size-3xl)',
-            marginBottom: 'var(--spacing-3xl)',
-            filter: 'grayscale(0.3)'
-          }}>💰</div>
-          <p style={{
-            color: 'var(--muted)',
-            fontSize: 'var(--font-size-base)',
-            textAlign: 'center'
-          }}>
-            No financial data available
-          </p>
-          <p style={{
-            color: 'var(--muted)',
-            fontSize: 'var(--font-size-sm)',
-            marginTop: 'var(--spacing-sm)',
-            textAlign: 'center'
-          }}>
-            Add income and expenses to see your financial overview
-          </p>
-        </div>
-      </div>
-    )
+    return <EmptyState />;
   }
 
   return (
-    <div className="chart-card" style={{ paddingBlock: 'var(--spacing-6xl)' }}>
-      <div className="chart-header">
-        <h3 className="chart-title text-gradient">Income vs. Expenses</h3>
-        <p className="chart-subtitle">
-          Net: <span style={{
-            fontWeight: 600,
-            color: barData[0].net >= 0 ? 'var(--success)' : 'var(--danger)'
-          }}>
-            {barData[0].net >= 0 ? '+' : ''}{formatCurrency(barData[0].net)}
-          </span>
-        </p>
-      </div>
-
-      <div style={{ height: '420px', marginTop: 'var(--spacing-3xl)' }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={barData}
-            margin={commonMargins}
-            barCategoryGap="26%"
-            barGap="10%">
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-            <XAxis
-              dataKey="name"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 'var(--font-size-xs)', fill: 'var(--color-text-secondary)' }}
-              tickFormatter={(value) => formatCurrency(value).replace('$', '$')}
-            />
-            <Tooltip content={renderTooltip} cursor={false} />
-            <Bar
-              dataKey="income"
-              fill="var(--success)"
-              radius={[4, 4, 0, 0]}
-              style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
-            />
-            <Bar
-              dataKey="expenses"
-              fill="var(--warn)"
-              radius={[4, 4, 0, 0]}
-              style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      {/* Legend (top 5 categories) */}
-      {/* <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: 'var(--spacing-3xl)',
-        marginTop: 'var(--spacing-3xl)',
-        flexWrap: 'wrap'
-      }}>
-          <Legend
-            key={"Income"}
-            color="var(--color-success)"
-            label="Income"
+    <div
+      className={cn('w-full', className)}
+      style={{ minHeight: CHART_HEIGHT }}
+    >
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+        <BarChart
+          data={barData}
+          margin={{ ...commonMargins, bottom: 16 }}
+          barCategoryGap="40%"
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11, fill: '#64748b' }}
           />
-          <Legend
-            key={"Expenses"}
-            color="var(--color-warning)"
-            label="Expenses"
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11, fill: '#64748b' }}
+            tickFormatter={(value) => formatCompactCurrency(value)}
           />
-      </div> */}
+          <Tooltip cursor={false} content={<TooltipContent />} />
+          <Bar
+            dataKey="income"
+            radius={[8, 8, 8, 8]}
+            maxBarSize={72}
+            fill={palette.income}
+          />
+          <Bar
+            dataKey="expenses"
+            radius={[8, 8, 8, 8]}
+            maxBarSize={72}
+            fill={palette.expenses}
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
-  )
-}
+  );
+};
 
-export default IncomeExpenseChart
+export default IncomeExpenseChart;
