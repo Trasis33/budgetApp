@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
@@ -10,9 +11,6 @@ import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
 import { MonthYearNavigator } from '../components/ui/month-year-navigator';
 
 // Import analytics components
-import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
-import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
-import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
 import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 import EnhancedCategorySpendingChart from '../components/charts/EnhancedCategorySpendingChart';
 import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
@@ -20,8 +18,23 @@ import BudgetActualChart from '../components/charts/BudgetActualChart';
 import BudgetAccordion from '../components/ui/BudgetAccordion';
 import useLazyLoad from '../hooks/useLazyLoad';
 import { SkeletonChart } from '../components/ui/Skeletons';
+import {
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  PieChart,
+  Target,
+  Wallet,
+  Sparkles,
+  ListChecks,
+  Circle,
+  Trash2,
+  PlusCircle,
+  AlertCircle
+} from 'lucide-react';
 
 const Budget = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('budget');
   const [incomes, setIncomes] = useState([]);
   const [source, setSource] = useState('');
@@ -38,6 +51,8 @@ const Budget = () => {
   const [categories, setCategories] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [timePeriod, setTimePeriod] = useState('6months');
+  const [incomePanelTab, setIncomePanelTab] = useState('view');
+  const [savingBudgetId, setSavingBudgetId] = useState(null);
 
   const sections = [
     { id: 'budget', label: 'Budget Overview', icon: '💰' },
@@ -46,6 +61,7 @@ const Budget = () => {
   ];
 
   const manageBudgetsSectionRef = useRef(null);
+  const incomeCenterRef = useRef(null);
   const budgetInputRefs = useRef({});
   const highlightTimeoutRef = useRef(null);
   const [highlightCategoryId, setHighlightCategoryId] = useState(null);
@@ -106,6 +122,7 @@ const Budget = () => {
       await axios.post('/incomes', { source, amount, date });
       setSource('');
       setAmount('');
+      setIncomePanelTab('view');
       fetchBudgetData();
     } catch (err) {
       console.error(err);
@@ -125,6 +142,45 @@ const Budget = () => {
     setBudgets(prev => ({ ...prev, [categoryId]: value }));
   };
 
+  const handleSaveBudget = async (categoryId) => {
+    const rawValue = budgets[categoryId];
+    const parsedValue = parseFloat(rawValue);
+
+    if (Number.isNaN(parsedValue) || parsedValue < 0) {
+      setError('Please enter a valid budget amount before saving.');
+      return;
+    }
+
+    try {
+      setSavingBudgetId(categoryId);
+      await axios.post('/budgets', {
+        category_id: categoryId,
+        amount: parsedValue,
+        month,
+        year
+      });
+      await fetchBudgetData();
+    } catch (err) {
+      console.error('Error saving budget:', err);
+      setError('We could not save that budget. Please try again.');
+    } finally {
+      setSavingBudgetId(null);
+    }
+  };
+
+  const scrollToManageBudgets = () => {
+    if (manageBudgetsSectionRef.current) {
+      manageBudgetsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const scrollToIncomeCenter = (tab = 'view') => {
+    setIncomePanelTab(tab);
+    if (incomeCenterRef.current) {
+      incomeCenterRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handleFocusBudgetInput = (categoryName) => {
     if (!categoryName) {
       return;
@@ -135,9 +191,7 @@ const Budget = () => {
       return;
     }
 
-    if (manageBudgetsSectionRef.current) {
-      manageBudgetsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    scrollToManageBudgets();
 
     const input = budgetInputRefs.current[category.id];
     if (input) {
@@ -280,6 +334,8 @@ const Budget = () => {
     return null;
   }
 
+  const shouldShowGlobalError = error && activeSection !== 'budget';
+
   const renderContent = () => {
     switch (activeSection) {
       case 'budget':
@@ -293,174 +349,535 @@ const Budget = () => {
     }
   };
 
-  const renderBudgetSection = () => (
-    <div className="space-y-6">
-      {loading ? (
-        <div className="space-y-4">
-          <SkeletonChart />
-          <SkeletonChart />
-        </div>
-      ) : (
-        <div className="space-y-6 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div ref={catRef}>
-                {catVisible ? (
-                  <EnhancedCategorySpendingChart
-                    chartData={getCategoryChartData()}
-                    formatCurrency={formatCurrency}
-                    selectedMonth={month - 1}
-                    onMonthChange={(m) => setMonth(m + 1)}
-                  />
-                ) : (
-                  <SkeletonChart />
-                )}
-              </div>
+  const renderBudgetSection = () => {
+    const loadingSteps = [
+      {
+        title: 'Syncing your latest transactions',
+        caption: 'Pulling budget, income, and expense data for this month.',
+      },
+      {
+        title: 'Analyzing category trends',
+        caption: 'Spotting the categories that need attention first.',
+      },
+      {
+        title: 'Preparing personalized guidance',
+        caption: 'Drafting action steps to keep your plan on track.',
+      },
+    ];
 
-              <div ref={ieRef}>
+    const categorySpending = chartData?.categorySpending ?? [];
+    const monthlyTotals = chartData?.monthlyTotals ?? { income: 0, expenses: 0 };
+    const incomeTotal = monthlyTotals.income || 0;
+    const expenseTotal = monthlyTotals.expenses || 0;
+    const netCashFlow = incomeTotal - expenseTotal;
+    const hasCashFlowData = incomeTotal > 0 || expenseTotal > 0;
+    const isBreakEven = Math.abs(netCashFlow) < 1;
+    const isSurplus = netCashFlow > 0 && !isBreakEven;
+    const cashFlowImpactLabel = isBreakEven
+      ? 'Balanced Month'
+      : `${isSurplus ? '+' : '-'}${formatCurrency(Math.abs(netCashFlow))} ${isSurplus ? 'Surplus' : 'Deficit'}`;
+    const cashFlowImpactClasses = isBreakEven
+      ? 'border border-indigo-100 bg-indigo-50 text-indigo-600'
+      : isSurplus
+        ? 'border border-emerald-100 bg-emerald-50 text-emerald-600'
+        : 'border border-rose-100 bg-rose-50 text-rose-600';
+    const cashFlowCopy = (() => {
+      if (!hasCashFlowData) {
+        return 'Add your income and expenses to see how your monthly cash flow is trending.';
+      }
+      if (isBreakEven) {
+        return 'Your spending matched your income this month. It’s a great moment to plan the next move for your savings.';
+      }
+      if (isSurplus) {
+        return `You're bringing in ${formatCurrency(incomeTotal)} and spending ${formatCurrency(expenseTotal)}. Great job building a surplus!`;
+      }
+      return `Your expenses were higher than your income this month. Let's see where you can rebalance.`;
+    })();
+
+    const sortedCategories = [...categorySpending].sort((a, b) => b.total - a.total);
+    const topCategory = sortedCategories[0];
+    const totalSpending = categorySpending.reduce((sum, item) => sum + (item.total || 0), 0);
+    const topCategoryShare = topCategory && totalSpending
+      ? Math.round((topCategory.total / totalSpending) * 100)
+      : 0;
+    const categoryCopy = topCategory
+      ? `${topCategory.category} was your biggest expense category this month, making up ${topCategoryShare}% of your spending.`
+      : 'We haven’t recorded any spending yet this month. Once you add transactions, we’ll spotlight where your money is going.';
+
+    const trackedBudgets = categorySpending.filter((item) => item.budget && Number(item.budget) > 0);
+    const performanceBreakdown = trackedBudgets.reduce(
+      (acc, item) => {
+        const ratio = item.budget ? item.total / item.budget : 0;
+        if (ratio >= 1.05) {
+          acc.over += 1;
+        } else if (ratio >= 0.9) {
+          acc.warning += 1;
+        } else {
+          acc.good += 1;
+        }
+        return acc;
+      },
+      { good: 0, warning: 0, over: 0 }
+    );
+    const totalTrackedBudgets = trackedBudgets.length;
+    const confidenceScore = totalTrackedBudgets
+      ? Math.max(0, Math.min(100, Math.round((performanceBreakdown.good / totalTrackedBudgets) * 100)))
+      : 60;
+    const confidenceTone = confidenceScore >= 80 ? 'emerald' : confidenceScore >= 60 ? 'amber' : 'slate';
+    const confidenceClassMap = {
+      emerald: 'border border-emerald-200 bg-emerald-50 text-emerald-600',
+      amber: 'border border-amber-200 bg-amber-50 text-amber-600',
+      slate: 'border border-slate-200 bg-slate-100 text-slate-600',
+    };
+    const budgetHealthCopy = (() => {
+      if (!totalTrackedBudgets) {
+        return 'Set a target for each category so we can keep an eye on how your spending lines up with your goals.';
+      }
+      if (performanceBreakdown.over > 0) {
+        return `${performanceBreakdown.over} ${performanceBreakdown.over === 1 ? 'category is' : 'categories are'} over budget. Let’s adjust allocations before the month ends.`;
+      }
+      if (performanceBreakdown.warning > 0) {
+        return `You're nearing the limit in ${performanceBreakdown.warning} ${performanceBreakdown.warning === 1 ? 'category' : 'categories'}. A small tweak keeps everything on track.`;
+      }
+      return "You're on track with every budget this month. Keep the momentum going!";
+    })();
+
+    const spendingByCategoryName = categorySpending.reduce((acc, item) => {
+      acc[item.category] = item;
+      return acc;
+    }, {});
+
+    const budgetSections = categories.map((category) => {
+      const record = spendingByCategoryName[category.name] || {};
+      const spent = record.total || 0;
+      const value = budgets[category.id] ?? '';
+      const numericValue = parseFloat(value) || 0;
+      const remaining = numericValue ? numericValue - spent : 0;
+      const quickSets = spent > 0
+        ? [
+            { label: 'Match spending', value: spent.toFixed(2) },
+            { label: 'Add 10%', value: (spent * 1.1).toFixed(2) },
+          ]
+        : [];
+
+      return {
+        id: String(category.id),
+        title: category.name,
+        spent,
+        value,
+        numericValue,
+        remaining,
+        quickSets,
+        highlighted: highlightCategoryId === category.id,
+        autoExpand: highlightCategoryId === category.id,
+        onValueChange: (next) => handleBudgetChange(category.id, next),
+        onQuickSet: (next) => handleBudgetChange(category.id, next),
+        onSave: () => handleSaveBudget(category.id),
+        isSaving: savingBudgetId === category.id,
+        registerInput: (node) => {
+          if (node) {
+            budgetInputRefs.current[category.id] = node;
+          }
+        },
+      };
+    });
+
+    const categoriesWithBudgets = budgetSections.filter((section) => section.numericValue > 0);
+    const manageBudgetsCopy = categoriesWithBudgets.length
+      ? `You have budgets for ${categoriesWithBudgets.length} of ${categories.length} categories. A quick tune-up keeps your plan intentional.`
+      : 'Creating a budget for each category is the best way to take control of your finances.';
+
+    const actionPillClass =
+      'inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50';
+
+    const categoryChartData = getCategoryChartData();
+    const incomeExpenseChartData = getIncomeExpenseChartData();
+    const budgetVsActualChartData = getBudgetVsActualChartData();
+
+    if (loading) {
+      return (
+        <div className="mt-6">
+          <div className="relative rounded-[32px] border border-white/40 bg-white/70 p-10 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-3 text-slate-700">
+              <ListChecks className="h-6 w-6 text-indigo-500" />
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-indigo-400">Preparing</p>
+                <h3 className="text-2xl font-semibold text-slate-900">Running your financial check-up</h3>
+              </div>
+            </div>
+            <div className="mt-8 space-y-5">
+              {loadingSteps.map((step, index) => {
+                const isCurrent = index === 0;
+                return (
+                  <div key={step.title} className="flex items-start gap-4">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        isCurrent
+                          ? 'border-2 border-indigo-200 bg-indigo-50 text-indigo-500 animate-pulse'
+                          : 'border border-slate-200 bg-white text-slate-300'
+                      }`}
+                    >
+                      {isCurrent ? <Sparkles className="h-5 w-5" /> : <Circle className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${isCurrent ? 'text-slate-800' : 'text-slate-500'}`}>
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-slate-400">{step.caption}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="mt-6">
+          <div className="rounded-3xl border border-rose-200 bg-rose-50/80 p-8 shadow-sm">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-1 h-5 w-5 text-rose-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-rose-700">We couldn’t load your budgets</h3>
+                <p className="mt-2 text-sm text-rose-600">{error}</p>
+                <button
+                  onClick={fetchBudgetData}
+                  className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const CashIcon = isSurplus || isBreakEven ? TrendingUp : TrendingDown;
+
+    const totalIncomeLogged = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+    return (
+      <div className="space-y-8">
+        <div className="rounded-3xl border border-slate-100 bg-gradient-to-r from-indigo-100 via-white to-white px-8 py-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <Sparkles className="mt-1 h-6 w-6 text-indigo-500" />
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-indigo-500">Financial Check-up</p>
+              <h2 className="mt-1 text-2xl font-semibold text-slate-900">Your budgets at a glance</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                We combined your latest spending, income, and goals to highlight what needs attention right now.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <CashIcon className={`h-4 w-4 ${isSurplus || isBreakEven ? 'text-emerald-500' : 'text-rose-500'}`} />
+                  <span>Cash Flow</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Your Monthly Cash Flow</h3>
+                <p className="mt-2 text-sm text-slate-600">{cashFlowCopy}</p>
+              </div>
+              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${cashFlowImpactClasses}`}>
+                {cashFlowImpactLabel}
+              </span>
+            </div>
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-2 py-3">
+              <div ref={ieRef} className="min-h-[220px]">
                 {ieVisible ? (
-                  <IncomeExpenseChart
-                    chartData={getIncomeExpenseChartData()}
-                    formatCurrency={formatCurrency}
-                  />
-                ) : (
-                  <SkeletonChart />
-                )}
-              </div>
-          </div>
-
-          <div ref={bvaRef}>
-              {bvaVisible ? (
-                <BudgetActualChart
-                  chartData={getBudgetVsActualChartData()}
-                  formatCurrency={formatCurrency}
-                  categories={categories}
-                />
-              ) : (
-                <SkeletonChart />
-              )}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <BudgetPerformanceCards />
-        <BudgetPerformanceBars />
-        <BudgetPerformanceBadges />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div ref={manageBudgetsSectionRef} className="card hover-lift">
-          <div className="section-header">
-            <h2 className="section-title gradient-text">Manage Budgets</h2>
-          </div>
-          <div className="space-y-4">
-            <BudgetAccordion
-              sections={categories.map(category => {
-                const categoryBudget = budgets[category.id] || '';
-                const isHighlighted = highlightCategoryId === category.id;
-                return {
-                  id: String(category.id),
-                  title: category.name,
-                  spent: chartData?.categorySpending?.find(c => c.category === category.name)?.total ?? 0,
-                  budget: Number(categoryBudget || 0),
-                  children: (
-                    <div className={`flex items-center gap-2 ${isHighlighted ? 'rounded-md bg-blue-50/80 px-2 py-2 ring-2 ring-blue-300 transition' : ''}`}>
-                      <input
-                        type="number"
-                        value={categoryBudget}
-                        ref={(node) => {
-                          if (node) {
-                            budgetInputRefs.current[category.id] = node;
-                          }
-                        }}
-                        onChange={(e) => handleBudgetChange(category.id, e.target.value)}
-                        className={`w-24 px-2 py-1 rounded-md border transition focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 ${
-                          isHighlighted ? 'border-blue-400 bg-blue-50 shadow-md' : 'border-gray-300'
-                        }`}
-                        placeholder="0.00"
-                      />
-                      <span className="text-sm text-gray-600">kr</span>
+                  hasCashFlowData && incomeExpenseChartData ? (
+                    <IncomeExpenseChart chartData={incomeExpenseChartData} formatCurrency={formatCurrency} />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
+                      Add income and expenses to visualize your cash flow.
                     </div>
                   )
-                };
-              })}
-            />
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/expenses')}
+                className={actionPillClass}
+              >
+                Review Expenses
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToIncomeCenter('add')}
+                className={actionPillClass}
+              >
+                Manage Income
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <div className="section-header">
-            <h2 className="section-title gradient-text">Manage Income</h2>
-          </div>
-          <form onSubmit={handleAddIncome} className="card hover-lift">
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Income Source</label>
-              <input
-                type="text"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="e.g., Salary, Freelance"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Amount</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="1000.00"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full btn btn-primary flex items-center justify-center">
-              Add Income
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div className="card hover-lift">
-        <div className="section-header">
-          <h2 className="section-title">Income This Month</h2>
-        </div>
-        <div>
-          <ul className="space-y-4">
-            {incomes.map((income) => (
-              <li key={income.id} className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">{income.source}</p>
-                  <p className="text-sm text-gray-500">{new Date(income.date).toLocaleDateString()}</p>
+          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <PieChart className="h-4 w-4 text-indigo-500" />
+                  <span>Spending Breakdown</span>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-lg text-green-600">{formatCurrency(income.amount)}</p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Where Your Money Went</h3>
+                <p className="mt-2 text-sm text-slate-600">{categoryCopy}</p>
+              </div>
+            </div>
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-2 py-3">
+              <div ref={catRef} className="min-h-[220px]">
+                {catVisible ? (
+                  categoryChartData ? (
+                    <EnhancedCategorySpendingChart
+                      chartData={categoryChartData}
+                      formatCurrency={formatCurrency}
+                      selectedMonth={month - 1}
+                      onMonthChange={(m) => setMonth(m + 1)}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
+                      No spending yet for this month. Add expenses to unlock insights.
+                    </div>
+                  )
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={scrollToManageBudgets} className={actionPillClass}>
+                Adjust Budgets
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/expenses')}
+                className={actionPillClass}
+              >
+                View All Transactions
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg md:col-span-2">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <Target className="h-4 w-4 text-indigo-500" />
+                  <span>Budget Performance</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Budget Health Check</h3>
+                <p className="mt-2 text-sm text-slate-600">{budgetHealthCopy}</p>
+                <dl className="mt-4 grid grid-cols-3 gap-3 text-xs font-medium text-slate-500">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-emerald-600">
+                    <dt>On track</dt>
+                    <dd className="text-lg font-semibold">{performanceBreakdown.good}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2 text-amber-600">
+                    <dt>Near limit</dt>
+                    <dd className="text-lg font-semibold">{performanceBreakdown.warning}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2 text-rose-600">
+                    <dt>Over</dt>
+                    <dd className="text-lg font-semibold">{performanceBreakdown.over}</dd>
+                  </div>
+                </dl>
+              </div>
+              <span className={`inline-flex h-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${confidenceClassMap[confidenceTone]}`}>
+                Confidence: {confidenceScore}%
+              </span>
+            </div>
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-2 py-3">
+              <div ref={bvaRef} className="min-h-[240px]">
+                {bvaVisible ? (
+                  budgetVsActualChartData ? (
+                    <BudgetActualChart
+                      chartData={budgetVsActualChartData}
+                      formatCurrency={formatCurrency}
+                      categories={categories}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
+                      Set budgets for your categories to compare planned versus actual spending.
+                    </div>
+                  )
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={scrollToManageBudgets} className={actionPillClass}>
+                Fine-tune Budgets
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={manageBudgetsSectionRef}
+            className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg md:col-span-2"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <ListChecks className="h-4 w-4 text-indigo-500" />
+                  <span>Budgets</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Set Your Spending Goals</h3>
+                <p className="mt-2 text-sm text-slate-600">{manageBudgetsCopy}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => scrollToIncomeCenter('view')}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              >
+                View Incomes
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-6">
+              <BudgetAccordion
+                sections={budgetSections}
+                formatCurrency={formatCurrency}
+              />
+            </div>
+          </div>
+
+          <div
+            ref={incomeCenterRef}
+            className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg md:col-span-2"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <Wallet className="h-4 w-4 text-indigo-500" />
+                  <span>Income Center</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Your Income</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  You’ve logged {incomes.length} {incomes.length === 1 ? 'income stream' : 'income streams'} this month
+                  totaling {formatCurrency(totalIncomeLogged)}.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-sm font-medium text-slate-600">
+              <button
+                type="button"
+                onClick={() => setIncomePanelTab('view')}
+                className={`rounded-full px-4 py-1 transition ${incomePanelTab === 'view' ? 'bg-white text-slate-900 shadow-sm' : ''}`}
+              >
+                View Incomes
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncomePanelTab('add')}
+                className={`rounded-full px-4 py-1 transition ${incomePanelTab === 'add' ? 'bg-white text-slate-900 shadow-sm' : ''}`}
+              >
+                Add New Income
+              </button>
+            </div>
+
+            <div className="mt-6">
+              {incomePanelTab === 'view' ? (
+                incomes.length ? (
+                  <ul className="space-y-3">
+                    {incomes.map((income) => (
+                      <li
+                        key={income.id}
+                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{income.source}</p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(income.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <p className="text-sm font-semibold text-emerald-600">
+                            {formatCurrency(income.amount)}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteIncome(income.id)}
+                            className="rounded-full border border-slate-200 bg-white p-1.5 text-slate-400 transition hover:text-rose-500"
+                            aria-label={`Delete income ${income.source}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+                    <Wallet className="mb-3 h-8 w-8 text-slate-400" />
+                    No income recorded for this month yet. Add your first entry to track progress.
+                  </div>
+                )
+              ) : (
+                <form onSubmit={handleAddIncome} className="space-y-5">
+                  <div>
+                    <label className="block text-xs uppercase tracking-[0.18em] text-slate-500">Income Source</label>
+                    <input
+                      type="text"
+                      value={source}
+                      onChange={(e) => setSource(e.target.value)}
+                      className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      placeholder="e.g., Salary, Freelance project"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-[0.18em] text-slate-500">Amount</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      placeholder="1000.00"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-[0.18em] text-slate-500">Date</label>
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      required
+                    />
+                  </div>
                   <button
-                    onClick={() => handleDeleteIncome(income.id)}
-                    className="btn btn-secondary"
-                    style={{ padding: '0.375rem 0.75rem' }}
+                    type="submit"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-600"
                   >
-                    Delete
+                    <PlusCircle className="h-4 w-4" />
+                    Add Income
                   </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </form>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderAnalyticsSection = () => (
     <div className="space-y-6">
@@ -569,7 +986,7 @@ const Budget = () => {
   return (
     <div className="dashboard-content">
       {/* Error card */}
-      {error && (
+      {shouldShowGlobalError && (
         <div className="glass-card error-card">
           <div className="section-header">
             <h3 className="section-title gradient-text">Error</h3>
