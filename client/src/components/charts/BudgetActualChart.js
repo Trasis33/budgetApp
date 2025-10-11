@@ -121,6 +121,43 @@ const BudgetActualChart = ({ chartData, formatCurrency, className }) => {
 
   const hasData = barData.length > 0;
   const yDomain = useMemo(() => computeYDomain(barData, ['budgeted', 'actual'], 0.2), [barData]);
+  const categoryCount = barData.length || 1;
+  const dynamicBarSize = useMemo(() => {
+    const base = Math.floor(660 / categoryCount);
+    return Math.max(20, Math.min(36, base));
+  }, [categoryCount]);
+
+  const innerGap = useMemo(() => Math.max(8, Math.round(dynamicBarSize * 0.3)), [dynamicBarSize]);
+
+  const barShape = useMemo(() => {
+    const effectiveGap = Math.min(dynamicBarSize - 4, innerGap);
+    return ({ x, y, width, height, fill }) => {
+      if (width <= 0 || height <= 0) {
+        return null;
+      }
+      const trimmedWidth = Math.max(0, width - effectiveGap);
+      const offset = (width - trimmedWidth) / 2;
+
+      return (
+        <rect
+          x={x + offset}
+          y={y}
+          width={trimmedWidth}
+          height={height}
+          rx={10}
+          ry={10}
+          fill={fill}
+        />
+      );
+    };
+  }, [innerGap, dynamicBarSize]);
+
+  const categoryGap = useMemo(() => {
+    if (categoryCount > 16) return '26%';
+    if (categoryCount > 12) return '34%';
+    if (categoryCount > 8) return '40%';
+    return '46%';
+  }, [categoryCount]);
 
   if (!hasData) {
     return <EmptyState />;
@@ -135,10 +172,10 @@ const BudgetActualChart = ({ chartData, formatCurrency, className }) => {
         <BarChart
           data={barData}
           margin={{ ...commonMargins, bottom: 56 }}
-          barGap={12}
-          barCategoryGap="36%"
+          barGap={0}
+          barCategoryGap={categoryGap}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
           <XAxis
             dataKey="category"
             axisLine={false}
@@ -148,6 +185,7 @@ const BudgetActualChart = ({ chartData, formatCurrency, className }) => {
             height={60}
             tickMargin={12}
             interval={0}
+            minTickGap={4}
           />
           <YAxis
             domain={yDomain}
@@ -160,13 +198,13 @@ const BudgetActualChart = ({ chartData, formatCurrency, className }) => {
           <Bar
             dataKey="budgeted"
             fill={palette.budgeted}
-            radius={[8, 8, 8, 8]}
-            maxBarSize={48}
+            barSize={dynamicBarSize}
+            shape={barShape}
           />
           <Bar
             dataKey="actual"
-            radius={[8, 8, 8, 8]}
-            maxBarSize={48}
+            barSize={dynamicBarSize}
+            shape={barShape}
           >
             {barData.map((entry, index) => {
               let fill = entry.actualColor;

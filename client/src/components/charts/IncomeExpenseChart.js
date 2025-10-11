@@ -6,7 +6,8 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip
+  Tooltip,
+  LabelList
 } from 'recharts';
 import { cn } from '../../lib/utils';
 import { commonMargins } from './chartUtils';
@@ -32,6 +33,29 @@ const EmptyState = () => (
     <p className="mt-1 text-xs text-slate-400">We’ll chart the surplus or deficit once data arrives.</p>
   </div>
 );
+
+const createValueLabel = (color, align = 'middle', horizontalOffset = 0, verticalOffset = 12) => (props) => {
+  const { x, y, value, height } = props;
+  if (value == null || x == null || y == null) {
+    return null;
+  }
+
+  const textAnchor =
+    align === 'start' || align === 'end' || align === 'middle' ? align : align === 'left' ? 'start' : align === 'right' ? 'end' : 'middle';
+
+  return (
+    <text
+      x={x + horizontalOffset}
+      y={y + height + verticalOffset}
+      fill={color}
+      textAnchor={textAnchor}
+      fontSize={12}
+      fontWeight={600}
+    >
+      {value}
+    </text>
+  );
+};
 
 const TooltipContent = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
@@ -77,6 +101,8 @@ const TooltipContent = ({ active, payload }) => {
 };
 
 const CHART_HEIGHT = 260;
+const BAR_GAP = '65%';
+const BAR_SIZE = 112;
 
 const IncomeExpenseChart = ({ chartData, formatCurrency, className }) => {
   const barData = useMemo(() => {
@@ -91,10 +117,15 @@ const IncomeExpenseChart = ({ chartData, formatCurrency, className }) => {
         expenses,
         formattedIncome: formatCurrency(income),
         formattedExpenses: formatCurrency(expenses),
-        formattedNet: formatCurrency(income - expenses)
+        formattedNet: formatCurrency(income - expenses),
+        shortIncome: formatCompactCurrency(income),
+        shortExpenses: formatCompactCurrency(expenses)
       }
     ];
   }, [chartData, formatCurrency]);
+
+  const renderIncomeLabel = useMemo(() => createValueLabel('#059669', 'middle', 56, 24), []);
+  const renderExpenseLabel = useMemo(() => createValueLabel('#f43f5e', 'middle', 56, 24), []);
 
   const hasData = barData.length > 0 && (barData[0].income > 0 || barData[0].expenses > 0);
 
@@ -111,9 +142,10 @@ const IncomeExpenseChart = ({ chartData, formatCurrency, className }) => {
         <BarChart
           data={barData}
           margin={{ ...commonMargins, bottom: 16 }}
-          barCategoryGap="40%"
+          barCategoryGap={BAR_GAP}
+          barGap={24}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
           <XAxis
             dataKey="name"
             axisLine={false}
@@ -129,16 +161,32 @@ const IncomeExpenseChart = ({ chartData, formatCurrency, className }) => {
           <Tooltip cursor={false} content={<TooltipContent />} />
           <Bar
             dataKey="income"
-            radius={[8, 8, 8, 8]}
-            maxBarSize={72}
+            radius={[12, 12, 12, 12]}
+            barSize={BAR_SIZE}
             fill={palette.income}
-          />
+            isAnimationActive={false}
+          >
+            <LabelList
+              dataKey="shortIncome"
+              position="top"
+              offset={12}
+              content={renderIncomeLabel}
+            />
+          </Bar>
           <Bar
             dataKey="expenses"
-            radius={[8, 8, 8, 8]}
-            maxBarSize={72}
+            radius={[12, 12, 12, 12]}
+            barSize={BAR_SIZE}
             fill={palette.expenses}
-          />
+            isAnimationActive={false}
+          >
+            <LabelList
+              dataKey="shortExpenses"
+              position="top"
+              offset={12}
+              content={renderExpenseLabel}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
