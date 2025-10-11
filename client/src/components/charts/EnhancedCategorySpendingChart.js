@@ -1,30 +1,17 @@
 import React, { useMemo } from 'react';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  PieChart,
+  Pie,
   Tooltip,
-  Cell
+  Cell,
+  Label
 } from 'recharts';
 import { cn } from '../../lib/utils';
 import {
   buildDistributionData,
-  computeYDomain,
-  distributionPalette,
-  commonMargins
+  distributionPalette
 } from './chartUtils';
-
-const formatCompactCurrency = (value) => {
-  return new Intl.NumberFormat('sv-SE', {
-    style: 'currency',
-    currency: 'SEK',
-    notation: 'compact',
-    maximumFractionDigits: 1
-  }).format(value);
-};
 
 const EmptyState = () => (
   <div className="flex h-full min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center text-sm text-slate-500">
@@ -71,58 +58,87 @@ const EnhancedCategorySpendingChart = ({
     }));
   }, [chartData, formatCurrency]);
 
-  const yDomain = useMemo(() => computeYDomain(distributionData, ['value'], 0.2), [distributionData]);
-
   if (!distributionData.length) {
     return <EmptyState />;
   }
 
+  const totalSpent = distributionData.reduce((sum, item) => sum + item.value, 0);
+  const topSlices = distributionData.slice(0, 4);
+
   return (
-    <div
-      className={cn('w-full', className)}
-      style={{ minHeight: CHART_HEIGHT }}
-    >
-      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-        <BarChart
-          data={distributionData}
-          margin={{ ...commonMargins, bottom: 48 }}
-          barCategoryGap="32%"
-          barGap={12}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-          <XAxis
-            dataKey="category"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 11, fill: '#64748b' }}
-            angle={-30}
-            height={50}
-            tickMargin={10}
-            interval={0}
-          />
-          <YAxis
-            domain={yDomain}
-            axisLine={false}
-            tickLine={false}
-            width={80}
-            tick={{ fontSize: 11, fill: '#64748b' }}
-            tickFormatter={(value) => formatCompactCurrency(value)}
-          />
-          <Tooltip cursor={false} content={<TooltipContent />} />
-          <Bar
-            dataKey="value"
-            radius={[8, 8, 8, 8]}
-            maxBarSize={56}
-          >
-            {distributionData.map((entry, index) => (
-              <Cell
-                key={`${entry.category}-${index}`}
-                fill={distributionPalette[index % distributionPalette.length]}
+    <div className={cn('space-y-5', className)}>
+      <div
+        className="w-full"
+        style={{ minHeight: CHART_HEIGHT }}
+      >
+        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+          <PieChart margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
+            <Tooltip cursor={false} content={<TooltipContent />} />
+            <Pie
+              data={distributionData}
+              dataKey="value"
+              nameKey="category"
+              innerRadius="55%"
+              outerRadius="85%"
+              paddingAngle={2}
+              stroke="#fff"
+              strokeWidth={2}
+            >
+              {distributionData.map((entry, index) => (
+                <Cell
+                  key={`${entry.category}-${index}`}
+                  fill={distributionPalette[index % distributionPalette.length]}
+                />
+              ))}
+              <Label
+                position="center"
+                content={({ viewBox }) => {
+                  if (!viewBox?.cx || !viewBox?.cy) return null;
+                  return (
+                    <g>
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy - 6}
+                        textAnchor="middle"
+                        fill="#94a3b8"
+                        style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase' }}
+                      >
+                        Total spent
+                      </text>
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy + 16}
+                        textAnchor="middle"
+                        fill="#1e293b"
+                        style={{ fontSize: '18px', fontWeight: 600 }}
+                      >
+                        {formatCurrency(totalSpent)}
+                      </text>
+                    </g>
+                  );
+                }}
               />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {topSlices.map((slice, index) => (
+          <div key={slice.category} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: distributionPalette[index % distributionPalette.length] }}
+              />
+              <span className="text-sm font-medium text-slate-700">{slice.category}</span>
+            </div>
+            <span className="text-sm font-semibold text-slate-900">
+              {slice.percentage.toFixed(0)}%
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
