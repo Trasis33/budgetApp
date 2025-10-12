@@ -372,8 +372,6 @@
   }
 }
 
-@import './styles/expenses-v2.css';
-
 @layer components {
   /* Layout components from template */
   .app-container {
