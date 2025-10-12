@@ -321,8 +321,8 @@ const ExpensesV2 = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
-      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 lg:px-8">
+    <div className="dashboard-content">
+      <div className="space-y-8">
         <SectionBanner
           title={heroCopy.title}
           subtitle={heroCopy.subtitle}
@@ -332,7 +332,7 @@ const ExpensesV2 = () => {
           scopedTotal={currencyFormatter(scopedTotal)}
         />
 
-        <div className="mt-8 grid gap-6">
+        <div className="grid gap-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <TotalSpendingCard
               range={range}
