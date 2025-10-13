@@ -10,7 +10,6 @@ import formatCurrency from '../utils/formatCurrency';
 import KPISummaryCards from './KPISummaryCards';
 import { useScope } from '../context/ScopeContext';
  
-
 // Phase 2: lazy-loading and skeletons
 import useLazyLoad from '../hooks/useLazyLoad';
 import { SkeletonChart } from './ui/Skeletons';
@@ -80,9 +79,6 @@ const ModernEnhancedDashboard = () => {
       setLoading(false);
     }
   };
-
-  
-
   // Declare lazy-load refs before any early returns (Rules of Hooks)
   const { ref: patternsRef, isVisible: patternsVisible } = useLazyLoad();
   const { ref: savingsRef, isVisible: savingsVisible } = useLazyLoad();
@@ -102,15 +98,6 @@ const ModernEnhancedDashboard = () => {
 
   return (
     <div className="dashboard-content">
-      {/* Dashboard Header */}
-{/*       <div className="dashboard-header">
-        <h2 className="dashboard-title">Enhanced Dashboard</h2>
-        <div className="dashboard-header-right">
-          <p className="dashboard-subtitle">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </p>
-        </div>
-      </div> */}
 
       {/* Quick Stats Grid */}
       <div className="stats-grid">
@@ -119,67 +106,6 @@ const ModernEnhancedDashboard = () => {
             formatCurrency={formatCurrency}
       scopeMeta={scopeMeta}
         />
-        {/* <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">This Month</span>
-            <div className="stat-icon" style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%)', 
-              color: '#3b82f6'
-            }}>
-              <DollarSign className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="stat-value">
-            {formatCurrency(dashboardData?.summary?.totalExpenses || 0)}
-          </div>
-          <div className="stat-change" style={{color: '#10b981'}}>
-            +2.5% from last month
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Savings Rate</span>
-            <div className="stat-icon" style={{
-              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(134, 239, 172, 0.1) 100%)', 
-              color: '#22c55e'
-            }}>
-              <TrendingUp className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="stat-value">
-            {getSafeNumber(dashboardData?.patterns?.summary?.avgMonthlySpending, dashboardData?.summary?.income)}%
-          </div>
-          <div className="stat-change neutral">
-            No change
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Budget Status</span>
-            <div className="stat-icon">
-              <Target className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="stat-value">On Track</div>
-          <div className="stat-change up">
-            Within budget
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Alerts</span>
-            <div className="stat-icon">
-              <AlertTriangle className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="stat-value">0</div>
-          <div className="stat-change">
-            No alerts
-          </div>
-        </div> */}
       </div>
 
       {/* Analytics Section */}
@@ -204,12 +130,12 @@ const ModernEnhancedDashboard = () => {
           <div ref={savingsRef}>
             {savingsVisible ? <SavingsRateTracker /> : <SkeletonChart />}
           </div>
-          <div ref={perfCardsRef}>
+{/*           <div ref={perfCardsRef}>
             {perfCardsVisible ? <BudgetPerformanceCards /> : <SkeletonChart />}
           </div>
           <div ref={perfBadgesRef}>
             {perfBadgesVisible ? <BudgetPerformanceBadges /> : <SkeletonChart />}
-          </div>
+          </div> */}
         </div>
       </div>
 

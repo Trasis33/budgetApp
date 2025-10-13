@@ -1,14 +1,41 @@
+/**
+ * Budget Optimizer - Analysis Engine for Budget Optimization Tips
+ * Analyzes spending patterns, budget variances, and generates personalized recommendations
+ * for budget optimization and savings goals.
+ * 
+ * @class BudgetOptimizer
+ * @created 2025-07-12
+ * @filepath /Users/fredriklanga/Documents/projects2024/budgetApp/server/utils/budgetOptimizer.js
+ */
 // Budget Optimizer - Analysis Engine for Budget Optimization Tips
 // Created: 2025-07-12
 
 const knex = require('../db/database');
 
+/**
+ * Creates an instance of BudgetOptimizer.
+ * 
+ * @constructor
+ * @param {number} userId - The ID of the user to analyze
+ */
 class BudgetOptimizer {
   constructor(userId) {
     this.userId = userId;
   }
 
-  // Analyze spending patterns and generate insights
+/**
+ * Analyzes spending patterns and generates comprehensive insights.
+ * Combines expense history, budgets, and savings goals to identify patterns,
+ * seasonal trends, and budget variances.
+ * 
+ * @async
+ * @returns {Promise<Object>} Analysis results containing:
+ *   - patterns: Spending pattern trends by category
+ *   - seasonalTrends: Seasonal spending factors by month
+ *   - budgetVariances: Differences between budgeted and actual spending
+ *   - recommendations: Array of optimization recommendations
+ * @throws {Error} If database queries fail
+ */
   async analyzeSpendingPatterns() {
     try {
       const expenses = await this.getExpenseHistory(12); // 12 months
@@ -31,8 +58,15 @@ class BudgetOptimizer {
     }
   }
 
-  // Get expense history for the last N months
-  // For couples' budget app: Include split expenses from both users + personal expenses from current user
+/**
+ * Retrieves expense history for the last N months.
+ * For couples' budget app: Includes split expenses from both users and personal expenses from current user.
+ * 
+ * @async
+ * @param {number} months - Number of months to retrieve
+ * @returns {Promise<Array<Object>>} Array of expense records grouped by category and month
+ * @throws {Error} If database query fails
+ */
   async getExpenseHistory(months) {
     try {
       const userId = this.userId; // Capture userId for use in nested functions
@@ -63,7 +97,14 @@ class BudgetOptimizer {
     }
   }
 
-  // Get budget history for the last N months
+/**
+ * Retrieves budget history for the last N months.
+ * 
+ * @async
+ * @param {number} months - Number of months to retrieve
+ * @returns {Promise<Array<Object>>} Array of budget records grouped by category and month
+ * @throws {Error} If database query fails
+ */
   async getBudgetHistory(months) {
     try {
       const currentDate = new Date();
@@ -98,7 +139,13 @@ class BudgetOptimizer {
     }
   }
 
-  // Get savings goals
+/**
+ * Retrieves active savings goals for the user.
+ * 
+ * @async
+ * @returns {Promise<Array<Object>>} Array of active savings goals (empty array if table doesn't exist)
+ * @throws {Error} If database query fails (except missing table)
+ */
   async getSavingsGoals() {
     try {
       const rows = await knex('savings_goals')
@@ -118,7 +165,19 @@ class BudgetOptimizer {
     }
   }
 
-  // Generate specific optimization recommendations
+/**
+ * Generates specific optimization recommendations based on analysis results.
+ * Creates recommendations for:
+ * - Reducing overspending in categories
+ * - Reallocating unused budget
+ * - Preparing for seasonal spending spikes
+ * - Staying on track with savings goals
+ * 
+ * @param {Object} patterns - Spending pattern trends by category
+ * @param {Array<Object>} budgetVariances - Budget variance data
+ * @param {Array<Object>} savingsGoals - Active savings goals
+ * @returns {Array<Object>} Array of recommendation objects with type, title, description, impact_amount, and confidence_score
+ */
   generateRecommendations(patterns, budgetVariances, savingsGoals) {
     const recommendations = [];
 
@@ -193,7 +252,13 @@ class BudgetOptimizer {
     return recommendations;
   }
 
-  // Identify spending patterns (increasing/decreasing trends)
+/**
+ * Identifies spending patterns and trends for each category.
+ * Calculates trend direction (increasing/decreasing/stable) and enhanced trend metrics.
+ * 
+ * @param {Array<Object>} expenses - Expense history data
+ * @returns {Object} Category trends with data, trend direction, strength, and enhanced metrics
+ */
   identifyPatterns(expenses) {
     const categoryTrends = {};
     
@@ -225,7 +290,13 @@ class BudgetOptimizer {
     return categoryTrends;
   }
 
-  // Calculate linear trend
+/**
+ * Calculates linear trend (slope) from an array of values.
+ * Uses least squares method to determine trend direction and strength.
+ * 
+ * @param {Array<number>} values - Array of numeric values
+ * @returns {number} Slope value indicating trend direction and strength
+ */
   calculateTrend(values) {
     if (values.length < 2) return 0;
     
@@ -240,7 +311,23 @@ class BudgetOptimizer {
     return slope;
   }
 
-  // Calculate enhanced trend strength with detailed metrics
+/**
+ * Calculates enhanced trend strength with detailed metrics.
+ * Provides comprehensive trend analysis including volatility, confidence, and categorization.
+ * 
+ * @param {Array<number>} amounts - Array of spending amounts
+ * @param {number} rawTrend - Raw trend slope value
+ * @returns {Object} Enhanced trend analysis containing:
+ *   - category: Trend strength category (minimal/weak/moderate/strong/very_strong)
+ *   - normalizedStrength: Normalized trend strength as percentage
+ *   - percentageChange: Total percentage change from first to last value
+ *   - monthlyChange: Average monthly change in absolute terms
+ *   - volatility: Standard deviation of amounts
+ *   - confidence: Confidence score (0-100)
+ *   - description: Human-readable trend description
+ *   - dataPoints: Number of data points analyzed
+ *   - average: Average spending amount
+ */
   calculateEnhancedTrendStrength(amounts, rawTrend) {
     if (amounts.length < 2) {
       return {
@@ -311,7 +398,13 @@ class BudgetOptimizer {
     };
   }
 
-  // Detect seasonal patterns
+/**
+ * Detects seasonal spending patterns across all years.
+ * Calculates seasonal factors by comparing monthly averages to overall average.
+ * 
+ * @param {Array<Object>} expenses - Expense history data
+ * @returns {Object} Seasonal factors by month (1-12)
+ */
   detectSeasonalTrends(expenses) {
     const monthlyAverages = {};
     
@@ -338,7 +431,22 @@ class BudgetOptimizer {
     return seasonalFactors;
   }
 
-  // Analyze budget variances
+/**
+ * Analyzes variances between budgeted and actual spending.
+ * Calculates overage percentages and suggests reductions or identifies unused budget.
+ * 
+ * @param {Array<Object>} expenses - Expense history data
+ * @param {Array<Object>} budgets - Budget history data
+ * @returns {Array<Object>} Array of variance objects with:
+ *   - name: Category name
+ *   - month: Year-month string
+ *   - budgetAmount: Budgeted amount
+ *   - actualAmount: Actual spending
+ *   - variance: Variance ratio
+ *   - overagePercentage: Overage as percentage
+ *   - suggestedReduction: Suggested reduction amount
+ *   - unusedAmount: Unused budget amount
+ */
   analyzeBudgetVariances(expenses, budgets) {
     const variances = [];
     
@@ -378,7 +486,13 @@ class BudgetOptimizer {
     return variances;
   }
 
-  // Calculate shortfall for savings goal
+/**
+ * Calculates savings plan for achieving a goal.
+ * Determines monthly savings needed and recommended based on target date and remaining amount.
+ * 
+ * @param {Object} goal - Savings goal object with target_amount, current_amount, and target_date
+ * @returns {Object|null} Savings plan with monthly recommendations and confidence, or null if goal is complete
+ */
   calculateGoalSavingsPlan(goal) {
     const targetAmount = Number(goal.target_amount || 0);
     const currentAmount = Number(goal.current_amount || 0);
@@ -429,6 +543,14 @@ class BudgetOptimizer {
     };
   }
 
+/**
+ * Builds human-readable recommendation copy for savings goals.
+ * Creates contextual messages based on time remaining and savings pace.
+ * 
+ * @param {Object} goal - Savings goal object
+ * @param {Object} plan - Calculated savings plan
+ * @returns {string} Formatted recommendation text
+ */
   buildGoalRecommendationCopy(goal, plan) {
     const { monthsRemaining, recommendedMonthly, monthlyNeeded, targetDate } = plan;
     const monthsLabel = monthsRemaining === 1 ? 'month' : 'months';
@@ -447,7 +569,12 @@ class BudgetOptimizer {
     return `Setting aside around ${recommendedText} each month will keep ${goalName} on track (target pace requires ${neededText}).`;
   }
 
-  // Format currency
+/**
+ * Formats a number as currency in Swedish Krona (SEK).
+ * 
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
   formatCurrency(amount) {
     return new Intl.NumberFormat('sv-SE', {
       style: 'currency',

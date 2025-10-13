@@ -8,8 +8,6 @@ import SpendingTrendsChart from './SpendingTrendsChart';
 import MonthlyComparisonChart from './MonthlyComparisonChart';
 // import KPISummaryCards from './KPISummaryCards';
 
-
-
 const DashboardAnalytics = () => {
   // const { user } = useAuth(); // Commented out as not currently used
   const [analytics, setAnalytics] = useState(null);
@@ -55,12 +53,6 @@ const DashboardAnalytics = () => {
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
-
-
-
-
-
-
 
   if (loading) {
     return (
