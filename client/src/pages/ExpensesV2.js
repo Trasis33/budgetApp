@@ -52,6 +52,7 @@ const {
   AlertTriangle,
   CheckCircle2,
   Tag,
+  Banknote,
 } = LucideIcons;
 
 const today = new Date();
@@ -412,7 +413,7 @@ const SectionBanner = ({ title, subtitle, scopeLabel, scopedTotal, onOpenFilter,
     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
-          <Sparkles className="h-4 w-4 text-indigo-500" />
+          <Banknote className="h-4 w-4 text-indigo-500" />
           {scopeLabel}
         </div>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 lg:text-4xl">{title}</h1>
