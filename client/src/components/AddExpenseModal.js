@@ -429,7 +429,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
     <div className="modal-overlay">
       <div
         className="modal-content w-full max-w-4xl border border-emerald-100/80 bg-gradient-to-br from-white via-emerald-50/30 to-white shadow-xl transition-all"
-        style={{ borderRadius: '24px', padding: '32px' }}
+        style={{ borderRadius: '24px', padding: '28px' }}
       >
         <form onSubmit={handleSubmit}>
           <header className="flex flex-wrap items-start justify-between gap-4">
@@ -866,33 +866,40 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
         </form>
 
         {!isEditMode && recent.length > 0 && (
-          <aside className="mt-10 space-y-4">
+          <aside className="mt-6 space-y-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">Recent expenses</p>
               <p className="mt-1 text-sm text-slate-500">
                 Reuse something similar to speed things up. We’ll prefill the fields for you.
               </p>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div
+              className="flex w-full gap-3 overflow-x-auto pb-2"
+              style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
+            >
               {recent.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-3xl border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/40 to-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-200/35"
+                  className="flex min-w-[200px] max-w-[240px] flex-col justify-between rounded-3xl border border-slate-200/70 bg-slate-50 p-4 shadow-sm transition hover:shadow-md hover:shadow-slate-200/80"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="text-base font-semibold text-slate-900">{item.description}</h4>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatCurrency(Number.parseFloat(item.amount) || 0)} · {item.category_name || 'Uncategorised'}
-                      </p>
-                      <p className="text-xs uppercase tracking-wide text-slate-400">
-                        {item.date ? new Date(item.date).toLocaleDateString() : '—'}
-                      </p>
-                    </div>
+                  <div className="space-y-1 text-left">
+                    <h4 className="text-sm font-semibold text-slate-900 line-clamp-2">
+                      {item.description}
+                    </h4>
+                    <p className="text-xs font-medium text-emerald-600">
+                      {formatCurrency(Number.parseFloat(item.amount) || 0)}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {item.category_name || 'Uncategorised'}
+                    </p>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                    <span>{item.date ? new Date(item.date).toLocaleDateString() : '—'}</span>
                     <Button
                       type="button"
                       variant="pill"
-                      className="border-emerald-100/70 bg-white text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/70 hover:text-emerald-700"
+                      size="sm"
+                      className="border-emerald-200 bg-white text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50/80 hover:text-emerald-700"
                       onClick={() => handleUseRecent(item)}
                     >
                       Use this
