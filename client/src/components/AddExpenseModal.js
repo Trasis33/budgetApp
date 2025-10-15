@@ -416,6 +416,20 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
     setCurrentStep(1);
   };
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  const handleOverlayClick = (event) => {
+    if (event.target !== event.currentTarget) return;
+    onClose?.();
+  };
+
   if (!open) return null;
 
   const amountInputClasses = cn(
@@ -426,7 +440,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
   );
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div
         className="modal-content w-full max-w-4xl border border-emerald-100/80 bg-gradient-to-br from-white via-emerald-50/30 to-white shadow-xl transition-all"
         style={{ borderRadius: '24px', padding: '28px' }}
@@ -501,7 +515,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                   <label className="text-sm font-semibold text-emerald-600">What’s the total amount?</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     autoFocus
                     className={amountInputClasses}
                     placeholder="0.00"
