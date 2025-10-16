@@ -19,8 +19,24 @@ const knex = require('../db/database');
  * @param {number} userId - The ID of the user to analyze
  */
 class BudgetOptimizer {
-  constructor(userId) {
-    this.userId = userId;
+  constructor(context) {
+    if (typeof context === 'number') {
+      this.scope = 'mine';
+      this.viewerId = context;
+      this.partnerId = null;
+      this.payerIds = [context];
+      this.sharedOnly = false;
+    } else if (context && typeof context === 'object') {
+      this.scope = context.scope || 'ours';
+      this.viewerId = context.viewerId;
+      this.partnerId = context.counterpartId ?? null;
+      this.payerIds = Array.isArray(context.payerIds)
+        ? context.payerIds.filter((id) => id !== null && id !== undefined)
+        : [];
+      this.sharedOnly = Boolean(context.sharedOnly);
+    } else {
+      throw new Error('BudgetOptimizer requires a user context');
+    }
   }
 
 /**
@@ -69,7 +85,9 @@ class BudgetOptimizer {
  */
   async getExpenseHistory(months) {
     try {
-      const userId = this.userId; // Capture userId for use in nested functions
+      if (!this.payerIds || this.payerIds.length === 0) {
+        return [];
+      }
       const rows = await knex('expenses')
         .select(
           'categories.name as category',
@@ -78,14 +96,14 @@ class BudgetOptimizer {
         )
         .join('categories', 'expenses.category_id', 'categories.id')
         .where('expenses.date', '>=', knex.raw(`date('now', '-${months} months')`))
-        .where(function() {
-          // Include personal expenses only for the current user
-          this.where(function() {
-            this.where('expenses.paid_by_user_id', userId)
-                .andWhere('expenses.split_type', '=', 'personal');
-          })
-          // Include all shared/split expenses regardless of who paid
-          .orWhere('expenses.split_type', '!=', 'personal');
+        .whereIn('expenses.paid_by_user_id', this.payerIds)
+        .modify((query) => {
+          if (this.sharedOnly) {
+            query.andWhere(function () {
+              this.whereNull('expenses.split_type')
+                .orWhereRaw("LOWER(expenses.split_type) NOT IN ('personal','personal_only')");
+            });
+          }
         })
         .groupBy(['categories.name', knex.raw("strftime('%Y-%m', expenses.date)")])
         .orderBy('month', 'desc');
@@ -148,9 +166,16 @@ class BudgetOptimizer {
  */
   async getSavingsGoals() {
     try {
+      let targetUserIds = [this.viewerId];
+      if (this.scope === 'partner' && this.partnerId) {
+        targetUserIds = [this.partnerId];
+      } else if (this.scope === 'ours' && this.partnerId) {
+        targetUserIds = [this.viewerId, this.partnerId];
+      }
+
       const rows = await knex('savings_goals')
         .select('*')
-        .where('user_id', this.userId)
+        .whereIn('user_id', targetUserIds)
         .where(function() {
           this.whereNull('target_date')
             .orWhere('target_date', '>', knex.raw("date('now')"));
@@ -467,19 +492,24 @@ class BudgetOptimizer {
     // Calculate variances
     Object.keys(budgetsByCategory).forEach(key => {
       const [category, month] = key.split('-');
-      const budgetAmount = budgetsByCategory[key];
-      const actualAmount = expensesByCategory[key] || 0;
-      const variance = (actualAmount - budgetAmount) / budgetAmount;
+      const rawBudget = Number(budgetsByCategory[key] || 0);
+      const rawActual = Number(expensesByCategory[key] || 0);
+      let variance = 0;
+      if (rawBudget > 0) {
+        variance = (rawActual - rawBudget) / rawBudget;
+      } else if (rawActual > 0) {
+        variance = 1;
+      }
       
       variances.push({
         name: category,
         month,
-        budgetAmount,
-        actualAmount,
+        budgetAmount: rawBudget,
+        actualAmount: rawActual,
         variance,
         overagePercentage: Math.max(0, variance * 100),
-        suggestedReduction: Math.max(0, actualAmount - budgetAmount),
-        unusedAmount: Math.max(0, budgetAmount - actualAmount)
+        suggestedReduction: Math.max(0, rawActual - rawBudget),
+        unusedAmount: Math.max(0, rawBudget - rawActual)
       });
     });
 

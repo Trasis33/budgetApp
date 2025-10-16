@@ -115,7 +115,7 @@ const ModernEnhancedDashboard = () => {
           optimization: {
             analysis: optimizationAnalysisRes.data
           },
-          goals: Array.isArray(goalsRes.data) ? goalsRes.data : []
+          goals: goalsRes.data
         });
       } catch (err) {
         console.error('Error fetching dashboard data', err);
@@ -177,9 +177,17 @@ const ModernEnhancedDashboard = () => {
     return base;
   }, [dashboardData, scope]);
 
+  const optimizationAnalysis = useMemo(() => {
+    const base = dashboardData?.optimization?.analysis;
+    if (!base) return null;
+    const scoped = base.scopes?.[scope];
+    if (scoped) return scoped;
+    return base;
+  }, [dashboardData, scope]);
+
   const budgetInsight = useMemo(() => {
-    const variances = dashboardData?.optimization?.analysis?.budgetVariances
-      || dashboardData?.optimization?.analysis?.budget_variances
+    const variances = optimizationAnalysis?.budgetVariances
+      || optimizationAnalysis?.budget_variances
       || [];
     if (!variances.length) return null;
     const sorted = [...variances].sort(
@@ -192,14 +200,19 @@ const ModernEnhancedDashboard = () => {
       actualAmount: pick.actualAmount ?? pick.actual_amount ?? pick.actual ?? 0,
       variance: pick.variance ?? 0
     };
-  }, [dashboardData]);
+  }, [optimizationAnalysis]);
 
-  const sharedGoal = useMemo(() => {
-    if (!Array.isArray(dashboardData?.goals) || dashboardData.goals.length === 0) {
-      return null;
-    }
-    return dashboardData.goals[0];
-  }, [dashboardData]);
+  const scopedGoals = useMemo(() => {
+    const base = dashboardData?.goals;
+    if (!base) return [];
+    const scoped = base.scopes?.[scope];
+    if (scoped?.goals) return scoped.goals;
+    if (Array.isArray(base)) return base;
+    if (Array.isArray(base.goals)) return base.goals;
+    return [];
+  }, [dashboardData, scope]);
+
+  const sharedGoal = scopedGoals.length > 0 ? scopedGoals[0] : null;
 
   const scopeOptions = useMemo(() => {
     const partnerLabel = couple?.partner?.name

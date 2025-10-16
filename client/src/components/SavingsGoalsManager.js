@@ -1,9 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import AddContributionModal from './AddContributionModal';
+import { useScope } from '../context/ScopeContext';
+
+const extractScopedGoals = (payload, scope) => {
+  if (!payload || typeof payload !== 'object') {
+    return Array.isArray(payload) ? payload : [];
+  }
+  const scoped = payload.scopes?.[scope];
+  if (scoped?.goals) {
+    return scoped.goals;
+  }
+  if (Array.isArray(payload.goals)) {
+    return payload.goals;
+  }
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  return [];
+};
 
 const SavingsGoalsManager = () => {
+  const { scope } = useScope();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,32 +36,32 @@ const SavingsGoalsManager = () => {
   const [contribOpen, setContribOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
 
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/savings/goals');
-      setGoals(response.data);
+      const response = await axios.get('/savings/goals', { params: { scope } });
+      setGoals(extractScopedGoals(response.data, scope));
     } catch (err) {
       console.error('Error fetching goals:', err);
       setError('Failed to load savings goals');
     } finally {
       setLoading(false);
     }
-  };
+  }, [scope]);
+
+  useEffect(() => {
+    fetchGoals();
+  }, [fetchGoals]);
 
   const handleAddGoal = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/savings/goals', {
+      await axios.post('/savings/goals', {
         ...formData,
         target_amount: parseFloat(formData.target_amount)
       });
-      setGoals([...goals, response.data]);
+      await fetchGoals();
       setFormData({
         goal_name: '',
         target_amount: '',
@@ -63,7 +82,7 @@ const SavingsGoalsManager = () => {
     
     try {
       await axios.delete(`/savings/goals/${goalId}`);
-      setGoals(goals.filter(goal => goal.id !== goalId));
+      await fetchGoals();
     } catch (err) {
       console.error('Error deleting goal:', err);
       setError('Failed to delete savings goal');

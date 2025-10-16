@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
 import SpendingPatternsChart from './SpendingPatternsChart';
+import { useScope } from '../context/ScopeContext';
 import {
   ResponsiveContainer,
   LineChart,
@@ -69,6 +70,17 @@ const TIP_TYPE_CONFIG = {
   }
 };
 
+const extractScopedValue = (payload, scope) => {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  const scoped = payload.scopes?.[scope];
+  if (scoped) {
+    return scoped;
+  }
+  return payload;
+};
+
 const buildRecommendationKeys = (item) => {
   if (!item) return [];
 
@@ -100,6 +112,7 @@ const buildRecommendationKeys = (item) => {
 
 const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth, currentYear }) => {
   const navigate = useNavigate();
+  const { scope } = useScope();
   const [tips, setTips] = useState([]);
   const [analysis, setAnalysis] = useState(null);
   const [goals, setGoals] = useState([]);
@@ -129,23 +142,27 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
     setError(null);
 
     try {
-      const analysisRes = await axios.get('/optimization/analyze');
-      setAnalysis(analysisRes.data);
+      const analysisRes = await axios.get('/optimization/analyze', { params: { scope } });
+      const resolvedAnalysis = extractScopedValue(analysisRes.data, scope);
+      setAnalysis(resolvedAnalysis);
 
       const [tipsRes, goalsRes] = await Promise.all([
-        axios.get('/optimization/tips'),
-        axios.get('/savings/goals').catch(() => ({ data: [] }))
+        axios.get('/optimization/tips', { params: { scope } }),
+        axios.get('/savings/goals', { params: { scope } }).catch(() => ({ data: [] }))
       ]);
 
-      setTips(Array.isArray(tipsRes.data) ? tipsRes.data : []);
-      setGoals(Array.isArray(goalsRes.data) ? goalsRes.data : []);
+      const scopedTips = extractScopedValue(tipsRes.data, scope);
+      setTips(Array.isArray(scopedTips?.tips) ? scopedTips.tips : Array.isArray(scopedTips) ? scopedTips : []);
+
+      const scopedGoals = extractScopedValue(goalsRes.data, scope);
+      setGoals(Array.isArray(scopedGoals?.goals) ? scopedGoals.goals : Array.isArray(scopedGoals) ? scopedGoals : []);
     } catch (err) {
       console.error('Error loading optimization data:', err);
       setError('We could not complete your financial check-up. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [startProgressCycle]);
+  }, [scope, startProgressCycle]);
 
   const refreshAnalysis = async () => {
     startProgressCycle();
@@ -153,11 +170,13 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
     setError(null);
 
     try {
-      const analysisRes = await axios.get('/optimization/analyze');
-      setAnalysis(analysisRes.data);
+      const analysisRes = await axios.get('/optimization/analyze', { params: { scope } });
+      const resolvedAnalysis = extractScopedValue(analysisRes.data, scope);
+      setAnalysis(resolvedAnalysis);
 
-      const tipsRes = await axios.get('/optimization/tips');
-      setTips(Array.isArray(tipsRes.data) ? tipsRes.data : []);
+      const tipsRes = await axios.get('/optimization/tips', { params: { scope } });
+      const scopedTips = extractScopedValue(tipsRes.data, scope);
+      setTips(Array.isArray(scopedTips?.tips) ? scopedTips.tips : Array.isArray(scopedTips) ? scopedTips : []);
     } catch (err) {
       console.error('Error refreshing analysis:', err);
       setError('Failed to refresh analysis. Please try again.');
@@ -385,7 +404,7 @@ const BudgetOptimizationTips = ({ categories = [], onAdjustBudget, currentMonth,
 
     try {
       setTipActionBusy(`${opportunity.id}-${action}`);
-      await axios.post(`/optimization/tips/${opportunity.id}/dismiss`);
+      await axios.post(`/optimization/tips/${opportunity.id}/dismiss`, null, { params: { scope } });
       setTips((prev) => prev.filter((tip) => tip.id !== opportunity.id));
     } catch (err) {
       console.error('Error updating tip:', err);

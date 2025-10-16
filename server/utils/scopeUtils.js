@@ -54,12 +54,21 @@ const resolveScopeContext = async (db, userId, requestedScope) => {
     }
   };
 
+  let viewerId = currentUser.id;
+  let counterpartId = partnerId;
+  if (effectiveScope === 'partner' && hasPartner) {
+    viewerId = partnerId;
+    counterpartId = currentUser.id;
+  }
+
   return {
     requestedScope: sanitizedScope,
     scope: effectiveScope,
     currentUser,
     partner,
     hasPartner,
+    viewerId,
+    counterpartId,
     ...scopeConfig[effectiveScope]
   };
 };

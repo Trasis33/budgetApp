@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const authMiddleware = require('../middleware/auth');
+const { resolveScopeContext } = require('../utils/scopeUtils');
 
 // Apply authentication to all savings routes
 router.use(authMiddleware);
@@ -9,9 +10,84 @@ router.use(authMiddleware);
 // Get all savings goals for user
 router.get('/goals', async (req, res) => {
   try {
-    const userId = req.user.id;
-    const goals = await db('savings_goals').where({ user_id: userId });
-    res.json(goals);
+    const scopeContext = await resolveScopeContext(db, req.user.id, req.query.scope);
+    const { scope, requestedScope, currentUser, partner, hasPartner } = scopeContext;
+
+    let targetUserIds;
+    let viewerId = currentUser.id;
+    let counterpartId = partner?.id ?? null;
+
+    if (scope === 'partner') {
+      if (!hasPartner) {
+        return res.json({
+          scope,
+          requestedScope,
+          goals: [],
+          scopes: {
+            [scope]: { goals: [] }
+          }
+        });
+      }
+      targetUserIds = [partner.id];
+      viewerId = partner.id;
+      counterpartId = currentUser.id;
+    } else if (scope === 'ours' && hasPartner) {
+      targetUserIds = [currentUser.id, partner.id];
+    } else {
+      targetUserIds = [currentUser.id];
+    }
+
+    const goals = await db('savings_goals')
+      .whereIn('user_id', targetUserIds)
+      .orderBy('created_at', 'desc');
+
+    const goalIds = goals.map((goal) => goal.id);
+
+    let contributions = [];
+    if (goalIds.length > 0) {
+      contributions = await db('savings_contributions')
+        .whereIn('goal_id', goalIds)
+        .select('goal_id', 'user_id')
+        .sum({ total_amount: 'amount' })
+        .groupBy('goal_id', 'user_id');
+    }
+
+    const contributionMap = contributions.reduce((acc, row) => {
+      if (!acc[row.goal_id]) {
+        acc[row.goal_id] = {};
+      }
+      acc[row.goal_id][row.user_id] = Number(row.total_amount || 0);
+      return acc;
+    }, {});
+
+    const mapGoal = (goal) => {
+      const totals = contributionMap[goal.id] || {};
+      const viewerContribution = Number(totals[viewerId] || 0);
+      const partnerContribution = counterpartId ? Number(totals[counterpartId] || 0) : 0;
+      return {
+        ...goal,
+        my_contribution: viewerContribution,
+        partner_contribution: partnerContribution,
+        owner_id: goal.user_id,
+        viewer_id: viewerId,
+        partner_id: counterpartId
+      };
+    };
+
+    const scopedGoals = goals.map(mapGoal);
+
+    const payload = {
+      goals: scopedGoals
+    };
+
+    res.json({
+      scope,
+      requestedScope,
+      ...payload,
+      scopes: {
+        [scope]: { ...payload }
+      }
+    });
   } catch (error) {
     console.error('Error fetching savings goals:', error);
     res.status(500).json({ error: 'Failed to fetch savings goals' });
