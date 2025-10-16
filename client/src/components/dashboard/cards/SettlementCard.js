@@ -4,13 +4,55 @@ import { Coins, ArrowRightLeft, Smile, ShieldCheck } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import formatCurrency from '../../../utils/formatCurrency';
 
-const SettlementCard = ({ settlement, couple }) => {
+const titles = {
+  ours: 'Settlement status',
+  mine: 'My settlement status',
+  partner: "Partner's settlement status"
+};
+
+const detailLabels = {
+  ours: 'Total shared expenses this month',
+  mine: 'Your share of shared expenses',
+  partner: "Partner's share of shared expenses"
+};
+
+const formatMonthYear = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+  const [year, month] = value.split('-').map(Number);
+  if (!year || !month) {
+    return null;
+  }
+  const parsed = new Date(year, month - 1, 1);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+};
+
+const SettlementCard = ({ scope = 'ours', settlement, couple }) => {
   const status = settlement?.settlement;
   const amount = Number.parseFloat(status?.amount || 0);
   const settled = !amount || amount === 0;
 
-  const debtor = status?.debtor || couple?.user?.name || 'You';
+  const debtor = status?.debtor || (scope === 'mine' ? 'You' : couple?.user?.name) || 'You';
   const creditor = status?.creditor || couple?.partner?.name || 'Partner';
+
+  const resolvedTitle = titles[scope] || titles.ours;
+  const detailLabel = detailLabels[scope] || detailLabels.ours;
+
+  const defaultMessage = settled
+    ? scope === 'ours'
+      ? 'We’re balanced—no one owes anything right now.'
+      : scope === 'mine'
+        ? 'You and your partner are all square.'
+        : `${creditor} and ${debtor} are all square.`
+    : `${debtor} can settle ${formatCurrency(amount)} with ${creditor} when ready.`;
+
+  const displayMessage = status?.message || defaultMessage;
+  const totalValue = Number.parseFloat(settlement?.totalSharedExpenses || 0);
+  const monthYearLabel = formatMonthYear(settlement?.monthYear);
 
   return (
     <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
@@ -18,13 +60,10 @@ const SettlementCard = ({ settlement, couple }) => {
         <div>
           <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
             Shared balance
+            {monthYearLabel ? ` · ${monthYearLabel}` : ''}
           </p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900">Settlement status</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            {settled
-              ? 'We’re balanced—no one owes anything right now.'
-              : `${debtor} can settle ${formatCurrency(amount)} with ${creditor} when ready.`}
-          </p>
+          <h3 className="mt-1 text-xl font-semibold text-slate-900">{resolvedTitle}</h3>
+          <p className="mt-2 text-sm text-slate-600">{displayMessage}</p>
         </div>
         <div
           className={cn(
@@ -36,10 +75,10 @@ const SettlementCard = ({ settlement, couple }) => {
         </div>
       </div>
 
-      {!settled && (
+      {Number.isFinite(totalValue) && totalValue > 0 && (
         <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-          <span className="font-medium text-slate-900">Total shared expenses this month:</span>{' '}
-          {formatCurrency(Number.parseFloat(settlement?.totalSharedExpenses || 0))}
+          <span className="font-medium text-slate-900">{detailLabel}:</span>{' '}
+          {formatCurrency(totalValue)}
         </div>
       )}
 
@@ -72,13 +111,16 @@ const SettlementCard = ({ settlement, couple }) => {
 };
 
 SettlementCard.propTypes = {
+  scope: PropTypes.oneOf(['ours', 'mine', 'partner']),
   settlement: PropTypes.shape({
     settlement: PropTypes.shape({
       amount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       debtor: PropTypes.string,
-      creditor: PropTypes.string
+      creditor: PropTypes.string,
+      message: PropTypes.string
     }),
-    totalSharedExpenses: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    totalSharedExpenses: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    monthYear: PropTypes.string
   }),
   couple: PropTypes.shape({
     user: PropTypes.shape({

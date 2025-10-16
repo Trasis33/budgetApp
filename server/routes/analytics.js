@@ -2,9 +2,439 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const authMiddleware = require('../middleware/auth');
+const { resolveScopeContext, isPersonalSplit } = require('../utils/scopeUtils');
 
 // Apply authentication to all analytics routes
 router.use(authMiddleware);
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const buildExpenseFilterClause = (startDate, endDate, payerIds, sharedOnly = false) => {
+  if (!Array.isArray(payerIds) || payerIds.length === 0) {
+    return null;
+  }
+  const sanitizedIds = payerIds.map((id) => Number(id));
+  const params = [startDate, endDate, ...sanitizedIds];
+  let clause = `e.date BETWEEN ? AND ? AND e.paid_by_user_id IN (${sanitizedIds.map(() => '?').join(', ')})`;
+  if (sharedOnly) {
+    clause += " AND (e.split_type IS NULL OR LOWER(e.split_type) NOT IN ('personal','personal_only'))";
+  }
+  return { clause, params };
+};
+
+const fetchTrendData = async (startDate, endDate, payerIds, sharedOnly = false) => {
+  const filter = buildExpenseFilterClause(startDate, endDate, payerIds, sharedOnly);
+  if (!filter) {
+    return { monthlyTotals: [], previousYearTotals: [] };
+  }
+
+  const monthlyTotals = await db.raw(`
+    SELECT 
+      strftime('%Y-%m', e.date) as month,
+      SUM(e.amount) as total_spending,
+      COUNT(e.id) as expense_count,
+      AVG(e.amount) as avg_expense,
+      COALESCE(SUM(b.amount), 0) as total_budget
+    FROM expenses e
+    LEFT JOIN budgets b ON strftime('%Y', e.date) = printf('%04d', b.year)
+      AND strftime('%m', e.date) = printf('%02d', b.month)
+    WHERE ${filter.clause}
+    GROUP BY strftime('%Y-%m', e.date)
+    ORDER BY month ASC
+  `, filter.params);
+
+  const previousYearStart = new Date(startDate);
+  previousYearStart.setFullYear(previousYearStart.getFullYear() - 1);
+  const previousYearEnd = new Date(endDate);
+  previousYearEnd.setFullYear(previousYearEnd.getFullYear() - 1);
+
+  const previousFilter = buildExpenseFilterClause(
+    previousYearStart.toISOString().split('T')[0],
+    previousYearEnd.toISOString().split('T')[0],
+    payerIds,
+    sharedOnly
+  );
+
+  const previousYearTotals = previousFilter
+    ? await db.raw(`
+      SELECT 
+        strftime('%Y-%m', e.date) as month,
+        SUM(e.amount) as total_spending
+      FROM expenses e
+      WHERE ${previousFilter.clause}
+      GROUP BY strftime('%Y-%m', e.date)
+      ORDER BY month ASC
+    `, previousFilter.params)
+    : [];
+
+  return { monthlyTotals, previousYearTotals };
+};
+
+const computeTrendSummary = (monthlyTotals, previousYearTotals) => {
+  const currentTotal = monthlyTotals.reduce((sum, month) => sum + Number(month.total_spending || 0), 0);
+  const previousTotal = previousYearTotals.reduce((sum, month) => sum + Number(month.total_spending || 0), 0);
+  const trendPercentage = previousTotal > 0
+    ? ((currentTotal - previousTotal) / previousTotal) * 100
+    : 0;
+  const avgMonthlySpending = monthlyTotals.length > 0
+    ? currentTotal / monthlyTotals.length
+    : 0;
+
+  return {
+    totalSpending: currentTotal,
+    avgMonthlySpending,
+    trendPercentage: Math.round(trendPercentage * 100) / 100,
+    trendDirection: trendPercentage > 0 ? 'up' : trendPercentage < 0 ? 'down' : 'stable',
+    monthCount: monthlyTotals.length
+  };
+};
+
+const defaultTrendSummary = () => ({
+  totalSpending: 0,
+  avgMonthlySpending: 0,
+  trendPercentage: 0,
+  trendDirection: 'stable',
+  monthCount: 0
+});
+
+const buildIncomeFilterClause = (startDate, endDate, userIds) => {
+  if (!Array.isArray(userIds) || userIds.length === 0) {
+    return null;
+  }
+  const sanitizedIds = userIds.map((id) => Number(id));
+  const params = [startDate, endDate, ...sanitizedIds];
+  const clause = `date BETWEEN ? AND ? AND user_id IN (${sanitizedIds.map(() => '?').join(', ')})`;
+  return { clause, params };
+};
+
+const fetchMonthlyIncome = async (startDate, endDate, userIds) => {
+  const filter = buildIncomeFilterClause(startDate, endDate, userIds);
+  if (!filter) {
+    return [];
+  }
+  return db.raw(`
+    SELECT 
+      strftime('%Y-%m', date) as month,
+      SUM(amount) as total_income
+    FROM incomes
+    WHERE ${filter.clause}
+    GROUP BY month
+    ORDER BY month ASC
+  `, filter.params);
+};
+
+const fetchMonthlyExpenses = async (startDate, endDate, payerIds, sharedOnly = false) => {
+  const filter = buildExpenseFilterClause(startDate, endDate, payerIds, sharedOnly);
+  if (!filter) {
+    return [];
+  }
+  return db.raw(`
+    SELECT 
+      strftime('%Y-%m', e.date) as month,
+      SUM(e.amount) as total_expenses
+    FROM expenses e
+    WHERE ${filter.clause}
+    GROUP BY strftime('%Y-%m', e.date)
+    ORDER BY month ASC
+  `, filter.params);
+};
+
+const mergeMonthlyIncomeExpenses = (incomeRows, expenseRows) => {
+  const incomeMap = incomeRows.reduce((acc, row) => {
+    acc[row.month] = Number(row.total_income || 0);
+    return acc;
+  }, {});
+  const expenseMap = expenseRows.reduce((acc, row) => {
+    acc[row.month] = Number(row.total_expenses || 0);
+    return acc;
+  }, {});
+
+  const monthKeys = new Set([...Object.keys(incomeMap), ...Object.keys(expenseMap)]);
+  const sortedMonths = Array.from(monthKeys).sort();
+
+  return sortedMonths.map((month) => {
+    const income = incomeMap[month] || 0;
+    const expenses = expenseMap[month] || 0;
+    const savings = income - expenses;
+    const savingsRate = income > 0 ? (savings / income) * 100 : 0;
+    return {
+      month,
+      income,
+      expenses,
+      savings,
+      savingsRate: Math.round(savingsRate * 100) / 100
+    };
+  });
+};
+
+const computeIncomeExpenseSummary = (monthlyData) => {
+  const totalIncome = monthlyData.reduce((sum, month) => sum + month.income, 0);
+  const totalExpenses = monthlyData.reduce((sum, month) => sum + month.expenses, 0);
+  const totalSurplus = totalIncome - totalExpenses;
+  const avgSavingsRate = monthlyData.length > 0
+    ? monthlyData.reduce((sum, month) => sum + month.savingsRate, 0) / monthlyData.length
+    : 0;
+
+  const recentMonths = monthlyData.slice(-3);
+  const earlierMonths = monthlyData.slice(0, -3);
+
+  const recentAvgSavings = recentMonths.length > 0
+    ? recentMonths.reduce((sum, month) => sum + month.savingsRate, 0) / recentMonths.length
+    : 0;
+  const earlierAvgSavings = earlierMonths.length > 0
+    ? earlierMonths.reduce((sum, month) => sum + month.savingsRate, 0) / earlierMonths.length
+    : 0;
+
+  const savingsTrend = earlierAvgSavings > 0
+    ? ((recentAvgSavings - earlierAvgSavings) / earlierAvgSavings) * 100
+    : 0;
+
+  return {
+    totalIncome,
+    totalExpenses,
+    totalSurplus,
+    avgSavingsRate: Math.round(avgSavingsRate * 100) / 100,
+    savingsTrend: Math.round(savingsTrend * 100) / 100,
+    savingsTrendDirection: savingsTrend > 0 ? 'improving' : savingsTrend < 0 ? 'declining' : 'stable',
+    monthCount: monthlyData.length
+  };
+};
+
+const countIncomes = async (startDate, endDate, userIds) => {
+  if (!Array.isArray(userIds) || userIds.length === 0) {
+    return 0;
+  }
+  const result = await db('incomes')
+    .whereBetween('date', [startDate, endDate])
+    .whereIn('user_id', userIds.map((id) => Number(id)))
+    .count({ count: 'id' })
+    .first();
+  return Number(result?.count || 0);
+};
+
+const countExpenses = async (startDate, endDate, payerIds, sharedOnly = false) => {
+  if (!Array.isArray(payerIds) || payerIds.length === 0) {
+    return 0;
+  }
+  const query = db('expenses')
+    .whereBetween('date', [startDate, endDate])
+    .whereIn('paid_by_user_id', payerIds.map((id) => Number(id)));
+
+  if (sharedOnly) {
+    query.andWhere(function () {
+      this.whereNull('split_type')
+        .orWhereRaw("LOWER(split_type) NOT IN ('personal','personal_only')");
+    });
+  }
+
+  const result = await query.count({ count: 'id' }).first();
+  return Number(result?.count || 0);
+};
+
+const computeSavingsAnalysisSummary = (monthlyData) => {
+  const totalIncome = monthlyData.reduce((sum, month) => sum + month.income, 0);
+  const totalExpenses = monthlyData.reduce((sum, month) => sum + month.expenses, 0);
+  const totalSavings = monthlyData.reduce((sum, month) => sum + month.savings, 0);
+  const averageSavingsRate = monthlyData.length > 0
+    ? monthlyData.reduce((sum, month) => sum + month.savingsRate, 0) / monthlyData.length
+    : 0;
+
+  const recentMonths = monthlyData.slice(-3);
+  const earlierMonths = monthlyData.slice(0, -3);
+
+  const recentAverage = recentMonths.length > 0
+    ? recentMonths.reduce((sum, month) => sum + month.savingsRate, 0) / recentMonths.length
+    : 0;
+  const earlierAverage = earlierMonths.length > 0
+    ? earlierMonths.reduce((sum, month) => sum + month.savingsRate, 0) / earlierMonths.length
+    : 0;
+
+  const savingsRateTrend = earlierAverage > 0
+    ? ((recentAverage - earlierAverage) / earlierAverage) * 100
+    : 0;
+
+  return {
+    totalIncome,
+    totalExpenses,
+    totalSavings,
+    averageSavingsRate: Math.round(averageSavingsRate * 100) / 100,
+    savingsRateTrend: Math.round(savingsRateTrend * 100) / 100,
+    trendDirection: savingsRateTrend > 0 ? 'improving' : savingsRateTrend < 0 ? 'declining' : 'stable',
+    monthCount: monthlyData.length
+  };
+};
+
+const buildDataAvailability = (incomeCount, expenseCount, message) => ({
+  hasIncome: incomeCount > 0,
+  hasExpenses: expenseCount > 0,
+  incomeEntries: incomeCount,
+  expenseEntries: expenseCount,
+  requiredForMeaningfulAnalysis: 2,
+  message
+});
+
+const fetchSavingsGoalsForScope = async ({ scope, currentUser, partner }) => {
+  let goalsQuery = db('savings_goals');
+  if (scope === 'partner' && partner) {
+    goalsQuery = goalsQuery.where('user_id', partner.id);
+  } else if (scope === 'ours' && partner) {
+    goalsQuery = goalsQuery.whereIn('user_id', [currentUser.id, partner.id]);
+  } else {
+    goalsQuery = goalsQuery.where('user_id', currentUser.id);
+  }
+  return goalsQuery.select('*');
+};
+
+const computeSettlementBalances = (expenses, currentUserId, partnerId) => {
+  const totals = {
+    [currentUserId]: { paid: 0, share: 0 },
+    [partnerId]: { paid: 0, share: 0 }
+  };
+  let totalSharedExpenses = 0;
+
+  expenses.forEach((expense) => {
+    const amount = Number(expense.amount || 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return;
+    }
+
+    if (isPersonalSplit(expense.split_type)) {
+      return;
+    }
+
+    const splitType = String(expense.split_type || '50/50').toLowerCase();
+
+    let ratioCurrent = 0.5;
+    let ratioPartner = 0.5;
+
+    if (splitType === 'custom') {
+      const rawRatioCurrent = Number(expense.split_ratio_user1);
+      const rawRatioPartner = Number(expense.split_ratio_user2);
+      if (Number.isFinite(rawRatioCurrent) && Number.isFinite(rawRatioPartner) && rawRatioCurrent + rawRatioPartner > 0) {
+        ratioCurrent = rawRatioCurrent / (rawRatioCurrent + rawRatioPartner);
+        ratioPartner = rawRatioPartner / (rawRatioCurrent + rawRatioPartner);
+      } else if (Number.isFinite(rawRatioCurrent)) {
+        ratioCurrent = Math.max(0, Math.min(100, rawRatioCurrent)) / 100;
+        ratioPartner = 1 - ratioCurrent;
+      } else if (Number.isFinite(rawRatioPartner)) {
+        ratioPartner = Math.max(0, Math.min(100, rawRatioPartner)) / 100;
+        ratioCurrent = 1 - ratioPartner;
+      }
+    } else if (splitType === 'bill') {
+      // For bill payer type, default to 50/50 unless ratios provided
+      const rawRatioCurrent = Number(expense.split_ratio_user1);
+      if (Number.isFinite(rawRatioCurrent)) {
+        ratioCurrent = Math.max(0, Math.min(100, rawRatioCurrent)) / 100;
+        ratioPartner = 1 - ratioCurrent;
+      }
+    }
+
+    totalSharedExpenses += amount;
+    totals[currentUserId].share += amount * ratioCurrent;
+    totals[partnerId].share += amount * ratioPartner;
+
+    if (totals[expense.paid_by_user_id]) {
+      totals[expense.paid_by_user_id].paid += amount;
+    }
+  });
+
+  return { totals, totalSharedExpenses };
+};
+
+const buildSettlementPayload = (scope, { currentUser, partner }, balances, totalSharedExpenses, monthYear) => {
+  if (!partner) {
+    const message = 'Link a partner to calculate settlements.';
+    const payload = {
+      settlement: {
+        amount: '0.00',
+        creditor: null,
+        debtor: null,
+        message
+      },
+      totalSharedExpenses: '0.00',
+      monthYear
+    };
+    return payload;
+  }
+
+  const currentTotals = balances[currentUser.id] || { paid: 0, share: 0 };
+  const partnerTotals = balances[partner.id] || { paid: 0, share: 0 };
+
+  const currentBalance = currentTotals.paid - currentTotals.share;
+  const partnerBalance = partnerTotals.paid - partnerTotals.share;
+
+  const config = {
+    ours: {
+      balance: currentBalance,
+      creditorPositive: currentUser.name,
+      debtorPositive: partner.name,
+      creditorNegative: partner.name,
+      debtorNegative: currentUser.name,
+      total: totalSharedExpenses
+    },
+    mine: {
+      balance: currentBalance,
+      creditorPositive: currentUser.name,
+      debtorPositive: partner.name,
+      creditorNegative: partner.name,
+      debtorNegative: currentUser.name,
+      total: currentTotals.share
+    },
+    partner: {
+      balance: partnerBalance,
+      creditorPositive: partner.name,
+      debtorPositive: currentUser.name,
+      creditorNegative: currentUser.name,
+      debtorNegative: partner.name,
+      total: partnerTotals.share
+    }
+  }[scope];
+
+  if (!config) {
+    return {
+      settlement: {
+        amount: '0.00',
+        creditor: null,
+        debtor: null,
+        message: 'Unable to determine settlement for this view.'
+      },
+      totalSharedExpenses: '0.00',
+      monthYear
+    };
+  }
+
+  const roundedTotal = Number(config.total || 0).toFixed(2);
+  const balance = config.balance || 0;
+  const absoluteAmount = Math.abs(balance);
+
+  if (absoluteAmount < 0.005) {
+    return {
+      settlement: {
+        amount: '0.00',
+        creditor: null,
+        debtor: null,
+        message: 'All settled up!'
+      },
+      totalSharedExpenses: roundedTotal,
+      monthYear
+    };
+  }
+
+  const settlement = {
+    amount: absoluteAmount.toFixed(2),
+    creditor: balance > 0 ? config.creditorPositive : config.creditorNegative,
+    debtor: balance > 0 ? config.debtorPositive : config.debtorNegative,
+    message: balance > 0
+      ? `${config.debtorPositive} owes ${config.creditorPositive}`
+      : `${config.debtorNegative} owes ${config.creditorNegative}`
+  };
+
+  return {
+    settlement,
+    totalSharedExpenses: roundedTotal,
+    monthYear
+  };
+};
 
 /**
  * GET /api/analytics/trends/:startDate/:endDate
@@ -15,78 +445,35 @@ router.use(authMiddleware);
 router.get('/trends/:startDate/:endDate', async (req, res) => {
   try {
     const { startDate, endDate } = req.params;
-    const userId = req.user.id;
-
-    // Validate date format (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+    if (!DATE_REGEX.test(startDate) || !DATE_REGEX.test(endDate)) {
       return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
-    // Get monthly spending totals with budget comparisons
-    const monthlyTotals = await db.raw(`
-      SELECT 
-        strftime('%Y-%m', e.date) as month,
-        SUM(e.amount) as total_spending,
-        COUNT(e.id) as expense_count,
-        AVG(e.amount) as avg_expense,
-        COALESCE(SUM(b.amount), 0) as total_budget
-      FROM expenses e
-      LEFT JOIN budgets b ON strftime('%Y', e.date) = b.year 
-        AND strftime('%m', e.date) = printf('%02d', b.month)
-      WHERE e.date BETWEEN ? AND ?
-        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
-          SELECT id FROM users WHERE id != ? LIMIT 1
-        ))
-      GROUP BY strftime('%Y-%m', e.date)
-      ORDER BY month ASC
-    `, [startDate, endDate, userId, userId]);
+    const scopeContext = await resolveScopeContext(db, req.user.id, req.query.scope);
+    const { scope, requestedScope, payerIds, sharedOnly } = scopeContext;
 
-    // Get previous year comparison data for the same period
-    const previousYearStart = new Date(startDate);
-    previousYearStart.setFullYear(previousYearStart.getFullYear() - 1);
-    const previousYearEnd = new Date(endDate);
-    previousYearEnd.setFullYear(previousYearEnd.getFullYear() - 1);
+    const { monthlyTotals, previousYearTotals } = await fetchTrendData(
+      startDate,
+      endDate,
+      payerIds,
+      sharedOnly
+    );
+    const summary = monthlyTotals.length
+      ? computeTrendSummary(monthlyTotals, previousYearTotals)
+      : defaultTrendSummary();
 
-    const previousYearTotals = await db.raw(`
-      SELECT 
-        strftime('%Y-%m', e.date) as month,
-        SUM(e.amount) as total_spending
-      FROM expenses e
-      WHERE e.date BETWEEN ? AND ?
-        AND (e.paid_by_user_id = ? OR e.paid_by_user_id IN (
-          SELECT id FROM users WHERE id != ? LIMIT 1
-        ))
-      GROUP BY strftime('%Y-%m', e.date)
-      ORDER BY month ASC
-    `, [
-      previousYearStart.toISOString().split('T')[0],
-      previousYearEnd.toISOString().split('T')[0],
-      userId,
-      userId
-    ]);
-
-    // Calculate trend indicators
-    const currentPeriodTotal = monthlyTotals.reduce((sum, month) => sum + month.total_spending, 0);
-    const previousPeriodTotal = previousYearTotals.reduce((sum, month) => sum + month.total_spending, 0);
-    const trendPercentage = previousPeriodTotal > 0 
-      ? ((currentPeriodTotal - previousPeriodTotal) / previousPeriodTotal * 100)
-      : 0;
-
-    // Calculate average monthly spending
-    const avgMonthlySpending = monthlyTotals.length > 0 
-      ? currentPeriodTotal / monthlyTotals.length 
-      : 0;
-
-    res.json({
+    const payload = {
       monthlyTotals,
       previousYearTotals,
-      summary: {
-        totalSpending: currentPeriodTotal,
-        avgMonthlySpending,
-        trendPercentage: Math.round(trendPercentage * 100) / 100,
-        trendDirection: trendPercentage > 0 ? 'up' : trendPercentage < 0 ? 'down' : 'stable',
-        monthCount: monthlyTotals.length
+      summary
+    };
+
+    res.json({
+      scope,
+      requestedScope,
+      ...payload,
+      scopes: {
+        [scope]: { ...payload }
       }
     });
 
@@ -201,83 +588,29 @@ router.get('/category-trends/:startDate/:endDate', async (req, res) => {
 router.get('/income-expenses/:startDate/:endDate', async (req, res) => {
   try {
     const { startDate, endDate } = req.params;
-    const userId = req.user.id;
-
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+    if (!DATE_REGEX.test(startDate) || !DATE_REGEX.test(endDate)) {
       return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
-    // Get monthly income and expense data using a more robust query
-    const monthlyIncome = await db.raw(`
-      SELECT 
-        strftime('%Y-%m', date) as month,
-        SUM(amount) as total_income
-      FROM incomes
-      WHERE date BETWEEN ? AND ? AND user_id = ?
-      GROUP BY month
-    `, [startDate, endDate, userId]);
+    const scopeContext = await resolveScopeContext(db, req.user.id, req.query.scope);
+    const { scope, requestedScope, payerIds, sharedOnly } = scopeContext;
 
-    const monthlyExpenses = await db.raw(`
-      SELECT 
-        strftime('%Y-%m', date) as month,
-        SUM(amount) as total_expenses
-      FROM expenses
-      WHERE date BETWEEN ? AND ? AND paid_by_user_id = ?
-      GROUP BY month
-    `, [startDate, endDate, userId]);
+    const monthlyIncome = await fetchMonthlyIncome(startDate, endDate, payerIds);
+    const monthlyExpenses = await fetchMonthlyExpenses(startDate, endDate, payerIds, sharedOnly);
+    const monthlyData = mergeMonthlyIncomeExpenses(monthlyIncome, monthlyExpenses);
+    const summary = computeIncomeExpenseSummary(monthlyData);
 
-    // Combine income and expense data by month
-    const monthlyData = [];
-    const allMonths = new Set([
-      ...monthlyIncome.map(m => m.month),
-      ...monthlyExpenses.map(m => m.month)
-    ]);
-
-    Array.from(allMonths).sort().forEach(month => {
-      const income = monthlyIncome.find(m => m.month === month);
-      const expense = monthlyExpenses.find(m => m.month === month);
-      monthlyData.push({
-        month,
-        income: income ? income.total_income : 0,
-        expenses: expense ? expense.total_expenses : 0
-      });
-    });
-
-    // Calculate summary statistics
-    const totalIncome = monthlyData.reduce((sum, month) => sum + month.income, 0);
-    const totalExpenses = monthlyData.reduce((sum, month) => sum + month.expenses, 0);
-    const totalSurplus = totalIncome - totalExpenses;
-    const avgSavingsRate = monthlyData.length > 0 
-      ? monthlyData.reduce((sum, month) => sum + month.savingsRate, 0) / monthlyData.length
-      : 0;
-
-    // Calculate trends
-    const recentMonths = monthlyData.slice(-3); // Last 3 months
-    const earlierMonths = monthlyData.slice(0, -3);
-    
-    const recentAvgSavings = recentMonths.length > 0 
-      ? recentMonths.reduce((sum, month) => sum + month.savingsRate, 0) / recentMonths.length
-      : 0;
-    const earlierAvgSavings = earlierMonths.length > 0 
-      ? earlierMonths.reduce((sum, month) => sum + month.savingsRate, 0) / earlierMonths.length
-      : 0;
-
-    const savingsTrend = earlierAvgSavings > 0 
-      ? ((recentAvgSavings - earlierAvgSavings) / earlierAvgSavings * 100)
-      : 0;
+    const payload = {
+      monthlyData,
+      summary
+    };
 
     res.json({
-      monthlyData,
-      summary: {
-        totalIncome,
-        totalExpenses,
-        totalSurplus,
-        avgSavingsRate: Math.round(avgSavingsRate * 100) / 100,
-        savingsTrend: Math.round(savingsTrend * 100) / 100,
-        savingsTrendDirection: savingsTrend > 0 ? 'improving' : savingsTrend < 0 ? 'declining' : 'stable',
-        monthCount: monthlyData.length
+      scope,
+      requestedScope,
+      ...payload,
+      scopes: {
+        [scope]: { ...payload }
       }
     });
 
@@ -294,219 +627,115 @@ router.get('/income-expenses/:startDate/:endDate', async (req, res) => {
 router.get('/savings-analysis/:startDate/:endDate', async (req, res) => {
   try {
     const { startDate, endDate } = req.params;
-    const userId = req.user.id;
-
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+    if (!DATE_REGEX.test(startDate) || !DATE_REGEX.test(endDate)) {
       return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
-    // Check data availability first
-    const incomeCount = await db('incomes')
-      .where({ user_id: userId })
-      .whereBetween('date', [startDate, endDate])
-      .count('id as count')
-      .first();
-    
-    const expenseCount = await db('expenses')
-      .where({ paid_by_user_id: userId })
-      .whereBetween('date', [startDate, endDate])
-      .count('id as count')
-      .first();
-    
-    const totalIncomeEntries = incomeCount.count;
-    const totalExpenseEntries = expenseCount.count;
-    
-    // If no data exists, return helpful information
-    if (totalIncomeEntries === 0 && totalExpenseEntries === 0) {
-      return res.json({
-        monthlyData: [],
-        savingsGoals: await db('savings_goals').where({ user_id: userId }),
-        summary: {
-          totalIncome: 0,
-          totalExpenses: 0,
-          totalSavings: 0,
-          averageSavingsRate: 0,
-          savingsRateTrend: 0,
-          trendDirection: 'no-data',
-          monthCount: 0
-        },
-        dataAvailability: {
-          hasIncome: false,
-          hasExpenses: false,
-          incomeEntries: totalIncomeEntries,
-          expenseEntries: totalExpenseEntries,
-          requiredForMeaningfulAnalysis: 2, // At least 2 months of data
-          message: 'Add income and expense entries to see meaningful savings analysis'
-        }
-      });
-    }
-    
-    // Check for partial data scenarios
-    if (totalIncomeEntries === 0) {
-      return res.json({
-        monthlyData: [],
-        savingsGoals: await db('savings_goals').where({ user_id: userId }),
-        summary: {
-          totalIncome: 0,
-          totalExpenses: 0,
-          totalSavings: 0,
-          averageSavingsRate: 0,
-          savingsRateTrend: 0,
-          trendDirection: 'no-data',
-          monthCount: 0
-        },
-        dataAvailability: {
-          hasIncome: false,
-          hasExpenses: true,
-          incomeEntries: totalIncomeEntries,
-          expenseEntries: totalExpenseEntries,
-          requiredForMeaningfulAnalysis: 2,
-          message: `You have ${totalExpenseEntries} expense entries but no income entries. Add income entries to calculate your savings rate.`
-        }
-      });
-    }
-    
-    if (totalExpenseEntries === 0) {
-      return res.json({
-        monthlyData: [],
-        savingsGoals: await db('savings_goals').where({ user_id: userId }),
-        summary: {
-          totalIncome: 0,
-          totalExpenses: 0,
-          totalSavings: 0,
-          averageSavingsRate: 0,
-          savingsRateTrend: 0,
-          trendDirection: 'no-data',
-          monthCount: 0
-        },
-        dataAvailability: {
-          hasIncome: true,
-          hasExpenses: false,
-          incomeEntries: totalIncomeEntries,
-          expenseEntries: totalExpenseEntries,
-          requiredForMeaningfulAnalysis: 2,
-          message: `You have ${totalIncomeEntries} income entries but no expense entries. Add expense entries to calculate your savings rate.`
-        }
-      });
-    }
-    
-    // Get monthly income and expense data using a more robust query
-    const monthlyIncome = await db.raw(`
-      SELECT 
-        strftime('%Y-%m', date) as month,
-        SUM(amount) as total_income
-      FROM incomes
-      WHERE date BETWEEN ? AND ? AND user_id = ?
-      GROUP BY month
-    `, [startDate, endDate, userId]);
+    const scopeContext = await resolveScopeContext(db, req.user.id, req.query.scope);
+    const { scope, requestedScope, payerIds, sharedOnly } = scopeContext;
 
-    const monthlyExpenses = await db.raw(`
-      SELECT 
-        strftime('%Y-%m', date) as month,
-        SUM(amount) as total_expenses
-      FROM expenses
-      WHERE date BETWEEN ? AND ? AND paid_by_user_id = ?
-      GROUP BY month
-    `, [startDate, endDate, userId]);
-
-    // Combine income and expense data by month
-    const monthlyData = [];
-    const allMonths = new Set([
-      ...monthlyIncome.map(m => m.month),
-      ...monthlyExpenses.map(m => m.month)
+    const [incomeCount, expenseCount, savingsGoals] = await Promise.all([
+      countIncomes(startDate, endDate, payerIds),
+      countExpenses(startDate, endDate, payerIds, sharedOnly),
+      fetchSavingsGoalsForScope(scopeContext)
     ]);
 
-    Array.from(allMonths).sort().forEach(month => {
-      const income = monthlyIncome.find(m => m.month === month);
-      const expense = monthlyExpenses.find(m => m.month === month);
-      monthlyData.push({
-        month,
-        total_income: income ? income.total_income : 0,
-        total_expenses: expense ? expense.total_expenses : 0
-      });
-    });
+    const baseSummary = computeSavingsAnalysisSummary([]);
 
-    // Calculate savings rate and additional metrics
-    const savingsAnalysis = monthlyData.map(month => {
-      const savings = month.total_income - month.total_expenses;
-      const savingsRate = month.total_income > 0 
-        ? (savings / month.total_income) * 100
-        : 0;
-      
-      return {
-        month: month.month,
-        income: month.total_income,
-        expenses: month.total_expenses,
-        savings: savings,
-        savingsRate: Math.round(savingsRate * 100) / 100
-      };
-    });
-
-    // Get savings goals
-    const savingsGoals = await db('savings_goals').where({ user_id: userId });
-    
-    // Check if we have enough data for meaningful analysis
-    if (savingsAnalysis.length < 2) {
-      return res.json({
-        monthlyData: savingsAnalysis,
+    if (incomeCount === 0 && expenseCount === 0) {
+      const payload = {
+        monthlyData: [],
         savingsGoals,
-        summary: {
-          totalIncome: savingsAnalysis.reduce((sum, month) => sum + month.income, 0),
-          totalExpenses: savingsAnalysis.reduce((sum, month) => sum + month.expenses, 0),
-          totalSavings: savingsAnalysis.reduce((sum, month) => sum + month.savings, 0),
-          averageSavingsRate: savingsAnalysis.length > 0 ? savingsAnalysis[0].savingsRate : 0,
-          savingsRateTrend: 0,
-          trendDirection: 'insufficient-data',
-          monthCount: savingsAnalysis.length
-        },
-        dataAvailability: {
-          hasIncome: true,
-          hasExpenses: true,
-          incomeEntries: totalIncomeEntries,
-          expenseEntries: totalExpenseEntries,
-          requiredForMeaningfulAnalysis: 2,
-          monthsWithData: savingsAnalysis.length,
-          message: `You have data for ${savingsAnalysis.length} month(s). Add more income and expense entries across multiple months to see trends and meaningful analysis.`
+        summary: { ...baseSummary, trendDirection: 'no-data' },
+        dataAvailability: buildDataAvailability(
+          incomeCount,
+          expenseCount,
+          'Add income and expense entries to see meaningful savings analysis'
+        )
+      };
+      return res.json({
+        scope,
+        requestedScope,
+        ...payload,
+        scopes: {
+          [scope]: { ...payload }
         }
       });
     }
 
-    // Calculate summary statistics
-    const totalIncome = savingsAnalysis.reduce((sum, month) => sum + month.income, 0);
-    const totalExpenses = savingsAnalysis.reduce((sum, month) => sum + month.expenses, 0);
-    const totalSavings = totalIncome - totalExpenses;
-    const averageSavingsRate = savingsAnalysis.length > 0 
-      ? savingsAnalysis.reduce((sum, month) => sum + month.savingsRate, 0) / savingsAnalysis.length
-      : 0;
+    if (incomeCount === 0) {
+      const payload = {
+        monthlyData: [],
+        savingsGoals,
+        summary: { ...baseSummary, trendDirection: 'no-data' },
+        dataAvailability: buildDataAvailability(
+          incomeCount,
+          expenseCount,
+          `You have ${expenseCount} expense entries but no income entries. Add income entries to calculate your savings rate.`
+        )
+      };
+      return res.json({
+        scope,
+        requestedScope,
+        ...payload,
+        scopes: {
+          [scope]: { ...payload }
+        }
+      });
+    }
 
-    // Calculate trends
-    const recentMonths = savingsAnalysis.slice(-3);
-    const earlierMonths = savingsAnalysis.slice(0, -3);
-    
-    const recentAvgSavingsRate = recentMonths.length > 0 
-      ? recentMonths.reduce((sum, month) => sum + month.savingsRate, 0) / recentMonths.length
-      : 0;
-    const earlierAvgSavingsRate = earlierMonths.length > 0 
-      ? earlierMonths.reduce((sum, month) => sum + month.savingsRate, 0) / earlierMonths.length
-      : 0;
-    
-    const savingsRateTrend = earlierAvgSavingsRate > 0 
-      ? ((recentAvgSavingsRate - earlierAvgSavingsRate) / earlierAvgSavingsRate) * 100
-      : 0;
+    if (expenseCount === 0) {
+      const payload = {
+        monthlyData: [],
+        savingsGoals,
+        summary: { ...baseSummary, trendDirection: 'no-data' },
+        dataAvailability: buildDataAvailability(
+          incomeCount,
+          expenseCount,
+          `You have ${incomeCount} income entries but no expense entries. Add expense entries to calculate your savings rate.`
+        )
+      };
+      return res.json({
+        scope,
+        requestedScope,
+        ...payload,
+        scopes: {
+          [scope]: { ...payload }
+        }
+      });
+    }
+
+    const monthlyIncome = await fetchMonthlyIncome(startDate, endDate, payerIds);
+    const monthlyExpenses = await fetchMonthlyExpenses(startDate, endDate, payerIds, sharedOnly);
+    const monthlyData = mergeMonthlyIncomeExpenses(monthlyIncome, monthlyExpenses);
+
+    const summary = computeSavingsAnalysisSummary(monthlyData);
+
+    const payload = {
+      monthlyData,
+      savingsGoals,
+      summary
+    };
+
+    if (monthlyData.length < 2) {
+      payload.dataAvailability = {
+        ...buildDataAvailability(
+          incomeCount,
+          expenseCount,
+          `You have data for ${monthlyData.length} month(s). Add more income and expense entries across multiple months to see trends and meaningful analysis.`
+        ),
+        monthsWithData: monthlyData.length
+      };
+      payload.summary.trendDirection = 'insufficient-data';
+      payload.summary.savingsRateTrend = 0;
+    }
 
     res.json({
-      monthlyData: savingsAnalysis,
-      savingsGoals,
-      summary: {
-        totalIncome,
-        totalExpenses,
-        totalSavings,
-        averageSavingsRate: Math.round(averageSavingsRate * 100) / 100,
-        savingsRateTrend: Math.round(savingsRateTrend * 100) / 100,
-        trendDirection: savingsRateTrend > 0 ? 'improving' : savingsRateTrend < 0 ? 'declining' : 'stable',
-        monthCount: savingsAnalysis.length
+      scope,
+      requestedScope,
+      ...payload,
+      scopes: {
+        [scope]: { ...payload }
       }
     });
 
@@ -522,84 +751,37 @@ router.get('/savings-analysis/:startDate/:endDate', async (req, res) => {
  */
 router.get('/current-settlement', async (req, res) => {
   try {
-    const userId = req.user.id;
+    const scopeContext = await resolveScopeContext(db, req.user.id, req.query.scope);
+    const { scope, requestedScope, currentUser, partner, hasPartner } = scopeContext;
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
 
-    // Get all users for reference
-    const users = await db('users').select('id', 'name');
-    if (users.length < 2) {
-      return res.json({
-        settlement: {
-          message: 'Need at least two users for settlements',
-          amount: 0,
-          creditor: null,
-          debtor: null
-        }
-      });
-    }
-
-    const [user1, user2] = users;
-    
-    // Get current month's expenses for settlement calculation
     const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
     const endDate = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0];
+    const monthYear = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
 
-    const expenses = await db('expenses').whereBetween('date', [startDate, endDate]);
-
+    let totals = { [currentUser.id]: { paid: 0, share: 0 } };
     let totalSharedExpenses = 0;
-    const userShares = { [user1.id]: 0, [user2.id]: 0 };
-    const userPaid = { [user1.id]: 0, [user2.id]: 0 };
 
-    for (const expense of expenses) {
-      const amount = parseFloat(expense.amount);
-
-      // Skip personal expenses entirely when calculating settlement
-      if (expense.split_type === 'personal') {
-        continue;
-      }
-
-      // Only count shared expenses towards what each user has paid
-      userPaid[expense.paid_by_user_id] += amount;
-      totalSharedExpenses += amount;
-
-      if (expense.split_type === '50/50') {
-        userShares[user1.id] += amount / 2;
-        userShares[user2.id] += amount / 2;
-      } else if (expense.split_type === 'custom') {
-        userShares[user1.id] += amount * (expense.split_ratio_user1 / 100);
-        userShares[user2.id] += amount * (expense.split_ratio_user2 / 100);
-      }
+    if (hasPartner) {
+      const expenses = await db('expenses')
+        .whereBetween('date', [startDate, endDate])
+        .whereIn('paid_by_user_id', [currentUser.id, partner.id]);
+      const settlementData = computeSettlementBalances(expenses, currentUser.id, partner.id);
+      totals = settlementData.totals;
+      totalSharedExpenses = settlementData.totalSharedExpenses;
     }
 
-    const balance1 = userPaid[user1.id] - userShares[user1.id];
-    const amountOwed = Math.abs(balance1);
-
-    let settlement = {
-      amount: amountOwed.toFixed(2),
-      creditor: null,
-      debtor: null,
-      message: ''
-    };
-
-    if (balance1 > 0) {
-      settlement.creditor = user1.name;
-      settlement.debtor = user2.name;
-      settlement.message = `${user2.name} owes ${user1.name}`;
-    } else if (balance1 < 0) {
-      settlement.creditor = user2.name;
-      settlement.debtor = user1.name;
-      settlement.message = `${user1.name} owes ${user2.name}`;
-    } else {
-      settlement.message = 'All settled up!';
-      settlement.amount = '0.00';
-    }
+    const payload = buildSettlementPayload(scope, scopeContext, totals, totalSharedExpenses, monthYear);
 
     res.json({
-      settlement,
-      totalSharedExpenses: totalSharedExpenses.toFixed(2),
-      monthYear: `${currentYear}-${String(currentMonth).padStart(2, '0')}`
+      scope,
+      requestedScope,
+      ...payload,
+      scopes: {
+        [scope]: { ...payload }
+      }
     });
 
   } catch (error) {

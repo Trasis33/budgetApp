@@ -82,7 +82,7 @@ const ModernEnhancedDashboard = () => {
           .get('/analytics/current-settlement', { params: { scope } })
           .catch(() => ({ data: null }));
         const goalsPromise = axios
-          .get('/savings/goals')
+          .get('/savings/goals', { params: { scope } })
           .catch(() => ({ data: [] }));
 
         const [
@@ -162,7 +162,20 @@ const ModernEnhancedDashboard = () => {
     return { income, expenses };
   }, [dashboardData, scope]);
 
-  const settlement = dashboardData?.analytics?.settlement;
+  const settlementData = useMemo(() => {
+    const base = dashboardData?.analytics?.settlement;
+    if (!base) {
+      return null;
+    }
+    const scoped = base.scopes?.[scope];
+    if (scoped) {
+      return {
+        ...scoped,
+        requestedScope: base.requestedScope ?? scope
+      };
+    }
+    return base;
+  }, [dashboardData, scope]);
 
   const budgetInsight = useMemo(() => {
     const variances = dashboardData?.optimization?.analysis?.budgetVariances
@@ -245,7 +258,7 @@ const ModernEnhancedDashboard = () => {
           income={incomeVsExpenses.income}
           expenses={incomeVsExpenses.expenses}
           totalSavings={savingsData?.summary?.totalSavings ?? savingsData?.summary?.total_savings ?? 0}
-          settlement={settlement}
+          settlement={settlementData}
           formatCurrency={formatCurrency}
           onViewReport={() => setDeepDiveOpen(true)}
         />
@@ -253,8 +266,8 @@ const ModernEnhancedDashboard = () => {
     },
     {
       key: 'settlement',
-      shouldRender: Boolean(settlement?.settlement),
-      node: <SettlementCard settlement={settlement} couple={couple} />
+      shouldRender: Boolean(settlementData?.settlement),
+      node: <SettlementCard scope={scope} settlement={settlementData} couple={couple} />
     },
     {
       key: 'spending',
