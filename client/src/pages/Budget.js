@@ -707,7 +707,7 @@ const Budget = () => {
 
   const renderAnalyticsSection = () => (
     <div className="space-y-6">
-      <div className="glass-card hover-lift">
+      {/* <div className="glass-card hover-lift">
         <h3 className="section-title gradient-text">Time Period</h3>
         <select
           value={timePeriod}
@@ -719,7 +719,7 @@ const Budget = () => {
           <option value="1year">Last Year</option>
           <option value="2years">Last 2 Years</option>
         </select>
-      </div>
+      </div> */}
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SavingsRateTracker />
