@@ -14,6 +14,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const Login = lazy(() => import('./pages/Login'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const MonthlyStatement = lazy(() => import('./pages/MonthlyStatement'));
+const Savings = lazy(() => import('./pages/Savings'));
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -62,6 +63,7 @@ function App() {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="expenses" element={<Expenses />} />
                 <Route path="budget" element={<Budget />} />
+                <Route path="savings" element={<Savings />} />
                 <Route path="monthly/:year/:month" element={<MonthlyStatement />} />
                 <Route path="settings" element={<Settings />} />
               </Route>

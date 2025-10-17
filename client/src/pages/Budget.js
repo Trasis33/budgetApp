@@ -24,22 +24,15 @@ import {
   TrendingDown,
   PieChart,
   Target,
-  Wallet,
   Sparkles,
   ListChecks,
   Circle,
-  Trash2,
-  PlusCircle,
   AlertCircle
 } from 'lucide-react';
 
 const Budget = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('budget');
-  const [incomes, setIncomes] = useState([]);
-  const [source, setSource] = useState('');
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,17 +44,14 @@ const Budget = () => {
   const [categories, setCategories] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [timePeriod, setTimePeriod] = useState('6months');
-  const [incomePanelTab, setIncomePanelTab] = useState('view');
   const [savingBudgetId, setSavingBudgetId] = useState(null);
 
   const sections = [
     { id: 'budget', label: 'Budget Overview', icon: '💰' },
-    { id: 'analytics', label: 'Analytics', icon: '📊' },
-    { id: 'income', label: 'Income Management', icon: '💼' }
+    { id: 'analytics', label: 'Analytics', icon: '📊' }
   ];
 
   const manageBudgetsSectionRef = useRef(null);
-  const incomeCenterRef = useRef(null);
   const budgetInputRefs = useRef({});
   const highlightTimeoutRef = useRef(null);
   const [highlightCategoryId, setHighlightCategoryId] = useState(null);
@@ -72,13 +62,11 @@ const Budget = () => {
     
     try {
       const basePromises = [
-        axios.get(`/incomes?month=${month}&year=${year}`),
         axios.get(`/summary/charts/${year}/${month}`),
         axios.get('/categories')
       ];
       
-      const [incomesRes, chartsRes, categoriesRes] = await Promise.all(basePromises);
-      setIncomes(incomesRes.data);
+      const [chartsRes, categoriesRes] = await Promise.all(basePromises);
       setChartData(chartsRes.data);
       setCategories(categoriesRes.data);
       
@@ -116,28 +104,6 @@ const Budget = () => {
   const { ref: ieRef, isVisible: ieVisible } = useLazyLoad();
   const { ref: bvaRef, isVisible: bvaVisible } = useLazyLoad();
 
-  const handleAddIncome = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('/incomes', { source, amount, date });
-      setSource('');
-      setAmount('');
-      setIncomePanelTab('view');
-      fetchBudgetData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteIncome = async (id) => {
-    try {
-      await axios.delete(`/incomes/${id}`);
-      fetchBudgetData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleBudgetChange = (categoryId, value) => {
     setBudgets(prev => ({ ...prev, [categoryId]: value }));
   };
@@ -171,13 +137,6 @@ const Budget = () => {
   const scrollToManageBudgets = () => {
     if (manageBudgetsSectionRef.current) {
       manageBudgetsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  const scrollToIncomeCenter = (tab = 'view') => {
-    setIncomePanelTab(tab);
-    if (incomeCenterRef.current) {
-      incomeCenterRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -342,8 +301,6 @@ const Budget = () => {
         return renderBudgetSection();
       case 'analytics':
         return renderAnalyticsSection();
-      case 'income':
-        return renderIncomeSection();
       default:
         return renderBudgetSection();
     }
@@ -558,8 +515,6 @@ const Budget = () => {
 
     const CashIcon = isSurplus || isBreakEven ? TrendingUp : TrendingDown;
 
-    const totalIncomeLogged = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-
     return (
       <div className="space-y-8">
         <div className="rounded-3xl border border-slate-100 bg-gradient-to-r from-indigo-100 via-white to-white px-8 py-6 shadow-sm">
@@ -616,10 +571,10 @@ const Budget = () => {
               </button>
               <button
                 type="button"
-                onClick={() => scrollToIncomeCenter('add')}
+                onClick={() => navigate('/savings')}
                 className={actionPillClass}
               >
-                Manage Income
+                Go to Savings
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -737,138 +692,12 @@ const Budget = () => {
                 <h3 className="mt-2 text-xl font-semibold text-slate-900">Set Your Spending Goals</h3>
                 <p className="mt-2 text-sm text-slate-600">{manageBudgetsCopy}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => scrollToIncomeCenter('view')}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                View Incomes
-                <ArrowRight className="h-4 w-4" />
-              </button>
             </div>
             <div className="mt-6">
               <BudgetAccordion
                 sections={budgetSections}
                 formatCurrency={formatCurrency}
               />
-            </div>
-          </div>
-
-          <div
-            ref={incomeCenterRef}
-            className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg md:col-span-2"
-          >
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  <Wallet className="h-4 w-4 text-indigo-500" />
-                  <span>Income Center</span>
-                </div>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">Your Income</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  You’ve logged {incomes.length} {incomes.length === 1 ? 'income stream' : 'income streams'} this month
-                  totaling {formatCurrency(totalIncomeLogged)}.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-sm font-medium text-slate-600">
-              <button
-                type="button"
-                onClick={() => setIncomePanelTab('view')}
-                className={`rounded-full px-4 py-1 transition ${incomePanelTab === 'view' ? 'bg-white text-slate-900 shadow-sm' : ''}`}
-              >
-                View Incomes
-              </button>
-              <button
-                type="button"
-                onClick={() => setIncomePanelTab('add')}
-                className={`rounded-full px-4 py-1 transition ${incomePanelTab === 'add' ? 'bg-white text-slate-900 shadow-sm' : ''}`}
-              >
-                Add New Income
-              </button>
-            </div>
-
-            <div className="mt-6">
-              {incomePanelTab === 'view' ? (
-                incomes.length ? (
-                  <ul className="space-y-3">
-                    {incomes.map((income) => (
-                      <li
-                        key={income.id}
-                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{income.source}</p>
-                          <p className="text-xs text-slate-500">
-                            {new Date(income.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <p className="text-sm font-semibold text-emerald-600">
-                            {formatCurrency(income.amount)}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteIncome(income.id)}
-                            className="rounded-full border border-slate-200 bg-white p-1.5 text-slate-400 transition hover:text-rose-500"
-                            aria-label={`Delete income ${income.source}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-                    <Wallet className="mb-3 h-8 w-8 text-slate-400" />
-                    No income recorded for this month yet. Add your first entry to track progress.
-                  </div>
-                )
-              ) : (
-                <form onSubmit={handleAddIncome} className="space-y-5">
-                  <div>
-                    <label className="block text-xs uppercase tracking-[0.18em] text-slate-500">Income Source</label>
-                    <input
-                      type="text"
-                      value={source}
-                      onChange={(e) => setSource(e.target.value)}
-                      className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                      placeholder="e.g., Salary, Freelance project"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs uppercase tracking-[0.18em] text-slate-500">Amount</label>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                      placeholder="1000.00"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs uppercase tracking-[0.18em] text-slate-500">Date</label>
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-600"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Add Income
-                  </button>
-                </form>
-              )}
             </div>
           </div>
         </div>
@@ -903,80 +732,6 @@ const Budget = () => {
         currentMonth={month}
         currentYear={year}
       />
-    </div>
-  );
-
-  const renderIncomeSection = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Add Income</h3>
-          <form onSubmit={handleAddIncome} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Income Source</label>
-              <input
-                type="text"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="e.g., Salary, Freelance"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Amount</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="1000.00"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">
-              Add Income
-            </button>
-          </form>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Income This Month</h3>
-          <div className="space-y-4">
-            {incomes.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No income recorded for this month</p>
-            ) : (
-              incomes.map((income) => (
-                <div key={income.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{income.source}</p>
-                    <p className="text-sm text-gray-500">{new Date(income.date).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg text-green-600">{formatCurrency(income.amount)}</p>
-                    <button 
-                      onClick={() => handleDeleteIncome(income.id)} 
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 

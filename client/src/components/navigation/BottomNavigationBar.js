@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Wallet, PlusCircle, BarChart2, Settings } from 'lucide-react';
+import { Home, Wallet, PlusCircle, BarChart2, Settings, PiggyBank } from 'lucide-react';
 import { useExpenseModal } from '../../context/ExpenseModalContext';
 
 const BottomNavigationBar = () => {
@@ -12,6 +12,7 @@ const BottomNavigationBar = () => {
     { to: '/expenses', label: 'Expenses', icon: Wallet },
     { action: 'add-expense', label: 'Add', icon: PlusCircle, isPrimary: true },
     { to: '/budget', label: 'Budget', icon: BarChart2 },
+    { to: '/savings', label: 'Savings', icon: PiggyBank },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
 

@@ -18,6 +18,18 @@ import formatCurrency from '../utils/formatCurrency';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import AddContributionModal from './AddContributionModal';
+import { useScope } from '../context/ScopeContext';
+
+const extractScopedValue = (payload, scope) => {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  const scoped = payload.scopes?.[scope];
+  if (scoped) {
+    return scoped;
+  }
+  return payload;
+};
 
 const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const [loading, setLoading] = useState(true);
@@ -27,6 +39,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   const [contribOpen, setContribOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
   const { user } = useAuth();
+  const { scope } = useScope();
   // Local period state to control the time filter UI and fetching
   const [period, setPeriod] = useState(timePeriod);
 
@@ -63,10 +76,14 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
         apiStartDate = startDateObj.toISOString().split('T')[0];
       }
       
-      const response = await axios.get(`/analytics/savings-analysis/${apiStartDate}/${apiEndDate}`);
+      const response = await axios.get(`/analytics/savings-analysis/${apiStartDate}/${apiEndDate}`, {
+        params: { scope }
+      });
+
+      const payload = extractScopedValue(response.data, scope) || {};
       
       // Transform the data to match our component's expected structure
-      const data = response.data;
+      const data = payload;
       const transformedData = {
         summary: {
           averageSavingsRate: data.summary?.averageSavingsRate || 0,
@@ -96,7 +113,7 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     } finally {
       setLoading(false);
     }
-  }, [user, period, startDate, endDate]);
+  }, [user, period, startDate, endDate, scope]);
 
   useEffect(() => {
     fetchSavingsData();
@@ -190,11 +207,8 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
     setContribOpen(true);
   };
 
-  const onContributionSuccess = (updatedGoal, _contribution) => {
-    setSavingsData((prev) => ({
-      ...prev,
-      goals: prev.goals.map((g) => g.id === updatedGoal.id ? { ...g, currentAmount: parseFloat(updatedGoal.current_amount || 0) } : g)
-    }));
+  const onContributionSuccess = () => {
+    fetchSavingsData();
   };
 
   // Loading state

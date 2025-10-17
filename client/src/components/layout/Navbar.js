@@ -17,6 +17,8 @@ const getPageTitle = (pathname) => {
       return 'Expenses';
     case 'budget':
       return 'Budget';
+    case 'savings':
+      return 'Savings';
     case 'monthly':
       return 'Monthly Statement';
     case 'settings':
