@@ -31,6 +31,27 @@ This document captures the visual and interaction standards established for the 
   - Goal cards: emerald background with deeper accent for progress bar.
 - **Confidence badge**: emerald >= 80%, amber 60–79, slate < 60. Badge background uses the lightest tint, border is one step darker.
 
+### 4.1 Accent Palette System
+Use the shared accent ramp whenever you need multiple cards or chips to feel related but distinct (goals, dashboards, modals, etc.). Colors are assigned by index so the experience stays predictable—when a card surfaces first (pinned or primary), it receives the emerald tone.
+
+| Index | Token | Surface / Border | Progress / Accent | Buttons & Pills | Notes |
+| --- | --- | --- | --- | --- | --- |
+| 0 | `emerald` | `bg-emerald-50/80` / `border-emerald-200` | `bg-emerald-500` | `border-emerald-200 text-emerald-600 hover:border-emerald-300` | Default mint for pinned/top goal |
+| 1 | `teal` | `bg-teal-50/80` / `border-teal-200` | `bg-teal-500` | `border-teal-200 text-teal-600 hover:border-teal-300` | Soothing seafoam |
+| 2 | `sky` | `bg-sky-50/80` / `border-sky-200` | `bg-sky-500` | `border-sky-200 text-sky-600 hover:border-sky-300` | Light airy blue |
+| 3 | `indigo` | `bg-indigo-50/80` / `border-indigo-200` | `bg-indigo-500` | `border-indigo-200 text-indigo-600 hover:border-indigo-300` | Reallocation accent |
+| 4 | `violet` | `bg-violet-50/80` / `border-violet-200` | `bg-violet-500` | `border-violet-200 text-violet-600 hover:border-violet-300` | Rich secondary accent |
+| 5 | `amber` | `bg-amber-50/80` / `border-amber-200` | `bg-amber-500` | `border-amber-200 text-amber-600 hover:border-amber-300` | Warm highlight |
+| 6 | `rose` | `bg-rose-50/80` / `border-rose-200` | `bg-rose-500` | `border-rose-200 text-rose-600 hover:border-rose-300` | Soft warning |
+| 7 | `slate` | `bg-slate-50/80` / `border-slate-200` | `bg-slate-500` | `border-slate-200 text-slate-600 hover:border-slate-300` | Neutral fallback |
+
+Implementation guidance:
+- Load palette via `getGoalColorScheme(index)` in `client/src/utils/goalColorPalette.js`.
+- Use `assignGoalColors(collection)` whenever a sorted list of cards needs consistent colors; the helper works for goals, dashboard tiles, or future analytics stacks.
+- Accent objects expose keys for `surface`, `border`, `ring`, `quickButton`, `primaryButton`, `progressTrack`, `progressBar`, `accent`, `heading`, and `body` to keep styling coherent.
+- Apply the palette across the check-up experience (Savings cards, inline composer, dashboard chips, optimization tips) so multi-card layouts share the same visual language.
+
+
 ## 5. Iconography & Micro-visuals
 - Use Lucide icons (via `lucide-react`) sized 20–24px. Pair icon color with the section accent for quick recognition.
 - Mini charts (Recharts) use soft gridlines (`#e2e8f0`, dashed) and rounded stroke widths (2px).

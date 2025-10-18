@@ -282,7 +282,14 @@ const fetchSavingsGoalsForScope = async ({ scope, currentUser, partner }) => {
   } else {
     goalsQuery = goalsQuery.where('user_id', currentUser.id);
   }
-  return goalsQuery.select('*');
+  const goals = await goalsQuery
+    .select('*')
+    .orderBy([{ column: 'is_pinned', order: 'desc' }, { column: 'created_at', order: 'desc' }]);
+
+  return goals.map((goal, index) => ({
+    ...goal,
+    color_index: index
+  }));
 };
 
 const computeSettlementBalances = (expenses, currentUserId, partnerId) => {

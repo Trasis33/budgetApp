@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart';
 import { PiggyBank, Wallet, TrendingUp, TrendingDown, PlusCircle, Calendar } from 'lucide-react';
@@ -19,6 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import AddContributionModal from './AddContributionModal';
 import { useScope } from '../context/ScopeContext';
+import { cn } from '../lib/utils';
+import { assignGoalColors, getGoalColorScheme } from '../utils/goalColorPalette';
 
 const extractScopedValue = (payload, scope) => {
   if (!payload || typeof payload !== 'object') {
@@ -94,15 +96,24 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
           month: month.month,
           savingsRate: month.savingsRate || 0
         })) || [],
-        goals: data.savingsGoals?.map(goal => ({
-          id: goal.id,
-          name: goal.goal_name,
-          targetAmount: parseFloat(goal.target_amount || 0),
-          currentAmount: parseFloat(goal.current_amount || 0),
-          icon: '🎯',
-          category: goal.category,
-          targetDate: goal.target_date
-        })) || [],
+        goals: data.savingsGoals?.map((goal, index) => {
+          const colorIndex =
+            typeof goal.color_index === 'number' && !Number.isNaN(goal.color_index)
+              ? goal.color_index
+              : index;
+          return {
+            id: goal.id,
+            name: goal.goal_name,
+            targetAmount: parseFloat(goal.target_amount || 0),
+            currentAmount: parseFloat(goal.current_amount || 0),
+            icon: '🎯',
+            category: goal.category,
+            targetDate: goal.target_date,
+            colorIndex,
+            color_index: colorIndex,
+            isPinned: Boolean(goal.is_pinned)
+          };
+        }) || [],
         targetRate: 20 // Default target savings rate
       };
       
@@ -123,6 +134,11 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
   useEffect(() => {
     setPeriod(timePeriod);
   }, [timePeriod]);
+
+  const goalAccents = useMemo(
+    () => assignGoalColors(savingsData?.goals || []),
+    [savingsData?.goals]
+  );
 
   // Helper functions for badge variants
   const getBadgeVariant = (rate) => {
@@ -412,37 +428,60 @@ const SavingsRateTracker = ({ timePeriod = '6months', startDate, endDate }) => {
 
         {/* Savings Goals Section */}
         {savingsData.goals && savingsData.goals.length > 0 && (
-          <div>
-            <h4 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--spacing-4xl)' }}>Savings Goals</h4>
-            <div className="two-col-grid">
-              {savingsData.goals.map((goal, index) => (
-                <Card key={goal.id || index} className="stat-card hover-lift" style={{ border: '1px solid var(--border-color)' }}>
-                  <CardContent>
-                    <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>{goal.name}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <button onClick={() => openContribution(goal)} title="Add contribution" style={{ border: '1px solid var(--border-color)', background: 'var(--surface)', borderRadius: 10, padding: '6px 10px', fontSize: 12, fontWeight: 700, color: 'var(--muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <PlusCircle size={16} /> Add
+          <div className="mt-10">
+            <h4 className="text-lg font-semibold text-slate-900 mb-6">Savings Goals</h4>
+            <div className="grid gap-4 md:grid-cols-2">
+              {savingsData.goals.map((goal, index) => {
+                const accent =
+                  goalAccents[goal.id] || getGoalColorScheme(goal.colorIndex ?? index);
+                const percent = computePercent(goal);
+
+                return (
+                  <Card
+                    key={goal.id || index}
+                    className={cn(
+                      'hover:shadow-lg transition-shadow rounded-3xl border shadow-sm',
+                      accent.surface,
+                      accent.border
+                    )}
+                  >
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className={cn('text-sm font-semibold', accent.heading)}>{goal.name}</div>
+                        <button
+                          type="button"
+                          onClick={() => openContribution(goal)}
+                          className={cn(
+                            'inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium',
+                            accent.quickButton,
+                            'bg-white'
+                          )}
+                        >
+                          <PlusCircle className="h-4 w-4" /> Add
                         </button>
                       </div>
-                    </div>
-                    <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, marginBottom: 'var(--spacing-md)' }}>
-                      {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
-                    </div>
-                    <div style={{ width: '100%', borderRadius: 9999, height: 6, background: 'rgba(16,24,40,0.08)', marginBottom: 'var(--spacing-lg)' }}>
-                      <div className="transition-all duration-300" style={{ height: '100%', borderRadius: 9999, width: `${computePercent(goal)}%`, background: 'var(--primary)' }} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--muted)', fontSize: 12 }}>
-                      <span>{computePercent(goal).toFixed(1)}% Complete</span>
-                      {goal.targetDate && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <Calendar size={14} /> Target: {new Date(goal.targetDate).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className={cn('text-xl font-semibold', accent.heading)}>
+                        {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
+                      </div>
+                      <div className={cn('h-2 w-full rounded-full', accent.progressTrack)}>
+                        <div
+                          className={cn('h-full rounded-full transition-all duration-300', accent.progressBar)}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <div className={cn('flex items-center justify-between text-xs', accent.body)}>
+                        <span>{percent.toFixed(1)}% Complete</span>
+                        {goal.targetDate && (
+                          <span className="inline-flex items-center gap-2">
+                            <Calendar className="h-4 w-4" /> Target:{' '}
+                            {new Date(goal.targetDate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}

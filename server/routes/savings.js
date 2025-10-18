@@ -60,7 +60,7 @@ router.get('/goals', async (req, res) => {
       return acc;
     }, {});
 
-    const mapGoal = (goal) => {
+    const mapGoal = (goal, index) => {
       const totals = contributionMap[goal.id] || {};
       const viewerContribution = Number(totals[viewerId] || 0);
       const partnerContribution = counterpartId ? Number(totals[counterpartId] || 0) : 0;
@@ -70,11 +70,12 @@ router.get('/goals', async (req, res) => {
         partner_contribution: partnerContribution,
         owner_id: goal.user_id,
         viewer_id: viewerId,
-        partner_id: counterpartId
+        partner_id: counterpartId,
+        color_index: index
       };
     };
 
-    const scopedGoals = goals.map(mapGoal);
+    const scopedGoals = goals.map((goal, index) => mapGoal(goal, index));
 
     const payload = {
       goals: scopedGoals

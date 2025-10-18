@@ -233,3 +233,9 @@ Optimization
   }
 ]
 ```
+
+## Shared Goal Palette & Pinning
+- Shared accent ramp lives in `client/src/utils/goalColorPalette.js`. Use `getGoalColorScheme(index)` or `assignGoalColors(collection)` for any ordered card list (goals, dashboard tiles, future analytics).
+- Pinning is persisted via `savings_goals.is_pinned`; server routes enforce a single pinned goal per user and send `color_index` for consistent ordering.
+- Client helpers consume the accent object (`surface`, `border`, `ring`, `quickButton`, etc.) to keep cards, progress bars, and buttons aligned with the design spec.
+- Run `npx knex migrate:latest --knexfile server/db/knexfile.js` after pulling to ensure the new column exists before starting the API.

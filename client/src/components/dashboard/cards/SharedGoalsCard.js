@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { CalendarDays, Users2, ArrowUpRight } from 'lucide-react';
 import formatCurrency from '../../../utils/formatCurrency';
+import { getGoalColorScheme } from '../../../utils/goalColorPalette';
+import { cn } from '../../../lib/utils';
 
 const computeContributionSplit = (goal) => {
   const mine = Number.parseFloat(goal?.my_contribution ?? goal?.user_contribution ?? 0);
@@ -43,21 +45,28 @@ const SharedGoalsCard = ({ scope, goal }) => {
   const targetAmount = Number.parseFloat(goal?.target_amount ?? 0);
   const progress = targetAmount > 0 ? Math.min((contributions.total / targetAmount) * 100, 100) : 0;
   const remaining = Math.max(targetAmount - contributions.total, 0);
+  const accent = getGoalColorScheme(goal?.color_index ?? 0);
 
   const titlePrefix =
     scope === 'mine' ? 'My goal:' : scope === 'partner' ? "Partner's goal:" : 'Goal:';
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
+    <div
+      className={cn(
+        'rounded-3xl border p-6 shadow-md transition-shadow hover:shadow-lg',
+        accent.surface,
+        accent.border
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{titlePrefix}</p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900">{goal.goal_name}</h3>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className={cn('text-xs uppercase tracking-[0.12em]', accent.accent)}>{titlePrefix}</p>
+          <h3 className={cn('mt-1 text-xl font-semibold', accent.heading)}>{goal.goal_name}</h3>
+          <p className={cn('mt-2 text-sm', accent.body)}>
             We’ve saved {formatCurrency(contributions.total)} of our {formatCurrency(targetAmount)} target.
           </p>
         </div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+        <div className={cn('flex h-12 w-12 items-center justify-center rounded-full', accent.icon)}>
           <Users2 className="h-6 w-6" />
         </div>
       </div>
@@ -67,33 +76,33 @@ const SharedGoalsCard = ({ scope, goal }) => {
           <span>Progress</span>
           <span>{progress.toFixed(0)}%</span>
         </div>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className={cn('h-3 w-full overflow-hidden rounded-full', accent.progressTrack)}>
           <div
-            className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+            className={cn('h-full rounded-full transition-all duration-500', accent.progressBar)}
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-2">
+        <div className="grid gap-3 rounded-2xl bg-white/60 p-4 text-sm md:grid-cols-2">
           <div>
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">My contribution</p>
-            <p className="mt-1 text-base font-semibold text-slate-900">
+            <p className={cn('text-xs uppercase tracking-[0.12em]', accent.accent)}>My contribution</p>
+            <p className={cn('mt-1 text-base font-semibold', accent.heading)}>
               {formatCurrency(contributions.mine)}
             </p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Partner contribution</p>
-            <p className="mt-1 text-base font-semibold text-slate-900">
+            <p className={cn('text-xs uppercase tracking-[0.12em]', accent.accent)}>Partner contribution</p>
+            <p className={cn('mt-1 text-base font-semibold', accent.heading)}>
               {formatCurrency(contributions.partner)}
             </p>
           </div>
         </div>
 
         {goal?.target_date && (
-          <div className="flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600 shadow-inner ring-1 ring-slate-100">
-            <CalendarDays className="h-4 w-4 text-slate-400" />
+          <div className={cn('flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm shadow-inner ring-1', accent.border)}>
+            <CalendarDays className={cn('h-4 w-4', accent.accent)} />
             Target date:{' '}
-            <span className="font-medium text-slate-900">
+            <span className={cn('font-medium', accent.heading)}>
               {new Date(goal.target_date).toLocaleDateString(undefined, {
                 month: 'short',
                 year: 'numeric'
@@ -102,7 +111,7 @@ const SharedGoalsCard = ({ scope, goal }) => {
           </div>
         )}
 
-        <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className={cn('rounded-2xl px-4 py-3 text-sm', accent.pill)}>
           Remaining: {formatCurrency(remaining)} to reach this goal together.
         </div>
       </div>
@@ -110,7 +119,11 @@ const SharedGoalsCard = ({ scope, goal }) => {
       <div className="mt-6 flex items-center gap-3">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
+          className={cn(
+            'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition',
+            accent.quickButton,
+            'bg-white'
+          )}
         >
           Contribute now
           <ArrowUpRight className="h-4 w-4" />

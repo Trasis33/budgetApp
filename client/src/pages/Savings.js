@@ -32,6 +32,7 @@ import { useAuth } from '../context/AuthContext';
 import { useScope } from '../context/ScopeContext';
 import formatCurrency from '../utils/formatCurrency';
 import ContributionComposer from '../components/ContributionComposer';
+import { assignGoalColors, getGoalColorScheme } from '../utils/goalColorPalette';
 import { Button } from '../components/ui/button';
 import Pill from '../components/ui/pill';
 import { cn } from '../lib/utils';
@@ -63,7 +64,8 @@ const createEmptyGoalForm = () => ({
   goal_name: '',
   target_amount: '',
   target_date: '',
-  category: 'general'
+  category: 'general',
+  color_index: 0
 });
 
 const computeDateRange = (period) => {
@@ -239,7 +241,8 @@ const GoalPanel = ({
   isPinned,
   canPin,
   onPinGoal,
-  onUnpinGoal
+  onUnpinGoal,
+  accent
 }) => {
   const progressPercent = getGoalProgress(goal);
   const targetDateLabel = formatTargetDate(goal.target_date);
@@ -251,18 +254,21 @@ const GoalPanel = ({
   const showContribution = isContributionOpen && canContribute && !isEditing;
   const showEditForm = isEditing;
   const editorValues = editValues || createEmptyGoalForm();
+  const scheme = accent || getGoalColorScheme(goal?.color_index || 0);
 
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5 shadow-inner transition-shadow',
-        isPinned ? 'border-emerald-300 shadow-lg ring-2 ring-emerald-200 ring-offset-2 ring-offset-emerald-50/80' : ''
+        'relative overflow-hidden rounded-2xl border p-5 shadow-inner transition-shadow',
+        scheme.surface,
+        scheme.border,
+        isPinned ? scheme.ring : ''
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="w-full">
-          <div className="flex items-center gap-2 justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className={cn('text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent)}>
               {formatCategoryLabel(goal.category)}
             </p>
             {canPin && (
@@ -271,10 +277,8 @@ const GoalPanel = ({
                 onClick={() => (isPinned ? onUnpinGoal(goal) : onPinGoal(goal))}
                 disabled={isEditing && !isPinned}
                 className={cn(
-                  'relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent transition-colors',
-                  isPinned
-                    ? 'border-amber-300 bg-amber-100 text-amber-600 hover:bg-amber-200'
-                    : 'border-emerald-100 bg-white/80 text-emerald-400 hover:border-emerald-200 hover:bg-emerald-50/80'
+                  'relative inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors',
+                  isPinned ? scheme.pin.active : scheme.pin.inactive
                 )}
                 aria-label={isPinned ? 'Unpin goal' : 'Pin goal'}
               >
@@ -282,8 +286,8 @@ const GoalPanel = ({
               </button>
             )}
           </div>
-          <h4 className="mt-1 text-lg font-semibold text-emerald-900">{goal.goal_name}</h4>
-          <p className="mt-3 text-sm text-emerald-700">
+          <h4 className={cn('mt-1 text-lg font-semibold', scheme.heading)}>{goal.goal_name}</h4>
+          <p className={cn('mt-3 text-sm', scheme.body)}>
             Saved {formatCurrency(Number(goal.current_amount ?? 0))} of{' '}
             {formatCurrency(Number(goal.target_amount ?? 0))}
           </p>
@@ -294,7 +298,7 @@ const GoalPanel = ({
             onClick={() =>
               showContribution ? onCloseContribution(goal) : onLogContribution(goal)
             }
-            className="border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
+            className={cn('bg-white', scheme.quickButton)}
             disabled={!canContribute || isEditing}
           >
             {showContribution ? (
@@ -312,7 +316,7 @@ const GoalPanel = ({
           <Button
             variant="pill"
             onClick={() => onEditGoal(goal)}
-            className="border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
+            className={cn('bg-white', scheme.quickButton)}
             disabled={isEditing}
           >
             <Pencil className="mr-2 h-4 w-4" />
@@ -336,23 +340,24 @@ const GoalPanel = ({
           contextLabel="Editing goal"
           submitLabel="Save changes"
           cancelLabel="Cancel edit"
+          accent={scheme}
         />
       ) : (
         <>
           <div className="mt-5">
-            <div className="h-2 w-full rounded-full bg-white/70">
+            <div className={cn('h-2 w-full rounded-full', scheme.progressTrack)}>
               <div
-                className="h-2 rounded-full bg-emerald-500 transition-[width] duration-500 ease-out"
+                className={cn('h-2 rounded-full transition-[width] duration-500 ease-out', scheme.progressBar)}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-between text-xs font-medium text-emerald-700">
+            <div className={cn('mt-2 flex flex-wrap items-center justify-between text-xs font-medium', scheme.body)}>
               <span>{progressPercent.toFixed(0)}% complete</span>
               <span>{describeTargetDate(goal.target_date)}</span>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-emerald-700">
+          <div className={cn('mt-4 flex flex-wrap items-center justify-between text-xs', scheme.body)}>
             <div className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4" />
               <span>{targetDateLabel || 'No date set'}</span>
@@ -367,7 +372,7 @@ const GoalPanel = ({
             <button
               type="button"
               onClick={() => onDeleteGoal(goal)}
-              className="text-xs font-medium text-emerald-700 underline-offset-2 hover:text-emerald-900 hover:underline"
+              className={cn('text-xs font-medium underline-offset-2 hover:underline', scheme.body)}
             >
               Remove goal
             </button>
@@ -382,7 +387,7 @@ const GoalPanel = ({
                 capAmount={remaining}
                 enforceCap={true}
                 layout="inline"
-                className="bg-emerald-50/80"
+                accent={scheme}
               />
             </div>
           )}
@@ -406,8 +411,10 @@ const GoalForm = ({
   contextLabel,
   submitLabel,
   cancelLabel,
-  className
+  className,
+  accent
 }) => {
+  const scheme = accent || getGoalColorScheme(values?.color_index || 0);
   const contextText = contextLabel || (mode === 'edit' ? 'Update goal' : 'New goal');
   const headingText = title || (mode === 'edit' ? 'Polish the plan' : 'Let\'s outline a goal');
   const submitText = submitLabel || (mode === 'edit' ? 'Save goal' : 'Create goal');
@@ -415,28 +422,28 @@ const GoalForm = ({
 
   const containerClasses = cn(
     layout === 'inline'
-      ? 'mt-5 space-y-4 rounded-2xl border border-emerald-200 bg-white px-5 py-5 shadow-sm'
-      : 'mt-6 space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5',
+      ? ['mt-5 space-y-4 rounded-2xl border px-5 py-5 shadow-sm bg-white', scheme.border]
+      : ['mt-6 space-y-4 rounded-2xl border p-5', scheme.border, scheme.surface],
     className
   );
 
   const contextClasses =
     layout === 'inline'
-      ? 'text-xs font-semibold uppercase tracking-[0.12em] text-slate-500'
-      : 'text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600';
+      ? cn('text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent)
+      : cn('text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent);
 
   const cancelVariant = layout === 'inline' ? 'pill' : 'ghost';
   const cancelClasses =
     layout === 'inline'
-      ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-      : 'text-emerald-600 hover:text-emerald-800';
+      ? cn('bg-white', scheme.quickButton)
+      : 'text-slate-600 hover:text-slate-800';
 
   return (
     <form onSubmit={onSubmit} className={containerClasses}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className={contextClasses}>{contextText}</p>
-          <h4 className="text-base font-semibold text-emerald-900">{headingText}</h4>
+        <p className={contextClasses}>{contextText}</p>
+          <h4 className={cn('text-base font-semibold', scheme.heading)}>{headingText}</h4>
         </div>
         <Button
           type="button"
@@ -456,7 +463,7 @@ const GoalForm = ({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+          <label className={cn('mb-2 block text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent)}>
             Goal name
           </label>
           <input
@@ -464,12 +471,16 @@ const GoalForm = ({
             value={values.goal_name}
             onChange={(event) => onChange('goal_name', event.target.value)}
             placeholder="Emergency fund"
-            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            className={cn(
+              'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+              scheme.border,
+              scheme.focus
+            )}
             required
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+          <label className={cn('mb-2 block text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent)}>
             Target amount
           </label>
           <input
@@ -479,29 +490,41 @@ const GoalForm = ({
             value={values.target_amount}
             onChange={(event) => onChange('target_amount', event.target.value)}
             placeholder="10000"
-            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            className={cn(
+              'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+              scheme.border,
+              scheme.focus
+            )}
             required
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+          <label className={cn('mb-2 block text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent)}>
             Target date
           </label>
           <input
             type="date"
             value={values.target_date}
             onChange={(event) => onChange('target_date', event.target.value)}
-            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            className={cn(
+              'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+              scheme.border,
+              scheme.focus
+            )}
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+          <label className={cn('mb-2 block text-xs font-semibold uppercase tracking-[0.12em]', scheme.accent)}>
             Category
           </label>
           <select
             value={values.category}
             onChange={(event) => onChange('category', event.target.value)}
-            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            className={cn(
+              'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+              scheme.border,
+              scheme.focus
+            )}
           >
             {categories.map((option) => (
               <option key={option.value} value={option.value}>
@@ -516,7 +539,7 @@ const GoalForm = ({
         <Button
           type="submit"
           disabled={submitting}
-          className="bg-emerald-600 text-white hover:bg-emerald-700"
+          className={cn(scheme.primaryButton, 'text-white')}
         >
           {submitting ? 'Saving...' : submitText}
         </Button>
@@ -703,6 +726,7 @@ const SharedGoalsCard = ({
   canPin,
   onPinGoal,
   onUnpinGoal,
+  goalAccents,
   pinnedGoalId,
   goalFormOpen,
   goalFormMode,
@@ -754,6 +778,7 @@ const SharedGoalsCard = ({
           const isContributionOpen = activeContributionGoalId === goal.id;
           const isEditingGoal = activeEditGoalId === goal.id;
           const isPinned = pinnedGoalId === goal.id;
+          const accentScheme = goalAccents?.[goal.id] || getGoalColorScheme(goal?.color_index ?? 0);
 
           return (
             <GoalPanel
@@ -776,6 +801,7 @@ const SharedGoalsCard = ({
               canPin={canPin}
               onPinGoal={onPinGoal}
               onUnpinGoal={onUnpinGoal}
+              accent={accentScheme}
             />
           );
         })
@@ -1002,6 +1028,8 @@ const Savings = () => {
     return [pinned, ...others];
   }, [allowPinning, normalizedGoals, pinnedGoalId]);
 
+  const goalAccents = useMemo(() => assignGoalColors(displayGoals), [displayGoals]);
+
   useEffect(() => {
     if (pinnedGoalId && !normalizedGoals.some((goal) => goal.id === pinnedGoalId)) {
       setPinnedGoalId(null);
@@ -1107,7 +1135,8 @@ const Savings = () => {
           ? String(goal.target_amount)
           : '',
       target_date: goal.target_date ? goal.target_date.slice(0, 10) : '',
-      category: goal.category || 'general'
+      category: goal.category || 'general',
+      color_index: goal.color_index ?? 0
     });
     setEditGoalError(null);
     setEditGoalSubmitting(false);
@@ -1436,6 +1465,7 @@ const Savings = () => {
                 canPin={allowPinning}
                 onPinGoal={handlePinGoal}
                 onUnpinGoal={handleUnpinGoal}
+                goalAccents={goalAccents}
                 pinnedGoalId={pinnedGoalId}
                 goalFormOpen={goalFormOpen}
                 goalFormMode={goalFormMode}

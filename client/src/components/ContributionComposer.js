@@ -4,6 +4,7 @@ import formatCurrency from '../utils/formatCurrency';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 import { CalendarDays, Loader2, PiggyBank, Plus } from 'lucide-react';
+import { getGoalColorScheme } from '../utils/goalColorPalette';
 
 const quickAddValues = [50, 100, 250];
 
@@ -36,7 +37,8 @@ const ContributionComposer = ({
   capAmount = null,
   enforceCap = true,
   layout = 'inline',
-  className
+  className,
+  accent
 }) => {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
@@ -149,23 +151,30 @@ const ContributionComposer = ({
 
   const goalName = getGoalName(goal);
   const inlineLayout = layout === 'inline';
+  const colorIndex =
+    typeof goal?.color_index === 'number' && !Number.isNaN(goal.color_index)
+      ? goal.color_index
+      : typeof goal?.colorIndex === 'number' && !Number.isNaN(goal.colorIndex)
+      ? goal.colorIndex
+      : 0;
+  const theme = accent || getGoalColorScheme(colorIndex);
 
   return (
     <div
       className={cn(
         inlineLayout
-          ? 'rounded-2xl border border-emerald-200 bg-white px-5 py-5 shadow-sm'
+          ? ['rounded-2xl border px-5 py-5 shadow-sm', theme.border, 'bg-white']
           : 'space-y-5',
         className
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+          <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl', theme.icon)}>
             <PiggyBank className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+            <p className={cn('text-xs font-semibold uppercase tracking-[0.12em]', theme.accent)}>
               Contribution
             </p>
             <h3 className="text-base font-semibold text-slate-900">Add to {goalName}</h3>
@@ -202,7 +211,11 @@ const ContributionComposer = ({
             value={amount}
             onChange={(event) => setAmountCapped(event.target.value)}
             placeholder="0.00"
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            className={cn(
+              'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+              theme.border,
+              theme.focus
+            )}
             required
           />
           <div className="mt-3 flex flex-wrap gap-2">
@@ -212,7 +225,7 @@ const ContributionComposer = ({
                 type="button"
                 variant="pill"
                 onClick={() => quickAdd(value)}
-                className="border-emerald-200 text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50"
+                className={cn('bg-white', theme.quickButton)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {formatCurrency(value)}
@@ -220,7 +233,7 @@ const ContributionComposer = ({
             ))}
           </div>
           {effectiveCap != null && (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className={cn('mt-2 text-xs', theme.body)}>
               Remaining capacity: {formatCurrency(effectiveCap)} {capped ? '(capped)' : ''}
             </p>
           )}
@@ -235,7 +248,11 @@ const ContributionComposer = ({
               type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className={cn(
+                'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+                theme.border,
+                theme.focus
+              )}
               required
             />
           </div>
@@ -248,7 +265,11 @@ const ContributionComposer = ({
               value={note}
               onChange={(event) => setNote(event.target.value)}
               placeholder="e.g. Paycheck transfer"
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className={cn(
+                'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2',
+                theme.border,
+                theme.focus
+              )}
             />
           </div>
         </div>
@@ -260,7 +281,7 @@ const ContributionComposer = ({
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className={cn('flex items-center gap-2 text-xs', theme.body)}>
             <CalendarDays className="h-4 w-4" />
             <span>We log this on the day you choose.</span>
           </div>
@@ -275,7 +296,7 @@ const ContributionComposer = ({
             </Button>
             <Button
               type="submit"
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              className={cn(theme.primaryButton, 'text-white')}
               disabled={submitting}
             >
               {submitting ? (
