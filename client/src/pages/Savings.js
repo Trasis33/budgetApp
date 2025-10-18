@@ -13,7 +13,8 @@ import {
   Plus,
   Pencil,
   LineChart as LineChartIcon,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 import {
   Area,
@@ -29,7 +30,7 @@ import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useScope } from '../context/ScopeContext';
 import formatCurrency from '../utils/formatCurrency';
-import AddContributionModal from '../components/AddContributionModal';
+import ContributionComposer from '../components/ContributionComposer';
 import { Button } from '../components/ui/button';
 import Pill from '../components/ui/pill';
 import { cn } from '../lib/utils';
@@ -219,13 +220,22 @@ const SavingsRateTooltip = ({ active, payload, label }) => {
   );
 };
 
-const GoalPanel = ({ goal, onLogContribution, onEditGoal, onDeleteGoal }) => {
+const GoalPanel = ({
+  goal,
+  onLogContribution,
+  onEditGoal,
+  onDeleteGoal,
+  isContributionOpen,
+  onCloseContribution,
+  onContributionSuccess
+}) => {
   const progressPercent = getGoalProgress(goal);
   const targetDateLabel = formatTargetDate(goal.target_date);
   const remaining = Math.max(
     0,
     Number(goal.target_amount ?? 0) - Number(goal.current_amount ?? 0)
   );
+  const canContribute = remaining > 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5 shadow-inner">
@@ -243,11 +253,21 @@ const GoalPanel = ({ goal, onLogContribution, onEditGoal, onDeleteGoal }) => {
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="pill"
-            onClick={() => onLogContribution(goal)}
+            onClick={() => (isContributionOpen ? onCloseContribution(goal) : onLogContribution(goal))}
             className="border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
+            disabled={!canContribute}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Log Contribution
+            {isContributionOpen ? (
+              <span className="flex items-center gap-2">
+                <X className="h-4 w-4" />
+                Close
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Log Contribution
+              </span>
+            )}
           </Button>
           <Button
             variant="pill"
@@ -293,6 +313,20 @@ const GoalPanel = ({ goal, onLogContribution, onEditGoal, onDeleteGoal }) => {
           Remove goal
         </button>
       </div>
+
+      {isContributionOpen && canContribute && (
+        <div className="mt-5">
+          <ContributionComposer
+            goal={goal}
+            onClose={() => onCloseContribution(goal)}
+            onSuccess={(updatedGoal) => onContributionSuccess(updatedGoal)}
+            capAmount={remaining}
+            enforceCap={true}
+            layout="inline"
+            className="bg-emerald-50/80"
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -571,6 +605,9 @@ const SharedGoalsCard = ({
   onEditGoal,
   onLogContribution,
   onDeleteGoal,
+  activeContributionGoalId,
+  onCloseContribution,
+  onContributionSuccess,
   goalFormOpen,
   goalFormMode,
   goalFormValues,
@@ -624,6 +661,9 @@ const SharedGoalsCard = ({
             onLogContribution={onLogContribution}
             onEditGoal={onEditGoal}
             onDeleteGoal={onDeleteGoal}
+            isContributionOpen={activeContributionGoalId === goal.id}
+            onCloseContribution={onCloseContribution}
+            onContributionSuccess={onContributionSuccess}
           />
         ))
       )}
@@ -724,7 +764,7 @@ const Savings = () => {
     error: null,
     list: []
   });
-  const [contributionGoal, setContributionGoal] = useState(null);
+  const [activeContributionGoalId, setActiveContributionGoalId] = useState(null);
   const [goalFormOpen, setGoalFormOpen] = useState(false);
   const [goalFormMode, setGoalFormMode] = useState('create');
   const [goalFormValues, setGoalFormValues] = useState(createEmptyGoalForm);
@@ -909,6 +949,7 @@ const Savings = () => {
     setGoalFormValues(createEmptyGoalForm());
     setGoalFormError(null);
     setGoalBeingEdited(null);
+    setActiveContributionGoalId(null);
     setGoalFormOpen(true);
   };
 
@@ -925,6 +966,7 @@ const Savings = () => {
     });
     setGoalFormError(null);
     setGoalBeingEdited(goal);
+    setActiveContributionGoalId(null);
     setGoalFormOpen(true);
   };
 
@@ -982,6 +1024,7 @@ const Savings = () => {
     }
     try {
       await axios.delete(`/savings/goals/${goal.id}`);
+      handleCloseContribution();
       await fetchGoals();
       await fetchSavingsAnalysis();
     } catch (error) {
@@ -994,11 +1037,17 @@ const Savings = () => {
   };
 
   const handleOpenContribution = (goal) => {
-    setContributionGoal(goal);
+    if (!goal) {
+      return;
+    }
+    setGoalFormOpen(false);
+    setGoalFormError(null);
+    setGoalBeingEdited(null);
+    setActiveContributionGoalId(goal.id);
   };
 
   const handleCloseContribution = () => {
-    setContributionGoal(null);
+    setActiveContributionGoalId(null);
   };
 
   const handleContributionSuccess = (updatedGoal) => {
@@ -1018,17 +1067,7 @@ const Savings = () => {
           : goal
       )
     }));
-    setContributionGoal((prev) => {
-      if (prev && prev.id === updatedGoal.id) {
-        return {
-          ...prev,
-          ...updatedGoal,
-          target_amount: Number(updatedGoal.target_amount ?? prev.target_amount ?? 0),
-          current_amount: Number(updatedGoal.current_amount ?? prev.current_amount ?? 0)
-        };
-      }
-      return prev;
-    });
+    handleCloseContribution();
     fetchSavingsAnalysis();
   };
 
@@ -1037,9 +1076,17 @@ const Savings = () => {
       handleOpenCreateGoal();
       return;
     }
-    if (opportunity.primaryActionLabel === 'Log Contribution') {
+  if (opportunity.primaryActionLabel === 'Log Contribution') {
       if (normalizedGoals.length > 0) {
-        handleOpenContribution(normalizedGoals[0]);
+        const goalWithCapacity = normalizedGoals.find(
+          (goal) =>
+            Number(goal.target_amount ?? 0) > Number(goal.current_amount ?? 0)
+        );
+        if (goalWithCapacity) {
+          handleOpenContribution(goalWithCapacity);
+        } else {
+          handleOpenCreateGoal();
+        }
       } else {
         handleOpenCreateGoal();
       }
@@ -1066,14 +1113,6 @@ const Savings = () => {
     fetchSavingsAnalysis();
     fetchGoals();
   };
-
-  const contributionCap = contributionGoal
-    ? Math.max(
-        0,
-        Number(contributionGoal.target_amount ?? 0) -
-          Number(contributionGoal.current_amount ?? 0)
-      )
-    : null;
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50/60">
@@ -1134,6 +1173,9 @@ const Savings = () => {
                 onEditGoal={handleOpenEditGoal}
                 onLogContribution={handleOpenContribution}
                 onDeleteGoal={handleDeleteGoal}
+                activeContributionGoalId={activeContributionGoalId}
+                onCloseContribution={handleCloseContribution}
+                onContributionSuccess={handleContributionSuccess}
                 goalFormOpen={goalFormOpen}
                 goalFormMode={goalFormMode}
                 goalFormValues={goalFormValues}
@@ -1155,18 +1197,6 @@ const Savings = () => {
         )}
       </div>
 
-      <AddContributionModal
-        open={Boolean(contributionGoal)}
-        onClose={handleCloseContribution}
-        goal={
-          contributionGoal
-            ? { id: contributionGoal.id, name: contributionGoal.goal_name }
-            : null
-        }
-        onSuccess={(updatedGoal) => handleContributionSuccess(updatedGoal)}
-        capAmount={contributionCap}
-        enforceCap={true}
-      />
     </div>
   );
 };
