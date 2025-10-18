@@ -39,7 +39,7 @@ router.get('/goals', async (req, res) => {
 
     const goals = await db('savings_goals')
       .whereIn('user_id', targetUserIds)
-      .orderBy('created_at', 'desc');
+      .orderBy([{ column: 'is_pinned', order: 'desc' }, { column: 'created_at', order: 'desc' }]);
 
     const goalIds = goals.map((goal) => goal.id);
 
@@ -120,11 +120,39 @@ router.put('/goals/:id', async (req, res) => {
     const userId = req.user.id;
     const { id } = req.params;
     const updates = req.body;
-    const goal = await db('savings_goals')
-      .where({ id, user_id: userId })
-      .update(updates)
-      .returning('*');
-    res.json(goal);
+    const trx = await db.transaction();
+    try {
+      const mutableUpdates = { ...updates };
+      if (Object.prototype.hasOwnProperty.call(mutableUpdates, 'is_pinned')) {
+        const rawValue = mutableUpdates.is_pinned;
+        const isPinned =
+          rawValue === true ||
+          rawValue === 1 ||
+          rawValue === '1' ||
+          (typeof rawValue === 'string' && rawValue.toLowerCase() === 'true');
+        mutableUpdates.is_pinned = isPinned;
+
+        if (isPinned) {
+          await trx('savings_goals')
+            .where({ user_id: userId })
+            .update({ is_pinned: false });
+        }
+      }
+
+      let [goal] = await trx('savings_goals')
+        .where({ id, user_id: userId })
+        .update(mutableUpdates)
+        .returning('*');
+
+      await trx.commit();
+      if (!goal) {
+        goal = await db('savings_goals').where({ id, user_id: userId }).first();
+      }
+      res.json(goal);
+    } catch (error) {
+      await trx.rollback();
+      throw error;
+    }
   } catch (error) {
     console.error('Error updating savings goal:', error);
     res.status(500).json({ error: 'Failed to update savings goal' });

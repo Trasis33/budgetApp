@@ -14,7 +14,8 @@ import {
   Pencil,
   LineChart as LineChartIcon,
   Loader2,
-  X
+  X,
+  Star
 } from 'lucide-react';
 import {
   Area,
@@ -234,7 +235,11 @@ const GoalPanel = ({
   onEditSubmit,
   onEditCancel,
   editError,
-  editSubmitting
+  editSubmitting,
+  isPinned,
+  canPin,
+  onPinGoal,
+  onUnpinGoal
 }) => {
   const progressPercent = getGoalProgress(goal);
   const targetDateLabel = formatTargetDate(goal.target_date);
@@ -248,11 +253,34 @@ const GoalPanel = ({
   const editorValues = editValues || createEmptyGoalForm();
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5 shadow-inner">
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5 shadow-inner transition-shadow',
+        isPinned ? 'border-emerald-300 shadow-lg ring-2 ring-emerald-200 ring-offset-2 ring-offset-emerald-50/80' : ''
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
-            {formatCategoryLabel(goal.category)}
+        <div className="w-full">
+          <div className="flex items-center gap-2 justify-between">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+              {formatCategoryLabel(goal.category)}
+            </p>
+            {canPin && (
+              <button
+                type="button"
+                onClick={() => (isPinned ? onUnpinGoal(goal) : onPinGoal(goal))}
+                disabled={isEditing && !isPinned}
+                className={cn(
+                  'relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent transition-colors',
+                  isPinned
+                    ? 'border-amber-300 bg-amber-100 text-amber-600 hover:bg-amber-200'
+                    : 'border-emerald-100 bg-white/80 text-emerald-400 hover:border-emerald-200 hover:bg-emerald-50/80'
+                )}
+                aria-label={isPinned ? 'Unpin goal' : 'Pin goal'}
+              >
+                <Star className={cn('h-4 w-4', isPinned ? 'fill-current' : '')} />
+              </button>
+            )}
           </div>
           <h4 className="mt-1 text-lg font-semibold text-emerald-900">{goal.goal_name}</h4>
           <p className="mt-3 text-sm text-emerald-700">
@@ -672,6 +700,10 @@ const SharedGoalsCard = ({
   onEditChange,
   onEditSubmit,
   onEditCancel,
+  canPin,
+  onPinGoal,
+  onUnpinGoal,
+  pinnedGoalId,
   goalFormOpen,
   goalFormMode,
   goalFormValues,
@@ -721,6 +753,7 @@ const SharedGoalsCard = ({
         goals.map((goal) => {
           const isContributionOpen = activeContributionGoalId === goal.id;
           const isEditingGoal = activeEditGoalId === goal.id;
+          const isPinned = pinnedGoalId === goal.id;
 
           return (
             <GoalPanel
@@ -739,6 +772,10 @@ const SharedGoalsCard = ({
               onEditCancel={onEditCancel}
               editError={isEditingGoal ? editError : null}
               editSubmitting={isEditingGoal ? editSubmitting : false}
+              isPinned={isPinned}
+              canPin={canPin}
+              onPinGoal={onPinGoal}
+              onUnpinGoal={onUnpinGoal}
             />
           );
         })
@@ -850,6 +887,7 @@ const Savings = () => {
   const [editGoalValues, setEditGoalValues] = useState(createEmptyGoalForm);
   const [editGoalError, setEditGoalError] = useState(null);
   const [editGoalSubmitting, setEditGoalSubmitting] = useState(false);
+  const [pinnedGoalId, setPinnedGoalId] = useState(null);
 
   const fetchSavingsAnalysis = useCallback(async () => {
     if (!user) {
@@ -913,13 +951,16 @@ const Savings = () => {
       const scopedGoals = extractScopedGoals(response.data, scope).map((goal) => ({
         ...goal,
         target_amount: Number(goal.target_amount ?? 0),
-        current_amount: Number(goal.current_amount ?? 0)
+        current_amount: Number(goal.current_amount ?? 0),
+        is_pinned: Boolean(goal.is_pinned)
       }));
+      const pinned = scopedGoals.find((goal) => goal.is_pinned) || null;
       setGoalsState({
         loading: false,
         error: null,
         list: scopedGoals
       });
+      setPinnedGoalId(pinned ? pinned.id : null);
     } catch (error) {
       console.error('Error fetching savings goals:', error);
       setGoalsState({
@@ -947,6 +988,25 @@ const Savings = () => {
   const monthlyData = analysisState.data?.monthlyData ?? [];
   const summary = analysisState.data?.summary;
   const normalizedGoals = useMemo(() => goalsState.list, [goalsState.list]);
+  const allowPinning = normalizedGoals.length > 2;
+
+  const displayGoals = useMemo(() => {
+    if (!allowPinning || !pinnedGoalId) {
+      return normalizedGoals;
+    }
+    const pinned = normalizedGoals.find((goal) => goal.id === pinnedGoalId);
+    if (!pinned) {
+      return normalizedGoals;
+    }
+    const others = normalizedGoals.filter((goal) => goal.id !== pinnedGoalId);
+    return [pinned, ...others];
+  }, [allowPinning, normalizedGoals, pinnedGoalId]);
+
+  useEffect(() => {
+    if (pinnedGoalId && !normalizedGoals.some((goal) => goal.id === pinnedGoalId)) {
+      setPinnedGoalId(null);
+    }
+  }, [normalizedGoals, pinnedGoalId]);
 
   const opportunity = useMemo(() => {
     const baseImpact = 50;
@@ -1107,6 +1167,46 @@ const Savings = () => {
     setEditGoalValues(createEmptyGoalForm());
   };
 
+  const handlePinGoal = async (goal) => {
+    if (!goal || !allowPinning) {
+      return;
+    }
+    const previousPinned = pinnedGoalId;
+    setPinnedGoalId(goal.id);
+    try {
+      await axios.put(`/savings/goals/${goal.id}`, { is_pinned: true });
+      await fetchGoals();
+      await fetchSavingsAnalysis();
+    } catch (error) {
+      console.error('Error pinning goal:', error);
+      setGoalsState((prev) => ({
+        ...prev,
+        error: 'Failed to pin goal. Please try again.'
+      }));
+      setPinnedGoalId(previousPinned);
+    }
+  };
+
+  const handleUnpinGoal = async (goal) => {
+    if (!goal) {
+      return;
+    }
+    const wasPinned = pinnedGoalId;
+    setPinnedGoalId((current) => (current === goal.id ? null : current));
+    try {
+      await axios.put(`/savings/goals/${goal.id}`, { is_pinned: false });
+      await fetchGoals();
+      await fetchSavingsAnalysis();
+    } catch (error) {
+      console.error('Error unpinning goal:', error);
+      setGoalsState((prev) => ({
+        ...prev,
+        error: 'Failed to update pinned goal. Please try again.'
+      }));
+      setPinnedGoalId(wasPinned);
+    }
+  };
+
   const handleInlineEditSubmit = async (event) => {
     event.preventDefault();
     if (!activeEditGoalId) {
@@ -1158,6 +1258,9 @@ const Savings = () => {
       if (activeEditGoalId === goal.id) {
         handleInlineEditCancel();
       }
+      if (pinnedGoalId === goal.id) {
+        setPinnedGoalId(null);
+      }
       await axios.delete(`/savings/goals/${goal.id}`);
       await fetchGoals();
       await fetchSavingsAnalysis();
@@ -1190,6 +1293,13 @@ const Savings = () => {
     if (!updatedGoal) {
       return;
     }
+    const nextIsPinned =
+      updatedGoal.is_pinned !== undefined ? Boolean(updatedGoal.is_pinned) : null;
+    if (nextIsPinned === true) {
+      setPinnedGoalId(updatedGoal.id);
+    } else if (nextIsPinned === false && pinnedGoalId === updatedGoal.id) {
+      setPinnedGoalId(null);
+    }
     setGoalsState((prev) => ({
       ...prev,
       list: prev.list.map((goal) =>
@@ -1198,7 +1308,11 @@ const Savings = () => {
               ...goal,
               ...updatedGoal,
               target_amount: Number(updatedGoal.target_amount ?? goal.target_amount ?? 0),
-              current_amount: Number(updatedGoal.current_amount ?? goal.current_amount ?? 0)
+              current_amount: Number(updatedGoal.current_amount ?? goal.current_amount ?? 0),
+              is_pinned:
+                updatedGoal.is_pinned !== undefined
+                  ? Boolean(updatedGoal.is_pinned)
+                  : goal.is_pinned
             }
           : goal
       )
@@ -1214,7 +1328,7 @@ const Savings = () => {
     }
     if (opportunity.primaryActionLabel === 'Log Contribution') {
       if (normalizedGoals.length > 0) {
-        const goalWithCapacity = normalizedGoals.find(
+        const goalWithCapacity = displayGoals.find(
           (goal) =>
             Number(goal.target_amount ?? 0) > Number(goal.current_amount ?? 0)
         );
@@ -1304,7 +1418,7 @@ const Savings = () => {
             </div>
             <div className="lg:col-span-1">
               <SharedGoalsCard
-                goals={normalizedGoals}
+                goals={displayGoals}
                 onAddGoalClick={handleOpenCreateGoal}
                 onEditGoal={handleOpenEditGoal}
                 onLogContribution={handleOpenContribution}
@@ -1319,6 +1433,10 @@ const Savings = () => {
                 onEditChange={handleInlineEditChange}
                 onEditSubmit={handleInlineEditSubmit}
                 onEditCancel={handleInlineEditCancel}
+                canPin={allowPinning}
+                onPinGoal={handlePinGoal}
+                onUnpinGoal={handleUnpinGoal}
+                pinnedGoalId={pinnedGoalId}
                 goalFormOpen={goalFormOpen}
                 goalFormMode={goalFormMode}
                 goalFormValues={goalFormValues}
