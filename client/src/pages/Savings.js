@@ -227,7 +227,14 @@ const GoalPanel = ({
   onDeleteGoal,
   isContributionOpen,
   onCloseContribution,
-  onContributionSuccess
+  onContributionSuccess,
+  isEditing,
+  editValues,
+  onEditChange,
+  onEditSubmit,
+  onEditCancel,
+  editError,
+  editSubmitting
 }) => {
   const progressPercent = getGoalProgress(goal);
   const targetDateLabel = formatTargetDate(goal.target_date);
@@ -236,6 +243,9 @@ const GoalPanel = ({
     Number(goal.target_amount ?? 0) - Number(goal.current_amount ?? 0)
   );
   const canContribute = remaining > 0;
+  const showContribution = isContributionOpen && canContribute && !isEditing;
+  const showEditForm = isEditing;
+  const editorValues = editValues || createEmptyGoalForm();
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5 shadow-inner">
@@ -253,11 +263,13 @@ const GoalPanel = ({
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="pill"
-            onClick={() => (isContributionOpen ? onCloseContribution(goal) : onLogContribution(goal))}
+            onClick={() =>
+              showContribution ? onCloseContribution(goal) : onLogContribution(goal)
+            }
             className="border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
-            disabled={!canContribute}
+            disabled={!canContribute || isEditing}
           >
-            {isContributionOpen ? (
+            {showContribution ? (
               <span className="flex items-center gap-2">
                 <X className="h-4 w-4" />
                 Close
@@ -273,59 +285,80 @@ const GoalPanel = ({
             variant="pill"
             onClick={() => onEditGoal(goal)}
             className="border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
+            disabled={isEditing}
           >
             <Pencil className="mr-2 h-4 w-4" />
-            Edit Goal
+            {isEditing ? 'Editing...' : 'Edit Goal'}
           </Button>
         </div>
       </div>
 
-      <div className="mt-5">
-        <div className="h-2 w-full rounded-full bg-white/70">
-          <div
-            className="h-2 rounded-full bg-emerald-500 transition-[width] duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-        <div className="mt-2 flex flex-wrap items-center justify-between text-xs font-medium text-emerald-700">
-          <span>{progressPercent.toFixed(0)}% complete</span>
-          <span>{describeTargetDate(goal.target_date)}</span>
-        </div>
-      </div>
+      {showEditForm ? (
+        <GoalForm
+          mode="edit"
+          values={editorValues}
+          onChange={onEditChange}
+          onSubmit={onEditSubmit}
+          onCancel={() => onEditCancel(goal)}
+          submitting={Boolean(editSubmitting)}
+          error={editError}
+          categories={categoryOptions}
+          layout="inline"
+          title={`Update ${goal.goal_name}`}
+          contextLabel="Editing goal"
+          submitLabel="Save changes"
+          cancelLabel="Cancel edit"
+        />
+      ) : (
+        <>
+          <div className="mt-5">
+            <div className="h-2 w-full rounded-full bg-white/70">
+              <div
+                className="h-2 rounded-full bg-emerald-500 transition-[width] duration-500 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="mt-2 flex flex-wrap items-center justify-between text-xs font-medium text-emerald-700">
+              <span>{progressPercent.toFixed(0)}% complete</span>
+              <span>{describeTargetDate(goal.target_date)}</span>
+            </div>
+          </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-emerald-700">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4" />
-          <span>{targetDateLabel || 'No date set'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Wallet className="h-4 w-4" />
-          <span>Remaining {formatCurrency(remaining)}</span>
-        </div>
-      </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-emerald-700">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              <span>{targetDateLabel || 'No date set'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              <span>Remaining {formatCurrency(remaining)}</span>
+            </div>
+          </div>
 
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={() => onDeleteGoal(goal)}
-          className="text-xs font-medium text-emerald-700 underline-offset-2 hover:text-emerald-900 hover:underline"
-        >
-          Remove goal
-        </button>
-      </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={() => onDeleteGoal(goal)}
+              className="text-xs font-medium text-emerald-700 underline-offset-2 hover:text-emerald-900 hover:underline"
+            >
+              Remove goal
+            </button>
+          </div>
 
-      {isContributionOpen && canContribute && (
-        <div className="mt-5">
-          <ContributionComposer
-            goal={goal}
-            onClose={() => onCloseContribution(goal)}
-            onSuccess={(updatedGoal) => onContributionSuccess(updatedGoal)}
-            capAmount={remaining}
-            enforceCap={true}
-            layout="inline"
-            className="bg-emerald-50/80"
-          />
-        </div>
+          {showContribution && (
+            <div className="mt-5">
+              <ContributionComposer
+                goal={goal}
+                onClose={() => onCloseContribution(goal)}
+                onSuccess={(updatedGoal) => onContributionSuccess(updatedGoal)}
+                capAmount={remaining}
+                enforceCap={true}
+                layout="inline"
+                className="bg-emerald-50/80"
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -339,106 +372,130 @@ const GoalForm = ({
   onCancel,
   submitting,
   error,
-  categories
-}) => (
-  <form
-    onSubmit={onSubmit}
-    className="mt-6 space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5"
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
-          {mode === 'edit' ? 'Update goal' : 'New goal'}
-        </p>
-        <h4 className="text-base font-semibold text-emerald-900">
-          {mode === 'edit' ? 'Polish the plan' : 'Let\'s outline a goal'}
-        </h4>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onCancel}
-        className="text-emerald-600 hover:text-emerald-800"
-      >
-        Cancel
-      </Button>
-    </div>
+  categories,
+  layout = 'panel',
+  title,
+  contextLabel,
+  submitLabel,
+  cancelLabel,
+  className
+}) => {
+  const contextText = contextLabel || (mode === 'edit' ? 'Update goal' : 'New goal');
+  const headingText = title || (mode === 'edit' ? 'Polish the plan' : 'Let\'s outline a goal');
+  const submitText = submitLabel || (mode === 'edit' ? 'Save goal' : 'Create goal');
+  const cancelText = cancelLabel || 'Cancel';
 
-    {error && (
-      <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
-        {error}
-      </p>
-    )}
+  const containerClasses = cn(
+    layout === 'inline'
+      ? 'mt-5 space-y-4 rounded-2xl border border-emerald-200 bg-white px-5 py-5 shadow-sm'
+      : 'mt-6 space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5',
+    className
+  );
 
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
-          Goal name
-        </label>
-        <input
-          type="text"
-          value={values.goal_name}
-          onChange={(event) => onChange('goal_name', event.target.value)}
-          placeholder="Emergency fund"
-          className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-          required
-        />
-      </div>
-      <div>
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
-          Target amount
-        </label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={values.target_amount}
-          onChange={(event) => onChange('target_amount', event.target.value)}
-          placeholder="10000"
-          className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-          required
-        />
-      </div>
-      <div>
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
-          Target date
-        </label>
-        <input
-          type="date"
-          value={values.target_date}
-          onChange={(event) => onChange('target_date', event.target.value)}
-          className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-        />
-      </div>
-      <div>
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
-          Category
-        </label>
-        <select
-          value={values.category}
-          onChange={(event) => onChange('category', event.target.value)}
-          className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+  const contextClasses =
+    layout === 'inline'
+      ? 'text-xs font-semibold uppercase tracking-[0.12em] text-slate-500'
+      : 'text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600';
+
+  const cancelVariant = layout === 'inline' ? 'pill' : 'ghost';
+  const cancelClasses =
+    layout === 'inline'
+      ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+      : 'text-emerald-600 hover:text-emerald-800';
+
+  return (
+    <form onSubmit={onSubmit} className={containerClasses}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className={contextClasses}>{contextText}</p>
+          <h4 className="text-base font-semibold text-emerald-900">{headingText}</h4>
+        </div>
+        <Button
+          type="button"
+          variant={cancelVariant}
+          onClick={onCancel}
+          className={cancelClasses}
         >
-          {categories.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          {cancelText}
+        </Button>
       </div>
-    </div>
 
-    <div className="flex justify-end gap-3">
-      <Button
-        type="submit"
-        disabled={submitting}
-        className="bg-emerald-600 text-white hover:bg-emerald-700"
-      >
-        {submitting ? 'Saving…' : mode === 'edit' ? 'Save goal' : 'Create goal'}
-      </Button>
-    </div>
-  </form>
-);
+      {error && (
+        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+          {error}
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+            Goal name
+          </label>
+          <input
+            type="text"
+            value={values.goal_name}
+            onChange={(event) => onChange('goal_name', event.target.value)}
+            placeholder="Emergency fund"
+            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            required
+          />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+            Target amount
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={values.target_amount}
+            onChange={(event) => onChange('target_amount', event.target.value)}
+            placeholder="10000"
+            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            required
+          />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+            Target date
+          </label>
+          <input
+            type="date"
+            value={values.target_date}
+            onChange={(event) => onChange('target_date', event.target.value)}
+            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+          />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-emerald-600">
+            Category
+          </label>
+          <select
+            value={values.category}
+            onChange={(event) => onChange('category', event.target.value)}
+            className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+          >
+            {categories.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          {submitting ? 'Saving...' : submitText}
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 const SavingsRateCard = ({ data, timePeriodLabel, onCyclePeriod, onViewTransactions }) => {
   const summary = data?.summary;
@@ -606,8 +663,15 @@ const SharedGoalsCard = ({
   onLogContribution,
   onDeleteGoal,
   activeContributionGoalId,
+  activeEditGoalId,
+  editValues,
+  editError,
+  editSubmitting,
   onCloseContribution,
   onContributionSuccess,
+  onEditChange,
+  onEditSubmit,
+  onEditCancel,
   goalFormOpen,
   goalFormMode,
   goalFormValues,
@@ -654,18 +718,30 @@ const SharedGoalsCard = ({
           Add a goal to track progress together and unlock smart nudges when you need them.
         </div>
       ) : (
-        goals.map((goal) => (
-          <GoalPanel
-            key={goal.id}
-            goal={goal}
-            onLogContribution={onLogContribution}
-            onEditGoal={onEditGoal}
-            onDeleteGoal={onDeleteGoal}
-            isContributionOpen={activeContributionGoalId === goal.id}
-            onCloseContribution={onCloseContribution}
-            onContributionSuccess={onContributionSuccess}
-          />
-        ))
+        goals.map((goal) => {
+          const isContributionOpen = activeContributionGoalId === goal.id;
+          const isEditingGoal = activeEditGoalId === goal.id;
+
+          return (
+            <GoalPanel
+              key={goal.id}
+              goal={goal}
+              onLogContribution={onLogContribution}
+              onEditGoal={onEditGoal}
+              onDeleteGoal={onDeleteGoal}
+              isContributionOpen={isContributionOpen}
+              onCloseContribution={onCloseContribution}
+              onContributionSuccess={onContributionSuccess}
+              isEditing={isEditingGoal}
+              editValues={isEditingGoal ? editValues : null}
+              onEditChange={onEditChange}
+              onEditSubmit={onEditSubmit}
+              onEditCancel={onEditCancel}
+              editError={isEditingGoal ? editError : null}
+              editSubmitting={isEditingGoal ? editSubmitting : false}
+            />
+          );
+        })
       )}
     </div>
   </div>
@@ -770,7 +846,10 @@ const Savings = () => {
   const [goalFormValues, setGoalFormValues] = useState(createEmptyGoalForm);
   const [goalFormSubmitting, setGoalFormSubmitting] = useState(false);
   const [goalFormError, setGoalFormError] = useState(null);
-  const [goalBeingEdited, setGoalBeingEdited] = useState(null);
+  const [activeEditGoalId, setActiveEditGoalId] = useState(null);
+  const [editGoalValues, setEditGoalValues] = useState(createEmptyGoalForm);
+  const [editGoalError, setEditGoalError] = useState(null);
+  const [editGoalSubmitting, setEditGoalSubmitting] = useState(false);
 
   const fetchSavingsAnalysis = useCallback(async () => {
     if (!user) {
@@ -948,14 +1027,20 @@ const Savings = () => {
     setGoalFormMode('create');
     setGoalFormValues(createEmptyGoalForm());
     setGoalFormError(null);
-    setGoalBeingEdited(null);
     setActiveContributionGoalId(null);
+    setActiveEditGoalId(null);
+    setEditGoalError(null);
+    setEditGoalSubmitting(false);
+    setEditGoalValues(createEmptyGoalForm());
     setGoalFormOpen(true);
   };
 
   const handleOpenEditGoal = (goal) => {
-    setGoalFormMode('edit');
-    setGoalFormValues({
+    setGoalFormOpen(false);
+    setGoalFormError(null);
+    setActiveContributionGoalId(null);
+    setActiveEditGoalId(goal.id);
+    setEditGoalValues({
       goal_name: goal.goal_name || '',
       target_amount:
         goal.target_amount !== undefined && goal.target_amount !== null
@@ -964,17 +1049,14 @@ const Savings = () => {
       target_date: goal.target_date ? goal.target_date.slice(0, 10) : '',
       category: goal.category || 'general'
     });
-    setGoalFormError(null);
-    setGoalBeingEdited(goal);
-    setActiveContributionGoalId(null);
-    setGoalFormOpen(true);
+    setEditGoalError(null);
+    setEditGoalSubmitting(false);
   };
 
   const handleGoalFormCancel = () => {
     setGoalFormOpen(false);
     setGoalFormError(null);
     setGoalFormValues(createEmptyGoalForm());
-    setGoalBeingEdited(null);
   };
 
   const handleGoalFormSubmit = async (event) => {
@@ -999,11 +1081,7 @@ const Savings = () => {
     setGoalFormSubmitting(true);
     setGoalFormError(null);
     try {
-      if (goalFormMode === 'create') {
-        await axios.post('/savings/goals', payload);
-      } else if (goalBeingEdited) {
-        await axios.put(`/savings/goals/${goalBeingEdited.id}`, payload);
-      }
+      await axios.post('/savings/goals', payload);
       await fetchGoals();
       await fetchSavingsAnalysis();
       handleGoalFormCancel();
@@ -1015,6 +1093,57 @@ const Savings = () => {
     }
   };
 
+  const handleInlineEditChange = (field, value) => {
+    setEditGoalValues((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleInlineEditCancel = () => {
+    setActiveEditGoalId(null);
+    setEditGoalError(null);
+    setEditGoalSubmitting(false);
+    setEditGoalValues(createEmptyGoalForm());
+  };
+
+  const handleInlineEditSubmit = async (event) => {
+    event.preventDefault();
+    if (!activeEditGoalId) {
+      return;
+    }
+    if (!editGoalValues.goal_name.trim()) {
+      setEditGoalError('Let\'s give this goal a name.');
+      return;
+    }
+    const numericTarget = parseFloat(editGoalValues.target_amount);
+    if (Number.isNaN(numericTarget) || numericTarget <= 0) {
+      setEditGoalError('Target amount must be a positive number.');
+      return;
+    }
+    const payload = {
+      goal_name: editGoalValues.goal_name.trim(),
+      target_amount: numericTarget,
+      category: editGoalValues.category || 'general'
+    };
+    if (editGoalValues.target_date) {
+      payload.target_date = editGoalValues.target_date;
+    }
+    setEditGoalSubmitting(true);
+    setEditGoalError(null);
+    try {
+      await axios.put(`/savings/goals/${activeEditGoalId}`, payload);
+      await fetchGoals();
+      await fetchSavingsAnalysis();
+      handleInlineEditCancel();
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      setEditGoalError('We couldn\'t update that goal. Please try again.');
+    } finally {
+      setEditGoalSubmitting(false);
+    }
+  };
+
   const handleDeleteGoal = async (goal) => {
     const confirmed = window.confirm(
       `Remove "${goal.goal_name}"? Previous contributions stay logged.`
@@ -1023,8 +1152,13 @@ const Savings = () => {
       return;
     }
     try {
+      if (activeContributionGoalId === goal.id) {
+        setActiveContributionGoalId(null);
+      }
+      if (activeEditGoalId === goal.id) {
+        handleInlineEditCancel();
+      }
       await axios.delete(`/savings/goals/${goal.id}`);
-      handleCloseContribution();
       await fetchGoals();
       await fetchSavingsAnalysis();
     } catch (error) {
@@ -1042,7 +1176,9 @@ const Savings = () => {
     }
     setGoalFormOpen(false);
     setGoalFormError(null);
-    setGoalBeingEdited(null);
+    if (activeEditGoalId) {
+      handleInlineEditCancel();
+    }
     setActiveContributionGoalId(goal.id);
   };
 
@@ -1076,7 +1212,7 @@ const Savings = () => {
       handleOpenCreateGoal();
       return;
     }
-  if (opportunity.primaryActionLabel === 'Log Contribution') {
+    if (opportunity.primaryActionLabel === 'Log Contribution') {
       if (normalizedGoals.length > 0) {
         const goalWithCapacity = normalizedGoals.find(
           (goal) =>
@@ -1174,8 +1310,15 @@ const Savings = () => {
                 onLogContribution={handleOpenContribution}
                 onDeleteGoal={handleDeleteGoal}
                 activeContributionGoalId={activeContributionGoalId}
+                activeEditGoalId={activeEditGoalId}
+                editValues={editGoalValues}
+                editError={editGoalError}
+                editSubmitting={editGoalSubmitting}
                 onCloseContribution={handleCloseContribution}
                 onContributionSuccess={handleContributionSuccess}
+                onEditChange={handleInlineEditChange}
+                onEditSubmit={handleInlineEditSubmit}
+                onEditCancel={handleInlineEditCancel}
                 goalFormOpen={goalFormOpen}
                 goalFormMode={goalFormMode}
                 goalFormValues={goalFormValues}
@@ -1196,7 +1339,6 @@ const Savings = () => {
           </div>
         )}
       </div>
-
     </div>
   );
 };
