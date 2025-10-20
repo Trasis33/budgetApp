@@ -70,16 +70,11 @@
   --color-text-primary: #1e293b;
   --color-text-secondary: #64748b;
   --color-text-muted: #475569;
-
-    /* Primary Colors */
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f59fffca 0%, #fa748696 100%);
-    --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  
+ 
     /* Background colors */
-  --bg-primary: rgba(255, 255, 255, 0.3);
+  /* --bg-primary: rgba(255, 255, 255, 0.3);
   --bg-secondary: rgba(255, 255, 255, 0.3);
-  --bg-card: var(--surface);
+  --bg-card: var(--surface); */
   /* --bg-gradient: linear-gradient(135deg, #fbdfff 0%, #d4eeff 50%, #d1fde9 100%); */
   /* --bg-gradient: linear-gradient(45deg, rgba(65, 89, 208, 1.000) 0.000%, rgba(200, 79, 192, 1.000) 50.000%, rgba(255, 205, 112, 1.000) 100.000%); */
   /* --bg-gradient: conic-gradient(from 20deg, rgb(52, 95, 95) 0.000deg, rgb(61, 93, 54) 40.000deg, rgb(91, 53, 100) 80.000deg, rgb(119, 53, 76) 120.000deg, rgb(53, 145, 148) 160.000deg, rgb(52, 135, 174) 200.000deg, rgb(52, 185, 192) 240.000deg, rgb(52, 207, 135) 280.000deg, rgb(163, 228, 52) 320.000deg, rgb(215, 244, 51) 360.000deg); */
@@ -92,29 +87,29 @@
   /* Border and effects */
   /*   --border-color: rgba(203, 213, 225, 0.3); */
   /* App-wide border color tuned for visibility on white surfaces */
-  --border-color: rgba(16, 24, 40, 0.12);
+/*   --border-color: rgba(16, 24, 40, 0.12);
   --border-radius-sm: 0.375rem;
   --border-radius-md: 0.5rem;
   --border-radius-lg: 0.75rem;
   --border-radius-xl: 1rem;
-  --border-radius-full: 1.5rem;
+  --border-radius-full: 1.5rem; */
   
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+/*   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 12px 30px rgba(139, 92, 246, 0.12);
+  --shadow-hover: 0 12px 30px rgba(139, 92, 246, 0.12); */
   
   /* Backdrop blur */
-  --backdrop-blur: blur(12px);
-  --backdrop-blur-light: blur(8px);
+/*   --backdrop-blur: blur(12px);
+  --backdrop-blur-light: blur(8px); */
 
   /* Layout constants */
-  --sidebar-width: 15rem;
+/*   --sidebar-width: 15rem;
   --header-height: 3.5rem;
-  --bottom-nav-height: 48px;
+  --bottom-nav-height: 48px; */
   /* Dual-Ledger core tokens */
-  --bg: #f5f7fb;
+/*   --bg: #f5f7fb;
   --surface: #ffffff;
   --ink: #0b1320;
   --muted: #596174;
@@ -124,13 +119,13 @@
   --danger: #E5484D;
   --card-radius: 12px;
   --shadow: 0 8px 24px rgba(16,24,40,0.08);
-
+ */
   /* Form-specific tokens */
-  --input-bg: var(--bg); /* Light canvas to differentiate from white card surface */
+/*   --input-bg: var(--bg); /* Light canvas to differentiate from white card surface */
   --input-border-color: rgba(16, 24, 40, 0.14); /* Subtle but visible */
   --focus-ring: 0 0 0 3px rgba(139, 92, 246, 0.12);
   }
-
+ 
   * {
     box-sizing: border-box;
   }

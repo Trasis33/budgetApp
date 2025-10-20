@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
+import SavingsRateTracker from '../components/SavingsRateTracker';
+import SavingsGoalsManager from '../components/SavingsGoalsManager';
 
 // Import shadcn/ui enhanced tabs
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
@@ -721,10 +723,10 @@ const Budget = () => {
         </select>
       </div> */}
 
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SavingsRateTracker />
-        <SavingsGoalsManager />
-      </div> */}
+        {/* <SavingsGoalsManager /> */}
+      </div>
 
       <BudgetOptimizationTips
         categories={categories}
