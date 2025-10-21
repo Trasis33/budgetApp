@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Deep Dive Modal - Financial Check-up Design</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      padding: 20px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 120;
+    }
+
+    .modal-container {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      height: 95vh;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 32px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .modal-header {
+      background: linear-gradient(135deg, #ecfdf5 0%, rgba(255, 255, 255, 0.8) 100%);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 32px 48px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 32px;
+    }
+
+    .header-left {
+      flex: 1;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #059669;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .header-title {
+      font-size: 32px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      max-width: 600px;
+      margin-bottom: 16px;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .time-range-select {
+      height: 44px;
+      padding: 0 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      background: white;
+      font-size: 14px;
+      font-weight: 500;
+      color: #334155;
+      cursor: pointer;
+      transition: all 150ms ease;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
+    }
+
+    .time-range-select:hover {
+      border-color: #a1aec4;
+      background: #f8fafc;
+    }
+
+    .close-btn {
+      height: 44px;
+      width: 44px;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      transition: all 150ms ease;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
+      font-size: 20px;
+    }
+
+    .close-btn:hover {
+      background: #f1f5f9;
+      border-color: #a1aec4;
+    }
+
+    /* Main Content */
+    .modal-main {
+      flex: 1;
+      overflow-y: auto;
+      background: #f8fafc;
+      padding: 32px 40px;
+      padding-bottom: 112px;
+    }
+
+    /* Tabs */
+    .tabs-list {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      background: white;
+      padding: 12px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
+      width: fit-content;
+    }
+
+    .tab-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+
+    .tab-trigger:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .tab-trigger.active {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* Section Banner */
+    .section-banner {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, white 100%);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .banner-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #059669;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .banner-content {
+      flex: 1;
+    }
+
+    .banner-headline {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .banner-description {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    /* Impact Chip */
+    .impact-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ecfdf5;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #059669;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Chart Container */
+    .chart-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 16px;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, #ecfdf5 0%, rgba(16, 185, 129, 0.05) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .metric-description {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* Highlight Boxes */
+    .highlight-box {
+      background: linear-gradient(135deg, #f0fdf4 0%, rgba(16, 185, 129, 0.05) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .highlight-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #059669;
+      margin-bottom: 12px;
+    }
+
+    .highlight-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .highlight-description {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-size: 11px;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #475569;
+    }
+
+    tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    .positive {
+      color: #059669;
+      font-weight: 600;
+    }
+
+    .negative {
+      color: #dc2626;
+      font-weight: 600;
+    }
+
+    /* Loading State */
+    .loading-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .empty-description {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    /* Legend Pills */
+    .legend-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .legend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Action Pills */
+    .action-pills {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .action-pill {
+      padding: 10px 16px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+
+    .action-pill:hover {
+      background: #f1f5f9;
+      border-color: #a1aec4;
+    }
+
+    .action-pill.primary {
+      background: #ecfdf5;
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #059669;
+    }
+
+    .action-pill.primary:hover {
+      background: #d1fae5;
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .modal-header {
+        padding: 24px;
+      }
+
+      .header-content {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .header-right {
+        width: 100%;
+      }
+
+      .time-range-select,
+      .close-btn {
+        flex: 1;
+      }
+
+      .modal-main {
+        padding: 20px;
+        padding-bottom: 80px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .header-title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="modal-backdrop">
+    <div class="modal-container">
+      <!-- Header -->
+      <header class="modal-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="badge">
+              ✨ Financial check-up
+            </div>
+            <h2 class="header-title">Your financial story in detail</h2>
+            <p class="header-subtitle">
+              Explore how income, spending, and contributions shift across the months. Each tab stays descriptive and calm so you can spot patterns and share context confidently.
+            </p>
+            <div class="header-meta">
+              <span class="meta-pill">📊 Shared view</span>
+              <span class="meta-pill">📅 Last 6 months</span>
+            </div>
+          </div>
+          <div class="header-right">
+            <select class="time-range-select">
+              <option>Last 3 months</option>
+              <option selected>Last 6 months</option>
+              <option>Last 12 months</option>
+            </select>
+            <button class="close-btn" aria-label="Close">✕</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="modal-main">
+        <!-- Tabs -->
+        <div class="tabs-list">
+          <button class="tab-trigger active">📈 Overview</button>
+          <button class="tab-trigger">📊 Trends</button>
+          <button class="tab-trigger">📋 Breakdown</button>
+          <button class="tab-trigger">💰 Cash flow</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div class="tab-content">
+          <!-- Section Banner -->
+          <div class="section-banner">
+            <div class="banner-icon">📈</div>
+            <div class="banner-content">
+              <div class="banner-headline">Savings rate over time</div>
+              <div class="banner-description">How much of your income stayed in reserve each month, paired with the net amount you kept.</div>
+            </div>
+          </div>
+
+          <!-- Chart Card -->
+          <div class="card">
+            <div class="chart-container">
+              [Savings Rate Chart - Composed Chart with dual axes]
+            </div>
+          </div>
+
+          <!-- Period Summary Grid -->
+          <div class="grid-2">
+            <!-- Left: Net Position & Metrics -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Period summary</div>
+                <div class="card-subtitle">A high-level recap of what went well and where to keep an eye.</div>
+              </div>
+
+              <div class="highlight-box">
+                <div class="highlight-label">Net position</div>
+                <div class="highlight-value">+$12,450.00</div>
+                <div class="highlight-description">
+                  You held onto more than you spent across the selected months.
+                </div>
+              </div>
+
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Total spending</div>
+                  <div class="metric-value">$32,100</div>
+                  <div class="metric-description">What left our accounts this window.</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Total income</div>
+                  <div class="metric-value">$44,550</div>
+                  <div class="metric-description">Money that came in across all sources.</div>
+                </div>
+              </div>
+
+              <div class="action-pills">
+                <button class="action-pill primary">See All Transactions</button>
+                <button class="action-pill">Adjust Budget</button>
+              </div>
+            </div>
+
+            <!-- Right: Highlights -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Highlights</div>
+              </div>
+
+              <div class="highlight-box" style="background: linear-gradient(135deg, #eff6ff 0%, rgba(59, 130, 246, 0.05) 100%); border-color: rgba(59, 130, 246, 0.2);">
+                <div class="highlight-label" style="color: #1e40af;">Bright spot</div>
+                <div class="highlight-value">August 2024</div>
+                <div class="highlight-description">
+                  Income of $45,200 with spending of $31,500. Your best month in the range.
+                </div>
+              </div>
+
+              <div class="highlight-box" style="background: linear-gradient(135deg, #fef2f2 0%, rgba(220, 38, 38, 0.05) 100%); border-color: rgba(220, 38, 38, 0.2);">
+                <div class="highlight-label" style="color: #991b1b;">Tougher month</div>
+                <div class="highlight-value">June 2024</div>
+                <div class="highlight-description">
+                  Spending reached $33,800 against income of $42,100. Worth reviewing.
+                </div>
+              </div>
+
+              <div class="highlight-box">
+                <div class="highlight-label">Top category</div>
+                <div class="highlight-value">Groceries</div>
+                <div class="highlight-description">
+                  Represented 28% of total spend across the period.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Categories Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Top categories</div>
+              <div class="card-subtitle">Where most of your spending landed.</div>
+            </div>
+
+            <div class="chart-container" style="height: 250px;">
+              [Category Pie Chart]
+            </div>
+
+            <div class="metrics-grid" style="margin-top: 20px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500; color: #0f172a;">Groceries</span>
+                <span style="color: #64748b;">28%</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-weight: 500; color: #0f172a;">Dining Out</span>
+                <span style="color: #64748b;">18%</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+                <span style="font-weight: 500; color: #0f172a;">Utilities</span>
+                <span style="color: #64748b;">15%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Tab (Hidden by default) -->
+        <div class="tab-content" style="display: none;">
+          <!-- Shared vs Personal Contributions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Shared vs personal contributions</div>
+              <div class="card-subtitle">Each column represents the month's spend, segmented by who covered it.</div>
+            </div>
+
+            <div class="legend-pills">
+              <span class="legend-pill"><span class="legend-dot" style="background: #0EA5E9;"></span>Shared</span>
+              <span class="legend-pill"><span class="legend-dot" style="background: #6366F1;"></span>Mine</span>
+              <span class="legend-pill"><span class="legend-dot" style="background: #10B981;"></span>Partner</span>
+            </div>
+
+            <div class="chart-container" style="height: 320px;">
+              [Stacked Bar Chart - Contributions]
+            </div>
+          </div>
+
+          <!-- Monthly Breakdown Table -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Monthly breakdown</div>
+              <div class="card-subtitle">Raw numbers remain available when you need to double-check the math.</div>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Income</th>
+                    <th>Spending</th>
+                    <th>Net</th>
+                    <th>Savings rate</th>
+                    <th>Shared</th>
+                    <th>Mine</th>
+                    <th>Partner</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-weight: 500; color: #0f172a;">Aug 2024</td>
+                    <td>$45,200</td>
+                    <td>$31,500</td>
+                    <td class="positive">+$13,700</td>
+                    <td>30.3%</td>
+                    <td>$15,750</td>
+                    <td>$10,200</td>
+                    <td>$5,550</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500; color: #0f172a;">Jul 2024</td>
+                    <td>$43,800</td>
+                    <td>$32,100</td>
+                    <td class="positive">+$11,700</td>
+                    <td>26.7%</td>
+                    <td>$16,050</td>
+                    <td>$9,800</td>
+                    <td>$6,250</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500; color: #0f172a;">Jun 2024</td>
+                    <td>$42,100</td>
+                    <td>$33,800</td>
+                    <td class="positive">+$8,300</td>
+                    <td>19.7%</td>
+                    <td>$16,900</td>
+                    <td>$10,500</td>
+                    <td>$6,400</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

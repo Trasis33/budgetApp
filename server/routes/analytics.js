@@ -9,6 +9,17 @@ router.use(authMiddleware);
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
+const toNumber = (value, fallback = 0) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
 const buildExpenseFilterClause = (startDate, endDate, payerIds, sharedOnly = false) => {
   if (!Array.isArray(payerIds) || payerIds.length === 0) {
     return null;
@@ -198,6 +209,45 @@ const computeIncomeExpenseSummary = (monthlyData) => {
     savingsTrendDirection: savingsTrend > 0 ? 'improving' : savingsTrend < 0 ? 'declining' : 'stable',
     monthCount: monthlyData.length
   };
+};
+
+const roundCurrency = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.round(numeric * 100) / 100;
+};
+
+const fetchDetailedExpenses = async (startDate, endDate, payerIds, sharedOnly = false) => {
+  if (!Array.isArray(payerIds) || payerIds.length === 0) {
+    return [];
+  }
+
+  const query = db('expenses as e')
+    .leftJoin('categories as c', 'c.id', 'e.category_id')
+    .whereBetween('e.date', [startDate, endDate])
+    .whereIn('e.paid_by_user_id', payerIds.map((id) => Number(id)))
+    .select(
+      db.raw("strftime('%Y-%m', e.date) as month"),
+      'e.amount',
+      'e.category_id',
+      'c.name as category_name',
+      'e.paid_by_user_id',
+      'e.split_type',
+      'e.split_ratio_user1',
+      'e.split_ratio_user2'
+    )
+    .orderBy('e.date', 'asc');
+
+  if (sharedOnly) {
+    query.andWhere(function () {
+      this.whereNull('e.split_type')
+        .orWhereRaw("LOWER(e.split_type) NOT IN ('personal','personal_only')");
+    });
+  }
+
+  return query;
 };
 
 const countIncomes = async (startDate, endDate, userIds) => {
@@ -442,6 +492,250 @@ const buildSettlementPayload = (scope, { currentUser, partner }, balances, total
     monthYear
   };
 };
+
+/**
+ * GET /api/analytics/trends/detailed/:startDate/:endDate
+ * Provides extended analytics dataset for the deep dive modal
+ */
+router.get('/trends/detailed/:startDate/:endDate', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.params;
+    if (!DATE_REGEX.test(startDate) || !DATE_REGEX.test(endDate)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+
+    const scopeContext = await resolveScopeContext(db, req.user.id, req.query.scope);
+    const {
+      scope,
+      requestedScope,
+      payerIds,
+      sharedOnly,
+      currentUser,
+      partner
+    } = scopeContext;
+
+    const timeRange = { start: startDate, end: endDate };
+
+    if (!Array.isArray(payerIds) || payerIds.length === 0) {
+      const emptyPayload = {
+        timeRange,
+        monthlyData: [],
+        periodSummary: {
+          totalIncome: 0,
+          totalSpending: 0,
+          netSurplus: 0,
+          avgMonthlySpending: 0,
+          topCategories: []
+        },
+        dataAvailability: buildDataAvailability(0, 0, 'Link a partner to explore shared analytics.')
+      };
+      return res.json({
+        scope,
+        requestedScope,
+        ...emptyPayload,
+        scopes: {
+          [scope]: { ...emptyPayload }
+        }
+      });
+    }
+
+    const effectiveSharedOnly = scope === 'ours' ? false : sharedOnly;
+
+    const [incomeCount, expenseCount, incomeRows, expenseRows] = await Promise.all([
+      countIncomes(startDate, endDate, payerIds),
+      countExpenses(startDate, endDate, payerIds, effectiveSharedOnly),
+      fetchMonthlyIncome(startDate, endDate, payerIds),
+      fetchDetailedExpenses(startDate, endDate, payerIds, effectiveSharedOnly)
+    ]);
+
+    const monthMap = new Map();
+    const categoryAggregates = new Map();
+
+    const ensureMonthEntry = (month) => {
+      if (!monthMap.has(month)) {
+        monthMap.set(month, {
+          income: 0,
+          spending: 0,
+          expenseCount: 0,
+          categories: new Map(),
+          scopeTotals: {
+            ours: 0,
+            shared: 0,
+            mine: 0,
+            partner: 0
+          }
+        });
+      }
+      return monthMap.get(month);
+    };
+
+    incomeRows.forEach((row) => {
+      const month = row.month;
+      if (!month) {
+        return;
+      }
+      const entry = ensureMonthEntry(month);
+      entry.income += toNumber(row.total_income || row.totalIncome || 0, 0);
+    });
+
+    expenseRows.forEach((row) => {
+      const month = row.month;
+      if (!month) {
+        return;
+      }
+
+      const amount = toNumber(row.amount, 0);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return;
+      }
+
+      const categoryId = row.category_id != null ? Number(row.category_id) : null;
+      const categoryKey = categoryId != null ? categoryId : 'uncategorized';
+      const categoryName = row.category_name || 'Uncategorized';
+      const paidById = Number(row.paid_by_user_id);
+      const personalExpense = isPersonalSplit(row.split_type);
+      let scopeKey = 'shared';
+      if (personalExpense) {
+        if (paidById === currentUser.id) {
+          scopeKey = 'mine';
+        } else if (partner && paidById === partner.id) {
+          scopeKey = 'partner';
+        }
+      }
+
+      const entry = ensureMonthEntry(month);
+      entry.spending += amount;
+      entry.expenseCount += 1;
+      entry.scopeTotals.ours += amount;
+      entry.scopeTotals.shared += scopeKey === 'shared' ? amount : 0;
+      entry.scopeTotals.mine += scopeKey === 'mine' ? amount : 0;
+      entry.scopeTotals.partner += scopeKey === 'partner' ? amount : 0;
+
+      if (!entry.categories.has(categoryKey)) {
+        entry.categories.set(categoryKey, {
+          categoryId,
+          name: categoryName,
+          total: 0,
+          count: 0,
+          scope: {
+            ours: 0,
+            shared: 0,
+            mine: 0,
+            partner: 0
+          }
+        });
+      }
+
+      const categoryEntry = entry.categories.get(categoryKey);
+      categoryEntry.total += amount;
+      categoryEntry.count += 1;
+      categoryEntry.scope.ours += amount;
+      categoryEntry.scope.shared += scopeKey === 'shared' ? amount : 0;
+      categoryEntry.scope.mine += scopeKey === 'mine' ? amount : 0;
+      categoryEntry.scope.partner += scopeKey === 'partner' ? amount : 0;
+
+      const aggregateEntry = categoryAggregates.get(categoryKey) || {
+        categoryId,
+        name: categoryName,
+        total: 0,
+        count: 0
+      };
+      aggregateEntry.total += amount;
+      aggregateEntry.count += 1;
+      categoryAggregates.set(categoryKey, aggregateEntry);
+    });
+
+    const sortedMonths = Array.from(monthMap.keys()).sort();
+    const monthlyData = sortedMonths.map((month) => {
+      const entry = monthMap.get(month);
+      const categories = Array.from(entry.categories.values())
+        .map((category) => ({
+          category_id: category.categoryId,
+          name: category.name,
+          total: roundCurrency(category.total),
+          expense_count: category.count,
+          avg_expense: category.count ? roundCurrency(category.total / category.count) : 0,
+          scope: {
+            ours: roundCurrency(category.scope.ours),
+            shared: roundCurrency(category.scope.shared),
+            mine: roundCurrency(category.scope.mine),
+            partner: roundCurrency(category.scope.partner)
+          }
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      const income = roundCurrency(entry.income);
+      const spending = roundCurrency(entry.spending);
+      const net = roundCurrency(income - spending);
+      const savingsRate = income > 0 ? (income - spending) / income : 0;
+
+      return {
+        month,
+        income,
+        spending,
+        net,
+        savingsRate,
+        categories,
+        scopeTotals: {
+          ours: roundCurrency(entry.scopeTotals.ours),
+          shared: roundCurrency(entry.scopeTotals.shared),
+          mine: roundCurrency(entry.scopeTotals.mine),
+          partner: roundCurrency(entry.scopeTotals.partner)
+        },
+        expenseCount: entry.expenseCount
+      };
+    });
+
+    const totalIncome = roundCurrency(monthlyData.reduce((sum, row) => sum + row.income, 0));
+    const totalSpending = roundCurrency(monthlyData.reduce((sum, row) => sum + row.spending, 0));
+    const netSurplus = roundCurrency(totalIncome - totalSpending);
+    const avgMonthlySpending = monthlyData.length
+      ? roundCurrency(totalSpending / monthlyData.length)
+      : 0;
+
+    const topCategories = Array.from(categoryAggregates.values())
+      .map((category) => ({
+        name: category.name,
+        category_id: category.categoryId,
+        total: roundCurrency(category.total),
+        expense_count: category.count,
+        avg_expense: category.count ? roundCurrency(category.total / category.count) : 0
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+
+    const dataAvailability = buildDataAvailability(
+      incomeCount,
+      expenseCount,
+      'Add income and expense entries in this range to explore detailed analytics.'
+    );
+
+    const payload = {
+      timeRange,
+      monthlyData,
+      periodSummary: {
+        totalIncome,
+        totalSpending,
+        netSurplus,
+        avgMonthlySpending,
+        topCategories
+      },
+      dataAvailability
+    };
+
+    res.json({
+      scope,
+      requestedScope,
+      ...payload,
+      scopes: {
+        [scope]: { ...payload }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching detailed trends:', error);
+    res.status(500).json({ error: 'Failed to fetch detailed trends data' });
+  }
+});
 
 /**
  * GET /api/analytics/trends/:startDate/:endDate

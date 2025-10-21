@@ -535,10 +535,10 @@ const contributionSummary = useMemo(() => {
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur">
       <div className="relative flex h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-2xl">
-        <header className="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-white px-12 py-8">
+        <header className="border-b border-slate-100 bg-gradient-to-br from-emerald-50 via-emerald-25 to-white px-12 py-8">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100/50 border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
                 <Sparkles className="h-4 w-4" />
                 Financial check-up
               </div>
@@ -553,7 +553,7 @@ const contributionSummary = useMemo(() => {
               </div>
               <div className="flex flex-wrap gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-600 shadow-sm">
-                  <BarChart3 className="h-4 w-4 text-indigo-500" />
+                  <BarChart3 className="h-4 w-4 text-emerald-600" />
                   {scopeLabel}
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-600 shadow-sm">
@@ -563,7 +563,7 @@ const contributionSummary = useMemo(() => {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <select
-                className="h-11 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                className="h-11 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                 value={timeRange}
                 onChange={(event) => setTimeRange(event.target.value)}
               >
@@ -577,7 +577,7 @@ const contributionSummary = useMemo(() => {
                 type="button"
                 onClick={onClose}
                 aria-label="Close deep dive"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-100"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -587,7 +587,7 @@ const contributionSummary = useMemo(() => {
 
         <main className="flex-1 overflow-y-auto bg-slate-50/80 px-10 py-8 pb-28">
           {loading && (
-            <div className="flex h-48 items-center justify-center rounded-3xl border border-slate-100 bg-white/95 text-sm text-slate-500 shadow-sm">
+            <div className="flex h-48 items-center justify-center rounded-3xl border border-slate-100 bg-white text-sm text-slate-500 shadow-sm">
               Refreshing your analytics…
             </div>
           )}
@@ -599,7 +599,7 @@ const contributionSummary = useMemo(() => {
           )}
 
           {isEmpty && (
-            <div className="rounded-3xl border border-slate-100 bg-white/95 px-6 py-10 text-center text-sm text-slate-600 shadow-sm">
+            <div className="rounded-3xl border border-slate-100 bg-white px-6 py-10 text-center text-sm text-slate-600 shadow-sm">
               We do not have detailed analytics for this period yet. Try a different range to explore more history.
             </div>
           )}
@@ -610,7 +610,7 @@ const contributionSummary = useMemo(() => {
               onValueChange={setActiveTab}
               className="flex h-full flex-col gap-6"
             >
-              <TabsList className="flex flex-wrap gap-3 rounded-full border border-slate-200 bg-white/95 px-3 py-2 shadow-sm">
+              <TabsList className="flex flex-wrap gap-3 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm w-fit">
                 <TabsTrigger value="overview">
                   <div className="flex items-center gap-2">
                     <LineChartIcon className="h-4 w-4" />
@@ -639,15 +639,22 @@ const contributionSummary = useMemo(() => {
 
               <TabsContent value="overview" className="flex-1 focus-visible:outline-none">
                 <div className="space-y-8">
-                  <Card className="p-4 rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-white shadow-lg">
+                  <div className="rounded-3xl bg-gradient-to-r from-emerald-100/40 to-white border border-emerald-100/50 px-6 py-5 mb-5 flex items-center gap-3 shadow-sm">
+                    <div className="h-10 w-10 rounded-full bg-emerald-100/50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <LineChartIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">Savings rate over time</div>
+                      <div className="text-xs text-slate-600">How much of your income stayed in reserve each month, paired with the net amount you kept.</div>
+                    </div>
+                  </div>
+
+                  <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
                     <CardHeader className="space-y-2 pb-0">
-                      <CardTitle className="text-lg font-semibold text-slate-900">Savings rate over time</CardTitle>
-                      <p className="text-sm text-slate-600">
-                        How much of our income stayed in reserve each month, paired with the net amount we kept.
-                      </p>
+                      <CardTitle className="sr-only">Savings rate over time</CardTitle>
                     </CardHeader>
                     <CardContent className="px-2 pb-6 pt-4 md:px-4">
-                      <div className="h-80 rounded-3xl border border-indigo-100/60 bg-slate-50/80 p-4 shadow-inner">
+                      <div className="h-80 rounded-3xl border border-slate-100 bg-slate-50/80 p-4 shadow-inner">
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart data={savingsTrendData} margin={{ top: 30, right: 24, bottom: 8, left: 18 }}>
                           <defs>
@@ -699,100 +706,110 @@ const contributionSummary = useMemo(() => {
                     </CardContent>
                   </Card>
 
-                  <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-                    <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
-                      <CardHeader className="space-y-3 pb-0">
-                        <CardTitle className="text-lg font-semibold text-slate-900">Period summary</CardTitle>
-                        <p className="text-sm text-slate-600">
-                          A high-level recap of what went well and where to keep an eye.
+                  <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
+                    <CardHeader className="space-y-3 pb-0">
+                      <CardTitle className="text-lg font-semibold text-slate-900">Period summary</CardTitle>
+                      <p className="text-sm text-slate-600">
+                        A high-level recap of what went well and where to keep an eye.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-6">
+                      <div className="space-y-4 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-emerald-50/40 p-6 shadow-inner">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600">Net position</p>
+                            <p className="mt-2 text-3xl font-semibold text-emerald-700">
+                              {formatCurrency(summary.netSurplus)}
+                            </p>
+                          </div>
+                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-emerald-600 shadow-sm">
+                            <ArrowUpRight className="h-5 w-5" />
+                          </span>
+                        </div>
+                        <p className="text-sm text-emerald-700">
+                          {summary.netSurplus >= 0
+                            ? 'We held onto more than we spent across the selected months.'
+                            : 'Expenses outpaced income in this range—worth scanning the breakdown below.'}
                         </p>
-                      </CardHeader>
-                      <CardContent className="px-4 pb-6">
-                        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-                          <div className="space-y-4 rounded-3xl border border-emerald-100 bg-emerald-50/70 p-6 shadow-inner">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600">Net position</p>
-                                <p className="mt-2 text-3xl font-semibold text-emerald-700">
-                                  {formatCurrency(summary.netSurplus)}
-                                </p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {buildMetricCards(summary).map((metric) => (
+                            <div
+                              key={metric.label}
+                              className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${metric.accent.surface} ${metric.accent.border}`}
+                            >
+                              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                {metric.label}
+                              </span>
+                              <div className="mt-2 flex items-center justify-between gap-3">
+                                <span className="text-lg font-semibold text-slate-900">{metric.value}</span>
+                                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow">
+                                  <metric.Icon className="h-4 w-4" />
+                                </span>
                               </div>
-                              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-emerald-600 shadow-sm">
-                                <ArrowUpRight className="h-5 w-5" />
+                              <p className="mt-1 text-xs text-slate-500">{metric.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
+                    <CardHeader className="space-y-3 pb-0">
+                      <CardTitle className="text-lg font-semibold text-slate-900">Key highlights</CardTitle>
+                      <p className="text-sm text-slate-600">
+                        Notable patterns and insights from your spending.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-6">
+                      <div className="space-y-3">
+                        {bestMonth && (
+                          <div className="rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50/80 to-sky-50/40 p-5 shadow-inner">
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-600">Bright spot</p>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <span className="text-lg font-semibold text-slate-900">{bestMonth.monthLabel}</span>
+                              <span className="text-sm font-semibold text-emerald-600">
+                                {formatCurrency(bestMonth.net)}
                               </span>
                             </div>
-                            <p className="text-sm text-emerald-700">
-                              {summary.netSurplus >= 0
-                                ? 'We held onto more than we spent across the selected months.'
-                                : 'Expenses outpaced income in this range—worth scanning the breakdown below.'}
+                            <p className="mt-2 text-sm text-slate-600">
+                              Income of {formatCurrency(bestMonth.income)} with spending of {formatCurrency(bestMonth.spending)}.
                             </p>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              {buildMetricCards(summary).map((metric) => (
-                                <div
-                                  key={metric.label}
-                                  className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${metric.accent.surface} ${metric.accent.border}`}
-                                >
-                                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                                    {metric.label}
-                                  </span>
-                                  <div className="mt-2 flex items-center justify-between gap-3">
-                                    <span className="text-lg font-semibold text-slate-900">{metric.value}</span>
-                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow">
-                                      <metric.Icon className="h-4 w-4" />
-                                    </span>
-                                  </div>
-                                  <p className="mt-1 text-xs text-slate-500">{metric.description}</p>
-                                </div>
-                              ))}
+                          </div>
+                        )}
+                        {toughestMonth && toughestMonth.net < bestMonth?.net && (
+                          <div className="rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50/80 to-rose-50/40 p-5 shadow-inner">
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">Tougher month</p>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <span className="text-lg font-semibold text-slate-900">{toughestMonth.monthLabel}</span>
+                              <span className="text-sm font-semibold text-rose-500">
+                                {formatCurrency(toughestMonth.net)}
+                              </span>
                             </div>
+                            <p className="mt-2 text-sm text-slate-600">
+                              Spending reached {formatCurrency(toughestMonth.spending)} against income of {formatCurrency(toughestMonth.income)}.
+                            </p>
                           </div>
-                          <div className="space-y-4">
-                            {bestMonth && (
-                              <div className="rounded-3xl border border-sky-100 bg-sky-50/70 p-5 shadow-inner">
-                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-600">Bright spot</p>
-                                <div className="mt-2 flex items-center justify-between gap-3">
-                                  <span className="text-lg font-semibold text-slate-900">{bestMonth.monthLabel}</span>
-                                  <span className="text-sm font-semibold text-emerald-600">
-                                    {formatCurrency(bestMonth.net)}
-                                  </span>
-                                </div>
-                                <p className="mt-2 text-sm text-slate-600">
-                                  Income of {formatCurrency(bestMonth.income)} with spending of {formatCurrency(bestMonth.spending)}.
-                                </p>
-                              </div>
-                            )}
-                            {toughestMonth && toughestMonth.net < bestMonth?.net && (
-                              <div className="rounded-3xl border border-rose-100 bg-rose-50/70 p-5 shadow-inner">
-                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">Tougher month</p>
-                                <div className="mt-2 flex items-center justify-between gap-3">
-                                  <span className="text-lg font-semibold text-slate-900">{toughestMonth.monthLabel}</span>
-                                  <span className="text-sm font-semibold text-rose-500">
-                                    {formatCurrency(toughestMonth.net)}
-                                  </span>
-                                </div>
-                                <p className="mt-2 text-sm text-slate-600">
-                                  Spending reached {formatCurrency(toughestMonth.spending)} against income of {formatCurrency(toughestMonth.income)}.
-                                </p>
-                              </div>
-                            )}
-                            {topCategory && (
-                              <div className="rounded-3xl border border-slate-100 bg-slate-50/80 p-5 shadow-inner">
-                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Top category</p>
-                                <div className="mt-2 flex items-center justify-between gap-3">
-                                  <span className="text-lg font-semibold text-slate-900">{topCategory.name}</span>
-                                  <span className="text-sm font-semibold text-slate-600">
-                                    {formatCurrency(topCategory.value)}
-                                  </span>
-                                </div>
-                                <p className="mt-2 text-sm text-slate-600">
-                                  {topCategory.name} represented {totalCategorySpend ? `${((topCategory.value / totalCategorySpend) * 100).toFixed(1)}%` : '—'} of total spend.
-                                </p>
-                              </div>
-                            )}
+                        )}
+                        {topCategory && (
+                          <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50/80 to-slate-50/40 p-5 shadow-inner">
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Top category</p>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <span className="text-lg font-semibold text-slate-900">{topCategory.name}</span>
+                              <span className="text-sm font-semibold text-slate-600">
+                                {formatCurrency(topCategory.value)}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm text-slate-600">
+                              {topCategory.name} represented {totalCategorySpend ? `${((topCategory.value / totalCategorySpend) * 100).toFixed(1)}%` : '—'} of total spend.
+                            </p>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid gap-6 xl:grid-cols-1">
 
                     <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
                       <CardHeader className="space-y-3 pb-0">
@@ -804,7 +821,7 @@ const contributionSummary = useMemo(() => {
                       <CardContent className="grid gap-4 px-4 pb-6">
                         {categoryPieData.length ? (
                           <div className="flex flex-col gap-4">
-                            <div className="h-48 rounded-3xl border border-slate-100 bg-slate-50/90 p-4">
+                            <div className="h-48 rounded-3xl border border-slate-100 bg-slate-50/80 p-4 shadow-inner">
                               <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                   <defs>
@@ -864,10 +881,21 @@ const contributionSummary = useMemo(() => {
               </TabsContent>
 
               <TabsContent value="trends" className="flex-1 focus-visible:outline-none">
-                <Card className=" p-4rounded-3xl border border-slate-100 bg-white shadow-lg">
+                <div className="space-y-6">
+                  <div className="rounded-3xl bg-gradient-to-r from-emerald-100/40 to-white border border-emerald-100/50 px-6 py-5 flex items-center gap-3 shadow-sm">
+                    <div className="h-10 w-10 rounded-full bg-emerald-100/50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">Category composition over time</div>
+                      <div className="text-xs text-slate-600">Stacked to show how key categories shaped overall spend each month.</div>
+                    </div>
+                  </div>
+
+                  <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
                     <CardHeader className="space-y-3 pb-0">
-                      <CardTitle className="text-lg font-semibold text-slate-900">Category composition over time</CardTitle>
-                      <p className="text-sm text-slate-600">
+                      <CardTitle className="sr-only">Category composition over time</CardTitle>
+                      <p className="sr-only">
                         Stacked to show how key categories shaped overall spend each month.
                       </p>
                       {!!areaCategoryNames.length && (
@@ -920,15 +948,26 @@ const contributionSummary = useMemo(() => {
                     </div>
                   </CardContent>
                 </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="breakdown" className="flex-1 focus-visible:outline-none">
-                <div className="space-y-8">
+                <div className="space-y-6">
+                  <div className="rounded-3xl bg-gradient-to-r from-emerald-100/40 to-white border border-emerald-100/50 px-6 py-5 flex items-center gap-3 shadow-sm">
+                    <div className="h-10 w-10 rounded-full bg-emerald-100/50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <List className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">Spending breakdown</div>
+                      <div className="text-xs text-slate-600">Detailed view of shared and personal spending patterns.</div>
+                    </div>
+                  </div>
+
                   <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
                     <CardHeader className="space-y-3 pb-0">
                       <CardTitle className="text-lg font-semibold text-slate-900">Shared vs personal contributions</CardTitle>
                       <p className="text-sm text-slate-600">
-                        Each column represents the month’s spend, segmented by who covered it.
+                        Each column represents the month's spend, segmented by who covered it.
                       </p>
                       {contributionSummary && (
                         <div className="flex flex-wrap gap-2">
@@ -939,7 +978,7 @@ const contributionSummary = useMemo(() => {
                           ].map((item) => (
                             <span
                               key={item.label}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm"
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm"
                             >
                               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                               {item.label}: {item.value}%
@@ -1022,11 +1061,22 @@ const contributionSummary = useMemo(() => {
               </TabsContent>
 
               <TabsContent value="cashflow" className="flex-1 focus-visible:outline-none">
-                <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
-                  <CardHeader className="space-y-3 pb-0">
-                    <CardTitle className="text-lg font-semibold text-slate-900">Income vs expenses</CardTitle>
-                    <p className="text-sm text-slate-600">A clear view of cash coming in compared to what left the budget.</p>
-                  </CardHeader>
+                <div className="space-y-6">
+                  <div className="rounded-3xl bg-gradient-to-r from-emerald-100/40 to-white border border-emerald-100/50 px-6 py-5 flex items-center gap-3 shadow-sm">
+                    <div className="h-10 w-10 rounded-full bg-emerald-100/50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <CircleDollarSign className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">Income vs expenses</div>
+                      <div className="text-xs text-slate-600">A clear view of cash coming in compared to what left the budget.</div>
+                    </div>
+                  </div>
+
+                  <Card className="p-4 rounded-3xl border border-slate-100 bg-white shadow-lg">
+                    <CardHeader className="space-y-3 pb-0">
+                      <CardTitle className="sr-only">Income vs expenses</CardTitle>
+                      <p className="sr-only">A clear view of cash coming in compared to what left the budget.</p>
+                    </CardHeader>
                   <CardContent className="px-3 pb-6 pt-4 md:px-4">
                     <div className="h-[360px] rounded-3xl border border-slate-100 bg-slate-50/80 p-4 shadow-inner">
                       <ResponsiveContainer width="100%" height="100%">
@@ -1043,6 +1093,7 @@ const contributionSummary = useMemo(() => {
                     </div>
                   </CardContent>
                 </Card>
+                </div>
               </TabsContent>
             </Tabs>
           )}
