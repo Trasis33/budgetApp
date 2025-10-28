@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Overview - Glassmorphism Design</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #8a2be2;
+      --success-color: #10b981;
+      --danger-color: #f43f5e;
+      --neutral-color: #6b7280;
+      --background: rgba(255, 255, 255, 0.33);
+      --border: rgba(255, 255, 255, 0.3);
+      --blur: 17px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.33);
+      backdrop-filter: blur(17px);
+      -webkit-backdrop-filter: blur(17px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.37),
+        0 4px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: -10%;
+      width: 120%;
+      height: 120%;
+      background: radial-gradient(
+        circle at top left,
+        rgba(255, 255, 255, 0.3),
+        transparent 70%
+      );
+      pointer-events: none;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .icon {
+      background: rgba(138, 43, 226, 0.2);
+      border-radius: 12px;
+      padding: 10px;
+      margin-right: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary-color);
+    }
+    
+    .title h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+    
+    .title p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+    }
+    
+    .progress-container {
+      margin-bottom: 1.5rem;
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    
+    .progress-label h2 {
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 500;
+    }
+    
+    .progress-label span {
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
+    }
+    
+    .progress-bar {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b6b, #ff8e53);
+      border-radius: 10px;
+      width: 91.3%;
+    }
+    
+    .budget-summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+    
+    .budget-spent {
+      color: #fff;
+      font-weight: 600;
+    }
+    
+    .budget-remaining {
+      color: var(--success-color);
+      font-weight: 600;
+    }
+    
+    .categories-title {
+      color: #fff;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    .category-item {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .category-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .category-icon {
+      margin-right: 0.75rem;
+    }
+    
+    .category-name {
+      font-weight: 500;
+      color: #fff;
+      font-size: 1rem;
+    }
+    
+    .category-amount {
+      margin-left: auto;
+      text-align: right;
+    }
+    
+    .category-amount .current {
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      display: block;
+    }
+    
+    .category-amount .total {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+    }
+    
+    .category-progress {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .category-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    
+    .category-progress-fill.good {
+      background: linear-gradient(90deg, #41e1a1, #10b981);
+    }
+    
+    .category-progress-fill.warning {
+      background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+    
+    .category-progress-fill.danger {
+      background: linear-gradient(90deg, #f87171, #ef4444);
+    }
+    
+    .over-budget {
+      color: var(--danger-color);
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+    
+    .summary-stats {
+      display: flex;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+    }
+    
+    .stat {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    .stat-value.good {
+      color: var(--success-color);
+    }
+    
+    .stat-value.danger {
+      color: var(--danger-color);
+    }
+    
+    .stat-label {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+    
+    .adjust-button {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 0.75rem;
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      margin-top: 1rem;
+    }
+    
+    .adjust-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Liquid effect animations */
+    @keyframes wave {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+    
+    .liquid-blob {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 70%);
+      z-index: -1;
+      filter: blur(10px);
+    }
+    
+    .blob-1 {
+      width: 200px;
+      height: 200px;
+      top: -100px;
+      right: -50px;
+      animation: wave 12s ease-in-out infinite;
+    }
+    
+    .blob-2 {
+      width: 150px;
+      height: 150px;
+      bottom: -50px;
+      left: -50px;
+      animation: wave 10s ease-in-out infinite;
+      animation-delay: -3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-card">
+    <!-- Liquid blobs for enhanced effect -->
+    <div class="liquid-blob blob-1"></div>
+    <div class="liquid-blob blob-2"></div>
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+        </svg>
+      </div>
+      <div class="title">
+        <h1>Budget Overview</h1>
+        <p>December 2024</p>
+      </div>
+    </div>
+    
+    <!-- Progress bar -->
+    <div class="progress-container">
+      <div class="progress-label">
+        <h2>Overall Progress</h2>
+        <span>91.3%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <!-- Budget summary -->
+    <div class="budget-summary">
+      <span class="budget-spent">$2510.00 spent</span>
+      <span class="budget-remaining">$240.00 remaining</span>
+    </div>
+    
+    <h3 class="categories-title">Categories</h3>
+    
+    <!-- Categories -->
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+            <line x1="6" y1="1" x2="6" y2="4"></line>
+            <line x1="10" y1="1" x2="10" y2="4"></line>
+            <line x1="14" y1="1" x2="14" y2="4"></line>
+          </svg>
+        </div>
+        <span class="category-name">Food & Dining</span>
+        <div class="category-amount">
+          <span class="current">$850.00</span>
+          <span class="total">of $900.00</span>
+        </div>
+      </div>
+      <div class="category-progress">
+        <div class="category-progress-fill good" style="width: 94.4%"></div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+        </div>
+        <span class="category-name">Transportation</span>
+        <div class="category-amount">
+          <span class="current">$420.00</span>
+          <span class="total">of $400.00</span>
+        </div>
+      </div>
+      <div class="category-progress">
+        <div class="category-progress-fill danger" style="width: 105%"></div>
+      </div>
+      <div class="over-budget">$20.00 over</div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+        </div>
+        <span class="category-name">Entertainment</span>
+        <div class="category-amount">
+          <span class="current">$380.00</span>
+          <span class="total">of $500.00</span>
+        </div>
+      </div>
+      <div class="category-progress">
+        <div class="category-progress-fill good" style="width: 76%"></div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+            <path d="M20.38 3.46L16 2a4 4 0 0 1 1.46 3.46"></path>
+            <path d="M6.5 2L2 3.46A4 4 0 0 0 3.46 6.5"></path>
+            <path d="M4.56 17.5A4 4 0 0 0 7.5 21.44"></path>
+            <path d="M21.44 17.5A4 4 0 0 1 18.5 21.44"></path>
+            <path d="M18.5 2.5v4.96"></path>
+            <path d="M18.5 16.5v5"></path>
+            <path d="M5.5 2.5v4.96"></path>
+            <path d="M5.5 16.5v5"></path>
+            <path d="M2.5 5.5h4.96"></path>
+            <path d="M16.5 5.5h5"></path>
+            <path d="M2.5 18.5h4.96"></path>
+            <path d="M16.5 18.5h5"></path>
+          </svg>
+        </div>
+        <span class="category-name">Shopping</span>
+        <div class="category-amount">
+          <span class="current">$520.00</span>
+          <span class="total">of $600.00</span>
+        </div>
+      </div>
+      <div class="category-progress">
+        <div class="category-progress-fill warning" style="width: 86.7%"></div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+            <path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </div>
+        <span class="category-name">Utilities</span>
+        <div class="category-amount">
+          <span class="current">$340.00</span>
+          <span class="total">of $350.00</span>
+        </div>
+      </div>
+      <div class="category-progress">
+        <div class="category-progress-fill warning" style="width: 97.1%"></div>
+      </div>
+    </div>
+    
+    <!-- Summary stats -->
+    <div class="summary-stats">
+      <div class="stat">
+        <div class="stat-value good">4</div>
+        <div class="stat-label">Categories On Track</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value danger">1</div>
+        <div class="stat-label">Over Budget</div>
+      </div>
+    </div>
+    
+    <!-- Action button -->
+    <button class="adjust-button">Adjust Budgets</button>
+  </div>
+</body>
+</html>

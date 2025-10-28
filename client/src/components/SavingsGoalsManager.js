@@ -1,8 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from '../api/axios';
 import formatCurrency from '../utils/formatCurrency';
+import AddContributionModal from './AddContributionModal';
+import { useScope } from '../context/ScopeContext';
+import { assignGoalColors, getGoalColorScheme } from '../utils/goalColorPalette';
+import { cn } from '../lib/utils';
+import { PlusCircle, CalendarDays } from 'lucide-react';
+
+const extractScopedGoals = (payload, scope) => {
+  if (!payload || typeof payload !== 'object') {
+    return Array.isArray(payload) ? payload : [];
+  }
+  const scoped = payload.scopes?.[scope];
+  if (scoped?.goals) {
+    return scoped.goals;
+  }
+  if (Array.isArray(payload.goals)) {
+    return payload.goals;
+  }
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  return [];
+};
 
 const SavingsGoalsManager = () => {
+  const { scope } = useScope();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,33 +36,48 @@ const SavingsGoalsManager = () => {
     target_date: '',
     category: 'general'
   });
+  const [contribOpen, setContribOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const goalAccents = useMemo(() => assignGoalColors(goals), [goals]);
 
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/savings/goals');
-      setGoals(response.data);
+      const response = await axios.get('/savings/goals', { params: { scope } });
+      const scopedGoals = extractScopedGoals(response.data, scope).map((goal, index) => {
+        const colorIndex =
+          typeof goal.color_index === 'number' && !Number.isNaN(goal.color_index)
+            ? goal.color_index
+            : index;
+        return {
+          ...goal,
+          target_amount: Number(goal.target_amount ?? 0),
+          current_amount: Number(goal.current_amount ?? 0),
+          color_index: colorIndex
+        };
+      });
+      setGoals(scopedGoals);
     } catch (err) {
       console.error('Error fetching goals:', err);
       setError('Failed to load savings goals');
     } finally {
       setLoading(false);
     }
-  };
+  }, [scope]);
+
+  useEffect(() => {
+    fetchGoals();
+  }, [fetchGoals]);
 
   const handleAddGoal = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/savings/goals', {
+      await axios.post('/savings/goals', {
         ...formData,
         target_amount: parseFloat(formData.target_amount)
       });
-      setGoals([...goals, response.data]);
+      await fetchGoals();
       setFormData({
         goal_name: '',
         target_amount: '',
@@ -60,7 +98,7 @@ const SavingsGoalsManager = () => {
     
     try {
       await axios.delete(`/savings/goals/${goalId}`);
-      setGoals(goals.filter(goal => goal.id !== goalId));
+      await fetchGoals();
     } catch (err) {
       console.error('Error deleting goal:', err);
       setError('Failed to delete savings goal');
@@ -68,15 +106,32 @@ const SavingsGoalsManager = () => {
   };
 
   const calculateProgress = (goal) => {
-    if (!goal.target_amount) return 0;
-    return Math.min((goal.current_amount / goal.target_amount) * 100, 100);
+    const target = Number(goal.target_amount || 0);
+    if (!target) return 0;
+    return Math.min((Number(goal.current_amount || 0) / target) * 100, 100);
   };
 
-  const getProgressColor = (progress) => {
-    if (progress >= 100) return 'bg-green-500';
-    if (progress >= 75) return 'bg-blue-500';
-    if (progress >= 50) return 'bg-yellow-500';
-    return 'bg-gray-400';
+  const openContribution = (goal) => {
+    setSelectedGoal(goal);
+    setContribOpen(true);
+  };
+
+  const onContributionSuccess = (updatedGoal) => {
+    setGoals((prev) =>
+      prev.map((g) =>
+        g.id === updatedGoal.id
+          ? {
+              ...g,
+              current_amount: Number(updatedGoal.current_amount ?? g.current_amount ?? 0),
+              target_amount: Number(updatedGoal.target_amount ?? g.target_amount ?? 0),
+              color_index:
+                typeof updatedGoal.color_index === 'number' && !Number.isNaN(updatedGoal.color_index)
+                  ? updatedGoal.color_index
+                  : g.color_index
+            }
+          : g
+      )
+    );
   };
 
   const categoryOptions = [
@@ -214,69 +269,85 @@ const SavingsGoalsManager = () => {
             <p className="text-sm mt-1">Add your first goal to start tracking progress</p>
           </div>
         ) : (
-          goals.map(goal => {
+          goals.map((goal, index) => {
             const progress = calculateProgress(goal);
-            const progressColor = getProgressColor(progress);
-            
+            const remaining = Math.max(0, Number(goal.target_amount || 0) - Number(goal.current_amount || 0));
+            const accent = goalAccents[goal.id] || getGoalColorScheme(goal.color_index ?? index);
+
             return (
-              <div key={goal.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-3">
+              <div
+                key={goal.id}
+                className={cn(
+                  'rounded-2xl border p-5 shadow-sm transition-shadow hover:shadow-md',
+                  accent.surface,
+                  accent.border
+                )}
+              >
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h4 className="font-medium text-gray-900">{goal.goal_name}</h4>
-                    <p className="text-sm text-gray-600 capitalize">{goal.category}</p>
+                    <h4 className={cn('text-base font-semibold', accent.heading)}>{goal.goal_name}</h4>
+                    <p className={cn('text-sm capitalize', accent.body)}>{goal.category}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="text-right">
-                      <div className="font-bold">{formatCurrency(goal.target_amount)}</div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => openContribution(goal)}
+                      className={cn('inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold', accent.quickButton, 'bg-white')}
+                    >
+                      <PlusCircle className="h-4 w-4" /> Add
+                    </button>
+                    <div className={cn('text-right text-sm', accent.body)}>
+                      <div className={cn('font-semibold', accent.heading)}>{formatCurrency(goal.target_amount)}</div>
                       {goal.target_date && (
-                        <div className="text-sm text-gray-500">
-                          {new Date(goal.target_date).toLocaleDateString()}
-                        </div>
+                        <div>{new Date(goal.target_date).toLocaleDateString()}</div>
                       )}
                     </div>
                     <button
                       onClick={() => handleDeleteGoal(goal.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+                      className="text-rose-500 hover:text-rose-600"
                     >
                       🗑️
                     </button>
                   </div>
                 </div>
-                
-                <div className="mb-2">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Progress: {formatCurrency(goal.current_amount)}</span>
-                    <span className="font-medium">{progress.toFixed(1)}%</span>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.12em] text-slate-500">
+                    <span>Progress</span>
+                    <span>{progress.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full ${progressColor}`}
+                  <div className={cn('h-2 w-full rounded-full', accent.progressTrack)}>
+                    <div
+                      className={cn('h-2 rounded-full transition-all duration-300', accent.progressBar)}
                       style={{ width: `${progress}%` }}
-                    ></div>
+                    />
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-center text-sm text-gray-600">
-                  <span>
-                    Remaining: {formatCurrency(Math.max(0, goal.target_amount - goal.current_amount))}
-                  </span>
-                  {goal.target_date && (
-                    <span>
-                      {new Date(goal.target_date) > new Date() ? (
-                        <>
-                          {Math.ceil((new Date(goal.target_date) - new Date()) / (1000 * 60 * 60 * 24))} days left
-                        </>
-                      ) : (
-                        <span className="text-red-600">Overdue</span>
-                      )}
-                    </span>
-                  )}
+
+                {goal.target_date && (
+                  <div className={cn('mt-3 inline-flex items-center gap-2 text-xs', accent.body)}>
+                    <CalendarDays className="h-4 w-4" />
+                    Target: {new Date(goal.target_date).toLocaleDateString()}
+                  </div>
+                )}
+
+                <div className={cn('mt-3 flex items-center justify-between text-sm', accent.body)}>
+                  <span>Saved: {formatCurrency(goal.current_amount)}</span>
+                  <span>Remaining: {formatCurrency(remaining)}</span>
                 </div>
               </div>
             );
           })
         )}
       </div>
+
+      <AddContributionModal
+        open={contribOpen}
+        onClose={() => setContribOpen(false)}
+        goal={selectedGoal ? { id: selectedGoal.id, name: selectedGoal.goal_name, color_index: selectedGoal.color_index } : null}
+        onSuccess={(goal) => onContributionSuccess(goal)}
+        capAmount={selectedGoal ? Math.max(0, parseFloat(selectedGoal.target_amount) - parseFloat(selectedGoal.current_amount || 0)) : null}
+        enforceCap={true}
+      />
     </div>
   );
 };

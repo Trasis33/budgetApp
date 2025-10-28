@@ -8,7 +8,11 @@ const auth = require('../middleware/auth');
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const expenses = await db('expenses')
+    const requestedScope = String(req.query.scope || 'ours').toLowerCase();
+    const currentUser = await db('users').select('partner_id').where('id', req.user.id).first();
+    const partnerId = currentUser ? currentUser.partner_id : null;
+
+    const baseQuery = db('expenses')
       .join('categories', 'expenses.category_id', 'categories.id')
       .join('users', 'expenses.paid_by_user_id', 'users.id')
       .select(
@@ -17,7 +21,26 @@ router.get('/', auth, async (req, res) => {
         'categories.icon as category_icon',
         'users.name as paid_by_name'
       );
-    
+
+    if (requestedScope === 'mine') {
+      baseQuery.where('expenses.paid_by_user_id', req.user.id);
+    } else if (requestedScope === 'partner') {
+      if (!partnerId) {
+        return res.json([]);
+      }
+      baseQuery.where('expenses.paid_by_user_id', partnerId);
+    } else if (requestedScope === 'ours' && partnerId) {
+      baseQuery
+        .whereIn('expenses.paid_by_user_id', [req.user.id, partnerId])
+        .andWhere(function () {
+          this.whereNull('expenses.split_type').orWhereRaw("LOWER(expenses.split_type) != 'personal'");
+        });
+    } else {
+      baseQuery.where('expenses.paid_by_user_id', req.user.id);
+    }
+
+    const expenses = await baseQuery;
+
     res.json(expenses);
   } catch (err) {
     console.error(err.message);
@@ -81,6 +104,11 @@ router.get('/:id', auth, async (req, res) => {
 // @desc    Create a new expense
 // @access  Private
 router.post('/', auth, async (req, res) => {
+  // TODO(modal-expense-create): Client optimistic creation will insert a temporary expense
+  // with a generated tempId. This endpoint's response (canonical expense record with DB id
+  // and joined category/user names) is used to reconcile & replace the temp client entry.
+  // If additional normalization fields are ever added, update contract tests (T006) and
+  // optimistic reconciliation logic accordingly.
   const {
     date,
     amount,

@@ -1,0 +1,135 @@
+/* Mockup D — Dark Neon Theme (non-breaking, opt-in via .theme-dark-neon) */
+
+/* 1) Token set (prefixed with --d-*) */
+:root {
+  --d-bg:#0b0f1a;
+  --d-panel:#0f1524;
+  --d-card:#121a2b;
+  --d-ink:#e9eefc;
+  --d-muted:#9aa7c8;
+  --d-primary:#7cf4ff;
+  --d-secondary:#a5ff9b;
+  --d-danger:#ff6b6b;
+  --d-warn:#ffd166;
+  --d-border:rgba(124,244,255,.18);
+  --d-shadow:0 16px 48px rgba(0,0,0,.45);
+  --d-radius-sm:10px;
+  --d-radius-md:14px;
+  --d-radius-lg:16px;
+  --d-radius-xl:20px;
+}
+
+/* 2) Theme mapping (apply on html or body with class .theme-dark-neon) */
+.theme-dark-neon {
+  color-scheme: dark;
+  /* Map existing DS variables to dark-neon so components adopt instantly */
+  --bg-gradient: var(--d-bg);
+  --bg-primary: var(--d-panel);
+  --bg-secondary: var(--d-card);
+  --bg-card: var(--d-card);
+  --color-text-primary: var(--d-ink);
+  --color-text-secondary: var(--d-muted);
+  --border-color: var(--d-border);
+  --shadow-lg: var(--d-shadow);
+  --border-radius-sm: var(--d-radius-sm);
+  --border-radius-md: var(--d-radius-md);
+  --border-radius-lg: var(--d-radius-lg);
+  --border-radius-xl: var(--d-radius-xl);
+  --color-primary: var(--d-primary);
+  --color-success: var(--d-secondary);
+  --color-warning: var(--d-warn);
+  --color-error: var(--d-danger);
+}
+
+/* 3) Core surfaces (safe overrides under theme scope only) */
+.theme-dark-neon body{
+  background: var(--bg-gradient) !important;
+  color: var(--color-text-primary);
+}
+
+.theme-dark-neon .card,
+.theme-dark-neon .stat-card,
+.theme-dark-neon .chart-card,
+.theme-dark-neon .table-card{
+  background: var(--bg-card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-lg);
+}
+
+/* 4) Opt-out old glass (do not remove classes; just neutralize in new theme) */
+.theme-dark-neon .glassmorphism-card,
+.theme-dark-neon .stat-card-shadcn{
+  background: var(--bg-card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* 5) New component utilities for Mockup D (non-destructive) */
+.neon-card{
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.neon-kpi{
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)), var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.neon-btn{
+  background: linear-gradient(180deg,var(--color-primary), #59dae6);
+  color:#002833;
+  border:0;border-radius:14px;padding:12px 16px;font-weight:800;
+}
+.neon-btn--secondary{
+  background: linear-gradient(180deg,var(--color-success), #68e771);
+  color:#003a1e;
+}
+.neon-btn--ghost{
+  background: transparent;border:1px solid var(--border-color);color: var(--color-text-primary);
+  border-radius:14px;padding:10px 14px;font-weight:800;
+}
+
+.neon-segment{display:flex;gap:6px}
+.neon-segment .seg{
+  border:1px solid var(--border-color);background:transparent;color:var(--color-text-secondary);
+  padding:6px 10px;border-radius:999px;font-weight:700
+}
+.neon-segment .seg.is-active{
+  background: rgba(124,244,255,.12); color: var(--color-text-primary);
+  box-shadow: inset 0 6px 18px rgba(124,244,255,.18);
+}
+
+.neon-banner{padding:10px;border-radius:12px;border:1px solid var(--border-color)}
+.neon-banner.info{background:#0f1f3e;color:#7cf4ff;border-color:rgba(124,244,255,.25)}
+.neon-banner.error{background:#2a1216;color:#ffb0b0;border-color:rgba(255,107,107,.45)}
+.neon-banner.success{background:#0f2a1a;color:#a5ff9b;border-color:rgba(165,255,155,.35)}
+
+.neon-fab{
+  position:fixed; right:16px; bottom:90px; width:64px; height:64px; border-radius:50%;
+  background: radial-gradient(closest-side, var(--color-primary), #52d0db);
+  color:#042d37; display:grid; place-items:center; font-size:28px; font-weight:900;
+  box-shadow:0 20px 50px rgba(124,244,255,.45), inset 0 0 26px rgba(255,255,255,.18);
+}
+
+.neon-bottom-nav{
+  position:sticky;bottom:0;background:linear-gradient(180deg, rgba(11,15,26,.6), rgba(11,15,26,.95));
+  border-top:1px solid var(--border-color);
+}
+
+/* 6) Accessibility */
+.theme-dark-neon *:focus-visible{
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .neon-btn, .neon-card{transition:none}
+}

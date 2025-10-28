@@ -1,0 +1,89 @@
+activity:
+  - date: 2025-10-07T00:00:00Z
+    description: Initialized scope selector enhancement workflow, documented requirements, and registered tasks
+    outcome: specifications and tasks drafted
+    reflection: Need to confirm data model changes do not disrupt existing auth flows before migration
+    issues: []
+    next_steps: ["Implement partner_id migration", "Expose couple summary endpoints", "Add ScopeContext"]
+    tool_calls:
+      - tool: create_file
+        action: Created docs/specs/specifications.yml with scope feature requirements
+      - tool: create_file
+        action: Created docs/specs/tasks.yml with scoped task breakdown
+  - date: 2025-10-07T00:30:00Z
+    description: Added partner_id support for reciprocal couple linking and seeded demo pairing
+    outcome: Migration created and setup script now auto-links demo users when column exists
+    reflection: Need to confirm migration ordering with existing deployments; consider backfill script if more demo users arise
+    issues: []
+    next_steps: ["Implement couple summary and linking API" , "Design ScopeContext state handling"]
+    tool_calls:
+      - tool: create_file
+        action: Added migration server/db/migrations/20251007093000_add_partner_id_to_users.js
+      - tool: apply_patch
+        action: Updated server/db/setup.js to enforce demo partner reciprocity
+  - date: 2025-10-07T01:30:00Z
+    description: Exposed couple APIs for linking accounts and fetching scope-aware totals while updating expenses listing filter
+    outcome: Added /api/couple routes and enhanced /api/expenses to honor scope query parameter
+    reflection: Need to add automated coverage for link conflicts and ensure shared calculation aligns with future split metadata
+    issues: []
+    next_steps: ["Build client ScopeContext", "Integrate navbar scope selector"]
+    tool_calls:
+      - tool: create_file
+        action: Added server/routes/couple.js with link & summary endpoints
+      - tool: apply_patch
+        action: Registered couple routes in server/index.js and updated expenses scope filtering
+  - date: 2025-10-07T02:10:00Z
+    description: Implemented client ScopeContext with persisted selection and couple summary loading
+    outcome: Added ScopeProvider around app tree with refresh and auto-correction for missing partner links
+    reflection: Need to expose error state to UI once design is available; currently logged to console
+    issues: []
+    next_steps: ["Refactor navbar segmented control to consume ScopeContext", "Propagate scope filtering to expenses page"]
+    tool_calls:
+      - tool: create_file
+        action: Added client/src/context/ScopeContext.js
+      - tool: apply_patch
+        action: Wrapped application routing with ScopeProvider in client/src/App.js
+  - date: 2025-10-07T02:45:00Z
+    description: Wired Navbar scope selector to ScopeContext and displayed per-scope totals
+    outcome: Segmented control now reflects partner connectivity, disables unavailable scope, and shows currency badges
+    reflection: Need to integrate tooltip design guidance later; currently using native title attribute
+    issues: []
+    next_steps: ["Propagate scope filtering to client data hooks", "Validate scope totals in dashboard"]
+    tool_calls:
+      - tool: apply_patch
+        action: Updated client/src/components/layout/Navbar.js for scope totals and disabled states
+  - date: 2025-10-08T09:00:00Z
+    description: Authored follow-up plan outlining scope selector integration tasks
+    outcome: Documented workstreams for expenses, analytics alignment, and documentation updates
+    reflection: Need design sign-off for partner-link CTA before implementation
+    issues: []
+    next_steps: ["Execute scope-task-005", "Execute scope-task-006"]
+    tool_calls:
+      - tool: create_directory
+        action: Created docs/specs/agent_work to house iterative planning notes
+      - tool: create_file
+        action: Added docs/specs/agent_work/scope_selector_followup_plan.md detailing next steps
+  - date: 2025-10-08T12:00:00Z
+    description: Integrated scope-aware data across expenses experience and dashboard KPIs
+    outcome: ExpensesV2 consumes useScopedExpenses hook, dashboard cards display scope totals, and new hook introduced for shared fetching logic
+    reflection: Need future backend support for scoped analytics endpoints to fully align trend metrics
+    issues: []
+    next_steps: ["Profile scope switch performance under large datasets"]
+    tool_calls:
+      - tool: create_file
+        action: Added client/src/hooks/useScopedExpenses.js for scoped expense fetching
+      - tool: apply_patch
+        action: Updated client/src/pages/ExpensesV2.js to refetch via scope context and refresh totals
+      - tool: apply_patch
+        action: Updated client/src/components/ModernEnhancedDashboard.js and KPISummaryCards.js for scope-aware KPIs
+  - date: 2025-10-08T12:20:00Z
+    description: Documented manual verification plan and release notes for scope selector rollout
+    outcome: Added manual test checklist and release summary under docs/specs/agent_work
+    reflection: Keep documentation synced with future analytics enhancements
+    issues: []
+    next_steps: []
+    tool_calls:
+      - tool: create_file
+        action: Added docs/specs/agent_work/scope_selector_manual_test_plan.md
+      - tool: create_file
+        action: Added docs/specs/agent_work/scope_selector_release_notes.md

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mockup D — Convert the Skeptic</title>
+<style>
+  :root{
+    --bg:#0b0f1a;           /* Deep navy backdrop for pop contrast */
+    --panel:#0f1524;        /* Slightly lighter surface */
+    --card:#121a2b;
+    --ink:#e9eefc;          /* High contrast text */
+    --muted:#9aa7c8;
+    --primary:#7cf4ff;      /* Electric cyan */
+    --secondary:#a5ff9b;    /* Soft lime for success */
+    --danger:#ff6b6b;
+    --warn:#ffd166;
+    --shadow:0 16px 48px rgba(0,0,0,.45);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 800px at 80% -10%, rgba(124,244,255,.10), transparent 60%),
+      radial-gradient(900px 600px at -10% 100%, rgba(165,255,155,.08), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  .app{max-width:428px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg, rgba(11,15,26,.9), rgba(11,15,26,.75));backdrop-filter:saturate(130%);border-bottom:1px solid rgba(124,244,255,.12)}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:30px;height:30px;border-radius:8px;background:conic-gradient(from 120deg, #7cf4ff, #a5ff9b, #7cf4ff);box-shadow:0 0 24px rgba(124,244,255,.45)}
+  .brand h1{font-size:16px;margin:0;letter-spacing:.2px}
+  .scope{display:flex;gap:6px}
+  .scope button{border:1px solid rgba(124,244,255,.2);background:transparent;color:var(--muted);padding:6px 10px;border-radius:999px;font-weight:700}
+  .scope button[aria-pressed="true"]{background:rgba(124,244,255,.12);color:var(--ink);box-shadow:0 6px 18px rgba(124,244,255,.18) inset}
+  .content{flex:1;overflow:auto;padding:16px 16px 110px}
+  /* Hero Conversion Section */
+  .hero{
+    position:relative;
+    background:linear-gradient(180deg, rgba(124,244,255,.12), rgba(165,255,155,.10)) , var(--panel);
+    border:1px solid rgba(124,244,255,.18);
+    border-radius:24px;
+    padding:18px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .hero h2{margin:0 0 8px;font-size:20px}
+  .hero p{margin:0;color:var(--muted)}
+  .cta-row{display:flex;gap:10px;margin-top:12px}
+  .cta{
+    flex:1;border:0;border-radius:12px;padding:12px 14px;font-weight:800;
+    background:linear-gradient(180deg,#7cf4ff,#59dae6);
+    color:#002833;
+    box-shadow:0 10px 28px rgba(124,244,255,.35);
+  }
+  .ghost{
+    flex:1;border:1px solid rgba(165,255,155,.35);border-radius:12px;padding:12px 14px;font-weight:800;color:#92ff8b;background:rgba(165,255,155,.08)
+  }
+  .spark{
+    position:absolute; inset:auto -40% -40% auto; width:300px; height:300px; border-radius:50%;
+    background:radial-gradient(closest-side, rgba(124,244,255,.25), transparent 70%);
+    filter:blur(20px); pointer-events:none;
+  }
+  /* KPI ribbons */
+  .ribbons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .ribbon{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+    border:1px solid rgba(124,244,255,.12);
+    border-radius:14px;padding:12px;box-shadow:var(--shadow)
+  }
+  .label{color:var(--muted);font-size:12px}
+  .value{font-variant-numeric:tabular-nums;font-weight:900;font-size:20px}
+  .trend{font-size:12px;color:#a5ff9b}
+  /* Magnetic Actions bar */
+  .mag-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+  .mag-actions button{
+    border:1px solid rgba(124,244,255,.18);background:rgba(255,255,255,.02);color:var(--ink);
+    border-radius:14px;padding:10px 10px;font-weight:800;box-shadow:var(--shadow)
+  }
+  .mag-actions button:hover{transform:translateY(-1px);transition:transform .15s}
+  /* Approval card */
+  .approval{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+    border:1px solid rgba(124,244,255,.12);border-radius:16px;padding:12px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:10px
+  }
+  .btn{border:0;border-radius:12px;padding:10px 12px;font-weight:800}
+  .btn.approve{background:linear-gradient(180deg,#a5ff9b,#68e771);color:#003a1e}
+  .btn.decline{background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.45);color:#ffb0b0}
+  /* List */
+  .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .row{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--card);border:1px solid rgba(124,244,255,.10);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow)
+  }
+  .l{display:flex;align-items:center;gap:10px}
+  .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+      background:linear-gradient(180deg, rgba(124,244,255,.2), rgba(124,244,255,.06)); color:#7cf4ff; font-weight:900}
+  .amt{font-variant-numeric:tabular-nums;font-weight:900}
+  .chip{padding:2px 8px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid rgba(124,244,255,.25);color:#7cf4ff}
+  .chip.mine{color:#a5ff9b;border-color:rgba(165,255,155,.35)}
+  .chip.partner{color:#ffd166;border-color:rgba(255,209,102,.35)}
+  /* Bottom nav */
+  nav{position:sticky;bottom:0;background:linear-gradient(180deg, rgba(11,15,26,.6), rgba(11,15,26,.95));backdrop-filter:saturate(140%);border-top:1px solid rgba(124,244,255,.12)}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr)}
+  .tabs button{padding:12px 6px;border:0;background:transparent;color:var(--muted);font-size:12px}
+  .tabs button[aria-current="page"]{color:var(--primary);font-weight:900;text-shadow:0 0 16px rgba(124,244,255,.45)}
+  /* Floating CTA */
+  .fab{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:88px;
+    width:74px;height:74px;border-radius:50%;
+    background:radial-gradient(closest-side, #7cf4ff, #52d0db);
+    color:#042d37; display:grid; place-items:center; font-size:30px; font-weight:900;
+    box-shadow:0 20px 50px rgba(124,244,255,.55), inset 0 0 30px rgba(255,255,255,.25);
+  }
+  /* Composer */
+  .composer{position:fixed;inset:auto 0 0 0;background:var(--panel);border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid rgba(124,244,255,.18);box-shadow:0 -30px 60px rgba(0,0,0,.6);padding:12px 16px 20px;display:none}
+  .composer.active{display:block}
+  .handle{width:46px;height:5px;border-radius:999px;background:rgba(124,244,255,.25);margin:8px auto}
+  .field{margin:8px 0}
+  .label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  input,select,textarea{
+    width:100%;padding:12px;border-radius:12px;background:#0b1020;border:1px solid rgba(124,244,255,.18);color:var(--ink);font-size:16px
+  }
+  .num{font-size:28px;font-weight:900;letter-spacing:.5px}
+  .primary{background:linear-gradient(180deg,#7cf4ff,#59dae6);color:#002833;border:0;border-radius:14px;padding:12px 14px;font-weight:900}
+  /* Micro motion */
+  .pulse{animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,244,255,.45)}70%{box-shadow:0 0 0 18px rgba(124,244,255,0)}100%{box-shadow:0 0 0 0 rgba(124,244,255,0)}}
+  /* Accessibility sizing */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  /* Tablet scaling */
+  @media (min-width:768px){
+    .app{max-width:900px}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+  }
+</style>
+</head>
+<body>
+<div class="app" role="application">
+  <header>
+    <div class="top">
+      <div class="brand">
+        <div class="logo pulse" aria-hidden="true"></div>
+        <h1>Horizon Budget</h1>
+      </div>
+      <div class="scope" role="tablist" aria-label="Scope">
+        <button role="tab" aria-pressed="true" aria-selected="true">Ours</button>
+        <button role="tab" aria-pressed="false">Mine</button>
+        <button role="tab" aria-pressed="false">Partner</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="content grid" role="main">
+    <section>
+      <!-- Conversion hero -->
+      <div class="hero" aria-label="Welcome">
+        <h2>Two taps to calm money together</h2>
+        <p>Capture, split, and agree—without spreadsheets or friction.</p>
+        <div class="cta-row">
+          <button class="cta" onclick="openComposer()">Add first expense</button>
+          <button class="ghost">Invite partner</button>
+        </div>
+        <div class="spark"></div>
+      </div>
+
+      <!-- KPI ribbons -->
+      <div class="ribbons" aria-label="Highlights">
+        <div class="ribbon">
+          <div class="label">Budget remaining</div>
+          <div class="value">8 640 SEK</div>
+          <div class="trend">+12% under plan</div>
+        </div>
+        <div class="ribbon">
+          <div class="label">Split status</div>
+          <div class="value">You owe 180 SEK</div>
+          <div class="trend" style="color:#ffd166">pending settlement</div>
+        </div>
+        <div class="ribbon">
+          <div class="label">Savings</div>
+          <div class="value">16.2%</div>
+          <div class="trend">on track</div>
+        </div>
+        <div class="ribbon">
+          <div class="label">Recurring this week</div>
+          <div class="value">2</div>
+          <div class="trend">auto-included</div>
+        </div>
+      </div>
+
+      <!-- Magnetic actions -->
+      <div class="mag-actions" aria-label="Magnetic actions">
+        <button onclick="openComposer()">+ Expense</button>
+        <button>Scan</button>
+        <button>Link bank</button>
+        <button>Import CSV</button>
+      </div>
+
+      <!-- Approval -->
+      <article class="approval" aria-label="Approval request">
+        <div>
+          <strong>Approve: Groceries +500 SEK</strong>
+          <div class="label">Requested by Partner • Shared category</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn decline">Decline</button>
+          <button class="btn approve" onclick="approved(this)">Approve</button>
+        </div>
+      </article>
+
+      <!-- Trans list -->
+      <div class="list" role="list" aria-label="Transactions">
+        <div class="row" role="listitem" aria-label="Groceries 420 SEK shared">
+          <div class="l">
+            <div class="ic">G</div>
+            <div>
+              <div><strong>Groceries</strong> <span class="chip">OURS</span></div>
+              <div class="label">Today • 50/50</div>
+            </div>
+          </div>
+          <div class="amt">420 SEK</div>
+        </div>
+        <div class="row" role="listitem" aria-label="Utilities 449 SEK recurring">
+          <div class="l">
+            <div class="ic">U</div>
+            <div>
+              <div><strong>Utilities</strong> <span class="chip">OURS</span></div>
+              <div class="label">Recurring</div>
+            </div>
+          </div>
+          <div class="amt">449 SEK</div>
+        </div>
+        <div class="row" role="listitem" aria-label="Dining 120 SEK personal mine">
+          <div class="l">
+            <div class="ic">D</div>
+            <div>
+              <div><strong>Dining Out</strong> <span class="chip mine">MINE</span></div>
+              <div class="label">Personal</div>
+            </div>
+          </div>
+          <div class="amt">120 SEK</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right column (tablet) shows Momentum panel -->
+    <aside aria-label="Momentum">
+      <div class="hero" style="margin-top:0">
+        <h2>Momentum</h2>
+        <p>Keep the streak—3 days captured in a row.</p>
+        <div class="cta-row">
+          <button class="ghost" onclick="nudge()">Set daily reminder</button>
+          <button class="cta" onclick="openComposer()">Capture now</button>
+        </div>
+      </div>
+
+      <div class="ribbons" style="margin-top:14px">
+        <div class="ribbon">
+          <div class="label">Goals</div>
+          <div class="value">Emergency +1 200</div>
+          <div class="trend">this month</div>
+        </div>
+        <div class="ribbon">
+          <div class="label">Debt payoff</div>
+          <div class="value">On track</div>
+          <div class="trend">snowball</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <button class="fab" aria-label="Add expense" onclick="openComposer()">+</button>
+
+  <nav aria-label="Bottom navigation">
+    <div class="tabs">
+      <button aria-current="page">Home</button>
+      <button>Plan</button>
+      <button>Add</button>
+      <button>Insights</button>
+      <button>Profile</button>
+    </div>
+  </nav>
+
+  <!-- Composer -->
+  <section id="composer" class="composer" role="dialog" aria-modal="true" aria-label="Add expense">
+    <div class="handle" aria-hidden="true"></div>
+    <div class="field">
+      <div class="label">Amount (SEK)</div>
+      <input class="num" placeholder="0"/>
+    </div>
+    <div class="field">
+      <div class="label">Category</div>
+      <select>
+        <option>Groceries</option><option>Dining Out</option><option>Utilities</option>
+        <option>Kids Clothes</option><option>Transportation</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="label">Split</div>
+      <select>
+        <option>50/50</option><option>Custom</option><option>Personal (Mine)</option><option>Personal (Partner)</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="label">Notes</div>
+      <textarea rows="2" placeholder="Optional"></textarea>
+    </div>
+    <button class="primary" onclick="save()">Save expense</button>
+  </section>
+
+  <div id="toast" class="sr-only" aria-live="polite">Saved</div>
+</div>
+
+<script>
+  function openComposer(){document.getElementById('composer').classList.add('active')}
+  function save(){
+    document.getElementById('composer').classList.remove('active');
+    const t=document.getElementById('toast');t.textContent='Expense saved';t.classList.remove('sr-only');
+    setTimeout(()=>{t.classList.add('sr-only')},1500);
+  }
+  function approved(btn){
+    const c=btn.closest('.approval'); c.querySelector('.label').textContent='Approved • Partner notified';
+    btn.parentElement.innerHTML='<span style="color:#a5ff9b;font-weight:900">Approved</span>';
+  }
+  function nudge(){alert('Daily reminder scheduled at 19:00')}
+</script>
+</body>
+</html>

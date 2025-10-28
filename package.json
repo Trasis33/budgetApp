@@ -11,7 +11,8 @@
     "test": "jest",
     "build": "cd client && npm run build",
     "install-client": "cd client && npm install",
-    "setup": "npm install && npm run install-client"
+    "setup": "npm install && npm run install-client",
+    "migrate": "node -e \"require('knex')(require('./server/db/knexfile').development).migrate.latest().then(()=>console.log('Migrations complete')).catch(e=>{console.error(e); process.exit(1)})\""
   },
   "keywords": [
     "expense",
@@ -28,6 +29,8 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-validator": "^7.2.1",
+    "flowbite": "^3.1.2",
+    "flowbite-react": "^0.12.7",
     "jsonwebtoken": "^9.0.0",
     "knex": "^2.4.2",
     "sqlite3": "^5.1.6"

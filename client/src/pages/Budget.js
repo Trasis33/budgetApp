@@ -1,51 +1,40 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import formatCurrency from '../utils/formatCurrency';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Filler,
-} from 'chart.js';
-
-// Import analytics components
-import BudgetPerformanceCards from '../components/BudgetPerformanceCards';
-import BudgetPerformanceBars from '../components/BudgetPerformanceBars';
-import BudgetPerformanceBadges from '../components/BudgetPerformanceBadges';
 import SavingsRateTracker from '../components/SavingsRateTracker';
 import SavingsGoalsManager from '../components/SavingsGoalsManager';
-import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
 
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Filler
-);
+// Import shadcn/ui enhanced tabs
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/enhanced-tabs';
+
+// Import month/year navigator
+import { MonthYearNavigator } from '../components/ui/month-year-navigator';
+
+// Import analytics components
+import BudgetOptimizationTips from '../components/BudgetOptimizationTips';
+import EnhancedCategorySpendingChart from '../components/charts/EnhancedCategorySpendingChart';
+import IncomeExpenseChart from '../components/charts/IncomeExpenseChart';
+import BudgetActualChart from '../components/charts/BudgetActualChart';
+import BudgetAccordion from '../components/ui/BudgetAccordion';
+import useLazyLoad from '../hooks/useLazyLoad';
+import { SkeletonChart } from '../components/ui/Skeletons';
+import {
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  PieChart,
+  Target,
+  Sparkles,
+  ListChecks,
+  Circle,
+  AlertCircle
+} from 'lucide-react';
 
 const Budget = () => {
-  // Active section state for horizontal pill navigation
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('budget');
-  
-  const [incomes, setIncomes] = useState([]);
-  const [source, setSource] = useState('');
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,95 +45,33 @@ const Budget = () => {
   const [chartData, setChartData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [budgets, setBudgets] = useState({});
-  
-  // Analytics state
-
-  const [trendsData, setTrendsData] = useState(null);
-  const [categoryTrendsData, setCategoryTrendsData] = useState(null);
-  const [incomeExpensesData, setIncomeExpensesData] = useState(null);
-
-  const [analyticsData, setAnalyticsData] = useState(null);
   const [timePeriod, setTimePeriod] = useState('6months');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [analyticsError, setAnalyticsError] = useState(null);
-  
-  // Calculate date range based on selected time period
-  const calculateDateRange = useCallback((period) => {
-    const today = new Date();
-    const end = today.toISOString().split('T')[0];
-    let start;
+  const [savingBudgetId, setSavingBudgetId] = useState(null);
 
-    switch (period) {
-      case '3months':
-        start = new Date(today.setMonth(today.getMonth() - 3)).toISOString().split('T')[0];
-        break;
-      case '6months':
-        start = new Date(today.setMonth(today.getMonth() - 6)).toISOString().split('T')[0];
-        break;
-      case '1year':
-        start = new Date(today.setFullYear(today.getFullYear() - 1)).toISOString().split('T')[0];
-        break;
-      case '2years':
-        start = new Date(today.setFullYear(today.getFullYear() - 2)).toISOString().split('T')[0];
-        break;
-      default:
-        start = new Date(today.setMonth(today.getMonth() - 6)).toISOString().split('T')[0];
-    }
-
-    return { start, end };
-  }, []);
-
-  // Navigation sections
   const sections = [
     { id: 'budget', label: 'Budget Overview', icon: '💰' },
-    { id: 'analytics', label: 'Analytics', icon: '📊' },
-    { id: 'income', label: 'Income Management', icon: '💼' }
+    { id: 'analytics', label: 'Analytics', icon: '📊' }
   ];
+
+  const manageBudgetsSectionRef = useRef(null);
+  const budgetInputRefs = useRef({});
+  const highlightTimeoutRef = useRef(null);
+  const [highlightCategoryId, setHighlightCategoryId] = useState(null);
 
   const fetchBudgetData = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Base API calls that don't depend on date range
       const basePromises = [
-        axios.get(`/incomes?month=${month}&year=${year}`),
         axios.get(`/summary/charts/${year}/${month}`),
         axios.get('/categories')
       ];
       
-      // Analytics API calls that depend on date range - only make if dates are available
-      const analyticsPromises = [];
-      if (startDate && endDate) {
-        analyticsPromises.push(
-          axios.get(`/analytics/trends/${startDate}/${endDate}`),
-          axios.get(`/analytics/category-trends/${startDate}/${endDate}`),
-          axios.get(`/analytics/income-expenses/${startDate}/${endDate}`)
-        );
-      }
-      
-      const [incomesRes, chartsRes, categoriesRes, ...analyticsResults] = await Promise.all([
-        ...basePromises,
-        ...analyticsPromises
-      ]);
-      setIncomes(incomesRes.data);
+      const [chartsRes, categoriesRes] = await Promise.all(basePromises);
       setChartData(chartsRes.data);
       setCategories(categoriesRes.data);
       
-      // Set analytics data if available
-      if (analyticsResults.length >= 3) {
-        setTrendsData(analyticsResults[0].data);
-        setCategoryTrendsData(analyticsResults[1].data);
-        setIncomeExpensesData(analyticsResults[2].data);
-      } else {
-        // Clear analytics data if no date range available
-        setTrendsData(null);
-        setCategoryTrendsData(null);
-        setIncomeExpensesData(null);
-      }
-
       const initialBudgets = {};
       chartsRes.data.categorySpending.forEach(item => {
         const category = categoriesRes.data.find(c => c.name === item.category);
@@ -160,417 +87,113 @@ const Budget = () => {
     } finally {
       setLoading(false);
     }
-  }, [month, year, startDate, endDate]);
+  }, [month, year]);
 
   useEffect(() => {
-    const { start, end } = calculateDateRange(timePeriod);
-    setStartDate(start);
-    setEndDate(end);
-  }, [timePeriod, calculateDateRange]);
+    fetchBudgetData();
+  }, [month, year, fetchBudgetData]);
 
-  // Separate useEffect for fetchBudgetData to avoid dependency issues
   useEffect(() => {
-    if (startDate && endDate) {
-      fetchBudgetData();
-    }
-  }, [month, year, startDate, endDate, fetchBudgetData]);
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
-  const handleAddIncome = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('/incomes', { source, amount, date });
-      setSource('');
-      setAmount('');
-      fetchBudgetData(); // Refetch all data
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteIncome = async (id) => {
-    try {
-      await axios.delete(`/incomes/${id}`);
-      fetchBudgetData(); // Refetch all data
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // Lazy-load refs (single declaration)
+  const { ref: catRef, isVisible: catVisible } = useLazyLoad();
+  const { ref: ieRef, isVisible: ieVisible } = useLazyLoad();
+  const { ref: bvaRef, isVisible: bvaVisible } = useLazyLoad();
 
   const handleBudgetChange = (categoryId, value) => {
     setBudgets(prev => ({ ...prev, [categoryId]: value }));
   };
 
   const handleSaveBudget = async (categoryId) => {
+    const rawValue = budgets[categoryId];
+    const parsedValue = parseFloat(rawValue);
+
+    if (Number.isNaN(parsedValue) || parsedValue < 0) {
+      setError('Please enter a valid budget amount before saving.');
+      return;
+    }
+
     try {
-      const amount = budgets[categoryId];
-      if (amount === '' || isNaN(parseFloat(amount))) {
-        alert('Please enter a valid number for the budget.');
-        return;
-      }
+      setSavingBudgetId(categoryId);
       await axios.post('/budgets', {
         category_id: categoryId,
-        amount: parseFloat(amount),
+        amount: parsedValue,
         month,
-        year,
+        year
       });
-      alert('Budget saved!');
-      fetchBudgetData(); // Refetch to update charts
+      await fetchBudgetData();
     } catch (err) {
-      console.error('Failed to save budget:', err);
-      alert('Failed to save budget.');
+      console.error('Error saving budget:', err);
+      setError('We could not save that budget. Please try again.');
+    } finally {
+      setSavingBudgetId(null);
     }
   };
 
-  // Chart colors (matching Analytics.js theme)
+  const scrollToManageBudgets = () => {
+    if (manageBudgetsSectionRef.current) {
+      manageBudgetsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleFocusBudgetInput = (categoryName) => {
+    if (!categoryName) {
+      return;
+    }
+
+    const category = categories.find((item) => item.name === categoryName);
+    if (!category) {
+      return;
+    }
+
+    scrollToManageBudgets();
+
+    const input = budgetInputRefs.current[category.id];
+    if (input) {
+      window.requestAnimationFrame(() => {
+        try {
+          input.focus({ preventScroll: true });
+        } catch (err) {
+          input.focus();
+        }
+        if (typeof input.select === 'function') {
+          input.select();
+        }
+      });
+    }
+
+    setHighlightCategoryId(category.id);
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightCategoryId(null);
+    }, 4000);
+  };
+
+  // Chart colors
   const chartColors = {
-    primary: '#3b82f6',      // Blue
-    secondary: '#22c55e',    // Green
-    accent: '#f97316',       // Orange
-    purple: '#8b5cf6',       // Purple
-    pink: '#ec4899',         // Pink
-    gray: '#6b7280',         // Gray
-    red: '#ef4444',          // Red
-    yellow: '#eab308'        // Yellow
+    primary: '#3b82f6',
+    secondary: '#22c55e',
+    accent: '#f97316',
+    purple: '#8b5cf6',
+    pink: '#ec4899',
+    gray: '#6b7280',
+    red: '#ef4444',
+    yellow: '#eab308'
   };
 
-  // Format month label for charts
-  const formatMonthLabel = (monthStr) => {
-    const [year, month] = monthStr.split('-');
-    const date = new Date(year, month - 1);
-    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-  };
-
-  // Analytics chart data functions (simplified versions for now)
-  const getMonthlyTrendChartData = () => {
-    if (!trendsData || !trendsData.monthlyTotals) return null;
-
-    const months = trendsData.monthlyTotals.map(item => formatMonthLabel(item.month));
-    const currentSpending = trendsData.monthlyTotals.map(item => item.total_spending);
-    const budgetTargets = trendsData.monthlyTotals.map(item => item.total_budget || 0);
-
-    // Previous year data (if available)
-    const previousYearSpending = trendsData.previousYearTotals ?
-      trendsData.previousYearTotals.map(item => item.total_spending) : [];
-
-    const datasets = [
-      {
-        label: 'Current Spending',
-        data: currentSpending,
-        borderColor: chartColors.primary,
-        backgroundColor: chartColors.primary + '10',
-        borderWidth: 3,
-        fill: false,
-        tension: 0.1
-      }
-    ];
-
-    // Add budget line if budget data exists
-    if (budgetTargets.some(budget => budget > 0)) {
-      datasets.push({
-        label: 'Budget Target',
-        data: budgetTargets,
-        borderColor: chartColors.secondary,
-        backgroundColor: chartColors.secondary + '10',
-        borderWidth: 2,
-        borderDash: [5, 5],
-        fill: false,
-        tension: 0.1
-      });
-    }
-
-    // Add previous year line if data exists
-    if (previousYearSpending.length > 0) {
-      datasets.push({
-        label: 'Previous Year',
-        data: previousYearSpending,
-        borderColor: chartColors.gray,
-        backgroundColor: chartColors.gray + '10',
-        borderWidth: 2,
-        borderDash: [2, 2],
-        fill: false,
-        tension: 0.1
-      });
-    }
-
-    return {
-      labels: months,
-      datasets
-    };
-  };
-
-  const getCategoryTrendChartData = () => {
-    if (!categoryTrendsData || !categoryTrendsData.topCategories) return null;
-
-    // Get all unique months from the data
-    const allMonths = new Set();
-    Object.values(categoryTrendsData.trendsByCategory).forEach(categoryData => {
-      categoryData.monthlyData.forEach(item => {
-        allMonths.add(item.month);
-      });
-    });
-
-    const sortedMonths = Array.from(allMonths).sort();
-    const monthLabels = sortedMonths.map(formatMonthLabel);
-
-    // Take top 5 categories for mobile, or limit based on screen size
-    const maxCategories = window.innerWidth < 768 ? 3 : 5;
-    const topCategories = categoryTrendsData.topCategories.slice(0, maxCategories);
-
-    const colors = [chartColors.primary, chartColors.secondary, chartColors.accent, chartColors.purple, chartColors.pink];
-
-    const datasets = topCategories.map((category, index) => {
-      const categoryData = categoryTrendsData.trendsByCategory[category];
-      const monthlySpending = sortedMonths.map(month => {
-        const monthData = categoryData.monthlyData.find(item => item.month === month);
-        return monthData ? monthData.total_spending : 0;
-      });
-
-      return {
-        label: category,
-        data: monthlySpending,
-        borderColor: colors[index],
-        backgroundColor: colors[index] + '10',
-        borderWidth: 2,
-        fill: false,
-        tension: 0.1
-      };
-    });
-
-    return {
-      labels: monthLabels,
-      datasets
-    };
-  };
-
-  const getBudgetPerformanceData = () => {
-    if (!chartData?.categorySpending || chartData.categorySpending.length === 0) {
-      return null;
-    }
-
-    const performanceData = [];
-    
-    chartData.categorySpending.forEach(category => {
-      if (category.budget && category.budget > 0) {
-        const utilization = (category.total / category.budget) * 100;
-        performanceData.push({
-          category: category.category,
-          spending: category.total,
-          budget: category.budget,
-          utilization: utilization,
-          status: utilization > 100 ? 'over' : utilization > 90 ? 'warning' : 'good'
-        });
-      }
-    });
-
-    return performanceData;
-  };
-
-  const getBudgetPerformanceChartData = () => {
-    const performanceData = getBudgetPerformanceData();
-    if (!performanceData || performanceData.length === 0) {
-      return null;
-    }
-
-    const labels = performanceData.map(item => item.category);
-    const budgetData = performanceData.map(item => item.budget);
-    const spendingData = performanceData.map(item => item.spending);
-
-    // Color bars based on performance
-    const budgetColors = performanceData.map(item => {
-      switch (item.status) {
-        case 'over': return chartColors.red;
-        case 'warning': return chartColors.yellow;
-        default: return chartColors.secondary;
-      }
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: `Budget (${timePeriod.replace('months', 'mo').replace('year', 'yr')})`,
-          data: budgetData,
-          backgroundColor: chartColors.primary + '40',
-          borderColor: chartColors.primary,
-          borderWidth: 1,
-          borderRadius: 6
-        },
-        {
-          label: 'Actual Spending',
-          data: spendingData,
-          backgroundColor: budgetColors.map(color => color + '80'),
-          borderColor: budgetColors,
-          borderWidth: 1,
-          borderRadius: 6
-        }
-      ]
-    };
-  };
-
-  const getIncomeExpensesChartData = () => {
-    if (!incomeExpensesData || !incomeExpensesData.monthlyData) return null;
-
-    const months = incomeExpensesData.monthlyData.map(item => formatMonthLabel(item.month));
-    const incomeData = incomeExpensesData.monthlyData.map(item => item.income);
-    const expenseData = incomeExpensesData.monthlyData.map(item => item.expenses);
-
-    return {
-      labels: months,
-      datasets: [
-        {
-          label: 'Income',
-          data: incomeData,
-          borderColor: chartColors.secondary,
-          backgroundColor: chartColors.secondary + '20',
-          borderWidth: 3,
-          fill: true,
-          tension: 0.1
-        },
-        {
-          label: 'Expenses',
-          data: expenseData,
-          borderColor: chartColors.accent,
-          backgroundColor: chartColors.accent + '20',
-          borderWidth: 3,
-          fill: true,
-          tension: 0.1
-        }
-      ]
-    };
-  };
-
-  // Common chart options for consistency
-  // Custom legend for the budget vs actual chart
-  const budgetVsActualLegend = {
-    id: 'budgetVsActualLegend',
-    afterDraw(chart, args, options) {
-      const { ctx, chartArea, width } = chart;
-      if (!chartArea) return;
-
-      const legendItems = [
-        { text: 'Budgeted', fillStyle: chartColors.primary + '40' },
-        { text: 'Actual Spending', fillStyle: chartColors.accent + '80' },
-        { text: 'Good', fillStyle: chartColors.secondary },
-        { text: 'Warning', fillStyle: chartColors.yellow },
-        { text: 'Over', fillStyle: chartColors.red },
-      ];
-
-      ctx.save();
-      ctx.font = "12px 'Inter', sans-serif";
-      ctx.textBaseline = 'middle';
-
-      const boxSize = 10;
-      const itemSpacing = 15;
-      const totalLegendWidth = legendItems.reduce((acc, item) => {
-        return acc + boxSize + 5 + ctx.measureText(item.text).width + itemSpacing;
-      }, 0) - itemSpacing;
-
-      let x = (width - totalLegendWidth) / 2;
-      const y = chartArea.top - 20;
-
-      legendItems.forEach(item => {
-        ctx.fillStyle = item.fillStyle;
-        ctx.fillRect(x, y, boxSize, boxSize);
-        x += boxSize + 5;
-
-        ctx.fillStyle = '#6b7280';
-        ctx.fillText(item.text, x, y + boxSize / 2);
-        x += ctx.measureText(item.text).width + itemSpacing;
-      });
-
-      ctx.restore();
-    }
-  };
-
-  const commonChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          boxWidth: 12,
-          padding: 15,
-          font: {
-            size: 11
-          }
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            return `${context.dataset.label}: ${formatCurrency(context.parsed.y || context.parsed)}`;
-          }
-        }
-      }
-    }
-  };
-
-  // Doughnut chart specific options
-  const doughnutChartOptions = {
-    ...commonChartOptions,
-    plugins: {
-      ...commonChartOptions.plugins,
-      legend: {
-        position: window.innerWidth < 768 ? 'bottom' : 'right',
-        labels: {
-          boxWidth: 20,
-          padding: window.innerWidth < 768 ? 8 : 15,
-          font: {
-            size: window.innerWidth < 768 ? 10 : 11
-          }
-        }
-      }
-    }
-  };
-
-  // Bar chart specific options
-  const barChartOptions = {
-    ...commonChartOptions,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return formatCurrency(value);
-          }
-        }
-      }
-    }
-  };
-
-  // Skeleton loader component
-  const SkeletonCard = () => (
-    <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
-      <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-      <div className="h-80 bg-gray-200 rounded"></div>
-    </div>
-  );
-
-  // Empty state component
-  const EmptyChartState = ({ message, suggestion, icon }) => (
-    <div className="h-80 bg-gray-50 rounded flex items-center justify-center">
-      <div className="text-center text-gray-500">
-        <div className="text-6xl mb-4">{icon}</div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">{message}</h3>
-        <p className="text-sm text-gray-500 mb-4">{suggestion}</p>
-        <button 
-          onClick={() => window.location.href = '/add-expense'}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Add Expense
-        </button>
-      </div>
-    </div>
-  );
-
-  // Chart data preparation functions
   const getCategoryChartData = () => {
     if (!chartData?.categorySpending || chartData.categorySpending.length === 0) {
       return null;
     }
 
-    // Define a base color palette
     const colors = [
       chartColors.primary,
       chartColors.secondary,
@@ -582,10 +205,8 @@ const Budget = () => {
       chartColors.yellow,
     ];
 
-    // Lighten the colors by adding opacity (e.g., 'B3' for ~70% opacity)
     const donutColors = colors.map(color => `${color}B3`);
 
-    // Sort categories by amount (descending) for consistent color assignment
     const sortedCategories = [...chartData.categorySpending].sort((a, b) => b.total - a.total);
 
     return {
@@ -598,8 +219,6 @@ const Budget = () => {
           borderWidth: 1,
           borderColor: '#ffffff',
           hoverOffset: 8,
-          borderRadius: 8,
-          spacing: 2
         },
       ],
     };
@@ -619,7 +238,6 @@ const Budget = () => {
           backgroundColor: chartColors.secondary + '80',
           borderColor: chartColors.secondary,
           borderWidth: 1,
-          borderRadius: 6
         },
         {
           label: 'Expenses',
@@ -627,7 +245,6 @@ const Budget = () => {
           backgroundColor: chartColors.accent + '80',
           borderColor: chartColors.accent,
           borderWidth: 1,
-          borderRadius: 6
         },
       ],
     };
@@ -638,20 +255,18 @@ const Budget = () => {
       return null;
     }
 
-    // Get categories that are over/under budget for coloring
     const performanceData = chartData.categorySpending.map(item => {
       if (!item.budget) return 'none';
       const utilization = (item.total / item.budget) * 100;
       return utilization > 100 ? 'over' : utilization > 90 ? 'warning' : 'good';
     });
 
-    // Color bars based on performance
     const budgetColors = performanceData.map(status => {
       switch (status) {
         case 'over': return chartColors.red;
         case 'warning': return chartColors.yellow;
         case 'good': return chartColors.secondary;
-        default: return chartColors.gray; // For categories without budget
+        default: return chartColors.gray;
       }
     });
 
@@ -664,7 +279,6 @@ const Budget = () => {
           backgroundColor: chartColors.primary + '40',
           borderColor: chartColors.primary,
           borderWidth: 1,
-          borderRadius: 6
         },
         {
           label: 'Actual Spending',
@@ -672,738 +286,496 @@ const Budget = () => {
           backgroundColor: budgetColors.map(color => color + '80'),
           borderColor: budgetColors,
           borderWidth: 1,
-          borderRadius: 6,
-          // Custom legend configuration
-          legend: {
-            display: true,
-            labels: {
-              generateLabels: function(chart) {
-                // Return empty array to prevent default legend items
-                return [];
-              }
-            }
-          }
         }
       ]
     };
-  };
-  
-  // Custom options for the budget vs actual chart
-  const budgetVsActualChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false, // Allow chart to fill container
-    plugins: {
-      // Disable the default legend and title
-      legend: {
-        display: false
-      },
-      title: {
-        display: false
-      },
-      // Add our custom legend
-      [budgetVsActualLegend.id]: {}
-    },
-    // Adjust layout to make room for our custom legend
-    layout: {
-      padding: {
-        top: 40, // Add space at the top for our custom legend
-        bottom: 10,
-        left: 10,
-        right: 10
-      }
-    },
-    devicePixelRatio: window.devicePixelRatio || 1 // Handle high DPI displays
   };
 
   if (!user) {
     return null;
   }
 
-  // Render content based on active section
+  const shouldShowGlobalError = error && activeSection !== 'budget';
+
   const renderContent = () => {
     switch (activeSection) {
       case 'budget':
         return renderBudgetSection();
       case 'analytics':
         return renderAnalyticsSection();
-      case 'income':
-        return renderIncomeSection();
       default:
         return renderBudgetSection();
     }
   };
 
-  const renderBudgetSection = () => (
-    <div className="space-y-6">
-      {/* Month/Year Filter */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-3">Filter by Month</h3>
-        <div className="flex gap-4">
-          <div>
-            <label htmlFor="month" className="block text-sm font-medium text-gray-700">Month</label>
-            <select
-              id="month"
-              value={month}
-              onChange={(e) => setMonth(parseInt(e.target.value))}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {new Date(0, i).toLocaleString('default', { month: 'long' })}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
-            <select
-              id="year"
-              value={year}
-              onChange={(e) => setYear(parseInt(e.target.value))}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              {Array.from({ length: 5 }, (_, i) => {
-                const yearOption = new Date().getFullYear() - 2 + i;
+  const renderBudgetSection = () => {
+    const loadingSteps = [
+      {
+        title: 'Syncing your latest transactions',
+        caption: 'Pulling budget, income, and expense data for this month.',
+      },
+      {
+        title: 'Analyzing category trends',
+        caption: 'Spotting the categories that need attention first.',
+      },
+      {
+        title: 'Preparing personalized guidance',
+        caption: 'Drafting action steps to keep your plan on track.',
+      },
+    ];
+
+    const categorySpending = chartData?.categorySpending ?? [];
+    const monthlyTotals = chartData?.monthlyTotals ?? { income: 0, expenses: 0 };
+    const incomeTotal = monthlyTotals.income || 0;
+    const expenseTotal = monthlyTotals.expenses || 0;
+    const netCashFlow = incomeTotal - expenseTotal;
+    const hasCashFlowData = incomeTotal > 0 || expenseTotal > 0;
+    const isBreakEven = Math.abs(netCashFlow) < 1;
+    const isSurplus = netCashFlow > 0 && !isBreakEven;
+    const cashFlowImpactLabel = isBreakEven
+      ? 'Balanced Month'
+      : `${isSurplus ? '+' : '-'}${formatCurrency(Math.abs(netCashFlow))} ${isSurplus ? 'Surplus' : 'Deficit'}`;
+    const cashFlowImpactClasses = isBreakEven
+      ? 'border border-indigo-100 bg-indigo-50 text-indigo-600'
+      : isSurplus
+        ? 'border border-emerald-100 bg-emerald-50 text-emerald-600'
+        : 'border border-rose-100 bg-rose-50 text-rose-600';
+    const cashFlowCopy = (() => {
+      if (!hasCashFlowData) {
+        return 'Add your income and expenses to see how your monthly cash flow is trending.';
+      }
+      if (isBreakEven) {
+        return 'Your spending matched your income this month. It’s a great moment to plan the next move for your savings.';
+      }
+      if (isSurplus) {
+        return `You're bringing in ${formatCurrency(incomeTotal)} and spending ${formatCurrency(expenseTotal)}. Great job building a surplus!`;
+      }
+      return `Your expenses were higher than your income this month. Let's see where you can rebalance.`;
+    })();
+
+    const sortedCategories = [...categorySpending].sort((a, b) => b.total - a.total);
+    const topCategory = sortedCategories[0];
+    const totalSpending = categorySpending.reduce((sum, item) => sum + (item.total || 0), 0);
+    const topCategoryShare = topCategory && totalSpending
+      ? Math.round((topCategory.total / totalSpending) * 100)
+      : 0;
+    const categoryCopy = topCategory
+      ? `${topCategory.category} was your biggest expense category this month, making up ${topCategoryShare}% of your spending.`
+      : 'We haven’t recorded any spending yet this month. Once you add transactions, we’ll spotlight where your money is going.';
+
+    const trackedBudgets = categorySpending.filter((item) => item.budget && Number(item.budget) > 0);
+    const performanceBreakdown = trackedBudgets.reduce(
+      (acc, item) => {
+        const ratio = item.budget ? item.total / item.budget : 0;
+        if (ratio >= 1.05) {
+          acc.over += 1;
+        } else if (ratio >= 0.9) {
+          acc.warning += 1;
+        } else {
+          acc.good += 1;
+        }
+        return acc;
+      },
+      { good: 0, warning: 0, over: 0 }
+    );
+    const totalTrackedBudgets = trackedBudgets.length;
+    const confidenceScore = totalTrackedBudgets
+      ? Math.max(0, Math.min(100, Math.round((performanceBreakdown.good / totalTrackedBudgets) * 100)))
+      : 60;
+    const confidenceTone = confidenceScore >= 80 ? 'emerald' : confidenceScore >= 60 ? 'amber' : 'slate';
+    const confidenceClassMap = {
+      emerald: 'border border-emerald-200 bg-emerald-50 text-emerald-600',
+      amber: 'border border-amber-200 bg-amber-50 text-amber-600',
+      slate: 'border border-slate-200 bg-slate-100 text-slate-600',
+    };
+    const budgetHealthCopy = (() => {
+      if (!totalTrackedBudgets) {
+        return 'Set a target for each category so we can keep an eye on how your spending lines up with your goals.';
+      }
+      if (performanceBreakdown.over > 0) {
+        return `${performanceBreakdown.over} ${performanceBreakdown.over === 1 ? 'category is' : 'categories are'} over budget. Let’s adjust allocations before the month ends.`;
+      }
+      if (performanceBreakdown.warning > 0) {
+        return `You're nearing the limit in ${performanceBreakdown.warning} ${performanceBreakdown.warning === 1 ? 'category' : 'categories'}. A small tweak keeps everything on track.`;
+      }
+      return "You're on track with every budget this month. Keep the momentum going!";
+    })();
+
+    const spendingByCategoryName = categorySpending.reduce((acc, item) => {
+      acc[item.category] = item;
+      return acc;
+    }, {});
+
+    const budgetSections = categories.map((category) => {
+      const record = spendingByCategoryName[category.name] || {};
+      const spent = record.total || 0;
+      const value = budgets[category.id] ?? '';
+      const numericValue = parseFloat(value) || 0;
+      const remaining = numericValue ? numericValue - spent : 0;
+      const quickSets = spent > 0
+        ? [
+            { label: 'Match spending', value: spent.toFixed(2) },
+            { label: 'Add 10%', value: (spent * 1.1).toFixed(2) },
+          ]
+        : [];
+
+      return {
+        id: String(category.id),
+        title: category.name,
+        spent,
+        value,
+        numericValue,
+        remaining,
+        quickSets,
+        highlighted: highlightCategoryId === category.id,
+        autoExpand: highlightCategoryId === category.id,
+        onValueChange: (next) => handleBudgetChange(category.id, next),
+        onQuickSet: (next) => handleBudgetChange(category.id, next),
+        onSave: () => handleSaveBudget(category.id),
+        isSaving: savingBudgetId === category.id,
+        registerInput: (node) => {
+          if (node) {
+            budgetInputRefs.current[category.id] = node;
+          }
+        },
+      };
+    });
+
+    const categoriesWithBudgets = budgetSections.filter((section) => section.numericValue > 0);
+    const manageBudgetsCopy = categoriesWithBudgets.length
+      ? `You have budgets for ${categoriesWithBudgets.length} of ${categories.length} categories. A quick tune-up keeps your plan intentional.`
+      : 'Creating a budget for each category is the best way to take control of your finances.';
+
+    const actionPillClass =
+      'inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50';
+
+    const categoryChartData = getCategoryChartData();
+    const incomeExpenseChartData = getIncomeExpenseChartData();
+    const budgetVsActualChartData = getBudgetVsActualChartData();
+
+    if (loading) {
+      return (
+        <div className="mt-6">
+          <div className="relative rounded-[32px] border border-white/40 bg-white/70 p-10 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-3 text-slate-700">
+              <ListChecks className="h-6 w-6 text-indigo-500" />
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-indigo-400">Preparing</p>
+                <h3 className="text-2xl font-semibold text-slate-900">Running your financial check-up</h3>
+              </div>
+            </div>
+            <div className="mt-8 space-y-5">
+              {loadingSteps.map((step, index) => {
+                const isCurrent = index === 0;
                 return (
-                  <option key={yearOption} value={yearOption}>
-                    {yearOption}
-                  </option>
+                  <div key={step.title} className="flex items-start gap-4">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        isCurrent
+                          ? 'border-2 border-indigo-200 bg-indigo-50 text-indigo-500 animate-pulse'
+                          : 'border border-slate-200 bg-white text-slate-300'
+                      }`}
+                    >
+                      {isCurrent ? <Sparkles className="h-5 w-5" /> : <Circle className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${isCurrent ? 'text-slate-800' : 'text-slate-500'}`}>
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-slate-400">{step.caption}</p>
+                    </div>
+                  </div>
                 );
               })}
-            </select>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="mt-6">
+          <div className="rounded-3xl border border-rose-200 bg-rose-50/80 p-8 shadow-sm">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-1 h-5 w-5 text-rose-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-rose-700">We couldn’t load your budgets</h3>
+                <p className="mt-2 text-sm text-rose-600">{error}</p>
+                <button
+                  onClick={fetchBudgetData}
+                  className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const CashIcon = isSurplus || isBreakEven ? TrendingUp : TrendingDown;
+
+    return (
+      <div className="space-y-8">
+        <div className="rounded-3xl border border-slate-100 bg-gradient-to-r from-indigo-100 via-white to-white px-8 py-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <Sparkles className="mt-1 h-6 w-6 text-indigo-500" />
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-indigo-500">Financial Check-up</p>
+              <h2 className="mt-1 text-2xl font-semibold text-slate-900">Your budgets at a glance</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                We combined your latest spending, income, and goals to highlight what needs attention right now.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <CashIcon className={`h-4 w-4 ${isSurplus || isBreakEven ? 'text-emerald-500' : 'text-rose-500'}`} />
+                  <span>Cash Flow</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Your Monthly Cash Flow</h3>
+                <p className="mt-2 text-sm text-slate-600">{cashFlowCopy}</p>
+              </div>
+              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${cashFlowImpactClasses}`}>
+                {cashFlowImpactLabel}
+              </span>
+            </div>
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-2 py-3">
+              <div ref={ieRef} className="min-h-[220px]">
+                {ieVisible ? (
+                  hasCashFlowData && incomeExpenseChartData ? (
+                    <IncomeExpenseChart chartData={incomeExpenseChartData} formatCurrency={formatCurrency} />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
+                      Add income and expenses to visualize your cash flow.
+                    </div>
+                  )
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/expenses')}
+                className={actionPillClass}
+              >
+                Review Expenses
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/savings')}
+                className={actionPillClass}
+              >
+                Go to Savings
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <PieChart className="h-4 w-4 text-indigo-500" />
+                  <span>Spending Breakdown</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Where Your Money Went</h3>
+                <p className="mt-2 text-sm text-slate-600">{categoryCopy}</p>
+              </div>
+            </div>
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-2 py-3">
+              <div ref={catRef} className="min-h-[220px]">
+                {catVisible ? (
+                  categoryChartData ? (
+                    <EnhancedCategorySpendingChart
+                      chartData={categoryChartData}
+                      formatCurrency={formatCurrency}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
+                      No spending yet for this month. Add expenses to unlock insights.
+                    </div>
+                  )
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={scrollToManageBudgets} className={actionPillClass}>
+                Adjust Budgets
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/expenses')}
+                className={actionPillClass}
+              >
+                View All Transactions
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg md:col-span-2">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <Target className="h-4 w-4 text-indigo-500" />
+                  <span>Budget Performance</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Budget Health Check</h3>
+                <p className="mt-2 text-sm text-slate-600">{budgetHealthCopy}</p>
+                <dl className="mt-4 grid grid-cols-3 gap-3 text-xs font-medium text-slate-500">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-emerald-600">
+                    <dt>On track</dt>
+                    <dd className="text-lg font-semibold">{performanceBreakdown.good}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2 text-amber-600">
+                    <dt>Near limit</dt>
+                    <dd className="text-lg font-semibold">{performanceBreakdown.warning}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2 text-rose-600">
+                    <dt>Over</dt>
+                    <dd className="text-lg font-semibold">{performanceBreakdown.over}</dd>
+                  </div>
+                </dl>
+              </div>
+              <span className={`inline-flex h-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${confidenceClassMap[confidenceTone]}`}>
+                Confidence: {confidenceScore}%
+              </span>
+            </div>
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-2 py-3">
+              <div ref={bvaRef} className="min-h-[240px]">
+                {bvaVisible ? (
+                  budgetVsActualChartData ? (
+                    <BudgetActualChart
+                      chartData={budgetVsActualChartData}
+                      formatCurrency={formatCurrency}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 text-sm text-slate-400">
+                      Set budgets for your categories to compare planned versus actual spending.
+                    </div>
+                  )
+                ) : (
+                  <SkeletonChart />
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={scrollToManageBudgets} className={actionPillClass}>
+                Fine-tune Budgets
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={manageBudgetsSectionRef}
+            className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-md transition-shadow hover:shadow-lg md:col-span-2"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <ListChecks className="h-4 w-4 text-indigo-500" />
+                  <span>Budgets</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">Set Your Spending Goals</h3>
+                <p className="mt-2 text-sm text-slate-600">{manageBudgetsCopy}</p>
+              </div>
+            </div>
+            <div className="mt-6">
+              <BudgetAccordion
+                sections={budgetSections}
+                formatCurrency={formatCurrency}
+              />
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Charts */}
-      {loading ? (
-        <div className="space-y-8 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-          <SkeletonCard />
-        </div>
-      ) : (
-        <div className="space-y-8 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Spending by Category Chart */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
-              <div className="h-80">
-                {(() => {
-                  const chartData = getCategoryChartData();
-                  if (!chartData) {
-                    return (
-                      <EmptyChartState 
-                        message="No category data available"
-                        suggestion="Add some expenses to see your spending breakdown by category"
-                        icon="🍰"
-                      />
-                    );
-                  }
-                  return (
-                    <Doughnut
-                      data={chartData}
-                      options={doughnutChartOptions}
-                    />
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Income vs Expenses Chart */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
-              <div className="h-80">
-                {(() => {
-                  const chartData = getIncomeExpenseChartData();
-                  if (!chartData) {
-                    return (
-                      <EmptyChartState 
-                        message="No income/expense data available"
-                        suggestion="Add income and expenses to see your financial overview"
-                        icon="💰"
-                      />
-                    );
-                  }
-                  return (
-                    <Bar data={chartData} options={barChartOptions} />
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
-
-          {/* Budget vs Actual Chart */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Budget vs. Actual Spending</h2>
-            <div className="h-80">
-              {(() => {
-                const chartData = getBudgetVsActualChartData();
-                if (!chartData) {
-                  return (
-                    <EmptyChartState 
-                      message="No budget comparison data available"
-                      suggestion="Set budgets for categories and add expenses to see budget performance"
-                      icon="🎯"
-                    />
-                  );
-                }
-                const budgetVsActualData = chartData;
-                return (
-                  <Bar
-                    data={budgetVsActualData}
-                    options={budgetVsActualChartOptions}
-                    plugins={[budgetVsActualLegend]}
-                  />
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Manage Budgets */}
-        <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Manage Budgets</h2>
-          <div className="space-y-4">
-            {categories.map(category => (
-              <div key={category.id} className="flex items-center gap-2">
-                <label htmlFor={`budget-${category.id}`} className="flex-1 text-sm font-medium text-gray-700 truncate">{category.name}</label>
-                <input
-                  type="number"
-                  id={`budget-${category.id}`}
-                  value={budgets[category.id] || ''}
-                  onChange={(e) => handleBudgetChange(category.id, e.target.value)}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                  placeholder="0.00"
-                />
-                <button onClick={() => handleSaveBudget(category.id)} className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Save</button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Manage Income */}
-        <div className="md:col-span-1">
-          <h2 className="text-xl font-semibold mb-4">Manage Income</h2>
-          <form onSubmit={handleAddIncome} className="bg-white p-6 rounded-lg shadow-md">
-            <div className="mb-4">
-              <label htmlFor="source" className="block text-sm font-medium text-gray-700">Income Source</label>
-              <input
-                type="text"
-                id="source"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="e.g., Primary Salary, Freelance"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
-              <input
-                type="number"
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="1000.00"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
-              <input
-                type="date"
-                id="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Add Income</button>
-          </form>
-        </div>
-
-        {/* Income List */}
-        <div className="md:col-span-1">
-          <h2 className="text-xl font-semibold mb-4">Income This Month</h2>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <ul className="space-y-4">
-              {incomes.map((income) => (
-                <li key={income.id} className="flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold">{income.source}</p>
-                    <p className="text-sm text-gray-500">{new Date(income.date).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg">{formatCurrency(income.amount)}</p>
-                    <button onClick={() => handleDeleteIncome(income.id)} className="text-red-500 hover:text-red-700 text-sm">Delete</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderAnalyticsSection = () => (
     <div className="space-y-6">
-      {/* Time Period Selector */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-3">Time Period</h3>
+      {/* <div className="glass-card hover-lift">
+        <h3 className="section-title gradient-text">Time Period</h3>
         <select
           value={timePeriod}
           onChange={(e) => setTimePeriod(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="form-select"
         >
           <option value="3months">Last 3 Months</option>
           <option value="6months">Last 6 Months</option>
           <option value="1year">Last Year</option>
           <option value="2years">Last 2 Years</option>
         </select>
-      </div>
-    
+      </div> */}
 
-      {/* Monthly Spending Trends */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Monthly Spending Trends</h2>
-        <div className="h-80">
-          {(() => {
-            const chartData = getMonthlyTrendChartData();
-            if (!chartData || chartData.labels.length === 0) {
-              return (
-                <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <div className="text-4xl mb-2">📈</div>
-                    <p>No spending data available for this period</p>
-                    <p className="text-sm mt-1">Add some expenses to see trends</p>
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <Line
-                data={chartData}
-                options={{
-                  ...commonChartOptions,
-                  plugins: {
-                    ...commonChartOptions.plugins,
-                    title: {
-                      display: false
-                    }
-                  }
-                }}
-              />
-            );
-          })()}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <SavingsRateTracker />
+        {/* <SavingsGoalsManager /> */}
       </div>
 
-      {/* Category Spending Trends */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Category Spending Trends</h2>
-        <div className="h-80">
-          {(() => {
-            const chartData = getCategoryTrendChartData();
-            if (!chartData || chartData.datasets.length === 0) {
-              return (
-                <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <div className="text-4xl mb-2">📊</div>
-                    <p>No category data available</p>
-                    <p className="text-sm mt-1">Add expenses with categories to see trends</p>
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <Line
-                data={chartData}
-                options={{
-                  ...commonChartOptions,
-                  plugins: {
-                    ...commonChartOptions.plugins,
-                    legend: {
-                      ...commonChartOptions.plugins.legend,
-                      position: window.innerWidth < 768 ? 'bottom' : 'top'
-                    }
-                  }
-                }}
-              />
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Income vs Expenses */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Income vs Expenses</h2>
-        <div className="h-80">
-          {(() => {
-            const chartData = getIncomeExpensesChartData();
-            if (!chartData || chartData.labels.length === 0) {
-              return (
-                <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <div className="text-4xl mb-2">💰</div>
-                    <p>No income/expense data available</p>
-                    <p className="text-sm mt-1">Add income and expenses to see comparison</p>
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <Line
-                data={chartData}
-                options={{
-                  ...commonChartOptions,
-                  plugins: {
-                    ...commonChartOptions.plugins,
-                    tooltip: {
-                      ...commonChartOptions.plugins.tooltip,
-                      callbacks: {
-                        label: function (context) {
-                          const value = formatCurrency(context.parsed.y);
-                          const surplus = context.parsed.y - (context.chart.data.datasets[1 - context.datasetIndex]?.data[context.dataIndex] || 0);
-                          const surplusText = context.datasetIndex === 0 ? ` (Surplus: ${formatCurrency(Math.abs(surplus))})` : '';
-                          return `${context.dataset.label}: ${value}${surplusText}`;
-                        }
-                      }
-                    }
-                  }
-                }}
-              />
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Budget Performance */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Budget Performance</h2>
-        <div className="h-80">
-          {(() => {
-            const chartData = getBudgetPerformanceChartData();
-            const performanceData = getBudgetPerformanceData();
-
-            if (!chartData || !performanceData || performanceData.length === 0) {
-              return (
-                <div className="h-full bg-gray-50 rounded flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <div className="text-4xl mb-2">🎯</div>
-                    <p>No budget data available</p>
-                    <p className="text-sm mt-1">Set budgets for categories to see performance comparison</p>
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <Bar
-                data={chartData}
-                options={{
-                  ...commonChartOptions,
-                  plugins: {
-                    ...commonChartOptions.plugins,
-                    tooltip: {
-                      ...commonChartOptions.plugins.tooltip,
-                      callbacks: {
-                        label: function (context) {
-                          const value = formatCurrency(context.parsed.y);
-                          const dataIndex = context.dataIndex;
-                          const performance = performanceData[dataIndex];
-                          const utilizationText = context.datasetIndex === 1 ?
-                            ` (${performance.utilization.toFixed(1)}% of budget)` : '';
-                          return `${context.dataset.label}: ${value}${utilizationText}`;
-                        }
-                      }
-                    }
-                  },
-                  scales: {
-                    ...commonChartOptions.scales,
-                    x: {
-                      ticks: {
-                        maxRotation: window.innerWidth < 768 ? 45 : 0,
-                        font: {
-                          size: window.innerWidth < 768 ? 10 : 11
-                        }
-                      }
-                    }
-                  }
-                }}
-              />
-            );
-          })()}
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Total Spending</h3>
-          <p className="text-3xl font-bold text-blue-600">
-            {chartData?.categorySpending ? 
-              formatCurrency(chartData.categorySpending.reduce((sum, cat) => sum + cat.total, 0)) : 
-              'No data'
-            }
-          </p>
-          <p className="text-sm text-gray-500 mt-1">This month</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Average per Category</h3>
-          <p className="text-3xl font-bold text-green-600">
-            {chartData?.categorySpending?.length > 0 ? 
-              formatCurrency(chartData.categorySpending.reduce((sum, cat) => sum + cat.total, 0) / chartData.categorySpending.length) : 
-              'No data'
-            }
-          </p>
-          <p className="text-sm text-gray-500 mt-1">Per category</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Budget Usage</h3>
-          <p className="text-3xl font-bold text-orange-600">
-            {chartData?.categorySpending ? 
-              (() => {
-                const totalSpent = chartData.categorySpending.reduce((sum, cat) => sum + cat.total, 0);
-                const totalBudget = chartData.categorySpending.reduce((sum, cat) => sum + (cat.budget || 0), 0);
-                const percentage = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
-                return `${percentage}%`;
-              })() : 
-              'No data'
-            }
-          </p>
-          <p className="text-sm text-gray-500 mt-1">Of total budget</p>
-        </div>
-      </div>
-
-      {/* Category Analysis */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4">Category Performance</h3>
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-2 bg-gray-200 rounded w-full"></div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {chartData?.categorySpending?.map((category) => {
-              const budgetUsage = category.budget > 0 ? (category.total / category.budget) * 100 : 0;
-              const isOverBudget = budgetUsage > 100;
-              const isWarning = budgetUsage > 90;
-              
-              return (
-                <div key={category.category} className="border-l-4 pl-4 py-3" style={{borderColor: isOverBudget ? '#ef4444' : isWarning ? '#eab308' : '#22c55e'}}>
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-medium">{category.category}</h4>
-                    <span className="text-sm font-semibold">{formatCurrency(category.total)}</span>
-                  </div>
-                  {category.budget > 0 && (
-                    <div>
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>Budget: {formatCurrency(category.budget)}</span>
-                        <span className={`font-medium ${
-                          isOverBudget ? 'text-red-600' : isWarning ? 'text-yellow-600' : 'text-green-600'
-                        }`}>
-                          {Math.round(budgetUsage)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            isOverBudget ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-green-500'
-                          }`}
-                          style={{width: `${Math.min(budgetUsage, 100)}%`}}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            }) || (
-              <div className="text-center py-8">
-                <div className="text-gray-400 text-4xl mb-4">📊</div>
-                <p className="text-gray-500">No category data available</p>
-                <p className="text-sm text-gray-400 mt-2">Add some expenses to see analytics</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Enhanced Savings Rate Tracking */}
-      <SavingsRateTracker 
-        timePeriod={timePeriod}
-        startDate={startDate}
-        endDate={endDate}
+      <BudgetOptimizationTips
+        categories={categories}
+        onAdjustBudget={handleFocusBudgetInput}
+        currentMonth={month}
+        currentYear={year}
       />
-
-      {/* Savings Goals Management */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SavingsGoalsManager />
-        
-        {/* Budget Optimization Tips */}
-        <BudgetOptimizationTips />
-      </div>
-      
-      {/* Additional Advanced Analytics Coming Soon */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
-        <h3 className="text-lg font-semibold mb-4 text-blue-900">More Advanced Analytics Coming Soon</h3>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3">
-            <span className="text-purple-600">📊</span>
-            <span className="text-blue-800">Predictive spending forecasts</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-green-600">🏆</span>
-            <span className="text-blue-800">Financial health scoring</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-blue-600">📈</span>
-            <span className="text-blue-800">Seasonal spending patterns</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderIncomeSection = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Add Income Form */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Add Income</h3>
-          <form onSubmit={handleAddIncome} className="space-y-4">
-            <div>
-              <label htmlFor="source" className="block text-sm font-medium text-gray-700">Income Source</label>
-              <input
-                type="text"
-                id="source"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="e.g., Primary Salary, Freelance"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
-              <input
-                type="number"
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="1000.00"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
-              <input
-                type="date"
-                id="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
-              Add Income
-            </button>
-          </form>
-        </div>
-
-        {/* Income List */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Income This Month</h3>
-          <div className="space-y-4">
-            {incomes.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No income recorded for this month</p>
-            ) : (
-              incomes.map((income) => (
-                <div key={income.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{income.source}</p>
-                    <p className="text-sm text-gray-500">{new Date(income.date).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg text-green-600">{formatCurrency(income.amount)}</p>
-                    <button 
-                      onClick={() => handleDeleteIncome(income.id)} 
-                      className="text-red-500 hover:text-red-700 text-sm transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 
   return (
-    <div className="container mx-auto p-4">
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Management</h1>
-        <p className="text-gray-600">Manage your budget, track performance, and analyze spending patterns</p>
-      </div>
-
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-          <div className="flex">
-            <div className="text-red-400">⚠️</div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-              <button 
-                onClick={fetchBudgetData}
-                className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
+    <div className="dashboard-content">
+      {/* Error card */}
+      {shouldShowGlobalError && (
+        <div className="glass-card error-card">
+          <div className="section-header">
+            <h3 className="section-title gradient-text">Error</h3>
           </div>
+          <p className="error-message-text">{error}</p>
+          <button onClick={fetchBudgetData} className="btn btn-secondary">
+            Retry
+          </button>
         </div>
       )}
 
-      {/* Horizontal Pill Navigation */}
-      <div className="mb-6">
-        <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeSection === section.id
-                  ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <span className="mr-2 text-lg">{section.icon}</span>
-              {section.label}
-            </button>
-          ))}
-        </nav>
+      {/* Tabs card */}
+      <div className="dashboard-header">
+        <Tabs value={activeSection} onValueChange={setActiveSection}>
+          <TabsList className="tabs-list-enhanced">
+            {sections.map((section) => (
+              <TabsTrigger key={section.id} value={section.id} className="tab-trigger-enhanced">
+                <span className="tab-icon">{section.icon}</span>
+                {section.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        <div className="dashboard-header-left">
+          <div className="dashboard-actions">
+            <MonthYearNavigator
+              month={month}
+              year={year}
+              onMonthChange={setMonth}
+              onYearChange={setYear}
+              className="w-auto"
+            />
+          </div>
+        </div>
       </div>
-
-      {/* Dynamic Content */}
       {renderContent()}
     </div>
   );

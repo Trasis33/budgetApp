@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Overview - Dark Glassmorphism</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #6366f1;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --background: #111827;
+      --card-bg: rgba(31, 41, 55, 0.7);
+      --border: rgba(255, 255, 255, 0.08);
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --blur: 20px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e1b4b 0%, #111827 100%);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        0 1px 2px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 2rem;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Improved glass shine effect */
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.05),
+        transparent
+      );
+      transition: 0.5s;
+      pointer-events: none;
+      animation: shine 8s infinite;
+    }
+    
+    @keyframes shine {
+      0% {
+        left: -100%;
+      }
+      20%, 100% {
+        left: 100%;
+      }
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .icon {
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 16px;
+      padding: 12px;
+      margin-right: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary-color);
+      fill: currentColor;
+    }
+    
+    .title h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.025em;
+    }
+    
+    .title p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    .progress-container {
+      margin-bottom: 1.75rem;
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    
+    .progress-label h2 {
+      font-size: 1rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    .progress-label span {
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.875rem;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 8px;
+      width: 91.3%;
+    }
+    
+    .budget-summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    
+    .budget-spent {
+      color: var(--text-primary);
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .budget-remaining {
+      color: var(--success-color);
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      text-align: right;
+    }
+    
+    .budget-spent small, .budget-remaining small {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      font-weight: 400;
+    }
+    
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .categories-title {
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+    
+    .view-all {
+      color: var(--primary-color);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    
+    .category-item {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    
+    .category-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 10px 20px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .category-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      border-radius: 10px;
+    }
+    
+    .category-icon.food {
+      background: rgba(239, 68, 68, 0.15);
+    }
+    
+    .category-icon.transport {
+      background: rgba(245, 158, 11, 0.15);
+    }
+    
+    .category-icon.entertainment {
+      background: rgba(16, 185, 129, 0.15);
+    }
+    
+    .category-icon.shopping {
+      background: rgba(139, 92, 246, 0.15);
+    }
+    
+    .category-icon.utilities {
+      background: rgba(14, 165, 233, 0.15);
+    }
+    
+    .category-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .category-info {
+      flex: 1;
+    }
+    
+    .category-name {
+      font-weight: 500;
+      color: var(--text-primary);
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .category-amount {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+    
+    .current-amount {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.875rem;
+    }
+    
+    .total-amount {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    
+    .category-progress {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .category-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    
+    .category-progress-fill.good {
+      background: linear-gradient(90deg, #059669, #10b981);
+    }
+    
+    .category-progress-fill.warning {
+      background: linear-gradient(90deg, #d97706, #f59e0b);
+    }
+    
+    .category-progress-fill.danger {
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+    }
+    
+    .over-budget {
+      color: var(--danger-color);
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .over-budget svg {
+      width: 14px;
+      height: 14px;
+      margin-right: 0.25rem;
+    }
+    
+    .summary-stats {
+      display: flex;
+      margin-top: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    
+    .stat {
+      flex: 1;
+      padding: 1rem 0.5rem;
+      text-align: center;
+      position: relative;
+    }
+    
+    .stat:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      height: 50%;
+      width: 1px;
+      background: var(--border);
+    }
+    
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+    }
+    
+    .stat-value.good {
+      color: var(--success-color);
+    }
+    
+    .stat-value.danger {
+      color: var(--danger-color);
+    }
+    
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+    
+    .adjust-button {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--text-primary);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 0.875rem;
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1.5rem;
+      gap: 0.5rem;
+    }
+    
+    .adjust-button:hover {
+      background: rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .adjust-button svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Small pulse animation on button */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+      }
+    }
+    
+    .adjust-button {
+      animation: pulse 2s infinite;
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .glass-card {
+        padding: 1.5rem;
+      }
+      
+      .header {
+        margin-bottom: 1.5rem;
+      }
+      
+      .title h1 {
+        font-size: 1.25rem;
+      }
+      
+      .budget-summary {
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-card">    
+    <!-- Header -->
+    <div class="header">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+        </svg>
+      </div>
+      <div class="title">
+        <h1>Budget Overview</h1>
+        <p>December 2024</p>
+      </div>
+    </div>
+    
+    <!-- Progress bar -->
+    <div class="progress-container">
+      <div class="progress-label">
+        <h2>Overall Progress</h2>
+        <span>91.3%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <!-- Budget summary -->
+    <div class="budget-summary">
+      <div class="budget-spent">
+        <small>SPENT</small>
+        $2,510.00
+      </div>
+      <div class="budget-remaining">
+        <small>REMAINING</small>
+        $240.00
+      </div>
+    </div>
+    
+    <div class="section-title">
+      <h3 class="categories-title">Categories</h3>
+      <a href="#" class="view-all">View All</a>
+    </div>
+    
+    <!-- Categories -->
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon food">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ef4444">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+            <line x1="6" y1="1" x2="6" y2="4"></line>
+            <line x1="10" y1="1" x2="10" y2="4"></line>
+            <line x1="14" y1="1" x2="14" y2="4"></line>
+          </svg>
+        </div>
+        <div class="category-info">
+          <div class="category-name">Food & Dining</div>
+          <div class="category-amount">
+            <span class="current-amount">$850.00</span>
+            <span class="total-amount">of $900.00</span>
+          </div>
+          <div class="category-progress">
+            <div class="category-progress-fill good" style="width: 94.4%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon transport">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#f59e0b">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+        </div>
+        <div class="category-info">
+          <div class="category-name">Transportation</div>
+          <div class="category-amount">
+            <span class="current-amount">$420.00</span>
+            <span class="total-amount">of $400.00</span>
+          </div>
+          <div class="category-progress">
+            <div class="category-progress-fill danger" style="width: 105%"></div>
+          </div>
+          <div class="over-budget">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            $20.00 over budget
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon entertainment">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#10b981">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+        </div>
+        <div class="category-info">
+          <div class="category-name">Entertainment</div>
+          <div class="category-amount">
+            <span class="current-amount">$380.00</span>
+            <span class="total-amount">of $500.00</span>
+          </div>
+          <div class="category-progress">
+            <div class="category-progress-fill good" style="width: 76%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon shopping">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#8b5cf6">
+            <path d="M20.38 3.46L16 2a4 4 0 0 1 1.46 3.46"></path>
+            <path d="M6.5 2L2 3.46A4 4 0 0 0 3.46 6.5"></path>
+            <path d="M4.56 17.5A4 4 0 0 0 7.5 21.44"></path>
+            <path d="M21.44 17.5A4 4 0 0 1 18.5 21.44"></path>
+            <path d="M18.5 2.5v4.96"></path>
+            <path d="M18.5 16.5v5"></path>
+            <path d="M5.5 2.5v4.96"></path>
+            <path d="M5.5 16.5v5"></path>
+            <path d="M2.5 5.5h4.96"></path>
+            <path d="M16.5 5.5h5"></path>
+            <path d="M2.5 18.5h4.96"></path>
+            <path d="M16.5 18.5h5"></path>
+          </svg>
+        </div>
+        <div class="category-info">
+          <div class="category-name">Shopping</div>
+          <div class="category-amount">
+            <span class="current-amount">$520.00</span>
+            <span class="total-amount">of $600.00</span>
+          </div>
+          <div class="category-progress">
+            <div class="category-progress-fill warning" style="width: 86.7%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="category-item">
+      <div class="category-header">
+        <div class="category-icon utilities">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0ea5e9">
+            <path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </div>
+        <div class="category-info">
+          <div class="category-name">Utilities</div>
+          <div class="category-amount">
+            <span class="current-amount">$340.00</span>
+            <span class="total-amount">of $350.00</span>
+          </div>
+          <div class="category-progress">
+            <div class="category-progress-fill warning" style="width: 97.1%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Summary stats -->
+    <div class="summary-stats">
+      <div class="stat">
+        <div class="stat-value good">4</div>
+        <div class="stat-label">ON TRACK</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value danger">1</div>
+        <div class="stat-label">OVER BUDGET</div>
+      </div>
+    </div>
+    
+    <!-- Action button -->
+    <button class="adjust-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 17a1 1 0 0 1-1-1c0-.5.38-1 1-1h18c.62 0 1 .5 1 1s-.38 1-1 1H3zm0-4a1 1 0 0 1-1-1c0-.5.38-1 1-1h18c.62 0 1 .5 1 1s-.38 1-1 1H3zm0-4a1 1 0 0 1-1-1c0-.5.38-1 1-1h18c.62 0 1 .5 1 1s-.38 1-1 1H3z"></path>
+      </svg>
+      Adjust Budgets
+    </button>
+  </div>
+</body>
+</html>

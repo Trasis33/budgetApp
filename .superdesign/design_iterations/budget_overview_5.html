@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Overview - Minimalist Neumorphic Glassmorphism</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Custom colors based on design-system.css */
+      --primary: #8b5cf6;
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #475569;
+      
+      /* Category colors */
+      --food: #ef4444;
+      --transport: #f59e0b;
+      --entertainment: #10b981;
+      --shopping: #8b5cf6;
+      --utilities: #06b6d4;
+      
+      /* UI colors */
+      --background: #f0f4f8;
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --shadow-color: rgba(148, 163, 184, 0.15);
+      --shadow-highlight: rgba(255, 255, 255, 0.8);
+      --border: rgba(255, 255, 255, 0.3);
+      --blur: 15px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+    
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border-radius: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 
+        10px 10px 20px var(--shadow-color),
+        -10px -10px 20px var(--shadow-highlight),
+        inset 0 0 0 1px var(--border);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 380px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Header section with title and progress */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+    
+    .title-section {
+      flex: 1;
+    }
+    
+    .title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+      color: var(--text-primary);
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    /* Circular progress indicator */
+    .budget-circle {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin-left: 1rem;
+      box-shadow: 
+        4px 4px 8px var(--shadow-color),
+        -4px -4px 8px var(--shadow-highlight);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .circle-bg {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      position: absolute;
+    }
+    
+    .circle-progress {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary) 91.3%, rgba(255, 255, 255, 0.1) 0);
+      position: absolute;
+      transform: rotate(-90deg);
+    }
+    
+    .circle-inner {
+      position: absolute;
+      width: 75%;
+      height: 75%;
+      background: white;
+      border-radius: 50%;
+      top: 12.5%;
+      left: 12.5%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--primary);
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Budget summary section */
+    .balance-section {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      box-shadow: 
+        inset 2px 2px 5px var(--shadow-color),
+        inset -2px -2px 5px var(--shadow-highlight);
+    }
+    
+    .balance-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .balance-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    
+    .balance-value {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    
+    .balance-value.remaining {
+      color: var(--success);
+    }
+    
+    /* Categories section header */
+    .categories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .categories-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    .view-all {
+      font-size: 0.75rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    /* Category items */
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+    
+    .category-item {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 0.875rem;
+      box-shadow: 
+        4px 4px 8px var(--shadow-color),
+        -4px -4px 8px var(--shadow-highlight);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .category-item:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* Removed color-coded top borders */
+    
+    
+    .category-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    
+    .category-icon-name {
+      display: flex;
+      align-items: center;
+    }
+    
+    .category-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      margin-right: 0.75rem;
+      box-shadow: 
+        2px 2px 4px var(--shadow-color),
+        -2px -2px 4px var(--shadow-highlight);
+    }
+    
+    .food {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--food);
+    }
+    
+    .transport {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--transport);
+    }
+    
+    .entertainment {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--entertainment);
+    }
+    
+    .shopping {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--shopping);
+    }
+    
+    .utilities {
+      background: rgba(6, 182, 212, 0.1);
+      color: var(--utilities);
+    }
+    
+    .category-name {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    .category-amount {
+      text-align: right;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 0.875rem;
+    }
+    
+    .category-amount span {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    
+    .over-amount {
+      color: var(--danger);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    
+    .over-amount svg {
+      width: 0.75rem;
+      height: 0.75rem;
+      margin-right: 0.25rem;
+    }
+    
+    .progress-bar {
+      height: 4px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+    
+    .progress-fill.good {
+      background: var(--success);
+    }
+    
+    .progress-fill.warning {
+      background: var(--warning);
+    }
+    
+    .progress-fill.danger {
+      background: var(--danger);
+    }
+    
+    /* Summary stats */
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      margin-top: 1.25rem;
+      box-shadow: 
+        inset 2px 2px 5px var(--shadow-color),
+        inset -2px -2px 5px var(--shadow-highlight);
+    }
+    
+    .summary-item {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .summary-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    
+    .summary-value.good {
+      color: var(--success);
+    }
+    
+    .summary-value.danger {
+      color: var(--danger);
+    }
+    
+    .summary-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    /* Action button */
+    .adjust-button {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--primary);
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem;
+      width: 100%;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 
+        4px 4px 8px var(--shadow-color),
+        -4px -4px 8px var(--shadow-highlight),
+        inset 0 0 0 1px rgba(139, 92, 246, 0.2);
+    }
+    
+    .adjust-button:hover {
+      background: rgba(139, 92, 246, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .adjust-button:active {
+      transform: translateY(1px);
+      box-shadow: 
+        2px 2px 4px var(--shadow-color),
+        -2px -2px 4px var(--shadow-highlight),
+        inset 0 0 0 1px rgba(139, 92, 246, 0.2);
+    }
+    
+    .adjust-button svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .glass-card {
+        padding: 1.5rem;
+      }
+      
+      .header {
+        margin-bottom: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-card">
+    <!-- Header with title and progress circle -->
+    <div class="header">
+      <div class="title-section">
+        <div class="title">Budget Overview</div>
+        <div class="subtitle">December 2024</div>
+      </div>
+      <div class="budget-circle">
+        <div class="circle-bg"></div>
+        <div class="circle-progress"></div>
+        <div class="circle-inner">91%</div>
+      </div>
+    </div>
+    
+    <!-- Budget summary -->
+    <div class="balance-section">
+      <div class="balance-item">
+        <div class="balance-label">Spent</div>
+        <div class="balance-value">$2,510</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-label">Remaining</div>
+        <div class="balance-value remaining">$240</div>
+      </div>
+    </div>
+    
+    <!-- Categories -->
+    <div class="categories-header">
+      <div class="categories-title">CATEGORIES</div>
+      <a href="#" class="view-all">View All</a>
+    </div>
+    
+    <div class="category-list">
+      <div class="category-item">
+        <div class="category-top">
+          <div class="category-icon-name">
+            <div class="category-icon food">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                <line x1="6" y1="1" x2="6" y2="4"></line>
+                <line x1="10" y1="1" x2="10" y2="4"></line>
+                <line x1="14" y1="1" x2="14" y2="4"></line>
+              </svg>
+            </div>
+            <div class="category-name">Food & Dining</div>
+          </div>
+          <div class="category-amount">
+            $850
+            <span>of $900</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill good" style="width: 94.4%"></div>
+        </div>
+      </div>
+      
+      <div class="category-item">
+        <div class="category-top">
+          <div class="category-icon-name">
+            <div class="category-icon transport">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+            </div>
+            <div class="category-name">Transportation</div>
+          </div>
+          <div class="category-amount">
+            $420
+            <span>of $400</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill danger" style="width: 105%"></div>
+        </div>
+        <div class="over-amount">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          $20 over budget
+        </div>
+      </div>
+      
+      <div class="category-item">
+        <div class="category-top">
+          <div class="category-icon-name">
+            <div class="category-icon entertainment">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+            </div>
+            <div class="category-name">Entertainment</div>
+          </div>
+          <div class="category-amount">
+            $380
+            <span>of $500</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill good" style="width: 76%"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Summary stats -->
+    <div class="summary">
+      <div class="summary-item">
+        <div class="summary-value good">4</div>
+        <div class="summary-label">On Track</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value danger">1</div>
+        <div class="summary-label">Over Budget</div>
+      </div>
+    </div>
+    
+    <!-- Action button -->
+    <button class="adjust-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+      </svg>
+      Adjust Budgets
+    </button>
+  </div>
+</body>
+</html>

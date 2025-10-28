@@ -8,10 +8,10 @@ module.exports = {
     },
     useNullAsDefault: true,
     migrations: {
-      directory: './migrations'
+      directory: path.join(__dirname, 'migrations')
     },
     seeds: {
-      directory: './seeds'
+      directory: path.join(__dirname, 'seeds')
     }
   },
   production: {
@@ -21,10 +21,10 @@ module.exports = {
     },
     useNullAsDefault: true,
     migrations: {
-      directory: './migrations'
+      directory: path.join(__dirname, 'migrations')
     },
     seeds: {
-      directory: './seeds'
+      directory: path.join(__dirname, 'seeds')
     }
   }
 };

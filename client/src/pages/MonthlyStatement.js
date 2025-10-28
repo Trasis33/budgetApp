@@ -19,16 +19,16 @@ const MonthlyStatement = () => {
 
   useEffect(() => {
     const fetchMonthlyData = async () => {
-      try {
+    try {
         const response = await api.get(`/summary/monthly/${year}/${month}`);
         setData(response.data);
-      } catch (err) {
+    } catch (err) {
         setError('Error fetching monthly statement data');
         console.error(err);
       } finally {
-        setLoading(false);
-      }
-    };
+      setLoading(false);
+    }
+  };
 
     fetchMonthlyData();
   }, [year, month]);
@@ -68,20 +68,20 @@ const MonthlyStatement = () => {
               <div key={userId} className="flex justify-between py-2">
                 <span className="font-medium">{balances[userId].name || `User ${userId}`} Paid:</span>
                 <span>{formatCurrency(amount)}</span>
-              </div>
+        </div>
             ))}
-          </div>
+        </div>
           <div>
             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Category Breakdown</h3>
             {Object.entries(categoryTotals).map(([category, total]) => (
               <div key={category} className="flex justify-between py-1">
                 <span>{category}</span>
                 <span className="font-medium">{formatCurrency(total)}</span>
-              </div>
+      </div>
             ))}
           </div>
         </div>
-
+        
         <div className="mb-8">
           <h3 className="text-xl font-semibold mb-4 border-b pb-2">Settlement</h3>
           <div className="text-center text-2xl font-bold p-4 bg-gray-100 rounded-lg">
@@ -95,14 +95,14 @@ const MonthlyStatement = () => {
           <h3 className="text-xl font-semibold mb-4 border-b pb-2">All Transactions</h3>
           <table className="min-w-full">
             <thead>
-              <tr>
+                <tr>
                 <th className="text-left py-2">Date</th>
                 <th className="text-left py-2">Description</th>
                 <th className="text-left py-2">Category</th>
                 <th className="text-left py-2">Paid By</th>
                 <th className="text-right py-2">Amount</th>
-              </tr>
-            </thead>
+                </tr>
+              </thead>
             <tbody>
               {expenses.map((expense) => (
                 <tr key={expense.id} className="border-b">
@@ -111,11 +111,11 @@ const MonthlyStatement = () => {
                   <td className="py-2">{expense.category_name}</td>
                   <td className="py-2">{expense.paid_by_name}</td>
                   <td className="py-2 text-right">{formatCurrency(expense.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
       </div>
     </div>
   );

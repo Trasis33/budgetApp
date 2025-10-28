@@ -1,14 +1,57 @@
+/**
+ * Budget Optimizer - Analysis Engine for Budget Optimization Tips
+ * Analyzes spending patterns, budget variances, and generates personalized recommendations
+ * for budget optimization and savings goals.
+ * 
+ * @class BudgetOptimizer
+ * @created 2025-07-12
+ * @filepath /Users/fredriklanga/Documents/projects2024/budgetApp/server/utils/budgetOptimizer.js
+ */
 // Budget Optimizer - Analysis Engine for Budget Optimization Tips
 // Created: 2025-07-12
 
 const knex = require('../db/database');
 
+/**
+ * Creates an instance of BudgetOptimizer.
+ * 
+ * @constructor
+ * @param {number} userId - The ID of the user to analyze
+ */
 class BudgetOptimizer {
-  constructor(userId) {
-    this.userId = userId;
+  constructor(context) {
+    if (typeof context === 'number') {
+      this.scope = 'mine';
+      this.viewerId = context;
+      this.partnerId = null;
+      this.payerIds = [context];
+      this.sharedOnly = false;
+    } else if (context && typeof context === 'object') {
+      this.scope = context.scope || 'ours';
+      this.viewerId = context.viewerId;
+      this.partnerId = context.counterpartId ?? null;
+      this.payerIds = Array.isArray(context.payerIds)
+        ? context.payerIds.filter((id) => id !== null && id !== undefined)
+        : [];
+      this.sharedOnly = Boolean(context.sharedOnly);
+    } else {
+      throw new Error('BudgetOptimizer requires a user context');
+    }
   }
 
-  // Analyze spending patterns and generate insights
+/**
+ * Analyzes spending patterns and generates comprehensive insights.
+ * Combines expense history, budgets, and savings goals to identify patterns,
+ * seasonal trends, and budget variances.
+ * 
+ * @async
+ * @returns {Promise<Object>} Analysis results containing:
+ *   - patterns: Spending pattern trends by category
+ *   - seasonalTrends: Seasonal spending factors by month
+ *   - budgetVariances: Differences between budgeted and actual spending
+ *   - recommendations: Array of optimization recommendations
+ * @throws {Error} If database queries fail
+ */
   async analyzeSpendingPatterns() {
     try {
       const expenses = await this.getExpenseHistory(12); // 12 months
@@ -31,11 +74,20 @@ class BudgetOptimizer {
     }
   }
 
-  // Get expense history for the last N months
-  // For couples' budget app: Include split expenses from both users + personal expenses from current user
+/**
+ * Retrieves expense history for the last N months.
+ * For couples' budget app: Includes split expenses from both users and personal expenses from current user.
+ * 
+ * @async
+ * @param {number} months - Number of months to retrieve
+ * @returns {Promise<Array<Object>>} Array of expense records grouped by category and month
+ * @throws {Error} If database query fails
+ */
   async getExpenseHistory(months) {
     try {
-      const userId = this.userId; // Capture userId for use in nested functions
+      if (!this.payerIds || this.payerIds.length === 0) {
+        return [];
+      }
       const rows = await knex('expenses')
         .select(
           'categories.name as category',
@@ -44,14 +96,14 @@ class BudgetOptimizer {
         )
         .join('categories', 'expenses.category_id', 'categories.id')
         .where('expenses.date', '>=', knex.raw(`date('now', '-${months} months')`))
-        .where(function() {
-          // Include personal expenses only for the current user
-          this.where(function() {
-            this.where('expenses.paid_by_user_id', userId)
-                .andWhere('expenses.split_type', '=', 'personal');
-          })
-          // Include all shared/split expenses regardless of who paid
-          .orWhere('expenses.split_type', '!=', 'personal');
+        .whereIn('expenses.paid_by_user_id', this.payerIds)
+        .modify((query) => {
+          if (this.sharedOnly) {
+            query.andWhere(function () {
+              this.whereNull('expenses.split_type')
+                .orWhereRaw("LOWER(expenses.split_type) NOT IN ('personal','personal_only')");
+            });
+          }
         })
         .groupBy(['categories.name', knex.raw("strftime('%Y-%m', expenses.date)")])
         .orderBy('month', 'desc');
@@ -63,7 +115,14 @@ class BudgetOptimizer {
     }
   }
 
-  // Get budget history for the last N months
+/**
+ * Retrieves budget history for the last N months.
+ * 
+ * @async
+ * @param {number} months - Number of months to retrieve
+ * @returns {Promise<Array<Object>>} Array of budget records grouped by category and month
+ * @throws {Error} If database query fails
+ */
   async getBudgetHistory(months) {
     try {
       const currentDate = new Date();
@@ -98,12 +157,25 @@ class BudgetOptimizer {
     }
   }
 
-  // Get savings goals
+/**
+ * Retrieves active savings goals for the user.
+ * 
+ * @async
+ * @returns {Promise<Array<Object>>} Array of active savings goals (empty array if table doesn't exist)
+ * @throws {Error} If database query fails (except missing table)
+ */
   async getSavingsGoals() {
     try {
+      let targetUserIds = [this.viewerId];
+      if (this.scope === 'partner' && this.partnerId) {
+        targetUserIds = [this.partnerId];
+      } else if (this.scope === 'ours' && this.partnerId) {
+        targetUserIds = [this.viewerId, this.partnerId];
+      }
+
       const rows = await knex('savings_goals')
         .select('*')
-        .where('user_id', this.userId)
+        .whereIn('user_id', targetUserIds)
         .where(function() {
           this.whereNull('target_date')
             .orWhere('target_date', '>', knex.raw("date('now')"));
@@ -118,7 +190,19 @@ class BudgetOptimizer {
     }
   }
 
-  // Generate specific optimization recommendations
+/**
+ * Generates specific optimization recommendations based on analysis results.
+ * Creates recommendations for:
+ * - Reducing overspending in categories
+ * - Reallocating unused budget
+ * - Preparing for seasonal spending spikes
+ * - Staying on track with savings goals
+ * 
+ * @param {Object} patterns - Spending pattern trends by category
+ * @param {Array<Object>} budgetVariances - Budget variance data
+ * @param {Array<Object>} savingsGoals - Active savings goals
+ * @returns {Array<Object>} Array of recommendation objects with type, title, description, impact_amount, and confidence_score
+ */
   generateRecommendations(patterns, budgetVariances, savingsGoals) {
     const recommendations = [];
 
@@ -166,22 +250,40 @@ class BudgetOptimizer {
 
     // 4. Goal-based optimization
     if (savingsGoals.length > 0) {
-      const shortfall = this.calculateGoalShortfall(savingsGoals[0]);
-      if (shortfall > 0) {
+      savingsGoals.forEach(goal => {
+        const plan = this.calculateGoalSavingsPlan(goal);
+        if (!plan) {
+          return;
+        }
+
         recommendations.push({
           type: 'goal_based',
-          title: 'Adjust spending to meet savings goal',
-          description: `To reach your goal of ${this.formatCurrency(savingsGoals[0].target_amount)}, consider reducing spending by ${this.formatCurrency(shortfall)} per month.`,
-          impact_amount: shortfall,
-          confidence_score: 0.9
+          goal_id: goal.id,
+          goal_name: goal.goal_name,
+          target_amount: plan.targetAmount,
+          current_amount: plan.currentAmount,
+          remaining_amount: plan.remainingAmount,
+          months_remaining: plan.monthsRemaining,
+          recommended_monthly: plan.recommendedMonthly,
+          monthly_needed: plan.monthlyNeeded,
+          title: goal.goal_name ? `Keep ${goal.goal_name} on track` : 'Keep your savings goal on track',
+          description: this.buildGoalRecommendationCopy(goal, plan),
+          impact_amount: plan.recommendedMonthly,
+          confidence_score: plan.confidence
         });
-      }
+      });
     }
 
     return recommendations;
   }
 
-  // Identify spending patterns (increasing/decreasing trends)
+/**
+ * Identifies spending patterns and trends for each category.
+ * Calculates trend direction (increasing/decreasing/stable) and enhanced trend metrics.
+ * 
+ * @param {Array<Object>} expenses - Expense history data
+ * @returns {Object} Category trends with data, trend direction, strength, and enhanced metrics
+ */
   identifyPatterns(expenses) {
     const categoryTrends = {};
     
@@ -213,7 +315,13 @@ class BudgetOptimizer {
     return categoryTrends;
   }
 
-  // Calculate linear trend
+/**
+ * Calculates linear trend (slope) from an array of values.
+ * Uses least squares method to determine trend direction and strength.
+ * 
+ * @param {Array<number>} values - Array of numeric values
+ * @returns {number} Slope value indicating trend direction and strength
+ */
   calculateTrend(values) {
     if (values.length < 2) return 0;
     
@@ -228,7 +336,23 @@ class BudgetOptimizer {
     return slope;
   }
 
-  // Calculate enhanced trend strength with detailed metrics
+/**
+ * Calculates enhanced trend strength with detailed metrics.
+ * Provides comprehensive trend analysis including volatility, confidence, and categorization.
+ * 
+ * @param {Array<number>} amounts - Array of spending amounts
+ * @param {number} rawTrend - Raw trend slope value
+ * @returns {Object} Enhanced trend analysis containing:
+ *   - category: Trend strength category (minimal/weak/moderate/strong/very_strong)
+ *   - normalizedStrength: Normalized trend strength as percentage
+ *   - percentageChange: Total percentage change from first to last value
+ *   - monthlyChange: Average monthly change in absolute terms
+ *   - volatility: Standard deviation of amounts
+ *   - confidence: Confidence score (0-100)
+ *   - description: Human-readable trend description
+ *   - dataPoints: Number of data points analyzed
+ *   - average: Average spending amount
+ */
   calculateEnhancedTrendStrength(amounts, rawTrend) {
     if (amounts.length < 2) {
       return {
@@ -299,7 +423,13 @@ class BudgetOptimizer {
     };
   }
 
-  // Detect seasonal patterns
+/**
+ * Detects seasonal spending patterns across all years.
+ * Calculates seasonal factors by comparing monthly averages to overall average.
+ * 
+ * @param {Array<Object>} expenses - Expense history data
+ * @returns {Object} Seasonal factors by month (1-12)
+ */
   detectSeasonalTrends(expenses) {
     const monthlyAverages = {};
     
@@ -326,7 +456,22 @@ class BudgetOptimizer {
     return seasonalFactors;
   }
 
-  // Analyze budget variances
+/**
+ * Analyzes variances between budgeted and actual spending.
+ * Calculates overage percentages and suggests reductions or identifies unused budget.
+ * 
+ * @param {Array<Object>} expenses - Expense history data
+ * @param {Array<Object>} budgets - Budget history data
+ * @returns {Array<Object>} Array of variance objects with:
+ *   - name: Category name
+ *   - month: Year-month string
+ *   - budgetAmount: Budgeted amount
+ *   - actualAmount: Actual spending
+ *   - variance: Variance ratio
+ *   - overagePercentage: Overage as percentage
+ *   - suggestedReduction: Suggested reduction amount
+ *   - unusedAmount: Unused budget amount
+ */
   analyzeBudgetVariances(expenses, budgets) {
     const variances = [];
     
@@ -347,39 +492,119 @@ class BudgetOptimizer {
     // Calculate variances
     Object.keys(budgetsByCategory).forEach(key => {
       const [category, month] = key.split('-');
-      const budgetAmount = budgetsByCategory[key];
-      const actualAmount = expensesByCategory[key] || 0;
-      const variance = (actualAmount - budgetAmount) / budgetAmount;
+      const rawBudget = Number(budgetsByCategory[key] || 0);
+      const rawActual = Number(expensesByCategory[key] || 0);
+      let variance = 0;
+      if (rawBudget > 0) {
+        variance = (rawActual - rawBudget) / rawBudget;
+      } else if (rawActual > 0) {
+        variance = 1;
+      }
       
       variances.push({
         name: category,
         month,
-        budgetAmount,
-        actualAmount,
+        budgetAmount: rawBudget,
+        actualAmount: rawActual,
         variance,
         overagePercentage: Math.max(0, variance * 100),
-        suggestedReduction: Math.max(0, actualAmount - budgetAmount),
-        unusedAmount: Math.max(0, budgetAmount - actualAmount)
+        suggestedReduction: Math.max(0, rawActual - rawBudget),
+        unusedAmount: Math.max(0, rawBudget - rawActual)
       });
     });
 
     return variances;
   }
 
-  // Calculate shortfall for savings goal
-  calculateGoalShortfall(goal) {
+/**
+ * Calculates savings plan for achieving a goal.
+ * Determines monthly savings needed and recommended based on target date and remaining amount.
+ * 
+ * @param {Object} goal - Savings goal object with target_amount, current_amount, and target_date
+ * @returns {Object|null} Savings plan with monthly recommendations and confidence, or null if goal is complete
+ */
+  calculateGoalSavingsPlan(goal) {
+    const targetAmount = Number(goal.target_amount || 0);
+    const currentAmount = Number(goal.current_amount || 0);
+    const remainingAmount = Math.max(0, targetAmount - currentAmount);
+
+    if (remainingAmount <= 0) {
+      return null;
+    }
+
     const today = new Date();
-    const targetDate = new Date(goal.target_date);
-    const monthsRemaining = Math.max(1, (targetDate.getFullYear() - today.getFullYear()) * 12 + targetDate.getMonth() - today.getMonth());
-    
-    const remainingAmount = goal.target_amount - goal.current_amount;
-    const monthlyRequired = remainingAmount / monthsRemaining;
-    
-    // Assuming current monthly savings of 0 for simplicity
-    return Math.max(0, monthlyRequired);
+    let monthsRemaining = null;
+
+    if (goal.target_date) {
+      const targetDate = new Date(goal.target_date);
+      if (!Number.isNaN(targetDate.getTime())) {
+        monthsRemaining = (targetDate.getFullYear() - today.getFullYear()) * 12 + (targetDate.getMonth() - today.getMonth());
+
+        // Include the current month if there is still time left in the target month
+        if (targetDate.getDate() >= today.getDate()) {
+          monthsRemaining += 1;
+        }
+      }
+    }
+
+    if (!monthsRemaining || monthsRemaining <= 0) {
+      monthsRemaining = 6; // Default horizon if no valid target date
+    }
+
+    const monthlyNeededRaw = remainingAmount / monthsRemaining;
+    const smoothingWindow = Math.max(monthsRemaining, 6);
+    const recommendedMonthlyRaw = remainingAmount / smoothingWindow;
+
+    const monthlyNeeded = Math.max(0, Math.round(monthlyNeededRaw * 100) / 100);
+    const recommendedMonthly = Math.max(0, Math.round(recommendedMonthlyRaw * 100) / 100);
+
+    const confidence = smoothingWindow >= 12 ? 0.92 : smoothingWindow >= 6 ? 0.88 : 0.82;
+
+    return {
+      targetAmount,
+      currentAmount,
+      remainingAmount,
+      monthsRemaining,
+      monthlyNeeded,
+      smoothingWindow,
+      recommendedMonthly,
+      confidence,
+      targetDate: goal.target_date || null
+    };
   }
 
-  // Format currency
+/**
+ * Builds human-readable recommendation copy for savings goals.
+ * Creates contextual messages based on time remaining and savings pace.
+ * 
+ * @param {Object} goal - Savings goal object
+ * @param {Object} plan - Calculated savings plan
+ * @returns {string} Formatted recommendation text
+ */
+  buildGoalRecommendationCopy(goal, plan) {
+    const { monthsRemaining, recommendedMonthly, monthlyNeeded, targetDate } = plan;
+    const monthsLabel = monthsRemaining === 1 ? 'month' : 'months';
+    const recommendedText = this.formatCurrency(recommendedMonthly);
+    const neededText = this.formatCurrency(monthlyNeeded);
+    const goalName = goal.goal_name || 'your savings goal';
+
+    if (monthsRemaining <= 2) {
+      return `Only ${monthsRemaining} ${monthsLabel} remain for ${goalName}. You'd need about ${neededText} each month to hit the target—consider setting aside at least ${recommendedText} or updating the target date.`;
+    }
+
+    if (targetDate) {
+      return `You have ${monthsRemaining} ${monthsLabel} until ${goalName} reaches its target (${new Date(targetDate).toLocaleDateString('en')}). Setting aside around ${recommendedText} each month keeps you on track (current pace requires ${neededText}).`;
+    }
+
+    return `Setting aside around ${recommendedText} each month will keep ${goalName} on track (target pace requires ${neededText}).`;
+  }
+
+/**
+ * Formats a number as currency in Swedish Krona (SEK).
+ * 
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
   formatCurrency(amount) {
     return new Intl.NumberFormat('sv-SE', {
       style: 'currency',

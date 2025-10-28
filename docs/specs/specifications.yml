@@ -1,0 +1,133 @@
+specifications:
+  functional_requirements:
+    - id: scope-001
+      description: When a logged-in partner selects a spending scope in the navbar, the application SHALL recalculate visible expense data to match that scope without requiring a page reload.
+      user_persona: Partnered household user
+      priority: high
+      status: drafted
+    - id: scope-002
+      description: The system SHALL persist the couple relationship by linking the active user with exactly one partner so scope calculations can differentiate "mine" and "partner" values.
+      user_persona: Partnered household user
+      priority: high
+      status: drafted
+    - id: scope-003
+      description: When a scope change occurs, the client SHALL broadcast the change via shared state so charts, tables, and summaries remain in sync.
+      user_persona: Partnered household user
+      priority: high
+      status: drafted
+    - id: scope-004
+      description: The API SHALL expose aggregated expense totals for each scope to support UI badges and analytics summaries.
+      user_persona: Partnered household user
+      priority: medium
+      status: drafted
+  edge_cases:
+    - id: scope-edge-001
+      description: Partner link missing or broken while user attempts to select "Partner" scope.
+      likelihood: 3
+      impact: 4
+      risk_score: 12
+      mitigation: Disable the scope option and surface a contextual helper guiding the user to reconnect accounts.
+    - id: scope-edge-002
+      description: Expense records missing paid_by_user_id or split metadata causing misclassification during aggregation.
+      likelihood: 2
+      impact: 5
+      risk_score: 10
+      mitigation: Validate inputs at API level and coerce nulls to safe defaults (treat as shared) while logging anomalies.
+    - id: scope-edge-003
+      description: Rapid scope toggles generating overlapping API requests and race conditions in UI state.
+      likelihood: 3
+      impact: 3
+      risk_score: 9
+      mitigation: Debounce or cancel in-flight fetches using AbortController within the expense data hook.
+  system_architecture:
+    tech_stack:
+      languages: [JavaScript]
+      frameworks: [React, Express]
+      database: SQLite (via Knex)
+      state_management: React Context
+      data_fetching: Axios
+    project_structure:
+      folders: [client/src/components/layout, client/src/context, client/src/hooks, server/routes, server/db/migrations]
+      naming_conventions: camelCase for hooks/utilities, PascalCase for components, snake_case for database columns
+      key_modules: [ScopeContext, ExpensesV2 page, Navbar component, expenses API routes]
+    component_architecture:
+      server:
+        framework: Express
+        modules:
+          - name: CoupleRoutes
+            responsibilities: Link partners, expose aggregated scope data
+          - name: ExpensesRoutes
+            responsibilities: CRUD + scope-filtered retrieval
+        threat_modeling:
+          - vulnerability: Unauthorized partner linking attempts
+            mitigation: Require authenticated user and verify partner existence before linking
+          - vulnerability: Inference of partner data via scope endpoint
+            mitigation: Ensure endpoints return only couple-linked data for the requesting user
+      client:
+        state_management: ScopeContext backed by localStorage for persistence across sessions
+        routing: React Router (unchanged)
+        type_definitions: JS objects with JSDoc annotations for scope payloads
+        threat_modeling:
+          - vulnerability: Stale cached partner data causing incorrect totals
+            mitigation: Invalidate cache on logout and when partner link changes
+          - vulnerability: XS leaks through query params
+            mitigation: Avoid reflecting scope in URL until sanitized semantics defined
+  feature_specifications:
+    - feature_id: feat-scope-selector
+      related_requirements: [scope-001, scope-002, scope-003, scope-004]
+      user_story: As a partner managing finances, I want to toggle between shared, personal, and partner expenses from the navbar so I can quickly inspect spending responsibilities without leaving the current view.
+      implementation_steps:
+        - Add database migration adding partner_id to users table with reciprocal constraint validation helper.
+        - Implement server endpoints to link partners and fetch aggregated totals per scope.
+        - Introduce ScopeContext to manage active scope and expose setter/hooks.
+        - Update Navbar scope selector to consume ScopeContext including disabled states when partner missing.
+        - Refactor expense consumers (ExpensesV2, dashboards) to filter data by active scope and request aggregated totals.
+      edge_cases:
+        - Attempting to select Partner scope without link should show helper and remain on previous scope.
+        - Switching scope while modal dialogs are open must not break focus or forms.
+        - API failures should surface toast and revert to last known good data.
+      validation_criteria: runTests: ["npm --prefix client test -- --watchAll=false"], manual: ["Verify scope toggle updates KPIs and tables", "Simulate missing partner link and confirm Partner button disabled"], api: ["Exercise new couple endpoint via curl"]
+      ui_ux: Maintain segmented control aesthetics, add disabled tooltip, ensure keyboard nav complies with WAI-ARIA tablist pattern
+  database_server_logic:
+    schema:
+      entities:
+        - name: users
+          fields: [id, name, email, password, partner_id, created_at, updated_at]
+        - name: expenses
+          fields: [id, date, amount, category_id, paid_by_user_id, split_type, split_ratio_user1, split_ratio_user2, description, recurring_expense_id]
+      relationships:
+        - description: users.partner_id references users.id enforcing a single partner link in both directions
+      migrations:
+        - name: add_partner_id_to_users
+          operations: addColumn partner_id, add unique constraint on sorted pair, backfill nulls
+    server_actions:
+      crud_operations:
+        - name: couple_link
+          method: POST
+          path: /api/couple/link
+          description: Link current user to partner via email or code
+        - name: couple_summary
+          method: GET
+          path: /api/couple/summary
+          description: Return aggregated totals per scope and connection metadata
+        - name: expenses_scope
+          method: GET
+          path: /api/expenses
+          description: Add optional scope query param to filter by payer/split type
+      integrations: []
+  security_compliance:
+    encryption: HTTPS via deployment, JWT auth for API, hashed passwords via bcrypt
+    compliance: GDPR awareness for personal data; limit partner info exposure
+    threat_modeling:
+      - vulnerability: Cross-user data leakage if partner link misconfigured
+        mitigation: Validate link reciprocity server-side and restrict scope queries to linked IDs
+      - vulnerability: Scope selection abuse via crafted API calls
+        mitigation: Ignore scope parameter unless user belongs to requested couple pair and fallback to shared scope
+  edge_cases_implementation:
+    obstacles: Need data migration for existing demo users; difference between seeded demo accounts vs production
+    constraints: Exactly two users supported; ensure migrations do not break assumption
+    scalability: Additional couples would require multi-tenant segregation (out of scope)
+    assumptions: Expenses table reliably records payer id and split metadata
+    critical_questions:
+      - How should personal expenses be identified when split_type missing?
+      - Should partner link workflow allow unlinking?

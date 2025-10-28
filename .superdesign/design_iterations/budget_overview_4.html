@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Overview - Neumorphic Glassmorphism</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6d28d9;
+      --primary-light: rgba(109, 40, 217, 0.1);
+      --background: #f0f4f8;
+      --card-bg: rgba(255, 255, 255, 0.5);
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border: rgba(203, 213, 225, 0.8);
+      --shadow-color: rgba(148, 163, 184, 0.15);
+      --shadow-highlight: rgba(255, 255, 255, 0.8);
+      --food: #f87171;
+      --transport: #fb923c;
+      --entertainment: #34d399;
+      --shopping: #a78bfa;
+      --utilities: #60a5fa;
+      --blur: 12px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #eff6ff 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    
+    .neumorphic-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border-radius: 24px;
+      box-shadow: 
+        10px 10px 20px var(--shadow-color),
+        -10px -10px 20px var(--shadow-highlight),
+        inset 0 0 0 1px var(--border);
+      padding: 2rem;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      box-shadow: 
+        4px 4px 8px var(--shadow-color),
+        -4px -4px 8px var(--shadow-highlight);
+    }
+    
+    .icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--primary);
+    }
+    
+    .title h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.025em;
+    }
+    
+    .title p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+    
+    .progress-container {
+      margin-bottom: 2rem;
+      position: relative;
+      padding: 1.5rem;
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 
+        inset 2px 2px 5px var(--shadow-color),
+        inset -2px -2px 5px var(--shadow-highlight);
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-label h2 {
+      font-size: 1.125rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+    
+    .progress-label span {
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+    
+    .progress-track {
+      height: 10px;
+      background: var(--background);
+      border-radius: 10px;
+      position: relative;
+      box-shadow: inset 2px 2px 5px var(--shadow-color);
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 91.3%;
+      background: linear-gradient(90deg, #8b5cf6, #6d28d9);
+      border-radius: 10px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .budget-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .budget-stat {
+      padding: 1.25rem;
+      border-radius: 16px;
+      box-shadow: 
+        6px 6px 12px var(--shadow-color),
+        -6px -6px 12px var(--shadow-highlight);
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .budget-stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    
+    .spent::before {
+      background: var(--text-secondary);
+    }
+    
+    .remaining::before {
+      background: #10b981;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    
+    .remaining .stat-value {
+      color: #10b981;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .view-all {
+      font-size: 0.875rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .categories {
+      display: grid;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    
+    .category-card {
+      padding: 1.25rem;
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 
+        6px 6px 12px var(--shadow-color),
+        -6px -6px 12px var(--shadow-highlight);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .category-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    
+    .food-category::before {
+      background: var(--food);
+    }
+    
+    .transport-category::before {
+      background: var(--transport);
+    }
+    
+    .entertainment-category::before {
+      background: var(--entertainment);
+    }
+    
+    .shopping-category::before {
+      background: var(--shopping);
+    }
+    
+    .utilities-category::before {
+      background: var(--utilities);
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .category-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      margin-right: 0.75rem;
+      box-shadow: 
+        3px 3px 6px var(--shadow-color),
+        -3px -3px 6px var(--shadow-highlight);
+    }
+    
+    .category-icon.food {
+      background: rgba(248, 113, 113, 0.1);
+      color: var(--food);
+    }
+    
+    .category-icon.transport {
+      background: rgba(251, 146, 60, 0.1);
+      color: var(--transport);
+    }
+    
+    .category-icon.entertainment {
+      background: rgba(52, 211, 153, 0.1);
+      color: var(--entertainment);
+    }
+    
+    .category-icon.shopping {
+      background: rgba(167, 139, 250, 0.1);
+      color: var(--shopping);
+    }
+    
+    .category-icon.utilities {
+      background: rgba(96, 165, 250, 0.1);
+      color: var(--utilities);
+    }
+    
+    .category-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .category-name {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    
+    .category-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 0.75rem;
+    }
+    
+    .category-spent {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+    
+    .category-budget {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .progress-container-mini {
+      position: relative;
+      height: 5px;
+      background: var(--background);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill-mini {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      transition: width 1s ease;
+      border-radius: 3px;
+    }
+    
+    .progress-fill-mini.food {
+      background: var(--food);
+      width: 94.4%;
+    }
+    
+    .progress-fill-mini.transport {
+      background: var(--transport);
+      width: 105%;
+    }
+    
+    .progress-fill-mini.entertainment {
+      background: var(--entertainment);
+      width: 76%;
+    }
+    
+    .progress-fill-mini.shopping {
+      background: var(--shopping);
+      width: 86.7%;
+    }
+    
+    .progress-fill-mini.utilities {
+      background: var(--utilities);
+      width: 97.1%;
+    }
+    
+    .over-budget {
+      color: var(--food);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .over-budget svg {
+      width: 14px;
+      height: 14px;
+      margin-right: 0.25rem;
+    }
+    
+    .summary-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    .stat-card {
+      padding: 1rem;
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 
+        6px 6px 12px var(--shadow-color),
+        -6px -6px 12px var(--shadow-highlight);
+      text-align: center;
+    }
+    
+    .stat-card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    
+    .on-track {
+      color: var(--entertainment);
+    }
+    
+    .over {
+      color: var(--food);
+    }
+    
+    .stat-card-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .adjust-button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 1rem;
+      width: 100%;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 2rem;
+      box-shadow: 
+        6px 6px 12px var(--shadow-color),
+        -6px -6px 12px var(--shadow-highlight),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .adjust-button:hover {
+      transform: translateY(-2px);
+      background: #5b21b6;
+    }
+    
+    .adjust-button:active {
+      transform: translateY(1px);
+      box-shadow: 
+        2px 2px 5px var(--shadow-color),
+        -2px -2px 5px var(--shadow-highlight),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+    
+    .adjust-button svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    @media (max-width: 480px) {
+      .neumorphic-card {
+        padding: 1.5rem;
+      }
+      
+      .header {
+        margin-bottom: 2rem;
+      }
+      
+      .budget-stats {
+        gap: 0.75rem;
+      }
+      
+      .budget-stat {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="neumorphic-card">
+    <!-- Header with title and icon -->
+    <div class="header">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+        </svg>
+      </div>
+      <div class="title">
+        <h1>Budget Overview</h1>
+        <p>December 2024</p>
+      </div>
+    </div>
+    
+    <!-- Progress bar -->
+    <div class="progress-container">
+      <div class="progress-label">
+        <h2>Overall Progress</h2>
+        <span>91.3%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <!-- Budget stats -->
+    <div class="budget-stats">
+      <div class="budget-stat spent">
+        <div class="stat-label">Spent</div>
+        <div class="stat-value">$2,510</div>
+      </div>
+      <div class="budget-stat remaining">
+        <div class="stat-label">Remaining</div>
+        <div class="stat-value">$240</div>
+      </div>
+    </div>
+    
+    <!-- Categories section -->
+    <div class="section-header">
+      <div class="section-title">Categories</div>
+      <a href="#" class="view-all">View All</a>
+    </div>
+    
+    <!-- Category cards -->
+    <div class="categories">
+      <div class="category-card food-category">
+        <div class="category-header">
+          <div class="category-icon food">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+          </div>
+          <div class="category-name">Food & Dining</div>
+        </div>
+        <div class="category-details">
+          <div class="category-spent">$850</div>
+          <div class="category-budget">of $900</div>
+        </div>
+        <div class="progress-container-mini">
+          <div class="progress-fill-mini food"></div>
+        </div>
+      </div>
+      
+      <div class="category-card transport-category">
+        <div class="category-header">
+          <div class="category-icon transport">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+          </div>
+          <div class="category-name">Transportation</div>
+        </div>
+        <div class="category-details">
+          <div class="category-spent">$420</div>
+          <div class="category-budget">of $400</div>
+        </div>
+        <div class="progress-container-mini">
+          <div class="progress-fill-mini transport"></div>
+        </div>
+        <div class="over-budget">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          $20 over budget
+        </div>
+      </div>
+      
+      <div class="category-card entertainment-category">
+        <div class="category-header">
+          <div class="category-icon entertainment">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="10 8 16 12 10 16 10 8"></polygon>
+            </svg>
+          </div>
+          <div class="category-name">Entertainment</div>
+        </div>
+        <div class="category-details">
+          <div class="category-spent">$380</div>
+          <div class="category-budget">of $500</div>
+        </div>
+        <div class="progress-container-mini">
+          <div class="progress-fill-mini entertainment"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Summary stats -->
+    <div class="summary-stats">
+      <div class="stat-card">
+        <div class="stat-card-value on-track">4</div>
+        <div class="stat-card-label">On Track</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value over">1</div>
+        <div class="stat-card-label">Over Budget</div>
+      </div>
+    </div>
+    
+    <!-- Action button -->
+    <button class="adjust-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M13.5 6H10V3h3.5v3zm0 7H10v-3h3.5v3zM19 3h-3.5v3H19V3zm0 7h-3.5v-3H19v3zm0 7h-3.5v-3H19v7zm-5.5 0H10v-3h3.5v3zM8 3H4.5v3H8V3zm0 7H4.5v-3H8v3zm0 7H4.5v-3H8v3z"></path>
+      </svg>
+      Adjust Budgets
+    </button>
+  </div>
+</body>
+</html>

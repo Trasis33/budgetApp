@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spending Patterns Analysis - Enhanced UX Design</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      /* Design system colors from budget_overview_5.html */
+      --primary: #8b5cf6;
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #475569;
+      
+      /* Category colors */
+      --mortgage: #3b82f6;
+      --transportation: #ef4444;
+      --utilities: #06b6d4;
+      --healthcare: #f59e0b;
+      --kids-clothes: #8b5cf6;
+      --groceries: #10b981;
+      
+      /* UI colors */
+      --background: #f0f4f8;
+      --card-bg: rgba(255, 255, 255, 0.33);
+      --shadow-color: rgba(148, 163, 184, 0.15);
+      --shadow-highlight: rgba(255, 255, 255, 0.8);
+      --border: rgba(255, 255, 255, 0.3);
+      --blur: 17px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      min-height: 100vh;
+      background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
+      color: var(--text-primary);
+      padding: 2rem;
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .main-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* Visual container wrapper */
+    .visual-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 
+        15px 15px 30px var(--shadow-color),
+        -15px -15px 30px var(--shadow-highlight),
+        inset 0 0 0 1px var(--border);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .visual-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    }
+    
+    .visual-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    }
+    
+    /* Enhanced glassmorphism card */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 
+        10px 10px 20px var(--shadow-color),
+        -10px -10px 20px var(--shadow-highlight),
+        inset 0 0 0 1px var(--border);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    }
+    
+    .glass-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    }
+    
+    /* Header section */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .title-section h1 {
+      font-size: 1.5rem !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .time-filter {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 0.25rem;
+      box-shadow: inset 2px 2px 5px var(--shadow-color);
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .filter-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 2px 2px 4px var(--shadow-color);
+    }
+    
+    /* Chart section */
+    .chart-section {
+      margin-bottom: 2rem;
+    }
+    
+    .chart-container {
+      height: 300px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: inset 2px 2px 5px var(--shadow-color);
+    }
+    
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 
+        4px 4px 8px var(--shadow-color),
+        -4px -4px 8px var(--shadow-highlight);
+      transition: transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .category-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .category-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 
+        2px 2px 4px var(--shadow-color),
+        -2px -2px 4px var(--shadow-highlight);
+    }
+    
+    .mortgage-icon { background: rgba(59, 130, 246, 0.1); color: var(--mortgage); }
+    .transportation-icon { background: rgba(239, 68, 68, 0.1); color: var(--transportation); }
+    .utilities-icon { background: rgba(6, 182, 212, 0.1); color: var(--utilities); }
+    .healthcare-icon { background: rgba(245, 158, 11, 0.1); color: var(--healthcare); }
+    .kids-clothes-icon { background: rgba(139, 92, 246, 0.1); color: var(--kids-clothes); }
+    .groceries-icon { background: rgba(16, 185, 129, 0.1); color: var(--groceries); }
+    
+    .category-name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+    
+    .trend-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+    
+    .trend-increasing {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+    
+    .trend-stable {
+      background: rgba(6, 182, 212, 0.1);
+      color: var(--secondary);
+    }
+    
+    .trend-insufficient {
+      background: rgba(148, 163, 184, 0.1);
+      color: var(--text-muted);
+    }
+    
+    .stat-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .metric {
+      text-align: center;
+    }
+    
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    
+    .metric-value {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .confidence-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    
+    .confidence-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    
+    .confidence-high { background: var(--success); }
+    .confidence-medium { background: var(--warning); }
+    .confidence-low { background: var(--danger); }
+    
+    .insight-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.4;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .visual-container {
+        padding: 1.5rem;
+      }
+      
+      .glass-card {
+        padding: 1.5rem;
+      }
+      
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-container {
+        height: 250px;
+      }
+    }
+    
+    /* Loading and empty states */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+      font-size: 1.25rem !important;
+      font-weight: 600 !important;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .empty-state p {
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="visual-container">
+      <!-- Main Analysis Card -->
+      <div class="glass-card">
+      <!-- Header -->
+      <div class="header">
+        <div class="title-section">
+          <h1>📊 Spending Patterns Analysis</h1>
+          <div class="subtitle">Spending Trends by Category</div>
+        </div>
+        <div class="time-filter">
+          <button class="filter-btn active">5M</button>
+          <button class="filter-btn">6M</button>
+          <button class="filter-btn">1Y</button>
+        </div>
+      </div>
+      
+      <!-- Chart Section -->
+      <div class="chart-section">
+        <div class="chart-container">
+          <canvas id="spendingChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Category Statistics Grid -->
+    <div class="stats-grid">
+      <!-- Mortgage -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="category-info">
+            <div class="category-icon mortgage-icon">🏠</div>
+            <div class="category-name">Mortgage</div>
+          </div>
+          <div class="trend-indicator trend-increasing">
+            ↗ increasing
+          </div>
+        </div>
+        
+        <div class="stat-metrics">
+          <div class="metric">
+            <div class="metric-label">Strength</div>
+            <div class="metric-value">0.4%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Change</div>
+            <div class="metric-value">0%</div>
+          </div>
+        </div>
+        
+        <div class="confidence-bar">
+          <div class="confidence-fill confidence-medium" style="width: 62%"></div>
+        </div>
+        
+        <div class="insight-text">
+          Very small change, spending is relatively stable
+        </div>
+      </div>
+      
+      <!-- Transportation -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="category-info">
+            <div class="category-icon transportation-icon">🚗</div>
+            <div class="category-name">Transportation</div>
+          </div>
+          <div class="trend-indicator trend-increasing">
+            ↗ increasing
+          </div>
+        </div>
+        
+        <div class="stat-metrics">
+          <div class="metric">
+            <div class="metric-label">Strength</div>
+            <div class="metric-value">2.4%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Change</div>
+            <div class="metric-value">0%</div>
+          </div>
+        </div>
+        
+        <div class="confidence-bar">
+          <div class="confidence-fill confidence-medium" style="width: 66%"></div>
+        </div>
+        
+        <div class="insight-text">
+          Small change, minor trend detected
+        </div>
+      </div>
+      
+      <!-- Utilities -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="category-info">
+            <div class="category-icon utilities-icon">⚡</div>
+            <div class="category-name">Utilities</div>
+          </div>
+          <div class="trend-indicator trend-stable">
+            → stable
+          </div>
+        </div>
+        
+        <div class="stat-metrics">
+          <div class="metric">
+            <div class="metric-label">Strength</div>
+            <div class="metric-value">0%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Change</div>
+            <div class="metric-value">0%</div>
+          </div>
+        </div>
+        
+        <div class="confidence-bar">
+          <div class="confidence-fill confidence-medium" style="width: 61%"></div>
+        </div>
+        
+        <div class="insight-text">
+          Very small change, spending is relatively stable
+        </div>
+      </div>
+      
+      <!-- Healthcare -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="category-info">
+            <div class="category-icon healthcare-icon">🏥</div>
+            <div class="category-name">Healthcare</div>
+          </div>
+          <div class="trend-indicator trend-stable">
+            → stable
+          </div>
+        </div>
+        
+        <div class="stat-metrics">
+          <div class="metric">
+            <div class="metric-label">Strength</div>
+            <div class="metric-value">0%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Change</div>
+            <div class="metric-value">0%</div>
+          </div>
+        </div>
+        
+        <div class="confidence-bar">
+          <div class="confidence-fill confidence-low" style="width: 0%"></div>
+        </div>
+        
+        <div class="insight-text">
+          Not enough data to calculate trend
+        </div>
+      </div>
+      
+      <!-- Kids Clothes -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="category-info">
+            <div class="category-icon kids-clothes-icon">👕</div>
+            <div class="category-name">Kids Clothes</div>
+          </div>
+          <div class="trend-indicator trend-increasing">
+            ↗ increasing
+          </div>
+        </div>
+        
+        <div class="stat-metrics">
+          <div class="metric">
+            <div class="metric-label">Strength</div>
+            <div class="metric-value">17.5%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Change</div>
+            <div class="metric-value">-60%</div>
+          </div>
+        </div>
+        
+        <div class="confidence-bar">
+          <div class="confidence-fill confidence-medium" style="width: 56%"></div>
+        </div>
+        
+        <div class="insight-text">
+          Significant change, strong trend detected
+        </div>
+      </div>
+      
+      <!-- Groceries -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="category-info">
+            <div class="category-icon groceries-icon">🛒</div>
+            <div class="category-name">Groceries</div>
+          </div>
+          <div class="trend-indicator trend-stable">
+            → stable
+          </div>
+        </div>
+        
+        <div class="stat-metrics">
+          <div class="metric">
+            <div class="metric-label">Strength</div>
+            <div class="metric-value">0%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Change</div>
+            <div class="metric-value">0%</div>
+          </div>
+        </div>
+        
+        <div class="confidence-bar">
+          <div class="confidence-fill confidence-low" style="width: 0%"></div>
+        </div>
+        
+        <div class="insight-text">
+          Not enough data to calculate trend
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample data for the chart
+    const chartData = {
+      labels: ['2025-03', '2025-04', '2025-05', '2025-06', '2025-07'],
+      datasets: [
+        {
+          label: 'Mortgage',
+          data: [10000, 10000, 10000, 10000, 10000],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Transportation',
+          data: [5500, 5500, 5500, 7000, 5500],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Utilities',
+          data: [500, 500, 500, 500, 500],
+          borderColor: '#06b6d4',
+          backgroundColor: 'rgba(6, 182, 212, 0.1)',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Healthcare',
+          data: [0, 0, 0, 0, 0],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Kids Clothes',
+          data: [2500, 1000, 13000, 1000, 0],
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ]
+    };
+
+    // Chart configuration
+    const config = {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                family: 'Plus Jakarta Sans',
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            titleColor: '#1e293b',
+            bodyColor: '#64748b',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' kr';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: 'rgba(203, 213, 225, 0.3)',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#64748b',
+              font: {
+                family: 'Plus Jakarta Sans',
+                size: 11
+              }
+            }
+          },
+          y: {
+            grid: {
+              color: 'rgba(203, 213, 225, 0.3)',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#64748b',
+              font: {
+                family: 'Plus Jakarta Sans',
+                size: 11
+              },
+              callback: function(value) {
+                return value.toLocaleString() + ' kr';
+              }
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    };
+
+    // Initialize chart
+    const ctx = document.getElementById('spendingChart').getContext('2d');
+    new Chart(ctx, config);
+
+    // Time filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
