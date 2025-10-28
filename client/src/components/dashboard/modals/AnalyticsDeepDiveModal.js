@@ -26,9 +26,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ComposedChart,
   Legend,
-  Line,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -61,7 +59,7 @@ const chartPalette = [
 ];
 
 const chartGridStroke = '#e2e8f0';
-const chartTickStyle = { fill: '#475569', fontSize: 12, fontWeight: 500 };
+const chartTickStyle = { fill: '#94a3b8', fontSize: 11, fontWeight: 500 };
 const axisProps = { axisLine: false, tickLine: false };
 
 const formatMonthLabel = (value) => {
@@ -397,6 +395,28 @@ const savingsTrendData = useMemo(() => monthlyDetail.map((row) => ({
     savingsAmount: row.net
   })), [monthlyDetail]);
 
+const savingsRateGradientOffset = useMemo(() => {
+    if (!savingsTrendData.length) {
+      return 1;
+    }
+    const values = savingsTrendData.map((row) => toNumber(row.savingsRate));
+    const dataMax = Math.max(...values);
+    const dataMin = Math.min(...values);
+
+    if (dataMax <= 0) {
+      return 0;
+    }
+    if (dataMin >= 0) {
+      return 1;
+    }
+
+    const offset = dataMax / (dataMax - dataMin);
+    if (!Number.isFinite(offset)) {
+      return 0.5;
+    }
+    return Math.max(0, Math.min(1, offset));
+  }, [savingsTrendData]);
+
   const categoryTotals = useMemo(() => {
     const totals = new Map();
     monthlyDetail.forEach((row) => {
@@ -656,51 +676,30 @@ const contributionSummary = useMemo(() => {
                     <CardContent className="px-2 pb-6 pt-4 md:px-4">
                       <div className="h-80 rounded-3xl border border-slate-100 bg-slate-50/80 p-4 shadow-inner">
                         <ResponsiveContainer width="100%" height="100%">
-                          <ComposedChart data={savingsTrendData} margin={{ top: 30, right: 24, bottom: 8, left: 18 }}>
-                          <defs>
-                            <linearGradient id="savingsAmountGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#0EA5E9" stopOpacity={0.48} />
-                              <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid stroke={chartGridStroke} strokeDasharray="4 6" />
-                          <XAxis dataKey="month" tick={chartTickStyle} {...axisProps} />
-                          <YAxis
-                            yAxisId="left"
-                            tickFormatter={(value) => `${value}%`}
-                            tick={chartTickStyle}
-                            {...axisProps}
-                          />
-                          <YAxis
-                            yAxisId="right"
-                            orientation="right"
-                            tickFormatter={(value) => formatCurrency(value)}
-                            tick={chartTickStyle}
-                            {...axisProps}
-                          />
-                          <Tooltip content={<SavingsTooltip />} />
-                          <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                          <Bar
-                            yAxisId="right"
-                            dataKey="savingsAmount"
-                            name="Amount saved"
-                            fill="url(#savingsAmountGradient)"
-                            stroke="#0EA5E9"
-                            strokeWidth={1.5}
-                            radius={[12, 12, 4, 4]}
-                            maxBarSize={36}
-                          />
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="savingsRate"
-                            name="Savings rate"
-                            stroke="#6366F1"
-                            strokeWidth={3}
-                            dot={{ r: 4, stroke: '#a6bafc', strokeWidth: 2 }}
-                            activeDot={{ r: 6, strokeWidth: 2, fill: '#6366F1', stroke: '#EEF2FF' }}
-                          />
-                        </ComposedChart>
+                          <AreaChart data={savingsTrendData} margin={{ top: 20, right: 24, bottom: 8, left: 18 }}>
+                            <defs>
+                              <linearGradient id="savingsRateGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stopColor="#10b981" stopOpacity={0.3} />
+                                <stop offset={savingsRateGradientOffset} stopColor="#10b981" stopOpacity={0.12} />
+                                <stop offset={savingsRateGradientOffset} stopColor="#F92916FF" stopOpacity={0.12} />
+                                <stop offset="1" stopColor="#F92916FF" stopOpacity={0.28} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke={chartGridStroke} strokeDasharray="4 6" />
+                            <XAxis dataKey="month" tick={chartTickStyle} {...axisProps} />
+                            <YAxis tickFormatter={(value) => `${value}%`} tick={chartTickStyle} {...axisProps} />
+                            <Tooltip content={<SavingsTooltip />} />
+                            <Area
+                              type="monotone"
+                              dataKey="savingsRate"
+                              name="Savings rate"
+                              stroke="#10b981"
+                              strokeWidth={2.5}
+                              fill="url(#savingsRateGradient)"
+                              dot={false}
+                              activeDot={{ r: 5, fill: '#10b981' }}
+                            />
+                          </AreaChart>
                         </ResponsiveContainer>
                       </div>
                     </CardContent>
@@ -820,15 +819,15 @@ const contributionSummary = useMemo(() => {
                       </CardHeader>
                       <CardContent className="grid gap-4 px-4 pb-6">
                         {categoryPieData.length ? (
-                          <div className="flex flex-col gap-4">
-                            <div className="h-48 rounded-3xl border border-slate-100 bg-slate-50/80 p-4 shadow-inner">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div className="h-64 rounded-3xl border border-slate-100 bg-slate-50/80 p-4 shadow-inner">
                               <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                   <defs>
                                     {categoryPieData.map((category, index) => (
                                       <linearGradient key={category.name} id={`category-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={category.color} stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor={category.color} stopOpacity={0.25} />
+                                        <stop offset="0%" stopColor={category.color} stopOpacity={0.85} />
+                                        <stop offset="100%" stopColor={category.color} stopOpacity={0.3} />
                                       </linearGradient>
                                     ))}
                                   </defs>
@@ -836,13 +835,14 @@ const contributionSummary = useMemo(() => {
                                     data={categoryPieData}
                                     dataKey="value"
                                     nameKey="name"
-                                    innerRadius={50}
-                                    outerRadius={90}
+                                    innerRadius={60}
+                                    outerRadius={100}
                                     paddingAngle={2}
                                     stroke="#fff"
+                                    strokeWidth={2}
                                   >
                                     {categoryPieData.map((entry, index) => (
-                                      <Cell key={entry.name} fill={`url(#category-${index})`} stroke={entry.color} />
+                                      <Cell key={entry.name} fill={`url(#category-${index})`} stroke="#fff" strokeWidth={2} />
                                     ))}
                                   </Pie>
                                   <Tooltip content={<CategoryPieTooltip />} />
@@ -922,7 +922,7 @@ const contributionSummary = useMemo(() => {
                           <defs>
                             {areaCategoryNames.map((name, index) => (
                               <linearGradient key={name} id={`trend-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={chartPalette[index % chartPalette.length]} stopOpacity={0.32} />
+                                <stop offset="0%" stopColor={chartPalette[index % chartPalette.length]} stopOpacity={0.4} />
                                 <stop offset="100%" stopColor={chartPalette[index % chartPalette.length]} stopOpacity={0.05} />
                             </linearGradient>
                           ))}
@@ -939,8 +939,9 @@ const contributionSummary = useMemo(() => {
                             dataKey={name}
                             stackId="1"
                             stroke={chartPalette[index % chartPalette.length]}
-                            strokeWidth={2}
+                            strokeWidth={2.5}
                             fill={`url(#trend-${index})`}
+                            dot={false}
                           />
                         ))}
                       </AreaChart>
@@ -972,9 +973,9 @@ const contributionSummary = useMemo(() => {
                       {contributionSummary && (
                         <div className="flex flex-wrap gap-2">
                           {[
-                            { label: 'Shared', value: contributionSummary.shared, color: chartPalette[0] },
-                            { label: 'Mine', value: contributionSummary.mine, color: chartPalette[1] },
-                            { label: 'Partner', value: contributionSummary.partner, color: chartPalette[2] }
+                            { label: 'Shared', value: contributionSummary.shared, color: '#0EA5E9' },
+                            { label: 'Mine', value: contributionSummary.mine, color: '#10B981' },
+                            { label: 'Partner', value: contributionSummary.partner, color: '#6366F1' }
                           ].map((item) => (
                             <span
                               key={item.label}
@@ -996,14 +997,18 @@ const contributionSummary = useMemo(() => {
                             <YAxis tickFormatter={(value) => `${Math.round(value * 100)}%`} tick={chartTickStyle} {...axisProps} />
                             <Tooltip content={<ContributionTooltip />} />
                             <Legend verticalAlign="top" height={36} iconType="circle" />
-                          {['Shared', 'Mine', 'Partner'].map((key, index) => (
+                          {[
+                            { key: 'Shared', color: '#0EA5E9' },
+                            { key: 'Mine', color: '#10B981' },
+                            { key: 'Partner', color: '#6366F1' }
+                          ].map((item) => (
                             <Bar
-                              key={key}
-                              dataKey={key}
-                              name={key}
+                              key={item.key}
+                              dataKey={item.key}
+                              name={item.key}
                               stackId="scopes"
-                              fill={chartPalette[index % chartPalette.length]}
-                              radius={[12, 12, 0, 0]}
+                              fill={item.color}
+                              radius={[8, 8, 0, 0]}
                               maxBarSize={48}
                             />
                           ))}
@@ -1086,8 +1091,8 @@ const contributionSummary = useMemo(() => {
                           <YAxis tickFormatter={(value) => formatCurrency(value)} tick={chartTickStyle} {...axisProps} />
                           <Tooltip content={<CashflowTooltip />} />
                           <Legend verticalAlign="top" height={36} iconType="circle" />
-                          <Bar dataKey="Income" fill="#10B981" radius={[12, 12, 0, 0]} maxBarSize={42} />
-                          <Bar dataKey="Expenses" fill="#F97316" radius={[12, 12, 0, 0]} maxBarSize={42} />
+                          <Bar dataKey="Income" fill="#10B981" radius={[8, 8, 0, 0]} maxBarSize={42} />
+                          <Bar dataKey="Expenses" fill="#F97316" radius={[8, 8, 0, 0]} maxBarSize={42} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
