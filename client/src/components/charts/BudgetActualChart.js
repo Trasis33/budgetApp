@@ -107,7 +107,7 @@ const TooltipContent = ({ active, payload }) => {
   );
 };
 
-const CHART_HEIGHT = 320;
+const CHART_HEIGHT = 380;
 
 const BudgetActualChart = ({ chartData, formatCurrency, className }) => {
   const barData = useMemo(() => {
@@ -171,7 +171,7 @@ const BudgetActualChart = ({ chartData, formatCurrency, className }) => {
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <BarChart
           data={barData}
-          margin={{ ...commonMargins, bottom: 56 }}
+          margin={{ ...commonMargins, bottom: 20 }}
           barGap={0}
           barCategoryGap={categoryGap}
         >

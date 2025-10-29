@@ -1309,7 +1309,9 @@
   }
   
   .modal-content {
-    background: var(--bg-card);
+    /* Ensure modal content has a solid fallback so dialogs remain opaque
+       even if --bg-card isn't defined elsewhere. */
+    background: var(--bg-card, #ffffff);
     backdrop-filter: none;
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-color);
