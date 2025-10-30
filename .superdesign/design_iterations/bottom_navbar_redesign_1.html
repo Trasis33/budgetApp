@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottom Navigation Bar Redesign</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="bottom_navbar_theme.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        .demo-content {
+            padding: 2rem;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Bottom Navigation Styles - Financial Check-up UI */
+        .bottom-nav-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 16px;
+            display: flex;
+            justify-content: center;
+            z-index: 50;
+            animation: slideUp 400ms ease-out;
+        }
+        
+        .bottom-nav-inner {
+            width: 100%;
+            max-width: 1040px;
+            height: 68px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+            margin: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 20px;
+            gap: 4px;
+        }
+        
+        .bottom-nav-item {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            height: 44px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bottom-nav-item:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+        
+        .bottom-nav-item:active {
+            transform: scale(0.96);
+            transition: transform 100ms;
+        }
+        
+        .bottom-nav-item.bottom-nav-active {
+            color: #10b981;
+            background: #ecfdf5;
+            font-weight: 600;
+        }
+        
+        .bottom-nav-item.bottom-nav-primary {
+            background: #10b981;
+            color: white;
+            font-weight: 600;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+        
+        .bottom-nav-item.bottom-nav-primary:hover {
+            background: #059669;
+            transform: scale(1.08) translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        }
+        
+        .bottom-nav-icon-wrap {
+            display: grid;
+            place-items: center;
+            position: relative;
+        }
+        
+        .bottom-nav-icon {
+            width: 20px;
+            height: 20px;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .bottom-nav-item:hover .bottom-nav-icon {
+            transform: scale(1.05);
+        }
+        
+        .bottom-nav-item.bottom-nav-primary .bottom-nav-icon {
+            width: 22px;
+            height: 22px;
+        }
+        
+        .bottom-nav-label {
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            letter-spacing: 0.025em;
+        }
+        
+        .bottom-nav-item.bottom-nav-active .bottom-nav-label {
+            font-weight: 600;
+        }
+        
+        /* Subtle ripple effect */
+        .bottom-nav-item::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .bottom-nav-item:active::after {
+            width: 80px;
+            height: 80px;
+        }
+        
+        /* Hide labels on very small screens */
+        @media (max-width: 380px) {
+            .bottom-nav-label {
+                display: none;
+            }
+            
+            .bottom-nav-icon {
+                width: 22px;
+                height: 22px;
+            }
+            
+            .bottom-nav-item.bottom-nav-primary .bottom-nav-icon {
+                width: 24px;
+                height: 24px;
+            }
+        }
+        
+        /* Safe area support */
+        @supports (padding: max(0px)) {
+            .bottom-nav-inner { 
+                padding-top: max(12px, env(safe-area-inset-bottom));
+                padding-bottom: max(12px, env(safe-area-inset-bottom));
+                height: auto;
+                min-height: 68px;
+            }
+        }
+        
+        @media (max-width: 480px) and (-webkit-touch-callout: none) {
+            .bottom-nav-inner { 
+                padding-top: max(10px, env(safe-area-inset-bottom));
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                min-height: 60px;
+            }
+        }
+        
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            }
+            
+            .card {
+                background: rgba(30, 30, 46, 0.95);
+                color: #e5e5e5;
+            }
+        }
+        
+        /* Animation for page load */
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .bn-container {
+            animation: slideUp 400ms ease-out;
+        }
+        
+        .bn-item {
+            animation: slideUp 400ms ease-out backwards;
+        }
+        
+        .bn-item:nth-child(1) { animation-delay: 50ms; }
+        .bn-item:nth-child(2) { animation-delay: 100ms; }
+        .bn-item:nth-child(3) { animation-delay: 150ms; }
+        .bn-item:nth-child(4) { animation-delay: 200ms; }
+        .bn-item:nth-child(5) { animation-delay: 250ms; }
+        .bn-item:nth-child(6) { animation-delay: 300ms; }
+    </style>
+</head>
+<body>
+    <div class="demo-content">
+        <div class="card">
+            <h1 class="text-2xl font-bold mb-4">Bottom Navigation - Financial Check-up UI</h1>
+            <p class="text-gray-600 mb-4">Redesigned bottom navigation following the Financial Check-up UI design spec with calming colors, rounded shapes, and proper width constraints.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Key Features:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Floating pill container with 24px border radius</li>
+                        <li>Emerald accent color for active states and primary actions</li>
+                        <li>Soft shadows and backdrop blur for calming effect</li>
+                        <li>Responsive design (labels hide on small screens)</li>
+                        <li>Proper touch targets and micro-interactions</li>
+                        <li>Properly constrained width (1040px max) like top navbar</li>
+                        <li>16px side margins matching navbar layout</li>
+                        <li>Follows app's slate/emerald color palette</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-2">Design Principles:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Conversational & Supportive - gentle visual feedback</li>
+                        <li>Calming confidence - rounded shapes, soft gradients</li>
+                        <li>Action-oriented - clear active states and hover effects</li>
+                        <li>Consistent with Financial Check-up UI spec</li>
+                        <li>Perfect visual alignment with top navigation bar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4">Try the Navigation</h2>
+            <p class="text-sm text-gray-600 mb-4">Click on different navigation items to see the active state change.</p>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav-container" role="navigation" aria-label="Primary navigation">
+        <div class="bottom-nav-inner">
+            <a href="#home" class="bottom-nav-item bottom-nav-active" data-page="home">
+                <span class="bottom-nav-icon-wrap">
+                    <i class="bottom-nav-icon" data-lucide="home"></i>
+                </span>
+                <span class="bottom-nav-label">Home</span>
+            </a>
+            
+            <a href="#expenses" class="bottom-nav-item" data-page="expenses">
+                <span class="bottom-nav-icon-wrap">
+                    <i class="bottom-nav-icon" data-lucide="wallet"></i>
+                </span>
+                <span class="bottom-nav-label">Expenses</span>
+            </a>
+            
+            <button class="bottom-nav-item bottom-nav-primary" type="button" onclick="handleAddClick()">
+                <span class="bottom-nav-icon-wrap">
+                    <i class="bottom-nav-icon" data-lucide="plus-circle"></i>
+                </span>
+                <span class="bottom-nav-label">Add</span>
+            </button>
+            
+            <a href="#budget" class="bottom-nav-item" data-page="budget">
+                <span class="bottom-nav-icon-wrap">
+                    <i class="bottom-nav-icon" data-lucide="bar-chart-2"></i>
+                </span>
+                <span class="bottom-nav-label">Budget</span>
+            </a>
+            
+            <a href="#savings" class="bottom-nav-item" data-page="savings">
+                <span class="bottom-nav-icon-wrap">
+                    <i class="bottom-nav-icon" data-lucide="piggy-bank"></i>
+                </span>
+                <span class="bottom-nav-label">Savings</span>
+            </a>
+            
+            <a href="#settings" class="bottom-nav-item" data-page="settings">
+                <span class="bottom-nav-icon-wrap">
+                    <i class="bottom-nav-icon" data-lucide="settings"></i>
+                </span>
+                <span class="bottom-nav-label">Settings</span>
+            </a>
+        </div>
+    </nav>
+    
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Handle navigation item clicks
+        document.querySelectorAll('.bottom-nav-item[data-page]').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all items
+                document.querySelectorAll('.bottom-nav-item').forEach(navItem => {
+                    navItem.classList.remove('bottom-nav-active');
+                });
+                
+                // Add active class to clicked item
+                this.classList.add('bottom-nav-active');
+                
+                // Simulate page navigation feedback
+                const page = this.dataset.page;
+                console.log(`Navigating to: ${page}`);
+            });
+        });
+        
+        // Handle Add button click
+        function handleAddClick() {
+            console.log('Add expense clicked');
+            // Simulate modal opening or navigation
+            document.body.style.backgroundColor = document.body.style.backgroundColor === 'rgb(102, 126, 234)' ? 
+                'rgb(118, 75, 162)' : 'rgb(102, 126, 234)';
+        }
+        
+        // Add ripple effect on touch/click
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.classList.add('ripple');
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 400);
+            });
+        });
+    </script>
+</body>
+</html>

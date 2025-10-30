@@ -1,0 +1,51 @@
+:root {
+  /* Bottom Navigation Theme Variables */
+  --bottom-nav-bg: oklch(0.9850 0 0);
+  --bottom-nav-border: oklch(0.9220 0 0);
+  --bottom-nav-shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --bottom-nav-height: 64px;
+  
+  /* Navigation Item Colors */
+  --nav-item-default: oklch(0.5560 0 0);
+  --nav-item-hover-bg: oklch(0.9700 0 0);
+  --nav-item-active: oklch(0.2050 0 0);
+  --nav-item-active-bg: oklch(0.9500 0 0);
+  
+  /* Primary Add Button */
+  --nav-primary: oklch(0.1448 0.0192 184.704);
+  --nav-primary-bg: oklch(0.1448 0.0192 184.704);
+  --nav-primary-hover: oklch(0.1234 0.0192 184.704);
+  --nav-primary-foreground: oklch(0.9850 0 0);
+  
+  /* Typography */
+  --nav-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --nav-label-size: 12px;
+  --nav-label-weight: 600;
+  --nav-label-active-weight: 700;
+  
+  /* Spacing & Sizing */
+  --nav-icon-size: 20px;
+  --nav-item-radius: 12px;
+  --nav-primary-scale: 1.05;
+  --nav-press-scale: 0.98;
+  
+  /* Transitions */
+  --nav-transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --nav-hover-transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode variations */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bottom-nav-bg: oklch(0.0850 0 0);
+    --bottom-nav-border: oklch(0.1450 0 0);
+    --bottom-nav-shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.30), 0 1px 2px -1px hsl(0 0% 0% / 0.30);
+    --nav-item-default: oklch(0.7080 0 0);
+    --nav-item-hover-bg: oklch(0.1450 0 0);
+    --nav-item-active: oklch(0.9850 0 0);
+    --nav-item-active-bg: oklch(0.1450 0 0);
+    --nav-primary: oklch(0.7080 0.0192 184.704);
+    --nav-primary-bg: oklch(0.7080 0.0192 184.704);
+    --nav-primary-hover: oklch(0.8080 0.0192 184.704);
+  }
+}
