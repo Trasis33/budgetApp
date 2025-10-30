@@ -77,26 +77,41 @@
   - GET `/summary/monthly/:year/:month`: expenses, category totals, balances, monthly statement.
   - PUT `/summary/monthly/:year/:month`: `{ remaining_budget_user1?, remaining_budget_user2? }`.
   - GET `/summary/settle?month=MM&year=YYYY`: settlement message and totals.
+  - GET `/summary/charts/:year/:month`: chart data for monthly summary.
 
 - Analytics
   - GET `/analytics/trends/:startDate/:endDate`: monthly totals + budget comparisions.
+  - GET `/analytics/trends/detailed/:startDate/:endDate`: detailed trend analytics with enhanced data.
   - GET `/analytics/category-trends/:startDate/:endDate`: top categories with monthly/budget data.
   - GET `/analytics/income-expenses/:startDate/:endDate`: monthly income vs expenses, surplus, trends.
   - GET `/analytics/savings-analysis/:startDate/:endDate`: comprehensive savings analysis.
-- GET `/analytics/current-settlement`: current month settlement snapshot.
+  - GET `/analytics/current-settlement`: current month settlement snapshot.
 
 - Savings
   - GET `/savings/goals`: goals for current user.
   - POST `/savings/goals`: `{ goal_name, target_amount, target_date, category }`.
   - PUT `/savings/goals/:id`: partial update.
   - DELETE `/savings/goals/:id`.
+  - GET `/savings/goals/:id/contributions`: contributions for a specific goal.
+  - POST `/savings/goals/:id/contributions`: add contribution to goal.
+  - DELETE `/savings/contributions/:contributionId`: remove specific contribution.
   - GET `/savings/rate/:startDate/:endDate`: savings rate per month.
 
 - Optimization
   - GET `/optimization/analyze`: returns analysis and stores optimization tips.
-- GET `/optimization/tips`: active (non-dismissed, non-expired) tips.
-- POST `/optimization/tips/:id/dismiss`: dismiss tip.
-- PUT `/optimization/tips/:id`: `{ is_dismissed }`.
+  - GET `/optimization/tips`: active (non-dismissed, non-expired) tips.
+  - POST `/optimization/tips/:id/dismiss`: dismiss tip.
+  - PUT `/optimization/tips/:id`: `{ is_dismissed }`.
+
+- Users
+  - GET `/users`: list all users (admin/couple access).
+
+- Couple
+  - POST `/couple/invite`: invite partner to share budget.
+  - GET `/couple/summary`: couple-level financial summary.
+
+- Auth (Additional)
+  - GET `/auth/users`: list all users (for couple setup).
 
 ## API Response Examples
 Example values are illustrative and truncated.
@@ -239,3 +254,46 @@ Optimization
 - Pinning is persisted via `savings_goals.is_pinned`; server routes enforce a single pinned goal per user and send `color_index` for consistent ordering.
 - Client helpers consume the accent object (`surface`, `border`, `ring`, `quickButton`, etc.) to keep cards, progress bars, and buttons aligned with the design spec.
 - Run `npx knex migrate:latest --knexfile server/db/knexfile.js` after pulling to ensure the new column exists before starting the API.
+
+## UI Style Guide & Design System
+
+The project follows a comprehensive design specification documented in `docs/design_spec_financial_checkup_ui.md`. Key guidelines:
+
+### Design Principles
+- **Conversational & Supportive** – copy should feel like a helpful coach
+- **Data-rich, never overwhelming** – every insight has a visual for immediate understanding
+- **Action-oriented** – each card provides clear next steps
+- **Calming confidence** – rounded shapes, soft gradients, gentle shadows
+
+### Color System
+- **Primary**: Emerald (`#10b981`) for wins/savings, Rose (`#fb7185`) for alerts, Indigo (`#6366f1`) for reallocation
+- **Background**: White with `#f8fafc` section dividers
+- **Text**: Primary `#0f172a`, secondary `#475569`, quiet `#94a3b8`
+- **Accent Palette**: 8-color shared system (emerald, teal, sky, indigo, violet, amber, rose, slate)
+
+### Typography
+- **Headlines**: 600 weight, 24-32px, `#0f172a`
+- **Card titles**: 600 weight, 18px, `#0f172a`
+- **Body**: 14px, line-height 1.6, `#475569`
+- **Meta labels**: Uppercase, 0.08em tracking, 12px, `#64748b`
+
+### Component Standards
+- **Cards**: `rounded-3xl border border-slate-100 bg-white p-6 shadow-md`
+- **Section banners**: 60px tall, gradient backgrounds, icon + stacked text
+- **Action pills**: Ghost style with hover states, emerald for primary actions
+- **Mini-charts**: 128-160px tall, soft gridlines, 11px axis fonts
+- **Progress bars**: 2px radius, accent colors with smooth transitions
+
+### Implementation
+- Use Flowbite library as base unless specified otherwise
+- Responsive design required (mobile-first approach)
+- Google Fonts: Plus Jakarta Sans, Inter, Roboto, Open Sans, Poppins, etc.
+- Motion: 250ms ease for cards, 150ms for buttons
+
+### Accessibility
+- Contrast ratio ≥ 4.5:1 for text
+- All icon-only controls need `aria-label`
+- Focus states visible with accent colors
+- Charts should have alt text summaries
+
+Refer to the full design spec for detailed component patterns, chart styling, and interaction guidelines.
