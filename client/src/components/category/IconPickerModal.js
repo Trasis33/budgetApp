@@ -14,7 +14,7 @@ const IconPickerModal = ({ isOpen, onClose, onSelectIcon, selectedIcon = '' }) =
       icon.name.toLowerCase().includes(term) || 
       icon.key.toLowerCase().includes(term)
     );
-  }, [searchTerm]);
+  }, [searchTerm, availableIcons]);
 
   const handleIconSelect = (iconKey) => {
     onSelectIcon(iconKey);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Wallet, PlusCircle, BarChart2, Settings, PiggyBank } from 'lucide-react';
+import { Home, Wallet, PlusCircle, BarChart2, PiggyBank } from 'lucide-react';
 import { useExpenseModal } from '../../context/ExpenseModalContext';
 
 const BottomNavigationBar = () => {

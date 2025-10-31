@@ -105,9 +105,9 @@
   --backdrop-blur-light: blur(8px); */
 
   /* Layout constants */
-/*   --sidebar-width: 15rem;
+  --sidebar-width: 15rem;
   --header-height: 3.5rem;
-  --bottom-nav-height: 48px; */
+  --bottom-nav-height: 68px;
   /* Dual-Ledger core tokens */
 /*   --bg: #f5f7fb;
   --surface: #ffffff;
