@@ -13,7 +13,7 @@ const BottomNavigationBar = () => {
     if (path.startsWith('/expenses')) return 'expenses';
     if (path.startsWith('/budget')) return 'budget';
     if (path.startsWith('/savings')) return 'savings';
-    if (path.startsWith('/settings')) return 'settings';
+    // if (path.startsWith('/settings')) return 'settings';
     return 'home';
   });
 
@@ -23,7 +23,7 @@ const BottomNavigationBar = () => {
     { action: 'add-expense', label: 'Add', icon: PlusCircle, isPrimary: true, id: 'add' },
     { to: '/budget', label: 'Budget', icon: BarChart2, id: 'budget' },
     { to: '/savings', label: 'Savings', icon: PiggyBank, id: 'savings' },
-    { to: '/settings', label: 'Settings', icon: Settings, id: 'settings' },
+    // { to: '/settings', label: 'Settings', icon: Settings, id: 'settings' },
   ];
 
   const handleNavClick = (itemId) => {
