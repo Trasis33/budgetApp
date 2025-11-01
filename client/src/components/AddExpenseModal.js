@@ -49,21 +49,21 @@ const SPLIT_OPTIONS = [
 const splitOptionStyles = {
   '50/50': {
     active:
-      'bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-600 shadow-emerald-500/25 focus-visible:ring-emerald-200 hover:from-emerald-500 hover:to-emerald-600',
+      'bg-gradient-to-r from-emerald-600 via-emerald-600 to-emerald-700 shadow-emerald-500/40 focus-visible:ring-2 focus-visible:ring-emerald-300 border-2 border-emerald-700',
     idle:
-      'hover:border-emerald-200 hover:bg-emerald-50/70 hover:text-emerald-700 focus-visible:ring-emerald-200/60',
+      'border-2 border-emerald-200 bg-white hover:border-emerald-400 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-200/80 hover:shadow-md',
   },
   personal: {
     active:
-      'bg-gradient-to-r from-indigo-500 via-indigo-500 to-indigo-600 shadow-indigo-500/25 focus-visible:ring-indigo-200 hover:from-indigo-500 hover:to-indigo-600',
+      'bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 shadow-indigo-500/40 focus-visible:ring-2 focus-visible:ring-indigo-300 border-2 border-indigo-700',
     idle:
-      'hover:border-indigo-200 hover:bg-indigo-50/70 hover:text-indigo-700 focus-visible:ring-indigo-200/60',
+      'border-2 border-indigo-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 focus-visible:ring-2 focus-visible:ring-indigo-200/80 hover:shadow-md',
   },
   custom: {
     active:
-      'bg-gradient-to-r from-sky-500 via-sky-500 to-sky-600 shadow-sky-500/25 focus-visible:ring-sky-200 hover:from-sky-500 hover:to-sky-600',
+      'bg-gradient-to-r from-sky-600 via-sky-600 to-sky-700 shadow-sky-500/40 focus-visible:ring-2 focus-visible:ring-sky-300 border-2 border-sky-700',
     idle:
-      'hover:border-sky-200 hover:bg-sky-50/70 hover:text-sky-700 focus-visible:ring-sky-200/60',
+      'border-2 border-sky-200 bg-white hover:border-sky-400 hover:bg-sky-50 focus-visible:ring-2 focus-visible:ring-sky-200/80 hover:shadow-md',
   },
 };
 
@@ -433,37 +433,37 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
   if (!open) return null;
 
   const amountInputClasses = cn(
-    'w-full rounded-[28px] border px-6 py-5 text-center text-3xl font-semibold tracking-tight text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-4',
+    'w-full rounded-[28px] border-2 px-6 py-5 text-center text-3xl font-bold tracking-tight text-slate-900 shadow-lg transition focus-visible:outline-none focus-visible:ring-4',
     errors.amount
-      ? 'border-rose-300 bg-white focus-visible:ring-rose-100'
-      : 'border-emerald-100 bg-white/95 focus-visible:ring-emerald-100'
+      ? 'border-rose-400 bg-white focus-visible:ring-rose-200 ring-2 ring-rose-100'
+      : 'border-slate-300 bg-white hover:border-emerald-400 focus-visible:ring-emerald-200 focus:border-emerald-500'
   );
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div
-        className="modal-content w-full max-w-4xl border border-emerald-100/80 bg-gradient-to-br from-white via-emerald-50/30 to-white shadow-xl transition-all"
+        className="modal-content w-full max-w-4xl border-2 border-slate-200 bg-white shadow-2xl transition-all"
         style={{ borderRadius: '24px', padding: '28px' }}
       >
         <form onSubmit={handleSubmit}>
           <header className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-gradient-to-r from-emerald-100 to-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 shadow-sm">
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-600 bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-md">
                 <Sparkles size={16} />
                 {isEditMode ? 'Edit expense' : 'New expense'}
               </span>
-              <h2 className="mt-3 text-3xl font-semibold text-slate-900">
+              {/* <h2 className="mt-3 text-3xl font-bold text-slate-900">
                 {isEditMode ? 'Refresh the details' : 'Log something new'}
               </h2>
-              <p className="mt-2 max-w-xl text-sm text-slate-500">
-                We’ll guide you through the details in three quick steps. You can jump back anytime before saving.
-              </p>
+              <p className="mt-2 max-w-xl text-sm font-medium text-slate-600">
+                We'll guide you through the details in three quick steps. You can jump back anytime before saving.
+              </p> */}
             </div>
             <Button
               variant="ghost"
               size="icon"
               type="button"
-              className="h-11 w-11 rounded-full border border-slate-100 text-slate-500 hover:text-slate-700"
+              className="h-11 w-11 rounded-full border-2 border-slate-300 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 hover:shadow-md"
               onClick={onClose}
               aria-label="Close add expense modal"
             >
@@ -472,7 +472,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
           </header>
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="text-sm font-semibold text-slate-600">
+            <div className="text-sm font-bold text-slate-800">
               Step {currentStep} of {STEPS.length}
             </div>
             <div className="flex items-center gap-3">
@@ -483,22 +483,24 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                   <div key={step.id} className="flex items-center gap-3">
                     <div
                       className={cn(
-                        'flex h-10 w-10 items-center justify-center rounded-full border transition shadow-sm',
+                        'flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 shadow-md',
                         isActive
-                          ? 'border-emerald-300 bg-gradient-to-br from-emerald-100 via-white to-emerald-50 text-emerald-700 shadow-emerald-200/60'
+                          ? 'border-emerald-600 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/50 scale-105'
                           : isCompleted
-                          ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white text-emerald-500'
-                          : 'border-slate-200 bg-white text-slate-400'
+                          ? 'border-emerald-500 bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-emerald-400/50'
+                          : 'border-slate-300 bg-white text-slate-500 hover:border-slate-400'
                       )}
                     >
                       {step.id}
                     </div>
                     {step.id !== STEPS.length && (
                       <ChevronRight
-                        size={18}
+                        size={20}
                         className={cn(
-                          'text-slate-300 transition',
-                          currentStep > step.id ? 'text-emerald-200' : ''
+                          'transition-all duration-200',
+                          currentStep > step.id
+                            ? 'text-emerald-500'
+                            : 'text-slate-300'
                         )}
                       />
                     )}
@@ -511,8 +513,8 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
           <section className="mt-8 space-y-8">
             {currentStep === 1 && (
               <div className="space-y-6 animate-[fadeIn_0.2s_ease]">
-                <div className="rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/80 via-white to-white p-8 shadow-sm">
-                  <label className="text-sm font-semibold text-emerald-600">What’s the total amount?</label>
+                <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-8 shadow-lg">
+                  <label className="text-sm font-bold text-slate-800">What's the total amount?</label>
                   <input
                     type="number"
                     step="1"
@@ -534,7 +536,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                         type="button"
                         variant="pill"
                         onClick={() => quickAdd(preset)}
-                        className="border-emerald-100/70 bg-white text-emerald-600 shadow-sm hover:border-emerald-200 hover:bg-emerald-50/70 hover:text-emerald-700"
+                        className="border-2 border-slate-300 bg-white text-slate-700 font-semibold shadow-md hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-lg"
                       >
                         +{formatCurrency(preset)}
                       </Button>
@@ -542,10 +544,10 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-white via-emerald-50/50 to-white p-6 shadow-sm">
-                  <label className="block text-sm font-semibold text-slate-700">
+                <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-6 shadow-lg">
+                  <label className="block text-sm font-bold text-slate-800">
                     Add a short description
-                    <span className="ml-1 text-xs font-normal text-slate-400">(e.g. “Groceries at Coop”)</span>
+                    <span className="ml-1 text-xs font-semibold text-slate-500">(e.g. "Groceries at Coop")</span>
                   </label>
                   <input
                     type="text"
@@ -555,8 +557,8 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                       clearFieldError('description');
                     }}
                     className={cn(
-                      'mt-3 w-full rounded-2xl border border-emerald-100 bg-white/95 px-4 py-3 text-base text-slate-900 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-100',
-                      errors.description ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : ''
+                      'mt-3 w-full rounded-2xl border-2 bg-white px-4 py-3 text-base font-medium text-slate-900 shadow-md transition focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-200 hover:border-slate-400',
+                      errors.description ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : 'border-slate-300'
                     )}
                     placeholder="What was this for?"
                   />
@@ -567,18 +569,18 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
 
             {currentStep === 2 && (
               <div className="space-y-6 animate-[fadeIn_0.2s_ease]">
-                <div className="rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/70 via-white to-white p-6 shadow-sm">
+                <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-6 shadow-lg">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
                         Category
                       </p>
-                      <h3 className="mt-1 text-lg font-semibold text-slate-900">Where should this live?</h3>
+                      <h3 className="mt-1 text-lg font-bold text-slate-900">Where should this live?</h3>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-3">
                     {popularCategories.length === 0 && (
-                      <p className="text-sm text-slate-500">No categories found.</p>
+                      <p className="text-sm font-medium text-slate-600">No categories found.</p>
                     )}
                     {popularCategories.map((category) => {
                       const selected = String(category.id) === categoryId;
@@ -589,10 +591,10 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                           type="button"
                           variant="pill"
                           className={cn(
-                            'group inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold transition-colors duration-200',
+                            'group inline-flex items-center gap-2 px-5 py-3 text-sm font-bold transition-all duration-200 border-2',
                             selected
-                              ? 'border-transparent bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-500 hover:to-emerald-600 focus-visible:ring-emerald-200'
-                              : 'border-emerald-100/70 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/70 hover:text-emerald-700 focus-visible:ring-emerald-200/60'
+                              ? 'border-transparent bg-gradient-to-r from-emerald-600 via-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/40 hover:from-emerald-600 hover:to-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-300'
+                              : 'border-slate-300 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md focus-visible:ring-2 focus-visible:ring-emerald-200/80'
                           )}
                           onClick={() => {
                             setCategoryId(String(category.id));
@@ -608,7 +610,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                       <Button
                         type="button"
                         variant="pill"
-                        className="border-emerald-100/70 bg-white text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/70 hover:text-emerald-700"
+                        className="border-2 border-slate-300 bg-white text-slate-700 font-semibold hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md"
                         onClick={() => setShowAllCategories((prev) => !prev)}
                       >
                         {showAllCategories ? 'Show popular' : 'More categories'}
@@ -616,19 +618,19 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                     )}
                   </div>
                   {showAllCategories && (
-                    <div className="mt-5 space-y-4 rounded-2xl border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/60 to-white p-4 shadow-inner">
+                    <div className="mt-5 space-y-4 rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-4 shadow-lg">
                       <div className="flex flex-wrap items-center gap-3">
                         <input
                           type="search"
                           value={categorySearch}
                           onChange={(event) => setCategorySearch(event.target.value)}
                           placeholder="Search categories"
-                          className="w-full flex-1 rounded-xl border border-emerald-100 bg-white/90 px-4 py-2 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                          className="w-full flex-1 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-md focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 hover:border-slate-400"
                         />
                         <Button
                           type="button"
                           variant="pill"
-                          className="border-emerald-100/70 bg-white text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/70 hover:text-emerald-700"
+                          className="border-2 border-slate-300 bg-white text-slate-700 font-semibold hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md"
                           onClick={() => {
                             setShowAllCategories(false);
                             setCategorySearch('');
@@ -650,17 +652,17 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                                 clearFieldError('categoryId');
                               }}
                               className={cn(
-                                'flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-medium transition hover:border-emerald-200 hover:bg-white',
+                                'flex w-full items-center justify-between rounded-xl border-2 px-4 py-3 text-left text-sm font-semibold transition hover:border-emerald-300 hover:bg-emerald-50/50',
                                 selected
-                                  ? 'border-emerald-300 bg-white text-emerald-700 shadow-sm shadow-emerald-200/40'
-                                  : 'border-transparent bg-white/70 text-slate-600 hover:text-emerald-700'
+                                  ? 'border-emerald-500 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 shadow-md shadow-emerald-200/50'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:text-emerald-700'
                               )}
                             >
                               <span className="flex items-center gap-2">
-                                {IconComponent && <IconComponent className="h-4 w-4 text-emerald-500" aria-hidden="true" />}
+                                {IconComponent && <IconComponent className="h-4 w-4 text-emerald-600" aria-hidden="true" />}
                                 {category.name}
                               </span>
-                              <span className="text-xs text-slate-400">Select</span>
+                              <span className="text-xs font-bold text-slate-500">Select</span>
                             </button>
                           );
                         })}
@@ -674,9 +676,9 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-white via-emerald-50/50 to-white p-6 shadow-sm">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                      <CalendarIcon size={18} className="text-emerald-500" />
+                  <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-6 shadow-lg">
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                      <CalendarIcon size={18} className="text-emerald-600" />
                       When did this happen?
                     </div>
                     <input
@@ -687,17 +689,17 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                         clearFieldError('date');
                       }}
                       className={cn(
-                        'mt-4 w-full rounded-2xl border border-emerald-100 bg-white/95 px-4 py-3 text-base text-slate-900 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-100',
-                        errors.date ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : ''
+                        'mt-4 w-full rounded-2xl border-2 bg-white px-4 py-3 text-base font-medium text-slate-900 shadow-md transition hover:border-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-200',
+                        errors.date ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : 'border-slate-300'
                       )}
                       required
                     />
                     {errors.date && <p className="mt-3 text-sm text-rose-500">{errors.date}</p>}
                   </div>
 
-                  <div className="rounded-3xl border border-indigo-100/70 bg-gradient-to-br from-white via-indigo-50/60 to-white p-6 shadow-sm">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-indigo-600">
-                      <UserCircle2 size={18} className="text-indigo-500" />
+                  <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-6 shadow-lg">
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                      <UserCircle2 size={18} className="text-indigo-600" />
                       Who paid upfront?
                     </div>
                     <div className="mt-4 flex flex-wrap gap-3">
@@ -712,10 +714,10 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                             type="button"
                             variant="pill"
                             className={cn(
-                              'inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold transition-colors duration-200',
+                              'inline-flex items-center gap-2 px-5 py-3 text-sm font-bold transition-all duration-200 border-2',
                               isSelected
-                                ? 'border-transparent text-white shadow-lg shadow-indigo-500/20 bg-gradient-to-r from-indigo-500 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-600 focus-visible:ring-indigo-200'
-                                : 'border-indigo-100/70 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-700 focus-visible:ring-indigo-200/60'
+                                ? 'border-transparent text-white shadow-lg shadow-indigo-500/30 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-600 hover:to-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-300'
+                                : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-200/80 hover:shadow-md'
                             )}
                             onClick={() => {
                               setPaidBy(String(option.id));
@@ -738,7 +740,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
 
             {currentStep === 3 && (
               <div className="space-y-6 animate-[fadeIn_0.2s_ease]">
-                <div className="rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-white via-emerald-50/60 to-white p-6 shadow-sm">
+                <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-6 shadow-lg">
                   <div className="flex flex-wrap items-center gap-3">
                     {SPLIT_OPTIONS.map((option) => {
                       const isSelected = option.value === splitType;
@@ -749,14 +751,14 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                           type="button"
                           variant="pill"
                           className={cn(
-                            'group inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold transition-colors duration-200',
+                            'group inline-flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all duration-200 border-2',
                             isSelected
                               ? cn(
                                   'border-transparent text-white shadow-lg',
                                   styles.active
                                 )
                               : cn(
-                                  'border-slate-200 bg-white text-slate-700',
+                                  'bg-white text-slate-700',
                                   styles.idle
                                 )
                           )}
@@ -770,12 +772,12 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                       );
                     })}
                   </div>
-                  <p className="mt-4 text-sm text-slate-600">
-                    We’ll calculate the amounts automatically. Adjust the split if it’s not an even share.
+                  <p className="mt-4 text-sm font-semibold text-slate-700">
+                    We'll calculate the amounts automatically. Adjust the split if it's not an even share.
                   </p>
                   {splitType === 'custom' && (
-                    <div className="mt-6 space-y-4 rounded-2xl border border-emerald-100/70 bg-gradient-to-br from-white via-emerald-50/70 to-white p-6 shadow-inner">
-                      <label className="block text-sm font-semibold text-emerald-600">
+                    <div className="mt-6 space-y-4 rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-white p-6 shadow-lg">
+                      <label className="block text-sm font-bold text-slate-800">
                         Adjust the split (in steps of 5%)
                       </label>
                       <input
@@ -790,9 +792,9 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                           setSplitRatio2(String(100 - value));
                           clearFieldError('split');
                         }}
-                        className="w-full accent-emerald-500"
+                        className="w-full accent-emerald-600"
                       />
-                      <div className="flex items-center justify-between text-sm font-semibold text-emerald-600">
+                      <div className="flex items-center justify-between text-sm font-bold text-slate-800">
                         <span>You · {clampPercentage(splitRatio1)}%</span>
                         <span>Partner · {100 - clampPercentage(splitRatio1)}%</span>
                       </div>
@@ -802,26 +804,26 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/70 via-white to-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Your share</p>
-                    <h3 className="mt-2 text-2xl font-semibold text-slate-900">{formatCurrency(numericAmount * (userRatio / 100) || 0)}</h3>
-                    <p className="mt-2 text-sm text-emerald-600">
+                  <div className="rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-6 shadow-lg">
+                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Your share</p>
+                    <h3 className="mt-2 text-3xl font-bold text-slate-900">{formatCurrency(numericAmount * (userRatio / 100) || 0)}</h3>
+                    <p className="mt-2 text-sm font-semibold text-emerald-700">
                       {splitType === 'personal'
                         ? 'Covered in full by you.'
-                        : `That’s ${userRatio}% of the total.`}
+                        : `That's ${userRatio}% of the total.`}
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/70 via-white to-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                  <div className="rounded-3xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-indigo-50 p-6 shadow-lg">
+                    <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">
                       {partner ? partner.name || partner.email || 'Partner' : 'Partner'}
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold text-slate-900">
+                    <h3 className="mt-2 text-3xl font-bold text-slate-900">
                       {formatCurrency(numericAmount * (partnerRatio / 100) || 0)}
                     </h3>
-                    <p className="mt-2 text-sm text-indigo-600">
+                    <p className="mt-2 text-sm font-semibold text-indigo-700">
                       {splitType === 'personal'
                         ? 'No share for your partner this time.'
-                        : `That’s ${partnerRatio}% of the total.`}
+                        : `That's ${partnerRatio}% of the total.`}
                     </p>
                   </div>
                 </div>
@@ -830,7 +832,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
           </section>
 
           {formError && (
-            <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            <div className="mt-6 rounded-2xl border-2 border-rose-400 bg-rose-50 px-4 py-4 text-sm font-semibold text-rose-700 shadow-md">
               {formError}
             </div>
           )}
@@ -839,7 +841,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
             <Button
               type="button"
               variant="pill"
-              className="border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100/70 hover:text-slate-800"
+              className="border-2 border-slate-300 bg-white text-slate-700 font-semibold hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 hover:shadow-md"
               onClick={onClose}
             >
               Cancel
@@ -849,7 +851,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                 <Button
                   type="button"
                   variant="pill"
-                  className="border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-100/70 hover:text-slate-900"
+                  className="border-2 border-slate-300 bg-white text-slate-700 font-bold hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 hover:shadow-md"
                   onClick={handleBack}
                 >
                   Back
@@ -859,7 +861,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                 <Button
                   type="button"
                   variant="pill"
-                  className="border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-emerald-100 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100/80"
+                  className="border-2 border-emerald-500 bg-gradient-to-r from-emerald-600 via-emerald-600 to-emerald-700 text-white font-bold px-6 shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-emerald-300"
                   onClick={handleNext}
                 >
                   Next
@@ -869,7 +871,7 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
                 <Button
                   type="submit"
                   variant="pill"
-                  className="border-transparent bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-600 px-6 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-500 hover:to-emerald-600"
+                  className="border-2 border-emerald-600 bg-gradient-to-r from-emerald-600 via-emerald-600 to-emerald-700 px-6 text-white font-bold shadow-lg shadow-emerald-500/40 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-emerald-300"
                   disabled={submitting}
                 >
                   {submitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Save expense'}
@@ -882,9 +884,9 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
         {!isEditMode && recent.length > 0 && (
           <aside className="mt-6 space-y-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">Recent expenses</p>
-              <p className="mt-1 text-sm text-slate-500">
-                Reuse something similar to speed things up. We’ll prefill the fields for you.
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-700">Recent expenses</p>
+              <p className="mt-1 text-sm font-semibold text-slate-600">
+                Reuse something similar to speed things up. We'll prefill the fields for you.
               </p>
             </div>
             <div
@@ -894,26 +896,26 @@ const AddExpenseModal = ({ open, onClose, expense = null, onSuccess }) => {
               {recent.map((item) => (
                 <div
                   key={item.id}
-                  className="flex min-w-[200px] max-w-[240px] flex-col justify-between rounded-3xl border border-slate-200/70 bg-slate-50 p-4 shadow-sm transition hover:shadow-md hover:shadow-slate-200/80"
+                  className="flex min-w-[200px] max-w-[240px] flex-col justify-between rounded-3xl border-2 border-slate-300 bg-white p-4 shadow-lg transition hover:shadow-xl hover:border-emerald-400 hover:bg-emerald-50/30"
                 >
                   <div className="space-y-1 text-left">
-                    <h4 className="text-sm font-semibold text-slate-900 line-clamp-2">
+                    <h4 className="text-sm font-bold text-slate-900 line-clamp-2">
                       {item.description}
                     </h4>
-                    <p className="text-xs font-medium text-emerald-600">
+                    <p className="text-sm font-bold text-emerald-700">
                       {formatCurrency(Number.parseFloat(item.amount) || 0)}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs font-semibold text-slate-600">
                       {item.category_name || 'Uncategorised'}
                     </p>
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                  <div className="mt-2 flex items-center justify-between text-xs font-semibold text-slate-500">
                     <span>{item.date ? new Date(item.date).toLocaleDateString() : '—'}</span>
                     <Button
                       type="button"
                       variant="pill"
                       size="sm"
-                      className="border-emerald-200 bg-white text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50/80 hover:text-emerald-700"
+                      className="border-2 border-emerald-400 bg-white text-emerald-700 font-bold hover:border-emerald-500 hover:bg-emerald-100 hover:shadow-md"
                       onClick={() => handleUseRecent(item)}
                     >
                       Use this
