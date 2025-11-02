@@ -10,8 +10,9 @@ export interface Expense {
   description: string;
   paid_by_user_id: number;
   paid_by_name: string;
-  split_type: 'equal' | 'custom' | 'personal' | 'bill';
-  custom_split_ratio?: number;
+  split_type: '50/50' | 'custom' | 'personal' | 'bill';
+  split_ratio_user1?: number;
+  split_ratio_user2?: number;
 }
 
 export const expenseService = {
@@ -29,8 +30,9 @@ export const expenseService = {
     category_id: number;
     description: string;
     paid_by_user_id: number;
-    split_type: 'equal' | 'custom' | 'personal' | 'bill';
-    custom_split_ratio?: number;
+    split_type: '50/50' | 'custom' | 'personal' | 'bill';
+    split_ratio_user1?: number;
+    split_ratio_user2?: number;
   }) {
     return apiClient.post('/expenses', data);
   },

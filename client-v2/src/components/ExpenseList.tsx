@@ -79,10 +79,16 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
     if (expense.split_type === 'personal') {
       return <Badge variant="outline">Personal</Badge>;
     }
-    if (expense.split_type === 'equal') {
+    if (expense.split_type === '50/50') {
       return <Badge variant="secondary">50/50</Badge>;
     }
-    return <Badge variant="default">{expense.custom_split_ratio}% Split</Badge>;
+    if (expense.split_type === 'custom') {
+      return <Badge variant="default">{expense.split_ratio_user1}% Split</Badge>;
+    }
+    if (expense.split_type === 'bill') {
+      return <Badge variant="outline">Bill</Badge>;
+    }
+    return <Badge variant="default">{expense.split_type}</Badge>;
   };
 
   const availableMonths = Array.from(new Set(

@@ -95,7 +95,7 @@ export function Analytics({ onNavigate }: AnalyticsProps) {
   // Split type breakdown
   const splitTypeData = monthlyExpenses.reduce((acc, exp) => {
     const type = exp.split_type === 'personal' ? 'Personal' :
-                 exp.split_type === 'equal' ? 'Split 50/50' : 'Custom Split';
+                 exp.split_type === '50/50' ? 'Split 50/50' : 'Custom Split';
     acc[type] = (acc[type] || 0) + exp.amount;
     return acc;
   }, {} as Record<string, number>);

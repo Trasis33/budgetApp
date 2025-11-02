@@ -32,8 +32,9 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
     description: '',
     date: new Date().toISOString().split('T')[0],
     paid_by_user_id: user?.id || 0,
-    split_type: 'equal' as 'equal' | 'custom' | 'personal' | 'bill',
-    custom_split_ratio: 50
+    split_type: '50/50' as '50/50' | 'custom' | 'personal' | 'bill',
+    split_ratio_user1: 50,
+    split_ratio_user2: 50
   });
 
   useEffect(() => {
@@ -72,7 +73,10 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
         date: formData.date,
         paid_by_user_id: formData.paid_by_user_id,
         split_type: formData.split_type,
-        ...(formData.split_type === 'custom' && { custom_split_ratio: formData.custom_split_ratio })
+        ...(formData.split_type === 'custom' && { 
+          split_ratio_user1: formData.split_ratio_user1,
+          split_ratio_user2: formData.split_ratio_user2 
+        })
       });
 
       toast.success('Expense added successfully!');
@@ -182,7 +186,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="equal">Equal (50/50)</SelectItem>
+                  <SelectItem value="50/50">Equal (50/50)</SelectItem>
                   <SelectItem value="custom">Custom Split</SelectItem>
                   <SelectItem value="personal">Personal (No Split)</SelectItem>
                   <SelectItem value="bill">Bill</SelectItem>
@@ -193,19 +197,25 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
             {formData.split_type === 'custom' && (
               <div className="space-y-2">
                 <Label htmlFor="splitRatio">
-                  {formData.paid_by_user_id === currentUser?.id ? currentUser?.name : partnerUser?.name}'s Share (%)
+                  {currentUser?.name}'s Share (%)
                 </Label>
                 <Input
                   id="splitRatio"
                   type="number"
                   min="0"
                   max="100"
-                  value={formData.custom_split_ratio}
-                  onChange={(e) => setFormData({ ...formData, custom_split_ratio: parseInt(e.target.value) })}
+                  value={formData.split_ratio_user1}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setFormData({ 
+                      ...formData, 
+                      split_ratio_user1: value,
+                      split_ratio_user2: 100 - value
+                    });
+                  }}
                 />
                 <p className="text-muted-foreground">
-                  {formData.paid_by_user_id === currentUser?.id ? partnerUser?.name : currentUser?.name}:{' '}
-                  {100 - formData.custom_split_ratio}%
+                  {partnerUser?.name}: {formData.split_ratio_user2}%
                 </p>
               </div>
             )}

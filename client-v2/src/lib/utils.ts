@@ -24,15 +24,15 @@ export function calculateExpenseShare(expense: Expense, userId: string): number 
     return expense.paid_by_user_id === userId ? (expense.amount || 0) : 0;
   }
 
-  if (expense.split_type === 'equal') {
+  if (expense.split_type === '50/50') {
     return (expense.amount || 0) / 2;
   }
 
   // Custom split
   if (expense.paid_by_user_id === userId) {
-    return (expense.amount || 0) * ((expense.custom_split_ratio || 50) / 100);
+    return (expense.amount || 0) * ((expense.split_ratio_user1 || 50) / 100);
   } else {
-    return (expense.amount || 0) * ((100 - (expense.custom_split_ratio || 50)) / 100);
+    return (expense.amount || 0) * ((100 - (expense.split_ratio_user1 || 50)) / 100);
   }
 }
 

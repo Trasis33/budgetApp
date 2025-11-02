@@ -9,7 +9,7 @@ This document captures the visual and interaction standards established for the 
 - **Calming confidence** – rounded shapes, soft gradients, and gentle shadows keep the UI inviting even when delivering tough news.
 
 ## 2. Layout & Spacing
-- **Canvas**: cards live on a white background with generous 32–40px padding from container edges.
+- **Canvas**: cards live on a light background with generous 32–40px padding from container edges.
 - **Sections**: headline banner (accent gradient) → cards grid (1 column mobile, 2 columns ≥ 768px). Use 24px gaps vertically, 20–24px between cards.
 - **Card padding**: 24px on desktop, 20px on mobile. Cards have 24px corner radius and 8–12px soft shadow (`0 12px 30px rgba(15, 23, 42, 0.06)`).
 

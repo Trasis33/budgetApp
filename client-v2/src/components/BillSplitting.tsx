@@ -89,12 +89,12 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
   };
 
   const getSplitDetails = (expense: Expense) => {
-    if (expense.split_type === 'equal') {
+    if (expense.split_type === '50/50') {
       return '50/50 split';
     }
     if (expense.split_type === 'custom') {
       const payer = expense.paid_by_user_id === currentUser.id ? currentUser.name : partnerUser.name;
-      return `${payer}: ${expense.custom_split_ratio}%`;
+      return `${payer}: ${expense.split_ratio_user1}%`;
     }
     return 'Personal';
   };
