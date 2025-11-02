@@ -1,44 +1,79 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import { Expense, Budget, User } from '../types';
+import { Expense, Budget } from '../types';
 import { formatCurrency, formatDate, filterExpensesByMonth, calculateCategorySpending, getBudgetProgress } from '../lib/utils';
 import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt } from 'lucide-react';
+import { expenseService } from '../api/services/expenseService';
+import { budgetService } from '../api/services/budgetService';
+import { toast } from 'sonner';
 
 interface DashboardProps {
-  expenses: Expense[];
-  budgets: Budget[];
-  currentUser: User;
   onNavigate: (view: string) => void;
 }
 
-export function Dashboard({ expenses, budgets, currentUser, onNavigate }: DashboardProps) {
+export function Dashboard({ onNavigate }: DashboardProps) {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [expensesData, budgetsData] = await Promise.all([
+          expenseService.getExpenses('ours'),
+          budgetService.getBudgets(new Date().getMonth() + 1, new Date().getFullYear())
+        ]);
+        setExpenses(expensesData);
+        setBudgets(budgetsData);
+      } catch (error) {
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
   
   const monthlyExpenses = filterExpensesByMonth(expenses, currentYear, currentMonth);
-  const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
+  const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
   const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
   const previousMonthExpenses = filterExpensesByMonth(expenses, previousYear, previousMonth);
-  const previousMonthTotal = previousMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
-  const spendingChange = previousMonthTotal > 0 
-    ? ((totalSpent - previousMonthTotal) / previousMonthTotal) * 100 
+  const previousMonthTotal = previousMonthExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
+  const spendingChange = previousMonthTotal > 0
+    ? ((totalSpent - previousMonthTotal) / previousMonthTotal) * 100
     : 0;
-  
-  const totalBudget = budgets.reduce((sum, b) => sum + b.monthlyAmount, 0);
-  const budgetProgress = (totalSpent / totalBudget) * 100;
-  
+
+  const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const budgetProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
   const recentExpenses = [...monthlyExpenses]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
-  
+
   const budgetsWithSpending = budgets.map(budget => ({
     ...budget,
-    spent: calculateCategorySpending(monthlyExpenses, budget.category)
+    spent: calculateCategorySpending(monthlyExpenses, budget.category_name)
   })).filter(b => b.spent > 0);
 
   return (
@@ -124,13 +159,13 @@ export function Dashboard({ expenses, budgets, currentUser, onNavigate }: Dashbo
                   <div className="flex-1">
                     <p>{expense.description}</p>
                     <p className="text-muted-foreground">
-                      {expense.category} • {formatDate(expense.date)}
+                      {expense.category_name} • {formatDate(expense.date)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p>{formatCurrency(expense.amount)}</p>
                     <p className="text-muted-foreground">
-                      {expense.splitType === 'personal' ? 'Personal' : 'Split'}
+                      {expense.split_type === 'personal' ? 'Personal' : 'Split'}
                     </p>
                   </div>
                 </div>
@@ -158,17 +193,17 @@ export function Dashboard({ expenses, budgets, currentUser, onNavigate }: Dashbo
               {budgetsWithSpending.slice(0, 5).map(budget => {
                 const progress = getBudgetProgress(budget, budget.spent || 0);
                 const isOverBudget = progress >= 100;
-                
+
                 return (
                   <div key={budget.id} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span>{budget.category}</span>
+                      <span>{budget.category_name}</span>
                       <span className={isOverBudget ? 'text-red-500' : ''}>
-                        {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.monthlyAmount)}
+                        {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.amount || 0)}
                       </span>
                     </div>
-                    <Progress 
-                      value={progress} 
+                    <Progress
+                      value={progress}
                       className={isOverBudget ? '[&>div]:bg-red-500' : ''}
                     />
                   </div>

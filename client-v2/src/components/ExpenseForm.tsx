@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,47 +7,81 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
-import { Expense, CATEGORIES, User } from '../types';
+import { Expense, Category, User } from '../types';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { expenseService } from '../api/services/expenseService';
+import { categoryService } from '../api/services/categoryService';
+import { authService } from '../api/services/authService';
+import { toast } from 'sonner';
 
 interface ExpenseFormProps {
-  currentUser: User;
-  partnerUser: User;
-  onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onCancel: () => void;
 }
 
-export function ExpenseForm({ currentUser, partnerUser, onAddExpense, onCancel }: ExpenseFormProps) {
+export function ExpenseForm({ onCancel }: ExpenseFormProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     amount: '',
-    category: 'Food',
+    category_id: 1,
     description: '',
     date: new Date().toISOString().split('T')[0],
-    paidBy: currentUser.id,
-    splitType: 'equal' as 'equal' | 'custom' | 'personal',
-    splitRatio: 50,
-    recurring: false,
-    recurringDay: 1
+    paid_by_user_id: user?.id || 0,
+    split_type: 'equal' as 'equal' | 'custom' | 'personal' | 'bill',
+    custom_split_ratio: 50
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const expense: Omit<Expense, 'id'> = {
-      amount: parseFloat(formData.amount),
-      category: formData.category,
-      description: formData.description,
-      date: formData.date,
-      paidBy: formData.paidBy,
-      splitType: formData.splitType,
-      ...(formData.splitType === 'custom' && { splitRatio: formData.splitRatio }),
-      ...(formData.recurring && { 
-        recurring: true, 
-        recurringDay: formData.recurringDay 
-      })
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesData, usersData] = await Promise.all([
+          categoryService.getCategories(),
+          authService.getUsers()
+        ]);
+        setCategories(categoriesData);
+        setUsers(usersData);
+
+        if (categoriesData.length > 0 && !formData.category_id) {
+          setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
+        }
+      } catch (error) {
+        toast.error('Failed to load form data');
+      }
     };
 
-    onAddExpense(expense);
+    loadData();
+  }, []);
+
+  const currentUser = users.find(u => u.id === user?.id);
+  const partnerUser = users.find(u => u.id !== user?.id);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await expenseService.createExpense({
+        amount: parseFloat(formData.amount),
+        category_id: formData.category_id,
+        description: formData.description,
+        date: formData.date,
+        paid_by_user_id: formData.paid_by_user_id,
+        split_type: formData.split_type,
+        ...(formData.split_type === 'custom' && { custom_split_ratio: formData.custom_split_ratio })
+      });
+
+      toast.success('Expense added successfully!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to add expense');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,16 +125,18 @@ export function ExpenseForm({ currentUser, partnerUser, onAddExpense, onCancel }
 
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select 
-                value={formData.category} 
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              <Select
+                value={formData.category_id.toString()}
+                onValueChange={(value) => setFormData({ ...formData, category_id: parseInt(value) })}
               >
                 <SelectTrigger id="category">
-                  <SelectValue />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -118,25 +155,28 @@ export function ExpenseForm({ currentUser, partnerUser, onAddExpense, onCancel }
 
             <div className="space-y-2">
               <Label htmlFor="paidBy">Paid By</Label>
-              <Select 
-                value={formData.paidBy} 
-                onValueChange={(value) => setFormData({ ...formData, paidBy: value })}
+              <Select
+                value={formData.paid_by_user_id.toString()}
+                onValueChange={(value) => setFormData({ ...formData, paid_by_user_id: parseInt(value) })}
               >
                 <SelectTrigger id="paidBy">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={currentUser.id}>{currentUser.name}</SelectItem>
-                  <SelectItem value={partnerUser.id}>{partnerUser.name}</SelectItem>
+                  {users.map(u => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="splitType">Split Type</Label>
-              <Select 
-                value={formData.splitType} 
-                onValueChange={(value: any) => setFormData({ ...formData, splitType: value })}
+              <Select
+                value={formData.split_type}
+                onValueChange={(value: any) => setFormData({ ...formData, split_type: value })}
               >
                 <SelectTrigger id="splitType">
                   <SelectValue />
@@ -145,57 +185,36 @@ export function ExpenseForm({ currentUser, partnerUser, onAddExpense, onCancel }
                   <SelectItem value="equal">Equal (50/50)</SelectItem>
                   <SelectItem value="custom">Custom Split</SelectItem>
                   <SelectItem value="personal">Personal (No Split)</SelectItem>
+                  <SelectItem value="bill">Bill</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {formData.splitType === 'custom' && (
+            {formData.split_type === 'custom' && (
               <div className="space-y-2">
                 <Label htmlFor="splitRatio">
-                  {formData.paidBy === currentUser.id ? currentUser.name : partnerUser.name}'s Share (%)
+                  {formData.paid_by_user_id === currentUser?.id ? currentUser?.name : partnerUser?.name}'s Share (%)
                 </Label>
                 <Input
                   id="splitRatio"
                   type="number"
                   min="0"
                   max="100"
-                  value={formData.splitRatio}
-                  onChange={(e) => setFormData({ ...formData, splitRatio: parseInt(e.target.value) })}
+                  value={formData.custom_split_ratio}
+                  onChange={(e) => setFormData({ ...formData, custom_split_ratio: parseInt(e.target.value) })}
                 />
                 <p className="text-muted-foreground">
-                  {formData.paidBy === currentUser.id ? partnerUser.name : currentUser.name}: {100 - formData.splitRatio}%
+                  {formData.paid_by_user_id === currentUser?.id ? partnerUser?.name : currentUser?.name}:{' '}
+                  {100 - formData.custom_split_ratio}%
                 </p>
               </div>
             )}
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="recurring"
-                checked={formData.recurring}
-                onCheckedChange={(checked) => setFormData({ ...formData, recurring: checked })}
-              />
-              <Label htmlFor="recurring">Recurring expense</Label>
-            </div>
-
-            {formData.recurring && (
-              <div className="space-y-2">
-                <Label htmlFor="recurringDay">Recurring Day of Month</Label>
-                <Input
-                  id="recurringDay"
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={formData.recurringDay}
-                  onChange={(e) => setFormData({ ...formData, recurringDay: parseInt(e.target.value) })}
-                />
-              </div>
-            )}
-
             <div className="flex gap-3 pt-4">
-              <Button type="submit" className="flex-1">
-                Add Expense
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? 'Adding...' : 'Add Expense'}
               </Button>
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
                 Cancel
               </Button>
             </div>

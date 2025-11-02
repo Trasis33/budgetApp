@@ -1,76 +1,134 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Progress } from './ui/progress';
-import { Budget, Expense, CATEGORIES } from '../types';
+import { Budget, Expense, Category } from '../types';
 import { formatCurrency, filterExpensesByMonth, calculateCategorySpending, getBudgetProgress } from '../lib/utils';
 import { ArrowLeft, Plus, Pencil, Trash2, TrendingUp, AlertCircle } from 'lucide-react';
+import { budgetService } from '../api/services/budgetService';
+import { expenseService } from '../api/services/expenseService';
+import { categoryService } from '../api/services/categoryService';
+import { toast } from 'sonner';
 
 interface BudgetManagerProps {
-  budgets: Budget[];
-  expenses: Expense[];
-  onUpdateBudget: (budget: Budget) => void;
-  onDeleteBudget: (id: string) => void;
   onNavigate: (view: string) => void;
 }
 
-export function BudgetManager({ budgets, expenses, onUpdateBudget, onDeleteBudget, onNavigate }: BudgetManagerProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
+export function BudgetManager({ onNavigate }: BudgetManagerProps) {
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({
-    category: 'Food',
-    monthlyAmount: ''
+    category_id: 1,
+    amount: ''
   });
 
   const now = new Date();
   const monthlyExpenses = filterExpensesByMonth(expenses, now.getFullYear(), now.getMonth());
 
-  const budgetsWithSpending = budgets.map(budget => ({
-    ...budget,
-    spent: calculateCategorySpending(monthlyExpenses, budget.category),
-    progress: getBudgetProgress(budget, calculateCategorySpending(monthlyExpenses, budget.category))
-  })).sort((a, b) => b.spent - a.spent);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [budgetsData, expensesData, categoriesData] = await Promise.all([
+          budgetService.getBudgets(now.getMonth() + 1, now.getFullYear()),
+          expenseService.getExpenses('all'),
+          categoryService.getCategories()
+        ]);
+        setBudgets(budgetsData);
+        setExpenses(expensesData);
+        setCategories(categoriesData);
 
-  const totalBudget = budgets.reduce((sum, b) => sum + b.monthlyAmount, 0);
-  const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const overallProgress = (totalSpent / totalBudget) * 100;
-
-  const usedCategories = budgets.map(b => b.category);
-  const availableCategories = CATEGORIES.filter(cat => !usedCategories.includes(cat));
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newBudget: Budget = {
-      id: Date.now().toString(),
-      category: formData.category,
-      monthlyAmount: parseFloat(formData.monthlyAmount)
+        if (categoriesData.length > 0) {
+          setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
+        }
+      } catch (error) {
+        toast.error('Failed to load budgets');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    onUpdateBudget(newBudget);
-    setFormData({ category: 'Food', monthlyAmount: '' });
-    setIsAdding(false);
+    loadData();
+  }, []);
+
+  const budgetsWithSpending = budgets.map(budget => ({
+    ...budget,
+    spent: calculateCategorySpending(monthlyExpenses, budget.category_name),
+    progress: getBudgetProgress(budget, calculateCategorySpending(monthlyExpenses, budget.category_name))
+  })).sort((a, b) => b.spent - a.spent);
+
+  const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const overallProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+  const usedCategories = budgets.map(b => b.category_name);
+  const availableCategories = categories.filter(cat => !usedCategories.includes(cat.name));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      await budgetService.createOrUpdateBudget({
+        category_id: formData.category_id,
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        amount: parseFloat(formData.amount)
+      });
+
+      const budgetsData = await budgetService.getBudgets(now.getMonth() + 1, now.getFullYear());
+      setBudgets(budgetsData);
+
+      setFormData({ category_id: categories[0]?.id || 1, amount: '' });
+      setIsAdding(false);
+      toast.success('Budget created');
+    } catch (error) {
+      toast.error('Failed to create budget');
+    }
   };
 
   const handleEdit = (budget: Budget) => {
     setEditingId(budget.id);
     setFormData({
-      category: budget.category,
-      monthlyAmount: budget.monthlyAmount.toString()
+      category_id: budget.category_id,
+      amount: budget.amount.toString()
     });
   };
 
-  const handleUpdate = (id: string) => {
-    onUpdateBudget({
-      id,
-      category: formData.category,
-      monthlyAmount: parseFloat(formData.monthlyAmount)
-    });
-    setEditingId(null);
-    setFormData({ category: 'Food', monthlyAmount: '' });
+  const handleUpdate = async (id: number) => {
+    try {
+      await budgetService.createOrUpdateBudget({
+        category_id: formData.category_id,
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        amount: parseFloat(formData.amount)
+      });
+
+      const budgetsData = await budgetService.getBudgets(now.getMonth() + 1, now.getFullYear());
+      setBudgets(budgetsData);
+
+      setEditingId(null);
+      setFormData({ category_id: categories[0]?.id || 1, amount: '' });
+      toast.success('Budget updated');
+    } catch (error) {
+      toast.error('Failed to update budget');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading budgets...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -134,11 +192,11 @@ export function BudgetManager({ budgets, expenses, onUpdateBudget, onDeleteBudge
                     <select
                       id="category"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      value={formData.category_id}
+                      onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
                     >
                       {availableCategories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
                   </div>
@@ -149,8 +207,8 @@ export function BudgetManager({ budgets, expenses, onUpdateBudget, onDeleteBudge
                       type="number"
                       step="0.01"
                       placeholder="0.00"
-                      value={formData.monthlyAmount}
-                      onChange={(e) => setFormData({ ...formData, monthlyAmount: e.target.value })}
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                       required
                     />
                   </div>
@@ -171,15 +229,15 @@ export function BudgetManager({ budgets, expenses, onUpdateBudget, onDeleteBudge
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Category</Label>
-                        <Input value={budget.category} disabled />
+                        <Input value={budget.category_name} disabled />
                       </div>
                       <div className="space-y-2">
                         <Label>Monthly Budget</Label>
                         <Input
                           type="number"
                           step="0.01"
-                          value={formData.monthlyAmount}
-                          onChange={(e) => setFormData({ ...formData, monthlyAmount: e.target.value })}
+                          value={formData.amount}
+                          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                         />
                       </div>
                     </div>
@@ -194,9 +252,9 @@ export function BudgetManager({ budgets, expenses, onUpdateBudget, onDeleteBudge
                   <>
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3>{budget.category}</h3>
+                        <h3>{budget.category_name}</h3>
                         <p className="text-muted-foreground">
-                          {formatCurrency(budget.spent)} of {formatCurrency(budget.monthlyAmount)}
+                          {formatCurrency(budget.spent || 0)} of {formatCurrency(budget.amount || 0)}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -212,16 +270,16 @@ export function BudgetManager({ budgets, expenses, onUpdateBudget, onDeleteBudge
                         </Button>
                       </div>
                     </div>
-                    <Progress 
-                      value={budget.progress} 
-                      className={budget.progress >= 100 ? '[&>div]:bg-red-500' : ''}
+                    <Progress
+                      value={budget.progress || 0}
+                      className={(budget.progress || 0) >= 100 ? '[&>div]:bg-red-500' : ''}
                     />
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        {budget.progress.toFixed(1)}% used
+                        {(budget.progress || 0).toFixed(1)}% used
                       </span>
-                      <span className={budget.progress >= 100 ? 'text-red-500' : 'text-green-600'}>
-                        {formatCurrency(budget.monthlyAmount - budget.spent)} remaining
+                      <span className={(budget.progress || 0) >= 100 ? 'text-red-500' : 'text-green-600'}>
+                        {formatCurrency((budget.amount || 0) - (budget.spent || 0))} remaining
                       </span>
                     </div>
                   </>

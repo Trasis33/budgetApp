@@ -3,6 +3,37 @@ const router = express.Router();
 const db = require('../db/database');
 const auth = require('../middleware/auth');
 
+// @route   GET api/budgets
+// @desc    Get budgets for a specific month and year
+// @access  Private
+router.get('/', auth, async (req, res) => {
+  const { month, year } = req.query;
+
+  if (!month || !year) {
+    return res.status(400).json({ message: 'Month and year are required' });
+  }
+
+  try {
+    const budgets = await db('budgets')
+      .join('categories', 'budgets.category_id', 'categories.id')
+      .select(
+        'budgets.id',
+        'budgets.category_id',
+        'budgets.month',
+        'budgets.year',
+        'budgets.amount',
+        'categories.name as category_name'
+      )
+      .where('budgets.month', month)
+      .andWhere('budgets.year', year);
+
+    res.json(budgets);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   POST api/budgets
 // @desc    Create or update a budget for a category
 // @access  Private

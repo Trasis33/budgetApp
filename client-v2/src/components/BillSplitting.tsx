@@ -1,56 +1,100 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Expense, User } from '../types';
 import { formatCurrency, calculateBalance, calculateExpenseShare, filterExpensesByMonth } from '../lib/utils';
 import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign } from 'lucide-react';
+import { expenseService } from '../api/services/expenseService';
+import { analyticsService } from '../api/services/analyticsService';
+import { authService } from '../api/services/authService';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 interface BillSplittingProps {
-  expenses: Expense[];
-  currentUser: User;
-  partnerUser: User;
   onNavigate: (view: string) => void;
 }
 
-export function BillSplitting({ expenses, currentUser, partnerUser, onNavigate }: BillSplittingProps) {
+export function BillSplitting({ onNavigate }: BillSplittingProps) {
+  const { user } = useAuth();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [settlement, setSettlement] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
   const now = new Date();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [expensesData, usersData, settlementData] = await Promise.all([
+          expenseService.getExpenses('all'),
+          authService.getUsers(),
+          analyticsService.getCurrentSettlement()
+        ]);
+        setExpenses(expensesData);
+        setUsers(usersData);
+        setSettlement(settlementData.settlement);
+      } catch (error) {
+        toast.error('Failed to load bill splitting data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading bill splitting...</p>
+        </div>
+      </div>
+    );
+  }
+
   const monthlyExpenses = filterExpensesByMonth(expenses, now.getFullYear(), now.getMonth());
+  const currentUser = users.find(u => u.id === user?.id);
+  const partnerUser = users.find(u => u.id !== user?.id);
   
   // Calculate balance
   const balance = calculateBalance(monthlyExpenses, currentUser.id, partnerUser.id);
   
   // Split expenses by type
-  const sharedExpenses = monthlyExpenses.filter(exp => exp.splitType !== 'personal');
-  const personalExpenses = monthlyExpenses.filter(exp => exp.splitType === 'personal');
-  
+  const sharedExpenses = monthlyExpenses.filter(exp => exp.split_type !== 'personal');
+  const personalExpenses = monthlyExpenses.filter(exp => exp.split_type === 'personal');
+
   // Calculate individual totals
   const user1Paid = monthlyExpenses
-    .filter(exp => exp.paidBy === currentUser.id)
-    .reduce((sum, exp) => sum + exp.amount, 0);
-    
+    .filter(exp => exp.paid_by_user_id === currentUser.id)
+    .reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
   const user2Paid = monthlyExpenses
-    .filter(exp => exp.paidBy === partnerUser.id)
-    .reduce((sum, exp) => sum + exp.amount, 0);
-    
+    .filter(exp => exp.paid_by_user_id === partnerUser.id)
+    .reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
   const user1Share = monthlyExpenses
     .reduce((sum, exp) => sum + calculateExpenseShare(exp, currentUser.id), 0);
-    
+
   const user2Share = monthlyExpenses
     .reduce((sum, exp) => sum + calculateExpenseShare(exp, partnerUser.id), 0);
 
-  const totalShared = sharedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const totalShared = sharedExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
 
   const getUserName = (userId: string) => {
     return userId === currentUser.id ? currentUser.name : partnerUser.name;
   };
 
   const getSplitDetails = (expense: Expense) => {
-    if (expense.splitType === 'equal') {
+    if (expense.split_type === 'equal') {
       return '50/50 split';
     }
-    if (expense.splitType === 'custom') {
-      const payer = expense.paidBy === currentUser.id ? currentUser.name : partnerUser.name;
-      return `${payer}: ${expense.splitRatio}%`;
+    if (expense.split_type === 'custom') {
+      const payer = expense.paid_by_user_id === currentUser.id ? currentUser.name : partnerUser.name;
+      return `${payer}: ${expense.custom_split_ratio}%`;
     }
     return 'Personal';
   };
@@ -209,7 +253,7 @@ export function BillSplitting({ expenses, currentUser, partnerUser, onNavigate }
                           )}
                         </div>
                         <p className="text-muted-foreground">
-                          {expense.category} • Paid by {getUserName(expense.paidBy)}
+                          {expense.category_name} • Paid by {getUserName(expense.paid_by_user_id)}
                         </p>
                         <p className="text-muted-foreground">
                           {getSplitDetails(expense)}
@@ -250,7 +294,7 @@ export function BillSplitting({ expenses, currentUser, partnerUser, onNavigate }
                       <div>
                         <p>{expense.description}</p>
                         <p className="text-muted-foreground">
-                          {expense.category} • {getUserName(expense.paidBy)}
+                          {expense.category_name} • {getUserName(expense.paid_by_user_id)}
                         </p>
                       </div>
                       <div className="text-right">

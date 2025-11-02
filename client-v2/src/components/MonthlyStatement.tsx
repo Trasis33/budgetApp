@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -6,89 +6,121 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Separator } from './ui/separator';
 import { Expense, Budget, User, Income } from '../types';
 import { formatCurrency, formatDate, filterExpensesByMonth, calculateCategorySpending, calculateBalance } from '../lib/utils';
-import { ArrowLeft, Download, FileText } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
+import { expenseService } from '../api/services/expenseService';
+import { budgetService } from '../api/services/budgetService';
+import { summaryService } from '../api/services/summaryService';
+import { authService } from '../api/services/authService';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 interface MonthlyStatementProps {
-  expenses: Expense[];
-  budgets: Budget[];
-  income: Income[];
-  currentUser: User;
-  partnerUser: User;
   onNavigate: (view: string) => void;
 }
 
-export function MonthlyStatement({ 
-  expenses, 
-  budgets, 
-  income, 
-  currentUser, 
-  partnerUser, 
-  onNavigate 
-}: MonthlyStatementProps) {
+export function MonthlyStatement({ onNavigate }: MonthlyStatementProps) {
+  const { user } = useAuth();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [expensesData, usersData] = await Promise.all([
+          expenseService.getExpenses('all'),
+          authService.getUsers()
+        ]);
+        setExpenses(expensesData);
+        setUsers(usersData);
+
+        // Get budgets for selected month
+        const currentMonth = selectedMonth + 1;
+        const budgetsData = await budgetService.getBudgets(selectedYear, currentMonth);
+        setBudgets(budgetsData);
+      } catch (error) {
+        toast.error('Failed to load statement data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [selectedYear, selectedMonth]);
+
+  const currentUser = users.find(u => u.id === user?.id);
+  const partnerUser = users.find(u => u.id !== user?.id);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading statement...</p>
+        </div>
+      </div>
+    );
+  }
 
   const availableYears = Array.from(new Set(
     expenses.map(exp => new Date(exp.date).getFullYear())
   )).sort((a, b) => b - a);
 
   const monthlyExpenses = filterExpensesByMonth(expenses, selectedYear, selectedMonth);
-  const monthlyIncome = income.filter(inc => {
-    const incDate = new Date(inc.date);
-    return incDate.getFullYear() === selectedYear && incDate.getMonth() === selectedMonth;
-  });
 
-  const totalIncome = monthlyIncome.reduce((sum, inc) => sum + inc.amount, 0);
-  const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // For now, no income tracking in the backend, so using 0
+  const totalIncome = 0;
+  const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const netIncome = totalIncome - totalExpenses;
-  const savingsRate = totalIncome > 0 ? (netIncome / totalIncome) * 100 : 0;
 
   // Category breakdown
   const categoryBreakdown = budgets.map(budget => {
-    const spent = calculateCategorySpending(monthlyExpenses, budget.category);
+    const spent = calculateCategorySpending(monthlyExpenses, budget.category_name);
     return {
-      category: budget.category,
-      budget: budget.monthlyAmount,
+      category: budget.category_name,
+      budget: budget.amount,
       spent,
-      variance: budget.monthlyAmount - spent
+      variance: budget.amount - spent
     };
   }).filter(item => item.spent > 0);
 
-  const balance = calculateBalance(monthlyExpenses, currentUser.id, partnerUser.id);
+  const balance = currentUser && partnerUser
+    ? calculateBalance(monthlyExpenses, currentUser.id, partnerUser.id)
+    : 0;
 
   const handleExport = () => {
     const statementDate = new Date(selectedYear, selectedMonth);
     const monthName = statementDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    
+
     let csvContent = `CouplesFlow Monthly Statement - ${monthName}\n\n`;
     csvContent += `Generated: ${new Date().toLocaleDateString()}\n\n`;
-    
+
     csvContent += `INCOME SUMMARY\n`;
-    csvContent += `Source,Amount\n`;
-    monthlyIncome.forEach(inc => {
-      csvContent += `"${inc.source}",${inc.amount}\n`;
-    });
     csvContent += `Total Income,${totalIncome}\n\n`;
-    
+
     csvContent += `EXPENSE SUMMARY\n`;
     csvContent += `Category,Budget,Spent,Variance\n`;
     categoryBreakdown.forEach(cat => {
       csvContent += `"${cat.category}",${cat.budget},${cat.spent},${cat.variance}\n`;
     });
     csvContent += `Total Expenses,,${totalExpenses}\n\n`;
-    
+
     csvContent += `NET SUMMARY\n`;
     csvContent += `Total Income,${totalIncome}\n`;
     csvContent += `Total Expenses,${totalExpenses}\n`;
-    csvContent += `Net Income,${netIncome}\n`;
-    csvContent += `Savings Rate,${savingsRate.toFixed(2)}%\n\n`;
-    
+    csvContent += `Net Income,${netIncome}\n\n`;
+
     csvContent += `DETAILED TRANSACTIONS\n`;
     csvContent += `Date,Description,Category,Amount,Paid By,Split Type\n`;
     monthlyExpenses.forEach(exp => {
-      const paidBy = exp.paidBy === currentUser.id ? currentUser.name : partnerUser.name;
-      csvContent += `${exp.date},"${exp.description}","${exp.category}",${exp.amount},"${paidBy}",${exp.splitType}\n`;
+      const paidByUser = users.find(u => u.id === exp.paid_by_user_id);
+      const paidBy = paidByUser ? paidByUser.name : 'Unknown';
+      csvContent += `${exp.date},"${exp.description}","${exp.category_name}",${exp.amount},"${paidBy}",${exp.split_type}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -100,9 +132,9 @@ export function MonthlyStatement({
     window.URL.revokeObjectURL(url);
   };
 
-  const monthName = new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
-    month: 'long', 
-    year: 'numeric' 
+  const monthName = new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
   });
 
   return (
@@ -117,8 +149,8 @@ export function MonthlyStatement({
           <div className="flex items-center justify-between">
             <CardTitle>Monthly Statement</CardTitle>
             <div className="flex gap-3">
-              <Select 
-                value={selectedMonth.toString()} 
+              <Select
+                value={selectedMonth.toString()}
                 onValueChange={(val) => setSelectedMonth(parseInt(val))}
               >
                 <SelectTrigger className="w-[150px]">
@@ -132,9 +164,9 @@ export function MonthlyStatement({
                   ))}
                 </SelectContent>
               </Select>
-              
-              <Select 
-                value={selectedYear.toString()} 
+
+              <Select
+                value={selectedYear.toString()}
                 onValueChange={(val) => setSelectedYear(parseInt(val))}
               >
                 <SelectTrigger className="w-[120px]">
@@ -162,49 +194,20 @@ export function MonthlyStatement({
             <h2>{monthName}</h2>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="p-4 border rounded-lg">
-              <p className="text-muted-foreground">Total Income</p>
-              <p className="text-green-600">{formatCurrency(totalIncome)}</p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="p-4 border rounded-lg">
               <p className="text-muted-foreground">Total Expenses</p>
               <p className="text-red-500">{formatCurrency(totalExpenses)}</p>
             </div>
             <div className="p-4 border rounded-lg">
-              <p className="text-muted-foreground">Net Income</p>
+              <p className="text-muted-foreground">Net Balance</p>
               <p className={netIncome >= 0 ? 'text-green-600' : 'text-red-500'}>
                 {formatCurrency(netIncome)}
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <p className="text-muted-foreground">Savings Rate</p>
-              <p className={savingsRate >= 0 ? 'text-green-600' : 'text-red-500'}>
-                {savingsRate.toFixed(1)}%
-              </p>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <h3 className="mb-4">Income Sources</h3>
-            <div className="space-y-2">
-              {monthlyIncome.map(inc => (
-                <div key={inc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <span>{inc.source}</span>
-                  <span className="text-green-600">{formatCurrency(inc.amount)}</span>
-                </div>
-              ))}
-              {monthlyIncome.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">No income recorded</p>
-              )}
-              {monthlyIncome.length > 0 && (
-                <div className="flex items-center justify-between p-3 border-t-2">
-                  <span>Total Income</span>
-                  <span className="text-green-600">{formatCurrency(totalIncome)}</span>
-                </div>
-              )}
+              <p className="text-muted-foreground">Transactions</p>
+              <p>{monthlyExpenses.length}</p>
             </div>
           </div>
 
@@ -242,17 +245,17 @@ export function MonthlyStatement({
                 <TableRow>
                   <TableCell>Total</TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(budgets.reduce((sum, b) => sum + b.monthlyAmount, 0))}
+                    {formatCurrency(budgets.reduce((sum, b) => sum + (b.amount || 0), 0))}
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(totalExpenses)}</TableCell>
-                  <TableCell 
+                  <TableCell
                     className={`text-right ${
-                      budgets.reduce((sum, b) => sum + b.monthlyAmount, 0) - totalExpenses >= 0 
-                        ? 'text-green-600' 
+                      budgets.reduce((sum, b) => sum + (b.amount || 0), 0) - totalExpenses >= 0
+                        ? 'text-green-600'
                         : 'text-red-500'
                     }`}
                   >
-                    {formatCurrency(budgets.reduce((sum, b) => sum + b.monthlyAmount, 0) - totalExpenses)}
+                    {formatCurrency(budgets.reduce((sum, b) => sum + (b.amount || 0), 0) - totalExpenses)}
                   </TableCell>
                   <TableCell></TableCell>
                 </TableRow>
@@ -262,33 +265,35 @@ export function MonthlyStatement({
 
           <Separator />
 
-          <div>
-            <h3 className="mb-4">Split Settlement</h3>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-muted-foreground">{currentUser.name}</p>
-                  <p>{formatCurrency(monthlyExpenses.filter(e => e.paidBy === currentUser.id).reduce((s, e) => s + e.amount, 0))}</p>
+          {currentUser && partnerUser && (
+            <div>
+              <h3 className="mb-4">Split Settlement</h3>
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-muted-foreground">{currentUser.name}</p>
+                    <p>{formatCurrency(monthlyExpenses.filter(e => e.paid_by_user_id === currentUser.id).reduce((s, e) => s + (e.amount || 0), 0))}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-muted-foreground">{partnerUser.name}</p>
+                    <p>{formatCurrency(monthlyExpenses.filter(e => e.paid_by_user_id === partnerUser.id).reduce((s, e) => s + (e.amount || 0), 0))}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground">{partnerUser.name}</p>
-                  <p>{formatCurrency(monthlyExpenses.filter(e => e.paidBy === partnerUser.id).reduce((s, e) => s + e.amount, 0))}</p>
+                <Separator className="my-4" />
+                <div className="text-center">
+                  <p className="text-muted-foreground mb-2">Settlement Amount</p>
+                  <p>
+                    {Math.abs(balance) < 10
+                      ? "Settled up! 🎉"
+                      : balance > 0
+                        ? `${partnerUser.name} owes ${currentUser.name}: ${formatCurrency(Math.abs(balance))}`
+                        : `${currentUser.name} owes ${partnerUser.name}: ${formatCurrency(Math.abs(balance))}`
+                    }
+                  </p>
                 </div>
-              </div>
-              <Separator className="my-4" />
-              <div className="text-center">
-                <p className="text-muted-foreground mb-2">Settlement Amount</p>
-                <p>
-                  {Math.abs(balance) < 10 
-                    ? "Settled up! 🎉" 
-                    : balance > 0 
-                      ? `${partnerUser.name} owes ${currentUser.name}: ${formatCurrency(Math.abs(balance))}`
-                      : `${currentUser.name} owes ${partnerUser.name}: ${formatCurrency(Math.abs(balance))}`
-                  }
-                </p>
               </div>
             </div>
-          </div>
+          )}
 
           <Separator />
 
@@ -307,17 +312,20 @@ export function MonthlyStatement({
               <TableBody>
                 {monthlyExpenses
                   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .map(expense => (
-                    <TableRow key={expense.id}>
-                      <TableCell>{formatDate(expense.date)}</TableCell>
-                      <TableCell>{expense.description}</TableCell>
-                      <TableCell>{expense.category}</TableCell>
-                      <TableCell>
-                        {expense.paidBy === currentUser.id ? currentUser.name : partnerUser.name}
-                      </TableCell>
-                      <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
-                    </TableRow>
-                  ))}
+                  .map(expense => {
+                    const paidByUser = users.find(u => u.id === expense.paid_by_user_id);
+                    return (
+                      <TableRow key={expense.id}>
+                        <TableCell>{formatDate(expense.date)}</TableCell>
+                        <TableCell>{expense.description}</TableCell>
+                        <TableCell>{expense.category_name}</TableCell>
+                        <TableCell>
+                          {paidByUser ? paidByUser.name : 'Unknown'}
+                        </TableCell>
+                        <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
               </TableBody>
             </Table>
           </div>

@@ -1,23 +1,65 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Expense, Budget } from '../types';
 import { formatCurrency, filterExpensesByMonth } from '../lib/utils';
 import { ArrowLeft, TrendingUp, PieChart as PieChartIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { expenseService } from '../api/services/expenseService';
+import { analyticsService } from '../api/services/analyticsService';
+import { toast } from 'sonner';
 
 interface AnalyticsProps {
-  expenses: Expense[];
-  budgets: Budget[];
   onNavigate: (view: string) => void;
 }
 
-export function Analytics({ expenses, budgets, onNavigate }: AnalyticsProps) {
+export function Analytics({ onNavigate }: AnalyticsProps) {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+
   const now = new Date();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [expensesData] = await Promise.all([
+          expenseService.getExpenses('all')
+        ]);
+        setExpenses(expensesData);
+
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(new Date().setMonth(new Date().getMonth() - 5))
+          .toISOString().split('T')[0];
+
+        const trendsData = await analyticsService.getTrends(startDate, endDate);
+        setAnalyticsData(trendsData);
+      } catch (error) {
+        toast.error('Failed to load analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Category breakdown for current month
   const monthlyExpenses = filterExpensesByMonth(expenses, now.getFullYear(), now.getMonth());
   const categoryTotals = monthlyExpenses.reduce((acc, exp) => {
-    acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+    acc[exp.category_name] = (acc[exp.category_name] || 0) + exp.amount;
     return acc;
   }, {} as Record<string, number>);
 
@@ -42,18 +84,18 @@ export function Analytics({ expenses, budgets, onNavigate }: AnalyticsProps) {
 
   // Budget vs Actual
   const budgetComparison = budgets.map(budget => {
-    const spent = categoryTotals[budget.category] || 0;
+    const spent = categoryTotals[budget.category_name] || 0;
     return {
-      category: budget.category,
-      budget: budget.monthlyAmount,
+      category: budget.category_name,
+      budget: budget.amount,
       spent: parseFloat(spent.toFixed(2))
     };
   }).filter(item => item.spent > 0);
 
   // Split type breakdown
   const splitTypeData = monthlyExpenses.reduce((acc, exp) => {
-    const type = exp.splitType === 'personal' ? 'Personal' : 
-                 exp.splitType === 'equal' ? 'Split 50/50' : 'Custom Split';
+    const type = exp.split_type === 'personal' ? 'Personal' :
+                 exp.split_type === 'equal' ? 'Split 50/50' : 'Custom Split';
     acc[type] = (acc[type] || 0) + exp.amount;
     return acc;
   }, {} as Record<string, number>);
