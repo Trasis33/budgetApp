@@ -6,7 +6,8 @@ import { Label } from './ui/label';
 import { Progress } from './ui/progress';
 import { Budget, Expense, Category } from '../types';
 import { formatCurrency, filterExpensesByMonth, calculateCategorySpending, getBudgetProgress } from '../lib/utils';
-import { ArrowLeft, Plus, Pencil, Trash2, TrendingUp, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, Pencil, Trash2, TrendingUp, AlertCircle, PieChart, Target, PlusCircle } from 'lucide-react';
 import { budgetService } from '../api/services/budgetService';
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
@@ -17,6 +18,7 @@ interface BudgetManagerProps {
 }
 
 export function BudgetManager({ onNavigate }: BudgetManagerProps) {
+  const navigate = useNavigate();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,7 +49,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
           setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
         }
       } catch (error) {
-        toast.error('Failed to load budgets');
+        toast.error('Having trouble loading budgets. Check your connection and try again');
       } finally {
         setLoading(false);
       }
@@ -65,6 +67,21 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
   const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
   const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const overallProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+  const getBudgetMessage = (spent: number, budgetAmount: number) => {
+    const percentage = (spent / budgetAmount) * 100;
+    if (percentage <= 50) return "Great start! You're well within budget";
+    if (percentage <= 80) return "Looking good! You're using your budget wisely";
+    if (percentage <= 100) return "Getting close to your limit";
+    return "You've reached your budget goal";
+  };
+
+  const getOverallMessage = () => {
+    if (overallProgress <= 50) return "Excellent! You're staying well within your budgets";
+    if (overallProgress <= 80) return "Nice work! You're managing your budgets well";
+    if (overallProgress <= 100) return "You're approaching your total budget limit";
+    return "You've exceeded your total budget – let's review and adjust";
+  };
 
   const usedCategories = budgets.map(b => b.category_name);
   const availableCategories = categories.filter(cat => !usedCategories.includes(cat.name));
@@ -85,9 +102,9 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
 
       setFormData({ category_id: categories[0]?.id || 1, amount: '' });
       setIsAdding(false);
-      toast.success('Budget created');
+      toast.success('✨ Budget goal set! We\'ll track your progress');
     } catch (error) {
-      toast.error('Failed to create budget');
+      toast.error('Could not create budget. Please check your amount and try again');
     }
   };
 
@@ -113,9 +130,9 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
 
       setEditingId(null);
       setFormData({ category_id: categories[0]?.id || 1, amount: '' });
-      toast.success('Budget updated');
+      toast.success('✨ Budget updated successfully');
     } catch (error) {
-      toast.error('Failed to update budget');
+      toast.error('Could not update budget. Please try again');
     }
   };
 
@@ -124,7 +141,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading budgets...</p>
+          <p className="mt-4 text-gray-600">Getting your budget goals ready...</p>
         </div>
       </div>
     );
@@ -132,54 +149,96 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
 
   return (
     <div className="p-6">
-      <Button variant="ghost" onClick={() => onNavigate('dashboard')} className="mb-4">
+      <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Dashboard
       </Button>
 
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Budget goals</h1>
+        <p className="text-gray-600">
+          Plan your spending before it happens. Set realistic budgets and we'll 
+          {budgetsWithSpending.length > 0 ? ' show you how you\'re doing' : ' help you get started'}.
+        </p>
+      </div>
+
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Overall Budget Performance</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="h-5 w-5" />
+              How you're doing overall
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-muted-foreground">Total Spent this Month</p>
-                  <p>{formatCurrency(totalSpent)}</p>
+            {totalBudget > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total spent this month</p>
+                    <p className="text-2xl font-semibold">{formatCurrency(totalSpent)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">Your total budget</p>
+                    <p className="text-2xl font-semibold">{formatCurrency(totalBudget)}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground">Total Budget</p>
-                  <p>{formatCurrency(totalBudget)}</p>
-                </div>
-              </div>
-              <Progress 
-                value={overallProgress} 
-                className={overallProgress >= 100 ? '[&>div]:bg-red-500' : ''}
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">
-                  {overallProgress.toFixed(1)}% of budget used
-                </span>
-                {overallProgress >= 90 && (
-                  <span className="flex items-center gap-1 text-red-500">
-                    <AlertCircle className="h-4 w-4" />
-                    {overallProgress >= 100 ? 'Over budget!' : 'Almost at limit'}
+                <Progress 
+                  value={Math.min(overallProgress, 100)} 
+                  className={overallProgress >= 100 ? '[&>div]:bg-red-500' : overallProgress >= 80 ? '[&>div]:bg-orange-500' : '[&>div]:bg-green-500'}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">
+                    {overallProgress.toFixed(1)}% of budget used
                   </span>
-                )}
+                  <div className="text-right">
+                    <p className={`text-sm font-medium ${
+                      overallProgress >= 100 ? 'text-red-600' : 
+                      overallProgress >= 80 ? 'text-orange-600' : 'text-green-600'
+                    }`}>
+                      {overallProgress >= 100 
+                        ? `Over by ${formatCurrency(totalSpent - totalBudget)}`
+                        : `${formatCurrency(totalBudget - totalSpent)} remaining`
+                      }
+                    </p>
+                  </div>
+                </div>
+                <p className={`text-sm ${
+                  overallProgress >= 100 ? 'text-red-700' : 
+                  overallProgress >= 80 ? 'text-orange-700' : 'text-green-700'
+                }`}>
+                  {getOverallMessage()}
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Ready to set your first budget?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Budgets help you plan spending before it happens. Start with categories 
+                  you spend on most – groceries, gas, or fun money.
+                </p>
+                <p className="text-xs text-gray-500">
+                  💡 Pro tip: Start with 2-3 categories, you can always add more
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Category Budgets</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Category budgets
+            </CardTitle>
             {!isAdding && availableCategories.length > 0 && (
-              <Button onClick={() => setIsAdding(true)} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Budget
+              <Button onClick={() => setIsAdding(true)} size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add budget
               </Button>
             )}
           </CardHeader>
@@ -282,18 +341,33 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
                         {formatCurrency((budget.amount || 0) - (budget.spent || 0))} remaining
                       </span>
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {getBudgetMessage(budget.spent || 0, budget.amount || 0)}
+                    </p>
                   </>
                 )}
               </div>
             ))}
 
             {budgetsWithSpending.length === 0 && !isAdding && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No budgets set yet</p>
-                <Button onClick={() => setIsAdding(true)} className="mt-4">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Your First Budget
-                </Button>
+              <div className="text-center py-12">
+                <PieChart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Ready to plan ahead?
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Budgets help you decide what to spend before you spend it. 
+                  Start with categories you spend on most – groceries, gas, fun money.
+                </p>
+                <div className="space-y-3 max-w-xs mx-auto">
+                  <Button onClick={() => setIsAdding(true)} className="w-full">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create my first budget
+                  </Button>
+                  <p className="text-xs text-gray-500">
+                    💡 Pro tip: Start with 2-3 categories, you can always add more
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>

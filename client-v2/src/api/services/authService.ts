@@ -37,6 +37,10 @@ export const authService = {
     return apiClient.put('/auth/profile', data);
   },
 
+  async invitePartner(email: string) {
+    return apiClient.post('/auth/invite-partner', { email });
+  },
+
   async getUsers() {
     return apiClient.get('/auth/users');
   },

@@ -36,9 +36,20 @@ export const Register: React.FC = () => {
 
     try {
       await register(name, email, password);
-      toast.success('Account created successfully!');
+      toast.success('🎉 Welcome to CouplesFlow! Ready to invite your partner?', {
+        duration: 5000
+      });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      const message = error.response?.data?.message;
+      if (message?.includes('email') && message?.includes('exists')) {
+        toast.error('An account with this email already exists. Try signing in instead');
+      } else if (message?.includes('password')) {
+        toast.error('Password needs to be at least 6 characters');
+      } else if (message?.includes('network') || message?.includes('connection')) {
+        toast.error('Connection issue. Check your internet and try again');
+      } else {
+        toast.error('Having trouble creating your account. Please try again');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,9 +59,9 @@ export const Register: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center">Create Account</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">Let's get started!</CardTitle>
           <CardDescription className="text-center">
-            Start managing your couple's budget today
+            Create your account and take the first step toward better money teamwork
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -86,7 +97,7 @@ export const Register: React.FC = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 6 characters"
+                placeholder="Choose a secure password (6+ characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -111,6 +122,9 @@ export const Register: React.FC = () => {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-sm text-gray-500 mb-4">
+              ✨ You're about to join thousands of couples making money less stressful
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-2">

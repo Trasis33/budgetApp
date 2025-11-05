@@ -23,9 +23,16 @@ export const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      toast.success('Logged in successfully!');
+      toast.success('🎉 Welcome back! Ready to see how your money is doing?');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      const message = error.response?.data?.message;
+      if (message?.includes('Invalid credentials') || message?.includes('email') || message?.includes('password')) {
+        toast.error('Check your email and password, then try again');
+      } else if (message?.includes('network') || message?.includes('connection')) {
+        toast.error('Connection issue. Check your internet and try again');
+      } else {
+        toast.error('Having trouble signing in. Please try again in a moment');
+      }
     } finally {
       setLoading(false);
     }
@@ -35,9 +42,9 @@ export const Login: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">Welcome back!</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your Couples Budget account
+            Let's see how your money journey is going
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -60,7 +67,7 @@ export const Login: React.FC = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Your secure password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -70,6 +77,9 @@ export const Login: React.FC = () => {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-sm text-gray-500 mb-4">
+              💡 Having trouble? Make sure you're using the same email you registered with
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-2">

@@ -143,14 +143,85 @@ router.get('/user', auth, async (req, res) => {
 });
 
 // @route   GET api/auth/users
-// @desc    Get all users (for expense splitting)
+// @desc    Get current user and their partner (for expense splitting)
 // @access  Private
 router.get('/users', auth, async (req, res) => {
   try {
-    const users = await db('users')
+    const currentUserId = req.user.id;
+    
+    // Get current user
+    const currentUser = await db('users')
       .select('id', 'name', 'email')
-      .orderBy('name');
-    res.json(users);
+      .where('id', currentUserId)
+      .first();
+    
+    // Get user's partner
+    const partner = await db('users')
+      .select('id', 'name', 'email')
+      .where('partner_id', currentUserId)
+      .first();
+    
+    // If user has a partner, return both
+    if (partner) {
+      res.json([currentUser, partner]);
+    } else {
+      // If no partner, only return current user with a flag
+      res.json([{
+        ...currentUser,
+        hasPartner: false,
+        partnerStatus: 'no_partner'
+      }]);
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/auth/invite-partner
+// @desc    Invite a partner by email
+// @access  Private
+router.post('/invite-partner', auth, async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    const currentUser = await db('users').where('id', req.user.id).first();
+    
+    // Check if user already has a partner
+    if (currentUser.partner_id) {
+      return res.status(400).json({ message: 'You already have a partner connected' });
+    }
+    
+    // Check if the email exists
+    const partner = await db('users').where('email', email).first();
+    
+    if (!partner) {
+      // In a real app, you'd send an email invitation here
+      return res.status(404).json({ 
+        message: 'No account found with that email. They need to create an account first.',
+        needsToRegister: true,
+        email: email
+      });
+    }
+    
+    // Check if the potential partner already has a partner
+    if (partner.partner_id) {
+      return res.status(400).json({ message: 'That person already has a partner connected' });
+    }
+    
+    // Create the partnership (bidirectional)
+    await db('users').where('id', req.user.id).update({ partner_id: partner.id });
+    await db('users').where('id', partner.id).update({ partner_id: req.user.id });
+    
+    res.json({ 
+      message: `Successfully connected with ${partner.name}!`,
+      partner: {
+        id: partner.id,
+        name: partner.name,
+        email: partner.email
+      }
+    });
+    
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

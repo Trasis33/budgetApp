@@ -10,6 +10,7 @@ import { Switch } from './ui/switch';
 import { Expense, Category, User } from '../types';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { authService } from '../api/services/authService';
@@ -25,6 +26,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -51,7 +53,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
           setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
         }
       } catch (error) {
-        toast.error('Failed to load form data');
+        toast.error('Having trouble loading categories. Try refreshing the page');
       }
     };
 
@@ -59,7 +61,9 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   }, []);
 
   const currentUser = users.find(u => u.id === user?.id);
-  const partnerUser = users.find(u => u.id !== user?.id);
+  const partnerUser = users.find(u => u.id !== user?.id && u.hasPartner !== false);
+  
+  const hasPartner = currentUser?.hasPartner === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,10 +83,23 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
         })
       });
 
-      toast.success('Expense added successfully!');
+      toast.success('✨ Expense tracked! Check the dashboard to see how it affects your monthly totals', {
+        duration: 4000
+      });
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to add expense');
+      const message = error.response?.data?.message;
+      if (message?.includes('amount') || message?.includes('invalid')) {
+        toast.error('Please check the amount – it needs to be greater than 0');
+      } else if (message?.includes('required') || message?.includes('description')) {
+        toast.error('Please tell us what this expense was for');
+      } else if (message?.includes('network') || message?.includes('connection')) {
+        toast.error('Connection issue. Your expense might not have saved. Try again?', {
+          duration: 6000
+        });
+      } else {
+        toast.error('Something went wrong adding your expense. Please try again');
+      }
     } finally {
       setLoading(false);
     }
@@ -97,7 +114,29 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Add New Expense</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            💸 Add your expense
+          </CardTitle>
+          <p className="text-sm text-gray-600 mt-2">
+            No judgments here – let's capture what happened
+          </p>
+          {hasPartner && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                💕 <strong>Solo mode:</strong> Invite your partner to start tracking shared expenses together! 
+                For now, you can still track personal expenses.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-2 text-blue-700 border-blue-300 hover:bg-blue-100"
+                onClick={() => setInviteModalOpen(true)}
+              >
+                Invite partner
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -113,6 +152,21 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   required
                 />
+                {/* Quick presets */}
+                <div className="flex flex-wrap gap-2">
+                  {[50, 100, 250, 500, 1000].map(amount => (
+                    <Button
+                      key={amount}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData(prev => ({ ...prev, amount: amount.toString() }))}
+                      className="text-xs h-7"
+                    >
+                      {amount} kr
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -159,39 +213,59 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="paidBy">Paid By</Label>
-              <Select
-                value={formData.paid_by_user_id.toString()}
-                onValueChange={(value) => setFormData({ ...formData, paid_by_user_id: parseInt(value) })}
-              >
-                <SelectTrigger id="paidBy">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map(u => (
-                    <SelectItem key={u.id} value={u.id.toString()}>
-                      {u.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {hasPartner ? (
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    {currentUser?.name} (solo mode - you can invite your partner later)
+                  </p>
+                </div>
+              ) : (
+                <Select
+                  value={formData.paid_by_user_id.toString()}
+                  onValueChange={(value) => setFormData({ ...formData, paid_by_user_id: parseInt(value) })}
+                >
+                  <SelectTrigger id="paidBy">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.id.toString()}>
+                        {u.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="splitType">Split Type</Label>
-              <Select
-                value={formData.split_type}
-                onValueChange={(value: any) => setFormData({ ...formData, split_type: value })}
+            <div className="space-y-3">
+              <Label htmlFor="splitType">How should we split this?</Label>
+              <Select 
+                value={formData.split_type} 
+                onValueChange={(value: any) => setFormData({ 
+                  ...formData, 
+                  split_type: value,
+                  // Reset custom ratios when changing split type
+                  ...(value !== 'custom' && { split_ratio_user1: 50, split_ratio_user2: 50 })
+                })}
               >
                 <SelectTrigger id="splitType">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="50/50">Equal (50/50)</SelectItem>
-                  <SelectItem value="custom">Custom Split</SelectItem>
-                  <SelectItem value="personal">Personal (No Split)</SelectItem>
-                  <SelectItem value="bill">Bill</SelectItem>
+                  <SelectItem value="50/50">50/50 split (easiest)</SelectItem>
+                  <SelectItem value="personal">You pay it all</SelectItem>
+                  <SelectItem value="bill">Partner pays it all</SelectItem>
+                  <SelectItem value="custom">Custom split</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Helper text */}
+              <p className="text-xs text-gray-500">
+                {formData.split_type === '50/50' && "Perfect for shared expenses like groceries"}
+                {formData.split_type === 'personal' && "When you want to cover the full amount"}
+                {formData.split_type === 'bill' && "When partner covers the full amount"}
+                {formData.split_type === 'custom' && "You decide the exact percentages"}
+              </p>
             </div>
 
             {formData.split_type === 'custom' && (
@@ -231,6 +305,16 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
           </form>
         </CardContent>
       </Card>
+      
+      {/* Partner Invitation Modal */}
+      <PartnerInviteModal
+        open={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        onSuccess={() => {
+          // Refresh data to show updated partnership status
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

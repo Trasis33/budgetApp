@@ -32,11 +32,17 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
           authService.getUsers(),
           analyticsService.getCurrentSettlement()
         ]);
-        setExpenses(expensesData);
-        setUsers(usersData);
-        setSettlement(settlementData.settlement);
+
+        setExpenses(expensesData || []);
+        setUsers(usersData || []);
+        setSettlement(settlementData?.settlement || null);
       } catch (error) {
+        console.error('Failed to load bill splitting data:', error);
         toast.error('Failed to load bill splitting data');
+        // Set empty arrays on error to prevent undefined issues
+        setExpenses([]);
+        setUsers([]);
+        setSettlement(null);
       } finally {
         setLoading(false);
       }
@@ -59,6 +65,25 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
   const monthlyExpenses = filterExpensesByMonth(expenses, now.getFullYear(), now.getMonth());
   const currentUser = users.find(u => u.id === user?.id);
   const partnerUser = users.find(u => u.id !== user?.id);
+
+  // Early return if we don't have the required data
+  if (!currentUser || !partnerUser || users.length === 0) {
+    return (
+      <div className="p-6">
+        <Button variant="ghost" onClick={() => onNavigate('dashboard')} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">
+              {users.length === 0 ? 'Loading user data...' : 'Setting up bill splitting...'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   // Calculate balance
   const balance = calculateBalance(monthlyExpenses, currentUser.id, partnerUser.id);
@@ -222,7 +247,10 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
             </CardHeader>
             <CardContent>
               <div>
-                {((user1Share / (user1Share + user2Share)) * 100).toFixed(0)}% / {((user2Share / (user1Share + user2Share)) * 100).toFixed(0)}%
+                {user1Share + user2Share > 0 
+                  ? `${((user1Share / (user1Share + user2Share)) * 100).toFixed(0)}% / ${((user2Share / (user1Share + user2Share)) * 100).toFixed(0)}%`
+                  : '0% / 0%'
+                }
               </div>
               <p className="text-muted-foreground mt-1">
                 {currentUser.name} / {partnerUser.name}

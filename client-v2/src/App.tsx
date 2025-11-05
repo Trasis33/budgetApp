@@ -13,8 +13,7 @@ import { Register } from './components/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { mockUsers, mockExpenses, mockBudgets, mockIncome } from './lib/mockData';
 import { Expense, Budget } from './types';
-import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner@2.0.3';
+import { Toaster } from 'sonner';
 import { useAuth } from './context/AuthContext';
 
 const MainApp = () => {

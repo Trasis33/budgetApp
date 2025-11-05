@@ -32,7 +32,10 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
       <div className="flex items-center h-16 px-6">
         <Link to="/dashboard" className="flex items-center gap-2 mr-8">
           <DollarSign className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">CouplesFlow</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-lg">CouplesFlow</span>
+            <span className="hidden lg:inline text-xs text-gray-500 -mt-1">Money, together</span>
+          </div>
         </Link>
 
         <div className="hidden md:flex items-center gap-1 flex-1">
@@ -57,9 +60,15 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
 
         <div className="flex items-center gap-4 ml-auto">
           {user && (
-            <span className="text-sm text-gray-600 hidden md:inline">
-              {user.name}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600 hidden md:inline">
+                Hey {user.name}! 
+              </span>
+              <div className="hidden md:flex items-center gap-1 text-xs">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-gray-500">Team mode</span>
+              </div>
+            </div>
           )}
           <Button variant="outline" size="sm" onClick={onLogout} className="gap-2">
             <LogOut className="h-4 w-4" />
