@@ -11,8 +11,10 @@ import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
 import { budgetService } from '../api/services/budgetService';
 import { toast } from 'sonner';
-import DashboardHeader from './DashboardHeader';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useScope } from '../context/ScopeContext';
+import { Users, User, Heart } from 'lucide-react';
+import type { ScopeType } from '../types/scope';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -24,7 +26,7 @@ export interface DashboardPropsExport {
 
 export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const { user } = useAuth();
-  const { currentScope, isLoading: scopeLoading } = useScope();
+  const { currentScope, setScope, isLoading: scopeLoading } = useScope();
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -93,16 +95,6 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      <DashboardHeader 
-        title={`${currentScope === 'ours' ? 'Our' : currentScope === 'mine' ? 'My' : "Partner's"} money dashboard`}
-        subtitle={now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-        showScopeSelector={true}
-        showNotifications={false}
-        showUserMenu={false}
-      />
-      
-      <div className="px-6 space-y-6">
-
       {/* Partner Invitation Banner for Unpaired Users */}
       {monthlyExpenses.length === 0 && expenses.length === 0 && (
         <div style={{
@@ -142,14 +134,41 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                👋 Hey {user?.name}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
-              </h2>
+              <div className="flex items-center gap-4 mb-3">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  👋 Hey {user?.name}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
+                </h2>
+                <Select value={currentScope} onValueChange={(value: ScopeType) => setScope(value)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mine">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Personal
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="ours">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Shared
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="partner">
+                      <div className="flex items-center gap-2">
+                        <Heart className="w-4 h-4" />
+                        Partner
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <p className="text-gray-600">
                 This month you've tracked {monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses totalling {formatCurrency(totalSpent)}
               </p>
               <div className="flex gap-3 mt-4">
-                <Button
+                {/* <Button
                   type="button"
                   size="sm"
                   onClick={() => navigate('/add-expense')}
@@ -157,27 +176,30 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add expense
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate('/expenses')}
-                  className="gap-2"
-                >
-                  <Receipt className="h-4 w-4" />
-                  View all
-                </Button>
+                </Button> */}
+                
               </div>
             </div>
-            <Button 
-              type="button" 
-              onClick={() => navigate('/add-expense')} 
-              className="gap-2"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add expense
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button 
+                type="button" 
+                onClick={() => navigate('/add-expense')} 
+                className="gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add expense
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => navigate('/expenses')}
+                className="gap-2"
+              >
+                <Receipt className="h-4 w-4" />
+                View all
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -370,7 +392,6 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           window.location.reload();
         }}
       />
-      </div>
     </div>
   );
 }
