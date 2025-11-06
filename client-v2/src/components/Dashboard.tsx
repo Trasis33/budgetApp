@@ -11,13 +11,20 @@ import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
 import { budgetService } from '../api/services/budgetService';
 import { toast } from 'sonner';
+import DashboardHeader from './DashboardHeader';
+import { useScope } from '../context/ScopeContext';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
-export function Dashboard({ onNavigate }: DashboardProps) {
+export interface DashboardPropsExport {
+  onNavigate: (view: string) => void;
+}
+
+export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const { user } = useAuth();
+  const { currentScope, isLoading: scopeLoading } = useScope();
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -32,7 +39,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const loadData = async () => {
       try {
         const [expensesData, budgetsData] = await Promise.all([
-          expenseService.getExpenses('ours'),
+          expenseService.getExpenses(currentScope),
           budgetService.getBudgets(new Date().getMonth() + 1, new Date().getFullYear())
         ]);
         setExpenses(expensesData);
@@ -44,10 +51,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       }
     };
 
-    loadData();
-  }, []);
+    if (!scopeLoading) {
+      loadData();
+    }
+  }, [currentScope, scopeLoading]);
 
-  if (loading) {
+  if (loading || scopeLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -83,20 +92,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   })).filter(b => b.spent > 0);
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Your money dashboard</h1>
-          <p className="text-muted-foreground">
-            {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-          </p>
-        </div>
-        <Button type="button" onClick={() => navigate('/add-expense')} className="gap-2">
-          <PlusCircle className="h-4 w-4" />
-          Add expense
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <DashboardHeader 
+        title={`${currentScope === 'ours' ? 'Our' : currentScope === 'mine' ? 'My' : "Partner's"} money dashboard`}
+        subtitle={now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        showScopeSelector={true}
+        showNotifications={false}
+        showUserMenu={false}
+      />
+      
+      <div className="px-6 space-y-6">
 
       {/* Partner Invitation Banner for Unpaired Users */}
       {monthlyExpenses.length === 0 && expenses.length === 0 && (
@@ -136,12 +141,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {monthlyExpenses.length > 0 && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
           <div className="flex items-start justify-between">
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                👋 Hey {user?.name}! Here's your money at a glance
+                👋 Hey {user?.name}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
               </h2>
               <p className="text-gray-600">
-                This month you've tracked {monthlyExpenses.length} expenses totalling {formatCurrency(totalSpent)}
+                This month you've tracked {monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses totalling {formatCurrency(totalSpent)}
               </p>
               <div className="flex gap-3 mt-4">
                 <Button
@@ -165,6 +170,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </Button>
               </div>
             </div>
+            <Button 
+              type="button" 
+              onClick={() => navigate('/add-expense')} 
+              className="gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add expense
+            </Button>
           </div>
         </div>
       )}
@@ -357,6 +370,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           window.location.reload();
         }}
       />
+      </div>
     </div>
   );
 }

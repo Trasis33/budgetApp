@@ -40,3 +40,4 @@ yarn-error.log*
 # system files
 .DS_Store
 .aider*
+scratchbook.md

@@ -12,6 +12,7 @@ import { budgetService } from '../api/services/budgetService';
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { toast } from 'sonner';
+import { useScope } from '@/context/ScopeContext';
 
 interface BudgetManagerProps {
   onNavigate: (view: string) => void;
@@ -19,6 +20,7 @@ interface BudgetManagerProps {
 
 export function BudgetManager({ onNavigate }: BudgetManagerProps) {
   const navigate = useNavigate();
+  const { currentScope, isLoading: scopeLoading } = useScope();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -36,9 +38,10 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Pass scope to API calls for filtered data
         const [budgetsData, expensesData, categoriesData] = await Promise.all([
           budgetService.getBudgets(now.getMonth() + 1, now.getFullYear()),
-          expenseService.getExpenses('all'),
+          expenseService.getExpenses(currentScope),
           categoryService.getCategories()
         ]);
         setBudgets(budgetsData);
@@ -55,8 +58,10 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
       }
     };
 
-    loadData();
-  }, []);
+    if (!scopeLoading) {
+      loadData();
+    }
+  }, [currentScope, scopeLoading]);
 
   const budgetsWithSpending = budgets.map(budget => ({
     ...budget,
@@ -136,6 +141,17 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      await budgetService.deleteBudget(id);
+      const budgetsData = await budgetService.getBudgets(now.getMonth() + 1, now.getFullYear());
+      setBudgets(budgetsData);
+      toast.success('Budget removed');
+    } catch (error) {
+      toast.error('Could not delete budget. Please try again');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -154,13 +170,19 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
         Back to Dashboard
       </Button>
 
-      {/* Header Section */}
+      {/* Header Section with Scope Info */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Budget goals</h1>
-        <p className="text-gray-600">
-          Plan your spending before it happens. Set realistic budgets and we'll 
-          {budgetsWithSpending.length > 0 ? ' show you how you\'re doing' : ' help you get started'}.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              {currentScope === 'ours' ? 'Our' : currentScope === 'mine' ? 'My' : "Partner's"} Budget Goals
+            </h1>
+            <p className="text-gray-600">
+              Plan your spending before it happens. Set realistic budgets and we'll 
+              {budgetsWithSpending.length > 0 ? ' show you how you\'re doing' : ' help you get started'}.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -323,7 +345,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => onDeleteBudget(budget.id)}
+                          onClick={() => handleDelete(budget.id)}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>

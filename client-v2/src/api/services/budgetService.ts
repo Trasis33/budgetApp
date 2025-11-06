@@ -22,4 +22,8 @@ export const budgetService = {
   async getBudgets(month: number, year: number) {
     return apiClient.get<Budget[]>(`/budgets?month=${month}&year=${year}`);
   },
+
+  async deleteBudget(id: number) {
+    return apiClient.delete(`/budgets/${id}`);
+  },
 };
