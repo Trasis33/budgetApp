@@ -26,7 +26,7 @@ export interface DashboardPropsExport {
 
 export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const { user } = useAuth();
-  const { currentScope, setScope, isLoading: scopeLoading } = useScope();
+  const { isPartnerConnected, currentScope, setScope, isLoading: scopeLoading } = useScope();
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -167,6 +167,20 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               <p className="text-gray-600">
                 This month you've tracked {monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses totalling {formatCurrency(totalSpent)}
               </p>
+              <p className="text-sm text-gray-500 mt-2">
+                {now.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  isPartnerConnected ? 'bg-green-500' : 'bg-gray-300'
+                }`} />
+                <span className="text-xs text-gray-500">
+                  {isPartnerConnected 
+                    ? `Partner connected • Viewing ${currentScope} budget` 
+                    : `Partner not connected • Viewing ${currentScope} budget`
+                  }
+                </span>
+              </div>
               <div className="flex gap-3 mt-4">
                 {/* <Button
                   type="button"
