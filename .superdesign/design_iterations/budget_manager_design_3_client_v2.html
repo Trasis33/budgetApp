@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Manager - Design 3: Client-v2 Styled</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Import your exact design system */
+        :root {
+          --font-size: 16px;
+          --background: #ffffff;
+          --foreground: oklch(0.145 0 0);
+          --card: #ffffff;
+          --card-foreground: oklch(0.145 0 0);
+          --popover: oklch(1 0 0);
+          --popover-foreground: oklch(0.145 0 0);
+          --primary: #030213;
+          --primary-foreground: oklch(1 0 0);
+          --secondary: oklch(0.95 0.0058 264.53);
+          --secondary-foreground: #030213;
+          --muted: #ececf0;
+          --muted-foreground: #717182;
+          --accent: #e9ebef;
+          --accent-foreground: #030213;
+          --destructive: #d4183d;
+          --destructive-foreground: #ffffff;
+          --border: rgba(0, 0, 0, 0.1);
+          --input: transparent;
+          --input-background: #f3f3f5;
+          --switch-background: #cbced4;
+          --font-weight-medium: 500;
+          --font-weight-normal: 400;
+          --ring: oklch(0.708 0 0);
+          --chart-1: oklch(0.646 0.222 41.116);
+          --chart-2: oklch(0.6 0.118 184.704);
+          --chart-3: oklch(0.398 0.07 227.392);
+          --chart-4: oklch(0.828 0.189 84.429);
+          --chart-5: oklch(0.769 0.188 70.08);
+          --radius: 0.625rem;
+          --radius-sm: calc(var(--radius) - 4px);
+          --radius-md: calc(var(--radius) - 2px);
+          --radius-lg: var(--radius);
+          --radius-xl: calc(var(--radius) + 4px);
+        }
+
+        * {
+          border-color: var(--border);
+          outline-color: var(--ring);
+        }
+
+        body {
+          background-color: var(--background);
+          color: var(--foreground);
+          font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        .card {
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--border);
+        }
+
+        .card-hover {
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .text-primary {
+          color: var(--primary);
+        }
+
+        .text-muted-foreground {
+          color: var(--muted-foreground);
+        }
+
+        .text-destructive {
+          color: var(--destructive);
+        }
+
+        .bg-primary {
+          background-color: var(--primary);
+        }
+
+        .bg-secondary {
+          background-color: var(--secondary);
+        }
+
+        .bg-muted {
+          background-color: var(--muted);
+        }
+
+        .bg-accent {
+          background-color: var(--accent);
+        }
+
+        .bg-input-background {
+          background-color: var(--input-background);
+        }
+
+        .font-medium {
+          font-weight: var(--font-weight-medium);
+        }
+
+        .font-normal {
+          font-weight: var(--font-weight-normal);
+        }
+
+        .table-row-hover {
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .table-row-hover:hover {
+          background-color: var(--accent);
+          transform: translateX(2px);
+        }
+
+        .progress-fill {
+          transition: width 0.6s ease-out;
+        }
+
+        .status-badge {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
+
+        .btn-primary {
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          border-radius: var(--radius-md);
+          padding: 0.5rem 1rem;
+          font-weight: var(--font-weight-medium);
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid transparent;
+        }
+
+        .btn-primary:hover {
+          background-color: color-mix(in oklab, var(--primary) 90%, transparent);
+        }
+
+        .btn-secondary {
+          background-color: var(--secondary);
+          color: var(--secondary-foreground);
+          border-radius: var(--radius-md);
+          padding: 0.5rem 1rem;
+          font-weight: var(--font-weight-medium);
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+          background-color: var(--accent);
+        }
+
+        .btn-ghost {
+          background-color: transparent;
+          color: var(--muted-foreground);
+          border-radius: var(--radius-md);
+          padding: 0.25rem;
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-ghost:hover {
+          background-color: var(--accent);
+          color: var(--accent-foreground);
+        }
+
+        .btn-ghost:hover.btn-destructive {
+          background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
+          color: var(--destructive);
+        }
+
+        .compact-cell {
+          padding: 0.75rem 1rem;
+        }
+
+        .metric-card {
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          border-left: 4px solid transparent;
+        }
+
+        .metric-card:hover {
+          border-left-color: var(--primary);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .progress-bar {
+          background-color: var(--muted);
+          border-radius: 9999px;
+        }
+
+        .progress-fill-green {
+          background-color: var(--chart-1);
+        }
+
+        .progress-fill-amber {
+          background-color: var(--chart-2);
+        }
+
+        .progress-fill-blue {
+          background-color: var(--chart-3);
+        }
+
+        .progress-fill-purple {
+          background-color: var(--chart-4);
+        }
+
+        .progress-fill-pink {
+          background-color: var(--chart-5);
+        }
+
+        .badge-success {
+          background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
+          color: color-mix(in oklab, var(--chart-1) 80%, black);
+        }
+
+        .badge-warning {
+          background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
+          color: color-mix(in oklab, var(--chart-2) 80%, black);
+        }
+
+        .badge-danger {
+          background-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+          color: var(--destructive);
+        }
+
+        .icon-green { color: var(--chart-1); }
+        .icon-amber { color: var(--chart-2); }
+        .icon-blue { color: var(--chart-3); }
+        .icon-purple { color: var(--chart-4); }
+        .icon-pink { color: var(--chart-5); }
+
+        .bg-icon-green { background-color: color-mix(in oklab, var(--chart-1) 20%, transparent); }
+        .bg-icon-amber { background-color: color-mix(in oklab, var(--chart-2) 20%, transparent); }
+        .bg-icon-blue { background-color: color-mix(in oklab, var(--chart-3) 20%, transparent); }
+        .bg-icon-purple { background-color: color-mix(in oklab, var(--chart-4) 20%, transparent); }
+        .bg-icon-pink { background-color: color-mix(in oklab, var(--chart-5) 20%, transparent); }
+
+        .text-success { color: var(--chart-1); }
+        .text-warning { color: var(--chart-2); }
+        .text-danger { color: var(--destructive); }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-6">
+        <!-- Compact Header -->
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <button class="btn-ghost flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Back
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-medium">Budget Manager</h1>
+                        <p class="text-sm text-muted-foreground">September 2025 • Partner Connected</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="btn-secondary text-sm">
+                        Export
+                    </button>
+                    <button class="btn-primary text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Budget
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="metric-card card p-4 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-muted-foreground uppercase tracking-wide font-medium">Total Budget</p>
+                            <p class="text-xl font-medium">$4,250</p>
+                        </div>
+                        <div class="w-10 h-10 bg-icon-green rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 icon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card card p-4 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-muted-foreground uppercase tracking-wide font-medium">Spent</p>
+                            <p class="text-xl font-medium">$3,106</p>
+                        </div>
+                        <div class="w-10 h-10 bg-icon-blue rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 icon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card card p-4 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-muted-foreground uppercase tracking-wide font-medium">Remaining</p>
+                            <p class="text-xl font-medium text-success">$1,144</p>
+                        </div>
+                        <div class="w-10 h-10 bg-icon-amber rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 icon-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card card p-4 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-muted-foreground uppercase tracking-wide font-medium">Status</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-lg font-medium">On Track</span>
+                                <div class="w-2 h-2 rounded-full status-badge" style="background-color: var(--chart-1)"></div>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 bg-icon-green rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 icon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Table -->
+            <div class="card overflow-hidden">
+                <div class="px-6 py-4 border-b" style="border-color: var(--border)">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-medium">Category Budgets</h2>
+                        <div class="flex items-center gap-2">
+                            <select class="text-sm border rounded-lg px-3 py-1" style="border-color: var(--border); background-color: var(--input-background)">
+                                <option>This Month</option>
+                                <option>Last Month</option>
+                                <option>Last 3 Months</option>
+                            </select>
+                            <button class="btn-ghost">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-muted" style="border-bottom: 1px solid var(--border)">
+                            <tr>
+                                <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Category</th>
+                                <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Budget</th>
+                                <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Spent</th>
+                                <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Remaining</th>
+                                <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Progress</th>
+                                <th class="text-center compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</th>
+                                <th class="text-center compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody style="border-bottom: 1px solid var(--border)">
+                            <!-- Groceries Row -->
+                            <tr class="table-row-hover">
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-icon-green rounded-lg flex items-center justify-center">
+                                            <svg class="w-4 h-4 icon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Groceries</p>
+                                            <p class="text-xs text-muted-foreground">Weekly shopping</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$800</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$680</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium text-warning">$120</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                            <div class="progress-fill-green h-2 rounded-full progress-fill" style="width: 85%"></div>
+                                        </div>
+                                        <span class="text-sm text-muted-foreground">85%</span>
+                                    </div>
+                                </td>
+                                <td class="compact-cell text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-warning">
+                                        Warning
+                                    </span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button class="btn-ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="btn-ghost btn-destructive">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Dining Out Row -->
+                            <tr class="table-row-hover">
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-icon-amber rounded-lg flex items-center justify-center">
+                                            <svg class="w-4 h-4 icon-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Dining Out</p>
+                                            <p class="text-xs text-muted-foreground">Restaurants & cafes</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$500</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$420</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium text-warning">$80</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                            <div class="progress-fill-amber h-2 rounded-full progress-fill" style="width: 84%"></div>
+                                        </div>
+                                        <span class="text-sm text-muted-foreground">84%</span>
+                                    </div>
+                                </td>
+                                <td class="compact-cell text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-warning">
+                                        Warning
+                                    </span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button class="btn-ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="btn-ghost btn-destructive">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Gas & Transport Row -->
+                            <tr class="table-row-hover">
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-icon-blue rounded-lg flex items-center justify-center">
+                                            <svg class="w-4 h-4 icon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Gas & Transport</p>
+                                            <p class="text-xs text-muted-foreground">Fuel & public transit</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$400</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$180</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium text-success">$220</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                            <div class="progress-fill-blue h-2 rounded-full progress-fill" style="width: 45%"></div>
+                                        </div>
+                                        <span class="text-sm text-muted-foreground">45%</span>
+                                    </div>
+                                </td>
+                                <td class="compact-cell text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-success">
+                                        Good
+                                    </span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button class="btn-ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="btn-ghost btn-destructive">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Entertainment Row -->
+                            <tr class="table-row-hover">
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-icon-purple rounded-lg flex items-center justify-center">
+                                            <svg class="w-4 h-4 icon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Entertainment</p>
+                                            <p class="text-xs text-muted-foreground">Movies & games</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$200</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$95</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium text-success">$105</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                            <div class="progress-fill-purple h-2 rounded-full progress-fill" style="width: 47.5%"></div>
+                                        </div>
+                                        <span class="text-sm text-muted-foreground">47.5%</span>
+                                    </div>
+                                </td>
+                                <td class="compact-cell text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-success">
+                                        Good
+                                    </span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button class="btn-ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="btn-ghost btn-destructive">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Shopping Row -->
+                            <tr class="table-row-hover">
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-icon-pink rounded-lg flex items-center justify-center">
+                                            <svg class="w-4 h-4 icon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Shopping</p>
+                                            <p class="text-xs text-muted-foreground">Clothing & misc</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$300</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium">$45</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <span class="font-medium text-success">$255</span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                            <div class="progress-fill-pink h-2 rounded-full progress-fill" style="width: 15%"></div>
+                                        </div>
+                                        <span class="text-sm text-muted-foreground">15%</span>
+                                    </div>
+                                </td>
+                                <td class="compact-cell text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-success">
+                                        Excellent
+                                    </span>
+                                </td>
+                                <td class="compact-cell">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button class="btn-ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="btn-ghost btn-destructive">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer -->
+                <div class="px-6 py-4 bg-muted" style="border-top: 1px solid var(--border)">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-muted-foreground">Showing 5 of 8 categories</p>
+                        <button class="text-sm font-medium" style="color: var(--primary)">
+                            View all categories →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Footer -->
+            <div class="mt-6 card p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: var(--chart-1)"></div>
+                            <span class="text-sm text-muted-foreground">On Track (2)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: var(--chart-2)"></div>
+                            <span class="text-sm text-muted-foreground">Warning (2)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: var(--destructive)"></div>
+                            <span class="text-sm text-muted-foreground">Over Budget (1)</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-muted-foreground">
+                        Last updated: 2 minutes ago
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
