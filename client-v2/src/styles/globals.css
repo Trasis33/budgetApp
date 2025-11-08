@@ -1,4 +1,10 @@
-@custom-variant dark (&:is(.dark *));
+/* 
+ * NOTE: CSS @apply, @theme, and @custom-variant warnings are expected in Tailwind CSS projects.
+ * These are valid Tailwind directives that work correctly despite linter warnings.
+ * The warnings can be safely ignored as they don't affect functionality.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --font-size: 16px;
@@ -186,4 +192,33 @@
 
 html {
   font-size: var(--font-size);
+}
+
+/* Button utility classes */
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply hover:bg-accent hover:text-accent-foreground;
+  @apply h-10 py-2 px-4;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  @apply h-10 py-2 px-4;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  @apply h-10 py-2 px-4;
+}
+
+.btn-destructive {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  @apply h-10 py-2 px-4;
+}
+
+.btn-ghost.btn-destructive:hover {
+  @apply bg-red-50 text-red-600;
 }

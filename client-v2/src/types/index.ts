@@ -32,10 +32,38 @@ export interface Category {
 export interface Budget {
   id: number;
   category_id: number;
+  category_name: string;
+  category_icon?: string;
+  amount: number;
   month: number;
   year: number;
-  amount: number;
-  category_name: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetWithSpending extends Budget {
+  spent: number;
+  remaining: number;
+  progress: number;
+  status: BudgetStatus;
+  expenseCount: number;
+}
+
+export type BudgetStatus = 'success' | 'warning' | 'danger';
+
+export interface BudgetMetrics {
+  totalBudget: number;
+  totalSpent: number;
+  totalRemaining: number;
+  overallProgress: number;
+  overallStatus: BudgetStatus;
+}
+
+export interface BudgetStats {
+  onTrack: number;
+  warning: number;
+  overBudget: number;
 }
 
 export interface Income {

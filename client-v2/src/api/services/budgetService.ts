@@ -1,13 +1,5 @@
 import { apiClient } from '../axios';
-
-export interface Budget {
-  id: number;
-  category_id: number;
-  month: number;
-  year: number;
-  amount: number;
-  category_name: string;
-}
+import { Budget } from '../../types';
 
 export const budgetService = {
   async createOrUpdateBudget(data: {

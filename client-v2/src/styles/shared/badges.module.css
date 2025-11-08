@@ -1,0 +1,117 @@
+/* Base badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  border: none;
+  outline: none;
+}
+
+/* Badge variants */
+.badgeSuccess {
+  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
+  color: color-mix(in oklab, var(--chart-1) 80%, black);
+}
+
+.badgeWarning {
+  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
+  color: color-mix(in oklab, var(--chart-2) 80%, black);
+}
+
+.badgeDanger {
+  background-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+  color: var(--destructive);
+}
+
+.badgeInfo {
+  background-color: color-mix(in oklab, var(--chart-3) 20%, transparent);
+  color: color-mix(in oklab, var(--chart-3) 80%, black);
+}
+
+.badgeDefault {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+/* Badge sizes */
+.badgeSm {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.625rem;
+}
+
+.badgeMd {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Badge with pulse animation */
+.badgePulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Status badge specific styles */
+.statusBadge {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.025em;
+}
+
+/* Interactive badge */
+.badgeInteractive {
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badgeInteractive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge with icon */
+.badgeWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badgeIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Badge variations for different contexts */
+.badgeOutline {
+  background-color: transparent;
+  border: 1px solid currentColor;
+}
+
+.badgeOutlineSuccess {
+  border-color: var(--chart-1);
+  color: var(--chart-1);
+}
+
+.badgeOutlineWarning {
+  border-color: var(--chart-2);
+  color: var(--chart-2);
+}
+
+.badgeOutlineDanger {
+  border-color: var(--destructive);
+  color: var(--destructive);
+}
+
+/* Badge for counts */
+.badgeCount {
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  font-size: 0.625rem;
+  line-height: 1.25rem;
+}

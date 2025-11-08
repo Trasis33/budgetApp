@@ -1,0 +1,272 @@
+/* Progress bar styles */
+.progressBar {
+  background-color: var(--muted);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s ease-out;
+  position: relative;
+}
+
+/* Progress bar variants */
+.progressFillSuccess {
+  background-color: var(--chart-1);
+}
+
+.progressFillWarning {
+  background-color: var(--chart-2);
+}
+
+.progressFillDanger {
+  background-color: var(--destructive);
+}
+
+/* Progress bar sizes */
+.progressBarSm {
+  height: 0.25rem;
+}
+
+.progressBarMd {
+  height: 0.5rem;
+}
+
+.progressBarLg {
+  height: 0.75rem;
+}
+
+/* Progress label */
+.progressLabel {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+  font-weight: var(--font-weight-normal);
+  white-space: nowrap;
+}
+
+/* Metric card container */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .metricsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Metric card */
+.metricCard {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+}
+
+.metricCard:hover {
+  border-left-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Metric content */
+.metricContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.metricInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.metricLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.metricValue {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.metricValueSuccess {
+  color: var(--chart-1);
+}
+
+.metricValueWarning {
+  color: var(--chart-2);
+}
+
+.metricValueDanger {
+  color: var(--destructive);
+}
+
+/* Icon container */
+.metricIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconGreen {
+  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
+  color: var(--chart-1);
+}
+
+.iconBlue {
+  background-color: color-mix(in oklab, var(--chart-3) 20%, transparent);
+  color: var(--chart-3);
+}
+
+.iconAmber {
+  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
+  color: var(--chart-2);
+}
+
+.iconPurple {
+  background-color: color-mix(in oklab, var(--chart-4) 20%, transparent);
+  color: var(--chart-4);
+}
+
+.iconPink {
+  background-color: color-mix(in oklab, var(--chart-5) 20%, transparent);
+  color: var(--chart-5);
+}
+
+/* Status indicator */
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.statusText {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+}
+
+.statusDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--chart-1);
+}
+
+.statusDotPulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Stats footer */
+.statsFooter {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.statsContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.statsLegend {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legendDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.legendDotSuccess {
+  background-color: var(--chart-1);
+}
+
+.legendDotWarning {
+  background-color: var(--chart-2);
+}
+
+.legendDotDanger {
+  background-color: var(--destructive);
+}
+
+.legendText {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+.statsTimestamp {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .statsContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .statsLegend {
+    gap: 1rem;
+  }
+  
+  .metricValue {
+    font-size: 1.125rem;
+  }
+  
+  .metricIcon {
+    width: 2rem;
+    height: 2rem;
+  }
+}
