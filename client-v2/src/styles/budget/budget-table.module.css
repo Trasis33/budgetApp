@@ -1,0 +1,56 @@
+.tableRow {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.tableRow:hover {
+  background-color: var(--accent);
+  transform: translateX(2px);
+}
+
+.tableRow td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tableRow:last-child td {
+  border-bottom: none;
+}
+
+.iconGreen {
+  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
+  color: var(--chart-1);
+}
+
+.categoryCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.categoryIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.amountCell {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.progressCell {
+  min-width: 120px;
+}
+
+.statusCell {
+  white-space: nowrap;
+}
+
+.actionsCell {
+  white-space: nowrap;
+}

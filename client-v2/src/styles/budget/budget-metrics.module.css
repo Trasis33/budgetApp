@@ -1,0 +1,119 @@
+.metricCard {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.metricCard:hover {
+  border-left-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.metricIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.metricValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.progressBar {
+  width: 100%;
+  height: 0.5rem;
+  background: var(--accent);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 0.75rem;
+}
+
+.progressFill {
+  height: 100%;
+  transition: width 0.6s ease-out;
+  border-radius: 9999px;
+}
+
+.progressFillSuccess {
+  background-color: var(--chart-1);
+}
+
+.progressFillWarning {
+  background-color: var(--chart-2);
+}
+
+.progressFillDanger {
+  background-color: var(--destructive);
+}
+
+.progressLabel {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 0.25rem;
+}
+
+.statusSuccess {
+  background-color: color-mix(in oklab, var(--chart-1) 15%, transparent);
+  color: var(--chart-1);
+}
+
+.statusWarning {
+  background-color: color-mix(in oklab, var(--chart-4) 15%, transparent);
+  color: var(--chart-4);
+}
+
+.statusDanger {
+  background-color: color-mix(in oklab, var(--destructive) 15%, transparent);
+  color: var(--destructive);
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

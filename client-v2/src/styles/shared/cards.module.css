@@ -1,0 +1,41 @@
+.card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.cardHover {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cardHover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.metricValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+}

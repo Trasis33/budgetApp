@@ -1,0 +1,35 @@
+.budgetManager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tableContainer {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tableBody {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.statsFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--accent);
+  border-top: 1px solid var(--border);
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
