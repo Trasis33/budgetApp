@@ -170,27 +170,10 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
       />
 
       <div className="space-y-6">
-        {/* Overall Metrics Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              How you're doing overall
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* <CardContent> */}
             {metrics.totalBudget > 0 ? (
               <div className="space-y-4">
                 <BudgetMetricsGrid metrics={metrics} />
-                
-                <div className="pt-4 border-t">
-                  <p className={`text-sm ${
-                    metrics.overallStatus === 'danger' ? 'text-red-700' : 
-                    metrics.overallStatus === 'warning' ? 'text-orange-700' : 'text-green-700'
-                  }`}>
-                    {getOverallMessage()}
-                  </p>
-                </div>
               </div>
             ) : (
               <div className="text-center py-8">
@@ -207,8 +190,6 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
 
         {/* Category Budgets Card */}
         <Card>
