@@ -1813,11 +1813,16 @@
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --ring: oklch(.708 0 0);
-  --chart-1: oklch(.646 .222 41.116);
-  --chart-2: oklch(.6 .118 184.704);
-  --chart-3: oklch(.398 .07 227.392);
-  --chart-4: oklch(.828 .189 84.429);
-  --chart-5: oklch(.769 .188 70.08);
+  --chart-1: oklch(.646 .222 41.116);   /* warm amber */
+  --chart-2: oklch(.6 .118 184.704);    /* teal */
+  --chart-3: oklch(.398 .07 227.392);   /* deep indigo */
+  --chart-4: oklch(.828 .189 84.429);   /* lime */
+  --chart-5: oklch(.769 .188 70.08);    /* citrus yellow */
+  --chart-6: oklch(.71 .18 16);         /* soft coral-red */
+  --chart-7: oklch(.74 .16 320);        /* lilac / violet */
+  --chart-8: oklch(.7 .16 200);         /* aqua-cyan */
+  --chart-9: oklch(.78 .16 260);        /* periwinkle */
+  --chart-10: oklch(.82 .12 140);       /* mint green */
   --radius: .625rem;
   --sidebar: oklch(.985 0 0);
   --sidebar-foreground: oklch(.145 0 0);
