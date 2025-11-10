@@ -11,14 +11,18 @@
 }
 
 /* Badge variants */
+/* Per request:
+ * - "Good" (success) uses previous warning color: --chart-2
+ * - "Warning" uses previous good color: --chart-1
+ */
 .badgeSuccess {
-  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
-  color: color-mix(in oklab, var(--chart-1) 80%, black);
+  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
+  color: color-mix(in oklab, var(--chart-2) 80%, black);
 }
 
 .badgeWarning {
-  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
-  color: color-mix(in oklab, var(--chart-2) 80%, black);
+  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
+  color: color-mix(in oklab, var(--chart-1) 80%, black);
 }
 
 .badgeDanger {

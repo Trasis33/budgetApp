@@ -26,17 +26,17 @@
   background-color: var(--destructive);
 }
 
-/* Progress bar sizes */
+/* Progress bar sizes - slightly larger to match reference design */
 .progressBarSm {
-  height: 0.25rem;
+  height: 0.3rem;
 }
 
 .progressBarMd {
-  height: 0.5rem;
+  height: 0.55rem;
 }
 
 .progressBarLg {
-  height: 0.75rem;
+  height: 0.8rem;
 }
 
 /* Progress label */
@@ -161,7 +161,7 @@
   color: var(--chart-5);
 }
 
-/* Status indicator */
+/* Status indicator (used by Status metric card) */
 .statusIndicator {
   display: flex;
   align-items: center;

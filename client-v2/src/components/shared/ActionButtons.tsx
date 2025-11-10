@@ -25,11 +25,11 @@ export function ActionButtons({
       {showDelete && onDelete && (
         <button
           onClick={onDelete}
-          className="btn-ghost btn-destructive"
+          className="btn-ghost"
           aria-label={deleteLabel}
           title={deleteLabel}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-4 h-4 text-red-500" />
         </button>
       )}
     </div>

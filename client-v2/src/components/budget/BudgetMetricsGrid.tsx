@@ -40,11 +40,12 @@ export function BudgetMetricsGrid({
       />
       
       <BudgetMetricCard
-        label="Overall Progress"
-        value={`${metrics.overallProgress.toFixed(1)}%`}
-        icon={<AlertCircle className="w-5 h-5" />}
-        iconColor="amber"
+        label="Status"
+        value="On Track"
+        icon={<CheckCircle className="w-5 h-5" />}
+        iconColor="green"
         variant={metrics.overallStatus}
+        className="flex flex-col"
       />
     </div>
   );

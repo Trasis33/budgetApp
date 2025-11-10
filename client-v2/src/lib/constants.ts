@@ -71,6 +71,18 @@ export const CATEGORY_ICONS: Record<string, { name: string; color: 'green' | 'bl
   'Other': { name: 'more-horizontal', color: 'green' },
 } as const;
 
+/**
+ * Category descriptions as single source of truth for subtitles.
+ * Used by BudgetTableRow to avoid local semantic matching.
+ */
+export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  'Groceries': 'Weekly shopping',
+  'Dining Out': 'Restaurants & cafes',
+  'Gas & Transport': 'Fuel & public transit',
+  'Entertainment': 'Movies & games',
+  'Shopping': 'Clothing & misc',
+};
+
 // Animation durations
 export const ANIMATION_DURATIONS = {
   FAST: '0.15s',

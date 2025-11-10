@@ -165,7 +165,7 @@
   color: var(--destructive);
 }
 
-/* Table footer */
+/* Table footer: pagination / view-all */
 .tableFooter {
   background-color: var(--muted);
   border-top: 1px solid var(--border);
@@ -173,6 +173,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* Stats footer separation when used under table footer */
+.statsFooterSeparated {
+  margin-top: 0.5rem;
+  border-radius: var(--radius-lg);
 }
 
 .footerInfo {

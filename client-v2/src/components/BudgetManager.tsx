@@ -161,8 +161,8 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
   return (
     <div className="p-6">
       <BudgetHeader
-        title={`${getScopeTitle()} Budget Goals`}
-        subtitle="Plan your spending before it happens. Set realistic budgets and we'll show you how you're doing."
+        title="Budget Manager"
+        subtitle="September 2025 • Partner Connected"
         onBack={handleBack}
         onExport={handleExport}
         onAddBudget={handleAddBudget}

@@ -23,5 +23,6 @@ export const actionButtons: string;
 export const actionButton: string;
 export const danger: string;
 export const tableFooter: string;
+export const statsFooterSeparated: string;
 export const footerInfo: string;
 export const footerAction: string;

@@ -1,5 +1,7 @@
 import { BudgetTableRowProps } from '../../types/budget';
 import { getCategoryIcon } from '../../lib/budgetUtils';
+import { CATEGORY_DESCRIPTIONS } from '../../lib/constants';
+import { formatBudgetAmount } from '../../lib/budgetUtils';
 import { BudgetProgressBar } from './BudgetProgressBar';
 import { BudgetStatusBadge } from './BudgetStatusBadge';
 import { ActionButtons } from '../shared/ActionButtons';
@@ -86,8 +88,8 @@ export function BudgetTableRow({
           <div className={styles.categoryInfo}>
             <div className={styles.categoryName}>{budget.category_name}</div>
             <div className={styles.categoryDescription}>
-              {/* Could add category descriptions here */}
-              {budget.expenseCount} expense{budget.expenseCount !== 1 ? 's' : ''}
+              {CATEGORY_DESCRIPTIONS[budget.category_name] ||
+                `${budget.expenseCount} expense${budget.expenseCount !== 1 ? 's' : ''}`}
             </div>
           </div>
         </div>
@@ -95,17 +97,17 @@ export function BudgetTableRow({
 
       {/* Budget Cell */}
       <td className={`${styles.compactCell} ${styles.amountCell}`}>
-        ${budget.amount.toLocaleString()}
+        {formatBudgetAmount(budget.amount)}
       </td>
 
       {/* Spent Cell */}
       <td className={`${styles.compactCell} ${styles.amountCell}`}>
-        ${budget.spent.toLocaleString()}
+        {formatBudgetAmount(budget.spent)}
       </td>
 
       {/* Remaining Cell */}
       <td className={`${styles.compactCell} ${styles.amountCell} ${getAmountClassName(budget.remaining)}`}>
-        ${budget.remaining.toLocaleString()}
+        {formatBudgetAmount(budget.remaining)}
       </td>
 
       {/* Progress Cell */}

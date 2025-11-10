@@ -135,11 +135,11 @@ export function isValidBudgetAmount(amount: number): boolean {
   return !isNaN(amount) && amount > 0 && amount <= 999999.99;
 }
 
-// Format budget amount for display (with currency)
+// Format budget amount for display (SEK)
 export function formatBudgetAmount(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('sv-SE', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'SEK',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);

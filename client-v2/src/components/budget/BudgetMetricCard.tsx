@@ -30,15 +30,26 @@ export function BudgetMetricCard({
     return variantMap[variant as keyof typeof variantMap] || styles.metricValue;
   };
 
+  const isStatusCard = label === 'Status';
+
   return (
     <div className={`${styles.metricCard} ${className}`}>
       <div className={styles.metricContent}>
         <div className={styles.metricInfo}>
           <div className={styles.metricLabel}>{label}</div>
-          <div className={`${styles.metricValue} ${getValueClassName(variant)}`}>
-            {value}
-          </div>
+
+          {isStatusCard ? (
+            <div className={styles.statusIndicator}>
+              <span className={styles.statusText}>{value}</span>
+              <span className={`${styles.statusDot} ${styles.statusDotPulse}`} />
+            </div>
+          ) : (
+            <div className={`${styles.metricValue} ${getValueClassName(variant)}`}>
+              {value}
+            </div>
+          )}
         </div>
+
         <div className={`${styles.metricIcon} ${getIconClassName(iconColor)}`}>
           {icon}
         </div>
