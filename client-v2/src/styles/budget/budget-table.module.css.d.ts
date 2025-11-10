@@ -26,3 +26,15 @@ export const tableFooter: string;
 export const statsFooterSeparated: string;
 export const footerInfo: string;
 export const footerAction: string;
+
+// Inline editing styles
+export const editMode: string;
+export const formInput: string;
+export const editing: string;
+export const editActions: string;
+export const btnPrimary: string;
+export const btnSecondary: string;
+export const btnGhost: string;
+export const btnDanger: string;
+export const quickSuggestContainer: string;
+export const quickEditBtn: string;

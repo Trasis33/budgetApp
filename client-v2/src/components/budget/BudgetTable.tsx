@@ -1,4 +1,3 @@
-import React from 'react';
 import { BudgetWithSpending } from '../../types/budget';
 import { useState, useMemo } from 'react';
 import { BudgetTableRow } from './BudgetTableRow';
@@ -7,17 +6,15 @@ import styles from '../../styles/budget/budget-table.module.css';
 
 interface BudgetTableProps {
   budgets: BudgetWithSpending[];
-  onEdit: (budget: BudgetWithSpending) => void;
   onDelete: (budgetId: number) => void;
-  editingBudgetId?: number;
+  deleteConfirmId?: number | null;
   className?: string;
 }
 
 export function BudgetTable({
   budgets,
-  onEdit,
   onDelete,
-  editingBudgetId,
+  deleteConfirmId,
   className = ''
 }: BudgetTableProps) {
   const [showAll, setShowAll] = useState(false);
@@ -60,9 +57,8 @@ export function BudgetTable({
             <BudgetTableRow
               key={budget.id}
               budget={budget}
-              onEdit={onEdit}
               onDelete={onDelete}
-              isEditing={budget.id === editingBudgetId}
+              deleteConfirmId={deleteConfirmId}
             />
           ))}
         </tbody>

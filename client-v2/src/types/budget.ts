@@ -67,9 +67,8 @@ export interface BudgetStatusBadgeProps {
 
 export interface BudgetTableRowProps {
   budget: BudgetWithSpending;
-  onEdit: (budget: BudgetWithSpending) => void;
   onDelete: (budgetId: number) => void;
-  isEditing?: boolean;
+  deleteConfirmId?: number | null;
   className?: string;
 }
 

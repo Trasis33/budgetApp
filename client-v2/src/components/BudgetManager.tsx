@@ -3,10 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from './ui/dialog';
 import { Budget, Category } from '../types';
 import { filterExpensesByMonth } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Target, PlusCircle } from 'lucide-react';
+import { Plus, Target, PlusCircle } from 'lucide-react';
 import { budgetService } from '../api/services/budgetService';
 import { categoryService } from '../api/services/categoryService';
 import { toast } from 'sonner';
@@ -16,8 +24,7 @@ import { useScope } from '@/context/ScopeContext';
 import { 
   BudgetHeader,
   BudgetMetricsGrid,
-  BudgetTable,
-  type BudgetWithSpending
+  BudgetTable
 } from './budget';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
 
@@ -25,16 +32,19 @@ interface BudgetManagerProps {
   onNavigate?: (view: string) => void;
 }
 
-export function BudgetManager({ onNavigate }: BudgetManagerProps) {
+export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   const navigate = useNavigate();
-  const { currentScope, isLoading: scopeLoading } = useScope();
+  const { isLoading: scopeLoading } = useScope();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({
-    category_id: 1,
-    amount: ''
-  });
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalSearchTerm, setModalSearchTerm] = useState('');
+  const [modalSelectedCategory, setModalSelectedCategory] = useState<Category | null>(null);
+  const [modalAmount, setModalAmount] = useState('');
+  
+  // Delete confirmation state
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
@@ -52,9 +62,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
         const categoriesData = await categoryService.getCategories();
         setCategories(categoriesData);
 
-        if (categoriesData.length > 0) {
-          setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
-        }
+        // Categories loaded successfully
       } catch (error) {
         toast.error('Having trouble loading categories. Check your connection and try again');
       }
@@ -65,57 +73,29 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
     }
   }, [scopeLoading]);
 
-  const getScopeTitle = () => {
-    switch (currentScope) {
-      case 'ours': return 'Our';
-      case 'mine': return 'My';
-      case 'partner': return "Partner's";
-      default: return 'My';
-    }
-  };
-
-  const getOverallMessage = () => {
-    if (metrics.overallProgress <= 50) return "Excellent! You're staying well within your budgets";
-    if (metrics.overallProgress <= 80) return "Nice work! You're managing your budgets well";
-    if (metrics.overallProgress <= 100) return "You're approaching your total budget limit";
-    return "You've exceeded your total budget – let's review and adjust";
-  };
-
   const usedCategories = budgets.map(b => b.category_name);
   const availableCategories = categories.filter(cat => !usedCategories.includes(cat.name));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      await budgetService.createOrUpdateBudget({
-        category_id: formData.category_id,
-        month: currentMonth,
-        year: currentYear,
-        amount: parseFloat(formData.amount)
-      });
-
-      refetch();
-      setFormData({ category_id: categories[0]?.id || 1, amount: '' });
-      setIsAdding(false);
-      toast.success('✨ Budget goal set! We\'ll track your progress');
-    } catch (error) {
-      toast.error('Could not create budget. Please check your amount and try again');
-    }
-  };
-
-  const handleEdit = (budget: BudgetWithSpending) => {
-    setEditingId(budget.id);
-    setFormData({
-      category_id: budget.category_id,
-      amount: budget.amount.toString()
-    });
-  };
 
   const handleDelete = async (budgetId: number) => {
+    // First click - show warning and change icon
+    if (deleteConfirmId !== budgetId) {
+      setDeleteConfirmId(budgetId);
+      toast.warning('Click again to confirm deletion', {
+        duration: 3000,
+        action: {
+          label: 'Cancel',
+          onClick: () => setDeleteConfirmId(null)
+        }
+      });
+      return;
+    }
+    
+    // Second click - actually delete
     try {
       await budgetService.deleteBudget(budgetId);
       refetch();
+      setDeleteConfirmId(null);
       toast.success('Budget removed');
     } catch (error) {
       toast.error('Could not delete budget. Please try again');
@@ -128,7 +108,32 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
   };
 
   const handleAddBudget = () => {
-    setIsAdding(true);
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = async () => {
+    if (!modalSelectedCategory || !modalAmount) {
+      toast.error('Please select a category and enter an amount');
+      return;
+    }
+
+    try {
+      await budgetService.createOrUpdateBudget({
+        category_id: modalSelectedCategory.id,
+        month: currentMonth,
+        year: currentYear,
+        amount: parseFloat(modalAmount)
+      });
+
+      await refetch();
+      setModalSelectedCategory(null);
+      setModalAmount('');
+      setModalSearchTerm('');
+      setIsModalOpen(false);
+      toast.success('✨ Budget goal set! We\'ll track your progress');
+    } catch (error) {
+      toast.error('Could not create budget. Please check your amount and try again');
+    }
   };
 
   const handleBack = () => {
@@ -166,7 +171,6 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
         onBack={handleBack}
         onExport={handleExport}
         onAddBudget={handleAddBudget}
-        showAddButton={!isAdding && availableCategories.length > 0}
       />
 
       <div className="space-y-6">
@@ -198,7 +202,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
               <Target className="h-5 w-5" />
               Category budgets
             </CardTitle>
-            {!isAdding && availableCategories.length > 0 && (
+            {availableCategories.length > 0 && (
               <Button onClick={handleAddBudget} size="sm" className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add budget
@@ -206,54 +210,14 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
             )}
           </CardHeader>
           <CardContent className="space-y-6">
-            {isAdding && (
-              <form onSubmit={handleSubmit} className="p-4 border rounded-lg space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <select
-                      id="category"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                      value={formData.category_id}
-                      onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
-                    >
-                      {availableCategories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Monthly Budget</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" size="sm">Add</Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAdding(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            )}
-
             {budgetsWithSpending.length > 0 ? (
               <BudgetTable
                 budgets={budgetsWithSpending}
-                onEdit={handleEdit}
                 onDelete={handleDelete}
-                editingBudgetId={editingId || undefined}
+                deleteConfirmId={deleteConfirmId}
               />
             ) : (
-              !isAdding && (
-                <div className="text-center py-12">
+              <div className="text-center py-12">
                   <Target className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Ready to plan ahead?
@@ -272,10 +236,93 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps) {
                     </p>
                   </div>
                 </div>
-              )
             )}
           </CardContent>
         </Card>
+
+        {/* Add Budget Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Budget</DialogTitle>
+              <DialogDescription>
+                Set a spending limit for a category
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Category Selection */}
+              <div className="space-y-3">
+                <Label>Category</Label>
+                <Input
+                  placeholder="Search categories..."
+                  value={modalSearchTerm}
+                  onChange={(e) => setModalSearchTerm(e.target.value)}
+                />
+                <div className="max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg bg-muted/50">
+                  {availableCategories
+                    .filter(cat => cat.name.toLowerCase().includes(modalSearchTerm.toLowerCase()))
+                    .map((category) => (
+                      <div
+                        key={category.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                          modalSelectedCategory?.id === category.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:bg-accent'
+                        }`}
+                        onClick={() => setModalSelectedCategory(category)}
+                      >
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Target className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{category.name}</p>
+                          <p className="text-xs text-muted-foreground">Category description</p>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          modalSelectedCategory?.id === category.id
+                            ? 'border-primary bg-primary'
+                            : 'border-border'
+                        }`}>
+                          {modalSelectedCategory?.id === category.id && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Budget Amount */}
+              <div className="space-y-3">
+                <Label>Monthly Budget Amount</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    placeholder="0.00"
+                    value={modalAmount}
+                    onChange={(e) => setModalAmount(e.target.value)}
+                    className="pl-8"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleModalSubmit}>
+                Add Budget
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

@@ -18,4 +18,12 @@ export const budgetService = {
   async deleteBudget(id: number) {
     return apiClient.delete(`/budgets/${id}`);
   },
+
+  async getAvailableCategories(month: number, year: number) {
+    return apiClient.get(`/budgets/available-categories?month=${month}&year=${year}`);
+  },
+
+  async getBudgetSummary(month: number, year: number) {
+    return apiClient.get(`/budgets/summary/${month}/${year}`);
+  },
 };

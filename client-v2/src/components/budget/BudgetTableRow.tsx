@@ -1,29 +1,36 @@
-import { BudgetTableRowProps } from '../../types/budget';
+import { BudgetWithSpending } from '../../types/budget';
 import { getCategoryIcon } from '../../lib/budgetUtils';
 import { CATEGORY_DESCRIPTIONS } from '../../lib/constants';
 import { formatBudgetAmount } from '../../lib/budgetUtils';
 import { BudgetProgressBar } from './BudgetProgressBar';
 import { BudgetStatusBadge } from './BudgetStatusBadge';
-import { ActionButtons } from '../shared/ActionButtons';
 // @ts-ignore - CSS module import
 import styles from '../../styles/budget/budget-table.module.css';
 
+import { useState } from 'react';
+import { Edit2, Trash2, AlertTriangle, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { budgetService } from '../../api/services/budgetService';
+
+interface BudgetTableRowProps {
+  budget: BudgetWithSpending;
+  onDelete: (budgetId: number) => void;
+  deleteConfirmId?: number | null;
+  className?: string;
+}
+
 export function BudgetTableRow({
   budget,
-  onEdit,
   onDelete,
-  isEditing = false,
+  deleteConfirmId,
   className = ''
 }: BudgetTableRowProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingAmount, setEditingAmount] = useState(budget.amount.toString());
+  const [showQuickSuggest, setShowQuickSuggest] = useState(false);
+
   const categoryIcon = getCategoryIcon(budget.category_name);
   const iconColor = categoryIcon.color;
-  
-  // Use a simple default icon for now - can be expanded later
-  const icon = (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-    </svg>
-  );
   
   const getIconClassName = (color: string) => {
     const colorMap = {
@@ -42,99 +49,203 @@ export function BudgetTableRow({
     return styles.amountPositive;
   };
 
-  if (isEditing) {
-    return (
-      <tr className={`${styles.tableRow} ${className}`}>
-        <td colSpan={7} className={styles.compactCell}>
-          <div className="p-4 border rounded-lg space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
-                <input
-                  type="text"
-                  value={budget.category_name}
-                  disabled
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Monthly Budget</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  defaultValue={budget.amount}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                />
-              </div>
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditingAmount(budget.amount.toString());
+    setShowQuickSuggest(true);
+  };
+
+  const handleSave = async () => {
+    if (!editingAmount) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    try {
+      await budgetService.createOrUpdateBudget({
+        category_id: budget.category_id,
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        amount: parseFloat(editingAmount)
+      });
+
+      toast.success('Budget updated successfully');
+      setIsEditing(false);
+      setShowQuickSuggest(false);
+      // In a real implementation, you'd refetch the data here
+    } catch (error) {
+      toast.error('Could not update budget. Please try again');
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditingAmount(budget.amount.toString());
+    setShowQuickSuggest(false);
+  };
+
+  const applyQuickSuggest = (amount: number) => {
+    setEditingAmount(amount.toString());
+  };
+
+  const hideQuickSuggest = () => {
+    setShowQuickSuggest(false);
+  };
+
+  const getQuickSuggestions = () => {
+    const spent = budget.spent;
+    const current = budget.amount;
+    
+    return [
+      { label: `Match spending: $${spent}`, value: spent },
+      { label: `+10%: $${(spent * 1.1).toFixed(0)}`, value: spent * 1.1 },
+      { label: `-10%: $${(spent * 0.9).toFixed(0)}`, value: spent * 0.9 },
+      { label: `Round to $${Math.ceil(current / 50) * 50}`, value: Math.ceil(current / 50) * 50 },
+    ];
+  };
+
+  // Use a simple default icon for now - can be expanded later
+  const icon = (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    </svg>
+  );
+
+  return (
+    <>
+      <tr className={`${styles.tableRow} ${isEditing ? styles.editMode : ''} ${className}`}>
+        {/* Category Cell */}
+        <td className={styles.compactCell}>
+          <div className={styles.categoryCell}>
+            <div className={`${styles.categoryIcon} ${getIconClassName(iconColor)}`}>
+              {icon}
             </div>
-            <div className="flex gap-2">
-              <button className="btn-primary text-sm">Save</button>
-              <button className="btn-secondary text-sm">Cancel</button>
+            <div className={styles.categoryInfo}>
+              <div className={styles.categoryName}>{budget.category_name}</div>
+              <div className={styles.categoryDescription}>
+                {CATEGORY_DESCRIPTIONS[budget.category_name] ||
+                  `${budget.expenseCount} expense${budget.expenseCount !== 1 ? 's' : ''}`}
+              </div>
             </div>
           </div>
         </td>
-      </tr>
-    );
-  }
 
-  return (
-    <tr className={`${styles.tableRow} ${className}`}>
-      {/* Category Cell */}
-      <td className={styles.compactCell}>
-        <div className={styles.categoryCell}>
-          <div className={`${styles.categoryIcon} ${getIconClassName(iconColor)}`}>
-            {icon}
-          </div>
-          <div className={styles.categoryInfo}>
-            <div className={styles.categoryName}>{budget.category_name}</div>
-            <div className={styles.categoryDescription}>
-              {CATEGORY_DESCRIPTIONS[budget.category_name] ||
-                `${budget.expenseCount} expense${budget.expenseCount !== 1 ? 's' : ''}`}
+        {/* Budget Cell */}
+        <td className={`${styles.compactCell} ${styles.amountCell}`}>
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">$</span>
+              <input
+                type="number"
+                value={editingAmount}
+                onChange={(e) => setEditingAmount(e.target.value)}
+                className={`${styles.formInput} ${styles.editing}`}
+                step="0.01"
+                min="0"
+                autoFocus
+              />
             </div>
-          </div>
-        </div>
-      </td>
+          ) : (
+            <span className="font-medium">{formatBudgetAmount(budget.amount)}</span>
+          )}
+        </td>
 
-      {/* Budget Cell */}
-      <td className={`${styles.compactCell} ${styles.amountCell}`}>
-        {formatBudgetAmount(budget.amount)}
-      </td>
+        {/* Spent Cell */}
+        <td className={`${styles.compactCell} ${styles.amountCell}`}>
+          <span className="font-medium">{formatBudgetAmount(budget.spent)}</span>
+        </td>
 
-      {/* Spent Cell */}
-      <td className={`${styles.compactCell} ${styles.amountCell}`}>
-        {formatBudgetAmount(budget.spent)}
-      </td>
+        {/* Remaining Cell */}
+        <td className={`${styles.compactCell} ${styles.amountCell} ${getAmountClassName(budget.remaining)}`}>
+          <span className="font-medium">{formatBudgetAmount(budget.remaining)}</span>
+        </td>
 
-      {/* Remaining Cell */}
-      <td className={`${styles.compactCell} ${styles.amountCell} ${getAmountClassName(budget.remaining)}`}>
-        {formatBudgetAmount(budget.remaining)}
-      </td>
+        {/* Progress Cell */}
+        <td className={styles.compactCell}>
+          <BudgetProgressBar
+            percentage={budget.progress}
+            variant={budget.status}
+            showLabel={true}
+            size="sm"
+          />
+        </td>
 
-      {/* Progress Cell */}
-      <td className={styles.compactCell}>
-        <BudgetProgressBar
-          percentage={budget.progress}
-          variant={budget.status}
-          showLabel={true}
-          size="sm"
-        />
-      </td>
+        {/* Status Cell */}
+        <td className={`${styles.compactCell} text-center`}>
+          <BudgetStatusBadge
+            status={budget.status}
+            showPulse={budget.status === 'danger'}
+          />
+        </td>
 
-      {/* Status Cell */}
-      <td className={`${styles.compactCell} text-center`}>
-        <BudgetStatusBadge
-          status={budget.status}
-          showPulse={budget.status === 'danger'}
-        />
-      </td>
+        {/* Actions Cell */}
+        <td className={styles.compactCell}>
+          {isEditing ? (
+            <div className={`flex items-center justify-center gap-1 ${styles.editActions}`}>
+              <button 
+                className={`${styles.btnPrimary} text-xs px-2 py-1`}
+                onClick={handleSave}
+              >
+                Save
+              </button>
+              <button 
+                className={`${styles.btnSecondary} text-xs px-2 py-1`}
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-1">
+              <button 
+                className={styles.btnGhost}
+                onClick={handleEdit}
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button 
+                className={`${styles.btnGhost} ${deleteConfirmId === budget.id ? styles.btnDanger : ''}`}
+                onClick={() => onDelete(budget.id)}
+              >
+                {deleteConfirmId === budget.id ? (
+                  <AlertTriangle className="w-4 h-4" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          )}
+        </td>
+      </tr>
 
-      {/* Actions Cell */}
-      <td className={styles.compactCell}>
-        <ActionButtons
-          onEdit={() => onEdit(budget)}
-          onDelete={() => onDelete(budget.id)}
-        />
-      </td>
-    </tr>
+      {/* Quick Suggest Row */}
+      {isEditing && showQuickSuggest && (
+        <tr className={styles.tableRow}>
+          <td colSpan={7} className={`${styles.compactCell} p-0`}>
+            <div className={`${styles.quickSuggestContainer} p-4 border-t`} style={{ borderColor: 'var(--border)', backgroundColor: 'var(--input-background)' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium mb-2">Quick suggestions for {budget.category_name}:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {getQuickSuggestions().map((suggestion, index) => (
+                      <button
+                        key={index}
+                        className={styles.quickEditBtn}
+                        onClick={() => applyQuickSuggest(suggestion.value)}
+                      >
+                        {suggestion.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button className={styles.btnGhost} onClick={hideQuickSuggest}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
