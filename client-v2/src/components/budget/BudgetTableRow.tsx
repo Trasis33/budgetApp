@@ -62,11 +62,13 @@ export function BudgetTableRow({
     }
 
     try {
+      const roundedAmount = Math.round(parseFloat(editingAmount));
+      
       await budgetService.createOrUpdateBudget({
         category_id: budget.category_id,
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
-        amount: parseFloat(editingAmount)
+        amount: roundedAmount
       });
 
       toast.success('Budget updated successfully');
@@ -85,7 +87,7 @@ export function BudgetTableRow({
   };
 
   const applyQuickSuggest = (amount: number) => {
-    setEditingAmount(amount.toString());
+    setEditingAmount(Math.round(amount).toString());
   };
 
   const hideQuickSuggest = () => {
@@ -93,14 +95,14 @@ export function BudgetTableRow({
   };
 
   const getQuickSuggestions = () => {
-    const spent = budget.spent;
-    const current = budget.amount;
+    const spent = Math.round(budget.spent);
+    const currentEditingAmount = editingAmount ? Math.round(parseFloat(editingAmount)) : Math.round(budget.amount);
     
     return [
-      { label: `Match spending: $${spent}`, value: spent },
-      { label: `+10%: $${(spent * 1.1).toFixed(0)}`, value: spent * 1.1 },
-      { label: `-10%: $${(spent * 0.9).toFixed(0)}`, value: spent * 0.9 },
-      { label: `Round to $${Math.ceil(current / 50) * 50}`, value: Math.ceil(current / 50) * 50 },
+      { label: `Match spending: ${formatBudgetAmount(spent)}`, value: spent },
+      { label: `+10%: ${formatBudgetAmount(Math.round(spent * 1.1))}`, value: Math.round(spent * 1.1) },
+      { label: `-10%: ${formatBudgetAmount(Math.round(spent * 0.9))}`, value: Math.round(spent * 0.9) },
+      { label: `Round to ${formatBudgetAmount(Math.ceil(currentEditingAmount / 50) * 50)}`, value: Math.ceil(currentEditingAmount / 50) * 50 },
     ];
   };
 
@@ -134,13 +136,12 @@ export function BudgetTableRow({
         <td className={`${styles.compactCell} ${styles.amountCell}`}>
           {isEditing ? (
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">$</span>
               <input
                 type="number"
                 value={editingAmount}
                 onChange={(e) => setEditingAmount(e.target.value)}
                 className={`${styles.formInput} ${styles.editing}`}
-                step="0.01"
+                step="1"
                 min="0"
                 autoFocus
               />
