@@ -16,6 +16,7 @@ interface BudgetTableRowProps {
   budget: BudgetWithSpending;
   onDelete: (budgetId: number) => void;
   deleteConfirmId?: number | null;
+  onUpdate?: () => void;
   className?: string;
 }
 
@@ -23,6 +24,7 @@ export function BudgetTableRow({
   budget,
   onDelete,
   deleteConfirmId,
+  onUpdate,
   className = ''
 }: BudgetTableRowProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -74,7 +76,11 @@ export function BudgetTableRow({
       toast.success('Budget updated successfully');
       setIsEditing(false);
       setShowQuickSuggest(false);
-      // In a real implementation, you'd refetch the data here
+      
+      // Trigger data refetch to update the table
+      if (onUpdate) {
+        onUpdate();
+      }
     } catch (error) {
       toast.error('Could not update budget. Please try again');
     }
@@ -96,13 +102,19 @@ export function BudgetTableRow({
 
   const getQuickSuggestions = () => {
     const spent = Math.round(budget.spent);
-    const currentEditingAmount = editingAmount ? Math.round(parseFloat(editingAmount)) : Math.round(budget.amount);
+    const parsedEditingAmount = parseFloat(editingAmount);
+    const currentEditingAmount = Number.isFinite(parsedEditingAmount)
+      ? Math.max(0, Math.round(parsedEditingAmount))
+      : Math.round(budget.amount);
+    const increaseByTenPercent = Math.round(currentEditingAmount * 1.1);
+    const decreaseByTenPercent = Math.round(currentEditingAmount * 0.9);
+    const roundedToNearestFifty = Math.ceil(currentEditingAmount / 50) * 50;
     
     return [
       { label: `Match spending: ${formatBudgetAmount(spent)}`, value: spent },
-      { label: `+10%: ${formatBudgetAmount(Math.round(spent * 1.1))}`, value: Math.round(spent * 1.1) },
-      { label: `-10%: ${formatBudgetAmount(Math.round(spent * 0.9))}`, value: Math.round(spent * 0.9) },
-      { label: `Round to ${formatBudgetAmount(Math.ceil(currentEditingAmount / 50) * 50)}`, value: Math.ceil(currentEditingAmount / 50) * 50 },
+      { label: `+10%: ${formatBudgetAmount(increaseByTenPercent)}`, value: increaseByTenPercent },
+      { label: `-10%: ${formatBudgetAmount(decreaseByTenPercent)}`, value: decreaseByTenPercent },
+      { label: `Round to ${formatBudgetAmount(roundedToNearestFifty)}`, value: roundedToNearestFifty },
     ];
   };
 

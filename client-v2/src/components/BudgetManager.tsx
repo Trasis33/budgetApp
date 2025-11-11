@@ -215,6 +215,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
                 budgets={budgetsWithSpending}
                 onDelete={handleDelete}
                 deleteConfirmId={deleteConfirmId}
+                onUpdate={refetch}
               />
             ) : (
               <div className="text-center py-12">

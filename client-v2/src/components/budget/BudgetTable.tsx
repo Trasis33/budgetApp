@@ -8,6 +8,7 @@ interface BudgetTableProps {
   budgets: BudgetWithSpending[];
   onDelete: (budgetId: number) => void;
   deleteConfirmId?: number | null;
+  onUpdate?: () => void;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ export function BudgetTable({
   budgets,
   onDelete,
   deleteConfirmId,
+  onUpdate,
   className = ''
 }: BudgetTableProps) {
   const [showAll, setShowAll] = useState(false);
@@ -59,6 +61,7 @@ export function BudgetTable({
               budget={budget}
               onDelete={onDelete}
               deleteConfirmId={deleteConfirmId}
+              onUpdate={onUpdate}
             />
           ))}
         </tbody>
