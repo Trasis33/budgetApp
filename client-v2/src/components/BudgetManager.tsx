@@ -13,6 +13,7 @@ import {
 } from './ui/dialog';
 import { Budget, Category } from '../types';
 import { filterExpensesByMonth } from '../lib/utils';
+import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Target, PlusCircle } from 'lucide-react';
 import { budgetService } from '../api/services/budgetService';
@@ -52,6 +53,9 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   const [modalSearchTerm, setModalSearchTerm] = useState('');
   const [modalSelectedCategory, setModalSelectedCategory] = useState<Category | null>(null);
   const [modalAmount, setModalAmount] = useState('');
+  const [suggestions, setSuggestions] = useState<BudgetSuggestions | null>(null);
+  const [alertAt80Percent, setAlertAt80Percent] = useState(true);
+  const [alertOnExceed, setAlertOnExceed] = useState(true);
   
   // Delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -82,6 +86,24 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
       loadCategories();
     }
   }, [scopeLoading]);
+
+  useEffect(() => {
+    if (modalSelectedCategory) {
+      const sug = calculateCategorySuggestions(modalSelectedCategory.name, monthlyExpenses);
+      setSuggestions(sug);
+    } else {
+      setSuggestions(null);
+    }
+  }, [modalSelectedCategory, monthlyExpenses]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      // Load alert preferences when modal opens (we'll use a dummy user ID for now)
+      const prefs = getAlertPreferences(1);
+      setAlertAt80Percent(prefs.alertAt80Percent);
+      setAlertOnExceed(prefs.alertOnExceed);
+    }
+  }, [isModalOpen]);
 
   const usedCategories = budgets.map(b => b.category_name);
   const availableCategories = categories.filter(cat => !usedCategories.includes(cat.name));
@@ -121,7 +143,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = async () => {
+  const handleModalSubmit = async (saveAndAddAnother: boolean = false) => {
     if (!modalSelectedCategory || !modalAmount) {
       toast.error('Please select a category and enter an amount');
       return;
@@ -135,12 +157,27 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
         amount: parseFloat(modalAmount)
       });
 
+      // Save alert preferences
+      saveAlertPreferences(1, {
+        alertAt80Percent,
+        alertOnExceed
+      });
+
       await refetch();
-      setModalSelectedCategory(null);
-      setModalAmount('');
-      setModalSearchTerm('');
-      setIsModalOpen(false);
-      toast.success('✨ Budget goal set! We\'ll track your progress');
+
+      if (saveAndAddAnother) {
+        setModalSelectedCategory(null);
+        setModalAmount('');
+        setModalSearchTerm('');
+        setSuggestions(null);
+        toast.success('✨ Budget goal set! Add another one');
+      } else {
+        setModalSelectedCategory(null);
+        setModalAmount('');
+        setModalSearchTerm('');
+        setIsModalOpen(false);
+        toast.success('✨ Budget goal set! We\'ll track your progress');
+      }
     } catch (error) {
       toast.error('Could not create budget. Please check your amount and try again');
     }
@@ -265,70 +302,168 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
               {/* Category Selection */}
               <div className="space-y-3">
                 <Label>Category</Label>
-                <Input
-                  placeholder="Search categories..."
-                  value={modalSearchTerm}
-                  onChange={(e) => setModalSearchTerm(e.target.value)}
-                />
-                <div className="max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg bg-muted/50">
-                  {availableCategories
-                    .filter(cat => cat.name.toLowerCase().includes(modalSearchTerm.toLowerCase()))
-                    .map((category) => (
-                      <div
-                        key={category.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                          modalSelectedCategory?.id === category.id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:bg-accent'
-                        }`}
-                        onClick={() => setModalSelectedCategory(category)}
-                      >
-                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <Target className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{category.name}</p>
-                          <p className="text-xs text-muted-foreground">Category description</p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border-2 ${
-                          modalSelectedCategory?.id === category.id
-                            ? 'border-primary bg-primary'
-                            : 'border-border'
-                        }`}>
-                          {modalSelectedCategory?.id === category.id && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                </div>
+                {availableCategories.length === 0 ? (
+                  <div className="text-center py-8 p-3 border rounded-lg bg-muted/30">
+                    <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="font-medium text-sm mb-2">All categories have budgets!</p>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Want to adjust an existing one instead?
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIsModalOpen(false);
+                      }}
+                    >
+                      View Existing Budgets
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      💡 You can delete a budget to create a different one
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <Input
+                      placeholder="Search categories..."
+                      value={modalSearchTerm}
+                      onChange={(e) => setModalSearchTerm(e.target.value)}
+                    />
+                    <div className="max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg bg-muted/50">
+                      {availableCategories
+                        .filter(cat => cat.name.toLowerCase().includes(modalSearchTerm.toLowerCase()))
+                        .map((category) => (
+                          <div
+                            key={category.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                              modalSelectedCategory?.id === category.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:bg-accent'
+                            }`}
+                            onClick={() => setModalSelectedCategory(category)}
+                          >
+                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Target className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">{category.name}</p>
+                              <p className="text-xs text-muted-foreground">Category description</p>
+                            </div>
+                            <div className={`w-4 h-4 rounded-full border-2 ${
+                              modalSelectedCategory?.id === category.id
+                                ? 'border-primary bg-primary'
+                                : 'border-border'
+                            }`}>
+                              {modalSelectedCategory?.id === category.id && (
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </>
+                )}
               </div>
 
-              {/* Budget Amount */}
-              <div className="space-y-3">
-                <Label>Monthly Budget Amount</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
-                  <Input
-                    placeholder="0.00"
-                    value={modalAmount}
-                    onChange={(e) => setModalAmount(e.target.value)}
-                    className="pl-8"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                  />
-                </div>
-              </div>
+              {availableCategories.length > 0 && (
+                <>
+                  {/* Budget Amount */}
+                  <div className="space-y-3">
+                    <Label>Monthly Budget Amount</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">kr</span>
+                      <Input
+                        placeholder="0.00"
+                        value={modalAmount}
+                        onChange={(e) => setModalAmount(e.target.value)}
+                        className="pl-8"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+
+                    {/* Quick Suggestions */}
+                    {suggestions && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">Quick suggestions based on recent spending:</p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setModalAmount(suggestions.matchAvg.toString())}
+                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
+                          >
+                            Match avg: kr{suggestions.matchAvg}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalAmount(suggestions.plusTen.toString())}
+                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
+                          >
+                            +10%: kr{suggestions.plusTen}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalAmount(suggestions.minusTen.toString())}
+                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
+                          >
+                            -10%: kr{suggestions.minusTen}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalAmount(suggestions.rounded.toString())}
+                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
+                          >
+                            Round: kr{suggestions.rounded}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Alert Preferences */}
+                  <div className="space-y-3">
+                    <Label>Alert me when</Label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={alertAt80Percent}
+                          onChange={(e) => setAlertAt80Percent(e.target.checked)}
+                          className="rounded border-border"
+                        />
+                        <span className="text-sm">I reach 80% of budget</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={alertOnExceed}
+                          onChange={(e) => setAlertOnExceed(e.target.checked)}
+                          className="rounded border-border"
+                        />
+                        <span className="text-sm">I exceed the budget</span>
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleModalSubmit}>
+              {availableCategories.length > 0 && (
+                <Button
+                  variant="ghost"
+                  onClick={() => handleModalSubmit(true)}
+                >
+                  Save & Add Another
+                </Button>
+              )}
+              <Button onClick={() => handleModalSubmit(false)}>
                 Add Budget
               </Button>
             </DialogFooter>

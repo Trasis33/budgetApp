@@ -2,6 +2,7 @@ import { BudgetWithSpending } from '../../types/budget';
 import { getCategoryIcon } from '../../lib/budgetUtils';
 import { CATEGORY_DESCRIPTIONS } from '../../lib/constants';
 import { formatBudgetAmount } from '../../lib/budgetUtils';
+import { getEditBudgetSuggestions } from '../../lib/budgetSuggestions';
 import { BudgetProgressBar } from './BudgetProgressBar';
 import { BudgetStatusBadge } from './BudgetStatusBadge';
 // @ts-ignore - CSS module import
@@ -133,21 +134,12 @@ export function BudgetTableRow({
   };
 
   const getQuickSuggestions = () => {
-    const spent = Math.round(budget.spent);
     const parsedEditingAmount = parseFloat(editingAmount);
     const currentEditingAmount = Number.isFinite(parsedEditingAmount)
       ? Math.max(0, Math.round(parsedEditingAmount))
       : Math.round(budget.amount);
-    const increaseByTenPercent = Math.round(currentEditingAmount * 1.1);
-    const decreaseByTenPercent = Math.round(currentEditingAmount * 0.9);
-    const roundedToNearestFifty = Math.ceil(currentEditingAmount / 50) * 50;
     
-    return [
-      { label: `Match spending: ${formatBudgetAmount(spent)}`, value: spent },
-      { label: `+10%: ${formatBudgetAmount(increaseByTenPercent)}`, value: increaseByTenPercent },
-      { label: `-10%: ${formatBudgetAmount(decreaseByTenPercent)}`, value: decreaseByTenPercent },
-      { label: `Round to ${formatBudgetAmount(roundedToNearestFifty)}`, value: roundedToNearestFifty },
-    ];
+    return getEditBudgetSuggestions(currentEditingAmount, budget.spent);
   };
 
   // Use a simple default icon for now - can be expanded later
