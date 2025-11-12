@@ -7,35 +7,50 @@ export const COLORS = {
 } as const;
 
 export const CHART_COLORS = {
-  green: 'var(--theme-amber)',      // Success (warm amber)
-  teal: 'var(--theme-teal)',        // Info
-  blue: 'var(--theme-indigo)',      // Secondary (deep indigo)
-  amber: 'var(--theme-yellow)',       // Warning (yellow)
-  orange: 'var(--theme-golden)',    // Accent (golden yellow)
+  mint: 'var(--theme-mint)',      // Success (mint)
+  teal: 'var(--theme-teal)',        // Info (teal)
+  indigo: 'var(--theme-indigo)',      // Secondary (deep indigo)
+  amber: 'var(--theme-amber)',       // Warning (amber)
+  golden: 'var(--theme-golden)',    // Accent (golden yellow)
+  yellow: 'var(--theme-yellow)',    // Accent (yellow)
+  coral: 'var(--theme-coral)',    // Accent (coral)
+  violet: 'var(--theme-violet)',    // Accent (violet)
+  cyan: 'var(--theme-cyan)',    // Accent (cyan)
+  periwinkle: 'var(--theme-periwinkle)',    // Accent (periwinkle)
 } as const;
 
 export const STATUS_COLORS = {
-  success: CHART_COLORS.green,
+  success: CHART_COLORS.mint,
   warning: CHART_COLORS.amber,
   danger: COLORS.destructive,
 } as const;
 
 // Icon color mapping
 export const ICON_COLORS = {
-  green: CHART_COLORS.green,
+  mint: CHART_COLORS.mint,
   amber: CHART_COLORS.amber,
-  blue: CHART_COLORS.blue,
-  purple: CHART_COLORS.orange,
-  pink: CHART_COLORS.teal,
+  indigo: CHART_COLORS.indigo,
+  golden: CHART_COLORS.golden,
+  yellow: CHART_COLORS.yellow,
+  violet: CHART_COLORS.violet,
+  teal: CHART_COLORS.teal,
+  coral: CHART_COLORS.coral,
+  cyan: CHART_COLORS.cyan,
+  periwinkle: CHART_COLORS.periwinkle,
 } as const;
 
 // Background colors for icons (20% opacity)
 export const ICON_BG_COLORS = {
-  green: `color-mix(in oklab, var(--theme-amber) 20%, transparent)`,
+  mint: `color-mix(in oklab, var(--theme-mint) 20%, transparent)`,
   amber: `color-mix(in oklab, var(--theme-yellow) 20%, transparent)`,
-  blue: `color-mix(in oklab, var(--theme-indigo) 20%, transparent)`,
-  purple: `color-mix(in oklab, var(--theme-golden) 20%, transparent)`,
-  pink: `color-mix(in oklab, var(--theme-teal) 20%, transparent)`,
+  indigo: `color-mix(in oklab, var(--theme-indigo) 20%, transparent)`,
+  golden: `color-mix(in oklab, var(--theme-golden) 20%, transparent)`,
+  yellow: `color-mix(in oklab, var(--theme-yellow) 20%, transparent)`,
+  violet: `color-mix(in oklab, var(--theme-violet) 20%, transparent)`,
+  teal: `color-mix(in oklab, var(--theme-teal) 20%, transparent)`,
+  coral: `color-mix(in oklab, var(--theme-coral) 20%, transparent)`,
+  cyan: `color-mix(in oklab, var(--theme-cyan) 20%, transparent)`,
+  periwinkle: `color-mix(in oklab, var(--theme-periwinkle) 20%, transparent)`,
 } as const;
 
 // Status thresholds
@@ -52,23 +67,23 @@ export const STATUS_LABELS = {
 } as const;
 
 // Category icons and their colors
-export const CATEGORY_ICONS: Record<string, { name: string; color: 'green' | 'blue' | 'amber' | 'purple' | 'pink' }> = {
-  'Groceries': { name: 'shopping-cart', color: 'green' },
+export const CATEGORY_ICONS: Record<string, { name: string; color: 'mint' | 'indigo' | 'amber' | 'violet' | 'teal' | 'coral' | 'cyan' | 'periwinkle' | 'golden' | 'yellow' }> = {
+  'Groceries': { name: 'shopping-cart', color: 'mint' },
   'Dining Out': { name: 'utensils', color: 'amber' },
-  'Gas & Transport': { name: 'zap', color: 'blue' },
-  'Entertainment': { name: 'tv', color: 'purple' },
-  'Shopping': { name: 'shopping-bag', color: 'pink' },
-  'Utilities': { name: 'home', color: 'green' },
-  'Healthcare': { name: 'heart', color: 'amber' },
-  'Insurance': { name: 'shield', color: 'blue' },
-  'Subscriptions': { name: 'credit-card', color: 'purple' },
-  'Education': { name: 'book', color: 'pink' },
-  'Travel': { name: 'plane', color: 'green' },
+  'Gas & Transport': { name: 'zap', color: 'indigo' },
+  'Entertainment': { name: 'tv', color: 'violet' },
+  'Shopping': { name: 'shopping-bag', color: 'teal' },
+  'Utilities': { name: 'home', color: 'cyan' },
+  'Healthcare': { name: 'heart', color: 'coral' },
+  'Insurance': { name: 'shield', color: 'golden' },
+  'Subscriptions': { name: 'credit-card', color: 'yellow' },
+  'Education': { name: 'book', color: 'teal' },
+  'Travel': { name: 'plane', color: 'mint' },
   'Fitness': { name: 'dumbbell', color: 'amber' },
-  'Pets': { name: 'paw', color: 'blue' },
-  'Gifts': { name: 'gift', color: 'purple' },
-  'Charity': { name: 'heart', color: 'pink' },
-  'Other': { name: 'more-horizontal', color: 'green' },
+  'Pets': { name: 'paw', color: 'indigo' },
+  'Gifts': { name: 'gift', color: 'violet' },
+  'Charity': { name: 'heart', color: 'coral' },
+  'Other': { name: 'more-horizontal', color: 'periwinkle' },
 } as const;
 
 /**

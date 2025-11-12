@@ -36,13 +36,17 @@ export function BudgetTableRow({
   
   const getIconClassName = (color: string) => {
     const colorMap = {
-      green: styles.iconGreen,
-      amber: styles.iconAmber,
-      blue: styles.iconBlue,
-      purple: styles.iconPurple,
-      pink: styles.iconPink,
+      mint: styles.iconMint,
+      indigo: styles.iconIndigo,
+      yellow: styles.iconYellow,
+      violet: styles.iconViolet,
+      golden: styles.iconGolden,
+      teal: styles.iconTeal,
+      coral: styles.iconCoral,
+      cyan: styles.iconCyan,
+      periwinkle: styles.iconPeriwinkle,
     };
-    return colorMap[color as keyof typeof colorMap] || styles.iconGreen;
+    return colorMap[color as keyof typeof colorMap] || styles.iconMint;
   };
 
   const getAmountClassName = (amount: number) => {
