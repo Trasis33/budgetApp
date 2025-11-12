@@ -1,19 +1,54 @@
 import React from 'react';
-import { BudgetMetrics } from '../../types/budget';
+import { BudgetMetrics, BudgetStatus } from '../../types/budget';
 import { BudgetMetricCard } from './BudgetMetricCard';
 import { formatBudgetAmount } from '../../lib/budgetUtils';
 import styles from '../../styles/budget/budget-metrics.module.css';
-import { Wallet, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { Wallet, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 interface BudgetMetricsGridProps {
   metrics: BudgetMetrics;
   className?: string;
 }
 
+interface StatusConfig {
+  text: string;
+  icon: React.ReactNode;
+  iconColor: 'success' | 'warning' | 'danger' | 'blue' | 'purple' | 'pink' | 'green' | 'amber';
+  dotColor: 'success' | 'warning' | 'danger';
+}
+
 export function BudgetMetricsGrid({
   metrics,
   className = ''
 }: BudgetMetricsGridProps) {
+  const getStatusConfig = (status: BudgetStatus): StatusConfig => {
+    switch (status) {
+      case 'success':
+        return {
+          text: 'On Track',
+          icon: <CheckCircle className="w-5 h-5" />,
+          iconColor: 'success',
+          dotColor: 'success'
+        };
+      case 'warning':
+        return {
+          text: 'Approaching Limit',
+          icon: <AlertCircle className="w-5 h-5" />,
+          iconColor: 'warning',
+          dotColor: 'warning'
+        };
+      case 'danger':
+        return {
+          text: 'Over Budget',
+          icon: <XCircle className="w-5 h-5" />,
+          iconColor: 'danger',
+          dotColor: 'danger'
+        };
+    }
+  };
+
+  const statusConfig = getStatusConfig(metrics.overallStatus);
+
   return (
     <div className={`${styles.metricsGrid} ${className}`}>
       <BudgetMetricCard
@@ -41,10 +76,11 @@ export function BudgetMetricsGrid({
       
       <BudgetMetricCard
         label="Status"
-        value="On Track"
-        icon={<CheckCircle className="w-5 h-5" />}
-        iconColor="green"
+        value={statusConfig.text}
+        icon={statusConfig.icon}
+        iconColor={statusConfig.iconColor}
         variant={metrics.overallStatus}
+        statusDotColor={statusConfig.dotColor}
         className="flex flex-col"
       />
     </div>

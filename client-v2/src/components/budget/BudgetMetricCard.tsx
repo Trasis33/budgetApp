@@ -1,14 +1,19 @@
 import { BudgetMetricCardProps } from '../../types/budget';
 import styles from '../../styles/budget/budget-metrics.module.css';
 
+interface BudgetMetricCardExtendedProps extends BudgetMetricCardProps {
+  statusDotColor?: 'success' | 'warning' | 'danger';
+}
+
 export function BudgetMetricCard({
   label,
   value,
   icon,
   iconColor,
   variant = 'default',
+  statusDotColor = 'success',
   className = ''
-}: BudgetMetricCardProps) {
+}: BudgetMetricCardExtendedProps) {
   const getIconClassName = (color: string) => {
     const colorMap = {
       green: styles.iconGreen,
@@ -16,6 +21,9 @@ export function BudgetMetricCard({
       blue: styles.iconBlue,
       purple: styles.iconPurple,
       pink: styles.iconPink,
+      success: styles.iconSuccess,
+      warning: styles.iconWarning,
+      danger: styles.iconDanger,
     };
     return colorMap[color as keyof typeof colorMap] || styles.iconGreen;
   };
@@ -30,6 +38,15 @@ export function BudgetMetricCard({
     return variantMap[variant as keyof typeof variantMap] || styles.metricValue;
   };
 
+  const getStatusDotClassName = (dotColor: string) => {
+    const dotColorMap = {
+      success: styles.statusDotSuccess,
+      warning: styles.statusDotWarning,
+      danger: styles.statusDotDanger,
+    };
+    return dotColorMap[dotColor as keyof typeof dotColorMap] || styles.statusDotSuccess;
+  };
+
   const isStatusCard = label === 'Status';
 
   return (
@@ -41,7 +58,7 @@ export function BudgetMetricCard({
           {isStatusCard ? (
             <div className={styles.statusIndicator}>
               <span className={styles.statusText}>{value}</span>
-              <span className={`${styles.statusDot} ${styles.statusDotPulse}`} />
+              <span className={`${getStatusDotClassName(statusDotColor)} ${styles.statusDotPulse}`} />
             </div>
           ) : (
             <div className={`${styles.metricValue} ${getValueClassName(variant)}`}>
