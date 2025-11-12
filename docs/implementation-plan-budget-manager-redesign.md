@@ -87,11 +87,11 @@ export const COLORS = {
 } as const;
 
 export const CHART_COLORS = {
-  green: 'var(--chart-1)',    // Success
-  teal: 'var(--chart-2)',     // Info
-  blue: 'var(--chart-3)',     // Secondary
-  amber: 'var(--chart-4)',    // Warning
-  orange: 'var(--chart-5)',   // Accent
+  green: 'var(--theme-amber)',      // Success
+  teal: 'var(--theme-teal)',        // Info
+  blue: 'var(--theme-indigo)',      // Secondary
+  amber: 'var(--theme-lime)',       // Warning
+  orange: 'var(--theme-yellow)',    // Accent
 } as const;
 
 export const STATUS_COLORS = {
@@ -312,8 +312,8 @@ styles/
 }
 
 .iconGreen {
-  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
-  color: var(--chart-1);
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
 }
 ```
 
@@ -338,8 +338,8 @@ styles/
   border-radius: 9999px;
 }
 
-.progressFillSuccess { background-color: var(--chart-1); }
-.progressFillWarning { background-color: var(--chart-2); }
+.progressFillSuccess { background-color: var(--theme-amber); }
+.progressFillWarning { background-color: var(--theme-teal); }
 .progressFillDanger { background-color: var(--destructive); }
 ```
 

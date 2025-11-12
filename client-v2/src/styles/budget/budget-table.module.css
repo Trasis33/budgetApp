@@ -32,28 +32,28 @@
 
 /* Icon color variants */
 .iconGreen {
-  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
-  color: var(--chart-1);
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
 }
 
 .iconAmber {
-  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
-  color: var(--chart-2);
+  background-color: color-mix(in oklab, var(--theme-teal) 20%, transparent);
+  color: var(--theme-teal);
 }
 
 .iconBlue {
-  background-color: color-mix(in oklab, var(--chart-3) 20%, transparent);
-  color: var(--chart-3);
+  background-color: color-mix(in oklab, var(--theme-indigo) 20%, transparent);
+  color: var(--theme-indigo);
 }
 
 .iconPurple {
-  background-color: color-mix(in oklab, var(--chart-4) 20%, transparent);
-  color: var(--chart-4);
+  background-color: color-mix(in oklab, var(--theme-lime) 20%, transparent);
+  color: var(--theme-lime);
 }
 
 .iconPink {
-  background-color: color-mix(in oklab, var(--chart-5) 20%, transparent);
-  color: var(--chart-5);
+  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
+  color: var(--theme-yellow);
 }
 
 /* Category info */
@@ -80,11 +80,11 @@
 }
 
 .amountPositive {
-  color: var(--chart-2);
+  color: var(--theme-teal);
 }
 
 .amountWarning {
-  color: var(--chart-1);
+  color: var(--theme-amber);
 }
 
 .amountDanger {

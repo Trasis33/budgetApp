@@ -15,11 +15,11 @@
 
 /* Progress bar variants */
 .progressFillSuccess {
-  background-color: var(--chart-2);
+  background-color: var(--theme-teal);
 }
 
 .progressFillWarning {
-  background-color: var(--chart-1);
+  background-color: var(--theme-amber);
 }
 
 .progressFillDanger {
@@ -114,11 +114,11 @@
 }
 
 .metricValueSuccess {
-  color: var(--chart-1);
+  color: var(--theme-amber);
 }
 
 .metricValueWarning {
-  color: var(--chart-2);
+  color: var(--theme-teal);
 }
 
 .metricValueDanger {
@@ -137,28 +137,43 @@
 }
 
 .iconGreen {
-  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
-  color: var(--chart-1);
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
 }
 
 .iconBlue {
-  background-color: color-mix(in oklab, var(--chart-3) 20%, transparent);
-  color: var(--chart-3);
+  background-color: color-mix(in oklab, var(--theme-indigo) 20%, transparent);
+  color: var(--theme-indigo);
 }
 
 .iconAmber {
-  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
-  color: var(--chart-2);
+  background-color: color-mix(in oklab, var(--theme-teal) 20%, transparent);
+  color: var(--theme-teal);
 }
 
 .iconPurple {
-  background-color: color-mix(in oklab, var(--chart-4) 20%, transparent);
-  color: var(--chart-4);
+  background-color: color-mix(in oklab, var(--theme-lime) 20%, transparent);
+  color: var(--theme-lime);
 }
 
 .iconPink {
-  background-color: color-mix(in oklab, var(--chart-5) 20%, transparent);
-  color: var(--chart-5);
+  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
+  color: var(--theme-yellow);
+}
+
+.iconSuccess {
+  background-color: color-mix(in oklab, var(--theme-mint) 20%, transparent);
+  color: var(--theme-mint);
+}
+
+.iconWarning {
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
+}
+
+.iconDanger {
+  background-color: color-mix(in oklab, var(--theme-coral) 20%, transparent);
+  color: var(--theme-coral);
 }
 
 /* Status indicator (used by Status metric card) */
@@ -179,7 +194,28 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background-color: var(--chart-1);
+  background-color: var(--theme-amber);
+}
+
+.statusDotSuccess {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--theme-mint);
+}
+
+.statusDotWarning {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--theme-amber);
+}
+
+.statusDotDanger {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--theme-coral);
 }
 
 .statusDotPulse {
@@ -228,11 +264,11 @@
 }
 
 .legendDotSuccess {
-  background-color: var(--chart-1);
+  background-color: var(--theme-amber);
 }
 
 .legendDotWarning {
-  background-color: var(--chart-2);
+  background-color: var(--theme-teal);
 }
 
 .legendDotDanger {

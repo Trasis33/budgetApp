@@ -12,17 +12,17 @@
 
 /* Badge variants */
 /* Per request:
- * - "Good" (success) uses previous warning color: --chart-2
- * - "Warning" uses previous good color: --chart-1
+ * - "Good" (success) uses previous warning color: --theme-teal
+ * - "Warning" uses previous good color: --theme-amber
  */
 .badgeSuccess {
-  background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
-  color: color-mix(in oklab, var(--chart-2) 80%, black);
+  background-color: color-mix(in oklab, var(--theme-teal) 20%, transparent);
+  color: color-mix(in oklab, var(--theme-teal) 80%, black);
 }
 
 .badgeWarning {
-  background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
-  color: color-mix(in oklab, var(--chart-1) 80%, black);
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: color-mix(in oklab, var(--theme-amber) 80%, black);
 }
 
 .badgeDanger {
@@ -31,8 +31,8 @@
 }
 
 .badgeInfo {
-  background-color: color-mix(in oklab, var(--chart-3) 20%, transparent);
-  color: color-mix(in oklab, var(--chart-3) 80%, black);
+  background-color: color-mix(in oklab, var(--theme-indigo) 20%, transparent);
+  color: color-mix(in oklab, var(--theme-indigo) 80%, black);
 }
 
 .badgeDefault {
@@ -97,13 +97,13 @@
 }
 
 .badgeOutlineSuccess {
-  border-color: var(--chart-1);
-  color: var(--chart-1);
+  border-color: var(--theme-amber);
+  color: var(--theme-amber);
 }
 
 .badgeOutlineWarning {
-  border-color: var(--chart-2);
-  color: var(--chart-2);
+  border-color: var(--theme-teal);
+  color: var(--theme-teal);
 }
 
 .badgeOutlineDanger {

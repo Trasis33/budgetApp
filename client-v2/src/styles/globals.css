@@ -33,16 +33,16 @@
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(.646 .222 41.116);   /* warm amber */
-  --chart-2: oklch(.6 .118 184.704);    /* teal */
-  --chart-3: oklch(.398 .07 227.392);   /* deep indigo */
-  --chart-4: oklch(.828 .189 84.429);   /* lime */
-  --chart-5: oklch(.769 .188 70.08);    /* citrus yellow */
-  --chart-6: oklch(.71 .18 16);         /* soft coral-red */
-  --chart-7: oklch(.74 .16 320);        /* lilac / violet */
-  --chart-8: oklch(.7 .16 200);         /* aqua-cyan */
-  --chart-9: oklch(.78 .16 260);        /* periwinkle */
-  --chart-10: oklch(.82 .12 140);       /* mint green */
+  --theme-amber: oklch(.646 .222 41.116);     /* warm amber */
+  --theme-teal: oklch(.6 .118 184.704);       /* teal */
+  --theme-indigo: oklch(.398 .07 227.392);    /* deep indigo */
+  --theme-lime: oklch(.828 .189 84.429);      /* lime */
+  --theme-yellow: oklch(.769 .188 70.08);     /* citrus yellow */
+  --theme-coral: oklch(.71 .18 16);           /* soft coral-red */
+  --theme-violet: oklch(.74 .16 320);         /* lilac / violet */
+  --theme-cyan: oklch(.7 .16 200);            /* aqua-cyan */
+  --theme-periwinkle: oklch(.78 .16 260);     /* periwinkle */
+  --theme-mint: oklch(.82 .12 140);           /* mint green */
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -76,11 +76,11 @@
   --ring: oklch(0.439 0 0);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --theme-amber: oklch(0.488 0.243 264.376);
+  --theme-teal: oklch(0.696 0.17 162.48);
+  --theme-yellow: oklch(0.769 0.188 70.08);
+  --theme-lime: oklch(0.627 0.265 303.9);
+  --theme-coral: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -113,11 +113,16 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  --color-theme-amber: var(--theme-amber);
+  --color-theme-teal: var(--theme-teal);
+  --color-theme-indigo: var(--theme-indigo);
+  --color-theme-lime: var(--theme-lime);
+  --color-theme-yellow: var(--theme-yellow);
+  --color-theme-coral: var(--theme-coral);
+  --color-theme-violet: var(--theme-violet);
+  --color-theme-cyan: var(--theme-cyan);
+  --color-theme-periwinkle: var(--theme-periwinkle);
+  --color-theme-mint: var(--theme-mint);
   --color-blue-50: oklch(0.974 0.01 240);
   --color-blue-100: oklch(0.948 0.021 240);
   --color-blue-200: oklch(0.904 0.042 240);

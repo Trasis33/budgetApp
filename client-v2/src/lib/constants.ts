@@ -7,11 +7,11 @@ export const COLORS = {
 } as const;
 
 export const CHART_COLORS = {
-  green: 'var(--chart-1)',    // Success
-  teal: 'var(--chart-2)',     // Info
-  blue: 'var(--chart-3)',     // Secondary
-  amber: 'var(--chart-4)',    // Warning
-  orange: 'var(--chart-5)',   // Accent
+  green: 'var(--theme-amber)',      // Success (warm amber)
+  teal: 'var(--theme-teal)',        // Info
+  blue: 'var(--theme-indigo)',      // Secondary (deep indigo)
+  amber: 'var(--theme-lime)',       // Warning (lime)
+  orange: 'var(--theme-yellow)',    // Accent (citrus yellow)
 } as const;
 
 export const STATUS_COLORS = {
@@ -31,11 +31,11 @@ export const ICON_COLORS = {
 
 // Background colors for icons (20% opacity)
 export const ICON_BG_COLORS = {
-  green: `color-mix(in oklab, ${CHART_COLORS.green} 20%, transparent)`,
-  amber: `color-mix(in oklab, ${CHART_COLORS.amber} 20%, transparent)`,
-  blue: `color-mix(in oklab, ${CHART_COLORS.blue} 20%, transparent)`,
-  purple: `color-mix(in oklab, ${CHART_COLORS.orange} 20%, transparent)`,
-  pink: `color-mix(in oklab, ${CHART_COLORS.teal} 20%, transparent)`,
+  green: `color-mix(in oklab, var(--theme-amber) 20%, transparent)`,
+  amber: `color-mix(in oklab, var(--theme-lime) 20%, transparent)`,
+  blue: `color-mix(in oklab, var(--theme-indigo) 20%, transparent)`,
+  purple: `color-mix(in oklab, var(--theme-yellow) 20%, transparent)`,
+  pink: `color-mix(in oklab, var(--theme-teal) 20%, transparent)`,
 } as const;
 
 // Status thresholds
