@@ -32,16 +32,18 @@ export function BudgetProgressBar({
 
   return (
     <div className={styles.progressContainer}>
-      <div className={`${getProgressBarClassName(size)} ${className}`}>
-        <div 
-          className={`${styles.progressFill} ${getProgressFillClassName(variant)}`}
-          style={{ width: `${clampedPercentage}%` }}
-          role="progressbar"
-          aria-valuenow={clampedPercentage}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`Budget progress: ${formatPercentage(clampedPercentage)}`}
-        />
+      <div className={styles.progressBarWrapper}>
+        <div className={`${getProgressBarClassName(size)} ${className}`}>
+          <div 
+            className={`${styles.progressFill} ${getProgressFillClassName(variant)}`}
+            style={{ width: `${clampedPercentage}%` }}
+            role="progressbar"
+            aria-valuenow={clampedPercentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Budget progress: ${formatPercentage(clampedPercentage)}`}
+          />
+        </div>
       </div>
       {showLabel && (
         <span className={styles.progressLabel}>

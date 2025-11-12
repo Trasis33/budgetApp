@@ -43,3 +43,4 @@ export const progressBarMd: string;
 export const progressBarLg: string;
 export const progressLabel: string;
 export const progressContainer: string;
+export const progressBarWrapper: string;

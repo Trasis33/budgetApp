@@ -28,7 +28,7 @@
 
 /* Progress bar sizes - slightly larger to match reference design */
 .progressBarSm {
-  height: 0.4rem;
+  height: 0.5rem;
 }
 
 .progressBarMd {
@@ -39,12 +39,27 @@
   height: 0.8rem;
 }
 
+/* Progress container - flex layout for bar and label side by side */
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
 /* Progress label */
 .progressLabel {
   font-size: var(--text-sm);
   color: var(--muted-foreground);
   font-weight: var(--font-weight-normal);
   white-space: nowrap;
+  min-width: fit-content;
+}
+
+/* Progress bar expands to fill available space */
+.progressBarWrapper {
+  flex: 1;
+  min-width: 80px;
 }
 
 /* Metric card container */
