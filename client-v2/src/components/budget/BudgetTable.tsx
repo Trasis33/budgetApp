@@ -45,13 +45,13 @@ export function BudgetTable({
       <table className={styles.budgetTable}>
         <thead className={styles.tableHeader}>
           <tr>
-            <th>Category</th>
-            <th>Monthly Budget</th>
-            <th>Spent</th>
-            <th>Remaining</th>
-            <th>Progress</th>
-            <th className="text-center">Status</th>
-            <th className="text-center">Actions</th>
+            <th className={styles.colCategory}>Category</th>
+            <th className={styles.colBudget}>Monthly Budget</th>
+            <th className={styles.colSpent}>Spent</th>
+            <th className={styles.colRemaining}>Remaining</th>
+            <th className={styles.colProgress}>Progress</th>
+            <th className={`text-center ${styles.colStatus}`}>Status</th>
+            <th className={`text-center ${styles.colActions}`}>Actions</th>
           </tr>
         </thead>
         <tbody className={styles.tableBody}>

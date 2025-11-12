@@ -104,7 +104,7 @@
 }
 
 .amountPositive {
-  color: var(--theme-teal);
+  color: var(--theme-mint);
 }
 
 .amountWarning {
@@ -151,6 +151,35 @@
 
 .tableHeader th:last-child {
   text-align: center;
+}
+
+/* Column widths */
+.colCategory {
+  width: 28%;
+}
+
+.colBudget {
+  width: 10%;
+}
+
+.colSpent {
+  width: 10%;
+}
+
+.colRemaining {
+  width: 10%;
+}
+
+.colProgress {
+  width: 28%;
+}
+
+.colStatus {
+  width: 8%;
+}
+
+.colActions {
+  width: 6%;
 }
 
 /* Table body */
