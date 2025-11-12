@@ -170,11 +170,11 @@
 }
 
 .metricValueSuccess {
-  color: var(--theme-amber);
+  color: var(--theme-mint);
 }
 
 .metricValueWarning {
-  color: var(--theme-teal);
+  color: var(--theme-coral);
 }
 
 .metricValueDanger {
@@ -192,29 +192,54 @@
   flex-shrink: 0;
 }
 
-.iconGreen {
-  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
-  color: var(--theme-amber);
+.iconMint {
+  background-color: color-mix(in oklab, var(--theme-mint) 20%, transparent);
+  color: var(--theme-mint);
 }
 
-.iconBlue {
+.iconIndigo {
   background-color: color-mix(in oklab, var(--theme-indigo) 20%, transparent);
   color: var(--theme-indigo);
 }
 
 .iconAmber {
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
+}
+
+.iconViolet {
+  background-color: color-mix(in oklab, var(--theme-violet) 20%, transparent);
+  color: var(--theme-violet);
+}
+
+.iconTeal {
   background-color: color-mix(in oklab, var(--theme-teal) 20%, transparent);
   color: var(--theme-teal);
 }
 
-.iconPurple {
-  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
-  color: var(--theme-yellow);
+.iconCoral {
+  background-color: color-mix(in oklab, var(--theme-coral) 20%, transparent);
+  color: var(--theme-coral);
 }
 
-.iconPink {
+.iconCyan {
+  background-color: color-mix(in oklab, var(--theme-cyan) 20%, transparent);
+  color: var(--theme-cyan);
+}
+
+.iconPeriwinkle {
+  background-color: color-mix(in oklab, var(--theme-periwinkle) 20%, transparent);
+  color: var(--theme-periwinkle);
+}
+
+.iconGolden {
   background-color: color-mix(in oklab, var(--theme-golden) 20%, transparent);
   color: var(--theme-golden);
+}
+
+.iconYellow {
+  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
+  color: var(--theme-yellow);
 }
 
 .iconSuccess {
@@ -320,11 +345,11 @@
 }
 
 .legendDotSuccess {
-  background-color: var(--theme-amber);
+  background-color: var(--theme-mint);
 }
 
 .legendDotWarning {
-  background-color: var(--theme-teal);
+  background-color: var(--theme-golden);
 }
 
 .legendDotDanger {
