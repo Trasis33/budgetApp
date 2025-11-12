@@ -70,12 +70,12 @@ export const STATUS_LABELS = {
 export const CATEGORY_ICONS: Record<string, { name: string; color: 'mint' | 'indigo' | 'amber' | 'violet' | 'teal' | 'coral' | 'cyan' | 'periwinkle' | 'golden' | 'yellow' }> = {
   'Groceries': { name: 'shopping-cart', color: 'mint' },
   'Dining Out': { name: 'utensils', color: 'amber' },
-  'Gas & Transport': { name: 'zap', color: 'indigo' },
+  'Transportation': { name: 'car', color: 'indigo' },
   'Entertainment': { name: 'tv', color: 'violet' },
   'Shopping': { name: 'shopping-bag', color: 'teal' },
-  'Utilities': { name: 'home', color: 'cyan' },
+  'Utilities': { name: 'zap', color: 'cyan' },
   'Healthcare': { name: 'heart', color: 'coral' },
-  'Insurance': { name: 'shield', color: 'golden' },
+  'Mortgage': { name: 'home', color: 'golden' },
   'Subscriptions': { name: 'credit-card', color: 'yellow' },
   'Education': { name: 'book', color: 'teal' },
   'Travel': { name: 'plane', color: 'mint' },
@@ -84,6 +84,8 @@ export const CATEGORY_ICONS: Record<string, { name: string; color: 'mint' | 'ind
   'Gifts': { name: 'gift', color: 'violet' },
   'Charity': { name: 'heart', color: 'coral' },
   'Other': { name: 'more-horizontal', color: 'periwinkle' },
+  'Kids Clothes': { name: 'shopping-bag', color: 'teal' },
+  'Household Items': { name: 'home', color: 'golden' },
 } as const;
 
 /**
@@ -93,9 +95,22 @@ export const CATEGORY_ICONS: Record<string, { name: string; color: 'mint' | 'ind
 export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Groceries': 'Weekly shopping',
   'Dining Out': 'Restaurants & cafes',
-  'Gas & Transport': 'Fuel & public transit',
+  'Transportation': 'Fuel & public transit',
   'Entertainment': 'Movies & games',
   'Shopping': 'Clothing & misc',
+  'Utilities': 'Utilities',
+  'Healthcare': 'Healthcare',
+  'Mortgage': 'Mortgage payment',
+  'Subscriptions': 'Subscriptions',
+  'Education': 'Education',
+  'Travel': 'Travel',
+  'Fitness': 'Fitness',
+  'Pets': 'Pets',
+  'Gifts': 'Gifts',
+  'Charity': 'Charity',
+  'Other': 'Other',
+  'Kids Clothes': 'Kids Clothes',
+  'Household Items': 'Household Items',
 };
 
 // Animation durations

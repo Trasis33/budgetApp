@@ -31,6 +31,10 @@
 }
 
 /* Icon color variants */
+.iconAmber {
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
+}
 .iconMint {
   background-color: color-mix(in oklab, var(--theme-mint) 20%, transparent);
   color: var(--theme-mint);
