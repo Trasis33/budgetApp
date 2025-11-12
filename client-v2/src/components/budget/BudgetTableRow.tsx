@@ -199,6 +199,7 @@ export function BudgetTableRow({
           <BudgetProgressBar
             percentage={budget.progress}
             variant={budget.status}
+            categoryColor={categoryIcon.color}
             showLabel={true}
             size="sm"
           />

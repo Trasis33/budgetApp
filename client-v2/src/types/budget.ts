@@ -55,6 +55,7 @@ export interface BudgetProgressBarProps {
   variant: BudgetStatus;
   showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  categoryColor?: 'mint' | 'indigo' | 'amber' | 'violet' | 'teal' | 'coral' | 'cyan' | 'periwinkle' | 'golden' | 'yellow';
   className?: string;
 }
 

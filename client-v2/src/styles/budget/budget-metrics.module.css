@@ -13,7 +13,7 @@
   position: relative;
 }
 
-/* Progress bar variants */
+/* Progress bar variants - status-based (fallback) */
 .progressFillSuccess {
   background-color: var(--theme-teal);
 }
@@ -24,6 +24,47 @@
 
 .progressFillDanger {
   background-color: var(--destructive);
+}
+
+/* Progress bar color variants - category-based */
+.progressFillMint {
+  background-color: var(--theme-mint);
+}
+
+.progressFillAmber {
+  background-color: var(--theme-amber);
+}
+
+.progressFillIndigo {
+  background-color: var(--theme-indigo);
+}
+
+.progressFillViolet {
+  background-color: var(--theme-violet);
+}
+
+.progressFillTeal {
+  background-color: var(--theme-teal);
+}
+
+.progressFillCoral {
+  background-color: var(--theme-coral);
+}
+
+.progressFillCyan {
+  background-color: var(--theme-cyan);
+}
+
+.progressFillPeriwinkle {
+  background-color: var(--theme-periwinkle);
+}
+
+.progressFillGolden {
+  background-color: var(--theme-golden);
+}
+
+.progressFillYellow {
+  background-color: var(--theme-yellow);
 }
 
 /* Progress bar sizes - slightly larger to match reference design */

@@ -7,9 +7,28 @@ export function BudgetProgressBar({
   variant,
   showLabel = true,
   size = 'md',
+  categoryColor,
   className = ''
 }: BudgetProgressBarProps) {
-  const getProgressFillClassName = (variant: string) => {
+  const getProgressFillClassName = (categoryColor?: string, variant?: string) => {
+    // Prioritize category color if provided
+    if (categoryColor) {
+      const colorMap: Record<string, string> = {
+        mint: styles.progressFillMint,
+        amber: styles.progressFillAmber,
+        indigo: styles.progressFillIndigo,
+        violet: styles.progressFillViolet,
+        teal: styles.progressFillTeal,
+        coral: styles.progressFillCoral,
+        cyan: styles.progressFillCyan,
+        periwinkle: styles.progressFillPeriwinkle,
+        golden: styles.progressFillGolden,
+        yellow: styles.progressFillYellow,
+      };
+      return colorMap[categoryColor] || styles.progressFillSuccess;
+    }
+
+    // Fall back to status-based color
     const variantMap = {
       success: styles.progressFillSuccess,
       warning: styles.progressFillWarning,
@@ -35,7 +54,7 @@ export function BudgetProgressBar({
       <div className={styles.progressBarWrapper}>
         <div className={`${getProgressBarClassName(size)} ${className}`}>
           <div 
-            className={`${styles.progressFill} ${getProgressFillClassName(variant)}`}
+            className={`${styles.progressFill} ${getProgressFillClassName(categoryColor, variant)}`}
             style={{ width: `${clampedPercentage}%` }}
             role="progressbar"
             aria-valuenow={clampedPercentage}
