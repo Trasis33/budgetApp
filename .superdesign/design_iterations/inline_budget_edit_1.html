@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inline Budget Edit - Design 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Import your exact design system */
+        :root {
+          --font-size: 16px;
+          --background: #ffffff;
+          --foreground: oklch(0.145 0 0);
+          --card: #ffffff;
+          --card-foreground: oklch(0.145 0 0);
+          --popover: oklch(1 0 0);
+          --popover-foreground: oklch(0.145 0 0);
+          --primary: #030213;
+          --primary-foreground: oklch(1 0 0);
+          --secondary: oklch(0.95 0.0058 264.53);
+          --secondary-foreground: #030213;
+          --muted: #ececf0;
+          --muted-foreground: #717182;
+          --accent: #e9ebef;
+          --accent-foreground: #030213;
+          --destructive: #d4183d;
+          --destructive-foreground: #ffffff;
+          --border: rgba(0, 0, 0, 0.1);
+          --input: transparent;
+          --input-background: #f3f3f5;
+          --switch-background: #cbced4;
+          --font-weight-medium: 500;
+          --font-weight-normal: 400;
+          --ring: oklch(0.708 0 0);
+          --chart-1: oklch(0.646 0.222 41.116);
+          --chart-2: oklch(0.6 0.118 184.704);
+          --chart-3: oklch(0.398 0.07 227.392);
+          --chart-4: oklch(0.828 0.189 84.429);
+          --chart-5: oklch(0.769 0.188 70.08);
+          --radius: 0.625rem;
+          --radius-sm: calc(var(--radius) - 4px);
+          --radius-md: calc(var(--radius) - 2px);
+          --radius-lg: var(--radius);
+          --radius-xl: calc(var(--radius) + 4px);
+        }
+
+        * {
+          border-color: var(--border);
+          outline-color: var(--ring);
+        }
+
+        body {
+          background-color: var(--background);
+          color: var(--foreground);
+          font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        .card {
+          background-color: var(--card);
+          color: var(--card-foreground);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          border-radius: var(--radius-md);
+          padding: 0.5rem 1rem;
+          font-weight: var(--font-weight-medium);
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid transparent;
+        }
+
+        .btn-primary:hover {
+          background-color: color-mix(in oklab, var(--primary) 90%, transparent);
+        }
+
+        .btn-secondary {
+          background-color: var(--secondary);
+          color: var(--secondary-foreground);
+          border-radius: var(--radius-md);
+          padding: 0.5rem 1rem;
+          font-weight: var(--font-weight-medium);
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+          background-color: var(--accent);
+        }
+
+        .btn-ghost {
+          background-color: transparent;
+          color: var(--muted-foreground);
+          border-radius: var(--radius-md);
+          padding: 0.25rem;
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-ghost:hover {
+          background-color: var(--accent);
+          color: var(--accent-foreground);
+        }
+
+        .btn-ghost:hover.btn-destructive {
+          background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
+          color: var(--destructive);
+        }
+
+        .table-row-hover {
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .table-row-hover:hover {
+          background-color: var(--accent);
+          transform: translateX(2px);
+        }
+
+        .compact-cell {
+          padding: 0.75rem 1rem;
+        }
+
+        .form-input {
+          background-color: var(--input-background);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 0.375rem 0.75rem;
+          font-size: 0.875rem;
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: var(--ring);
+          box-shadow: 0 0 0 2px var(--ring);
+          background-color: var(--card);
+        }
+
+        .form-input.editing {
+          background-color: var(--card);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 20%, transparent);
+        }
+
+        .quick-edit-btn {
+          background-color: var(--muted);
+          color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+          font-weight: var(--font-weight-medium);
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
+        }
+
+        .quick-edit-btn:hover {
+          background-color: var(--accent);
+          color: var(--accent-foreground);
+          transform: translateY(-1px);
+        }
+
+        .progress-bar {
+          background-color: var(--muted);
+          border-radius: 9999px;
+        }
+
+        .progress-fill-green {
+          background-color: var(--chart-1);
+        }
+
+        .progress-fill-amber {
+          background-color: var(--chart-2);
+        }
+
+        .progress-fill-blue {
+          background-color: var(--chart-3);
+        }
+
+        .progress-fill-purple {
+          background-color: var(--chart-4);
+        }
+
+        .progress-fill-pink {
+          background-color: var(--chart-5);
+        }
+
+        .badge-success {
+          background-color: color-mix(in oklab, var(--chart-1) 20%, transparent);
+          color: color-mix(in oklab, var(--chart-1) 80%, black);
+        }
+
+        .badge-warning {
+          background-color: color-mix(in oklab, var(--chart-2) 20%, transparent);
+          color: color-mix(in oklab, var(--chart-2) 80%, black);
+        }
+
+        .badge-danger {
+          background-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+          color: var(--destructive);
+        }
+
+        .icon-green { color: var(--chart-1); }
+        .icon-amber { color: var(--chart-2); }
+        .icon-blue { color: var(--chart-3); }
+        .icon-purple { color: var(--chart-4); }
+        .icon-pink { color: var(--chart-5); }
+
+        .bg-icon-green { background-color: color-mix(in oklab, var(--chart-1) 20%, transparent); }
+        .bg-icon-amber { background-color: color-mix(in oklab, var(--chart-2) 20%, transparent); }
+        .bg-icon-blue { background-color: color-mix(in oklab, var(--chart-3) 20%, transparent); }
+        .bg-icon-purple { background-color: color-mix(in oklab, var(--chart-4) 20%, transparent); }
+        .bg-icon-pink { background-color: color-mix(in oklab, var(--chart-5) 20%, transparent); }
+
+        .text-success { color: var(--chart-1); }
+        .text-warning { color: var(--chart-2); }
+        .text-danger { color: var(--destructive); }
+
+        .edit-mode {
+          background-color: color-mix(in oklab, var(--primary) 5%, transparent);
+          border-left: 3px solid var(--primary);
+        }
+
+        .edit-actions {
+          animation: slideIn 0.15s ease-out;
+        }
+
+        @keyframes slideIn {
+          from { 
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .quick-suggest-container {
+          animation: fadeIn 0.1s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-6">
+        <h1 class="text-2xl font-medium mb-6">Inline Budget Edit Design</h1>
+        
+        <!-- Main Table -->
+        <div class="card overflow-hidden">
+            <div class="px-6 py-4 border-b" style="border-color: var(--border)">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-medium">Category Budgets</h2>
+                    <div class="flex items-center gap-2">
+                        <select class="text-sm border rounded-lg px-3 py-1" style="border-color: var(--border); background-color: var(--input-background)">
+                            <option>This Month</option>
+                            <option>Last Month</option>
+                            <option>Last 3 Months</option>
+                        </select>
+                        <button class="btn-ghost">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-muted" style="border-bottom: 1px solid var(--border)">
+                        <tr>
+                            <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Category</th>
+                            <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Budget</th>
+                            <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Spent</th>
+                            <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Remaining</th>
+                            <th class="text-left compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Progress</th>
+                            <th class="text-center compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</th>
+                            <th class="text-center compact-cell text-xs font-medium text-muted-foreground uppercase tracking-wide">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody style="border-bottom: 1px solid var(--border)">
+                        <!-- Normal Row -->
+                        <tr class="table-row-hover">
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-icon-green rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 icon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Groceries</p>
+                                        <p class="text-xs text-muted-foreground">Weekly shopping</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$800</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$680</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium text-warning">$120</span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                        <div class="progress-fill-green h-2 rounded-full" style="width: 85%; transition: width 0.6s ease-out"></div>
+                                    </div>
+                                    <span class="text-sm text-muted-foreground">85%</span>
+                                </div>
+                            </td>
+                            <td class="compact-cell text-center">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-warning">
+                                    Warning
+                                </span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button class="btn-ghost" onclick="enterEditMode(this)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="btn-ghost btn-destructive">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Mode Row -->
+                        <tr class="table-row-hover edit-mode">
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-icon-amber rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 icon-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Dining Out</p>
+                                        <p class="text-xs text-muted-foreground">Restaurants & cafes</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-muted-foreground">$</span>
+                                    <input 
+                                        type="number" 
+                                        value="500" 
+                                        class="form-input editing w-24"
+                                        step="0.01"
+                                        min="0"
+                                        autofocus
+                                    >
+                                </div>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$420</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium text-warning">$80</span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                        <div class="progress-fill-amber h-2 rounded-full" style="width: 84%; transition: width 0.6s ease-out"></div>
+                                    </div>
+                                    <span class="text-sm text-muted-foreground">84%</span>
+                                </div>
+                            </td>
+                            <td class="compact-cell text-center">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-warning">
+                                    Warning
+                                </span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center justify-center gap-1 edit-actions">
+                                    <button class="btn-primary text-xs px-2 py-1">
+                                        Save
+                                    </button>
+                                    <button class="btn-secondary text-xs px-2 py-1" onclick="exitEditMode(this)">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Quick Suggest Row -->
+                        <tr class="table-row-hover">
+                            <td colspan="7" class="compact-cell p-0">
+                                <div class="quick-suggest-container p-4 border-t" style="border-color: var(--border); background-color: var(--input-background)">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium mb-2">Quick suggestions for Dining Out:</p>
+                                            <div class="flex flex-wrap gap-2">
+                                                <button class="quick-edit-btn">
+                                                    Match spending: $420
+                                                </button>
+                                                <button class="quick-edit-btn">
+                                                    +10%: $462
+                                                </button>
+                                                <button class="quick-edit-btn">
+                                                    -10%: $378
+                                                </button>
+                                                <button class="quick-edit-btn">
+                                                    Round to $450
+                                                </button>
+                                                <button class="quick-edit-btn">
+                                                    Based on last 3 months: $485
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button class="btn-ghost" onclick="hideQuickSuggest(this)">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Normal Row -->
+                        <tr class="table-row-hover">
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-icon-blue rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 icon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Gas & Transport</p>
+                                        <p class="text-xs text-muted-foreground">Fuel & public transit</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$400</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$180</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium text-success">$220</span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                        <div class="progress-fill-blue h-2 rounded-full" style="width: 45%; transition: width 0.6s ease-out"></div>
+                                    </div>
+                                    <span class="text-sm text-muted-foreground">45%</span>
+                                </div>
+                            </td>
+                            <td class="compact-cell text-center">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-success">
+                                    Good
+                                </span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button class="btn-ghost" onclick="enterEditMode(this)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="btn-ghost btn-destructive">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Normal Row -->
+                        <tr class="table-row-hover">
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-icon-purple rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 icon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Entertainment</p>
+                                        <p class="text-xs text-muted-foreground">Movies & games</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$200</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium">$95</span>
+                            </td>
+                            <td class="compact-cell">
+                                <span class="font-medium text-success">$105</span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 progress-bar h-2 min-w-[80px]">
+                                        <div class="progress-fill-purple h-2 rounded-full" style="width: 47.5%; transition: width 0.6s ease-out"></div>
+                                    </div>
+                                    <span class="text-sm text-muted-foreground">47.5%</span>
+                                </div>
+                            </td>
+                            <td class="compact-cell text-center">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium badge-success">
+                                    Good
+                                </span>
+                            </td>
+                            <td class="compact-cell">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button class="btn-ghost" onclick="enterEditMode(this)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="btn-ghost btn-destructive">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add New Budget Button -->
+        <div class="mt-6 flex justify-center">
+            <button class="btn-primary flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add New Budget
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function enterEditMode(button) {
+            const row = button.closest('tr');
+            const budgetCell = row.cells[1]; // Budget column
+            const actionsCell = row.cells[6]; // Actions column
+            
+            // Store original value
+            const originalValue = budgetCell.querySelector('span').textContent;
+            
+            // Create input
+            const numericValue = originalValue.replace('$', '').replace(',', '');
+            budgetCell.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-muted-foreground">$</span>
+                    <input 
+                        type="number" 
+                        value="${numericValue}" 
+                        class="form-input editing w-24"
+                        step="0.01"
+                        min="0"
+                        autofocus
+                    >
+                </div>
+            `;
+            
+            // Update actions
+            actionsCell.innerHTML = `
+                <div class="flex items-center justify-center gap-1 edit-actions">
+                    <button class="btn-primary text-xs px-2 py-1" onclick="saveEdit(this, '${originalValue}')">
+                        Save
+                    </button>
+                    <button class="btn-secondary text-xs px-2 py-1" onclick="exitEditMode(this, '${originalValue}')">
+                        Cancel
+                    </button>
+                </div>
+            `;
+            
+            // Add edit mode styling
+            row.classList.add('edit-mode');
+            
+            // Focus input
+            budgetCell.querySelector('input').focus();
+            budgetCell.querySelector('input').select();
+            
+            // Show quick suggest row
+            showQuickSuggest(row);
+        }
+
+        function exitEditMode(button, originalValue) {
+            const row = button.closest('tr');
+            const budgetCell = row.cells[1];
+            const actionsCell = row.cells[6];
+            
+            // Restore original value
+            budgetCell.innerHTML = `<span class="font-medium">${originalValue}</span>`;
+            
+            // Restore actions
+            actionsCell.innerHTML = `
+                <div class="flex items-center justify-center gap-1">
+                    <button class="btn-ghost" onclick="enterEditMode(this)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>
+                    <button class="btn-ghost btn-destructive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            // Remove edit mode styling
+            row.classList.remove('edit-mode');
+            
+            // Hide quick suggest row
+            hideQuickSuggestRow(row);
+        }
+
+        function saveEdit(button, originalValue) {
+            const row = button.closest('tr');
+            const budgetCell = row.cells[1];
+            const input = budgetCell.querySelector('input');
+            const newValue = '$' + parseFloat(input.value).toLocaleString();
+            
+            // Update display
+            budgetCell.innerHTML = `<span class="font-medium">${newValue}</span>`;
+            
+            // Restore actions (would normally save to backend first)
+            exitEditMode(button, newValue);
+        }
+
+        function showQuickSuggest(row) {
+            // Find or create quick suggest row after the current row
+            let quickSuggestRow = row.nextElementSibling;
+            if (!quickSuggestRow || !quickSuggestRow.querySelector('.quick-suggest-container')) {
+                quickSuggestRow = document.createElement('tr');
+                quickSuggestRow.innerHTML = `
+                    <td colspan="7" class="compact-cell p-0">
+                        <div class="quick-suggest-container p-4 border-t" style="border-color: var(--border); background-color: var(--input-background)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium mb-2">Quick suggestions:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button class="quick-edit-btn" onclick="applyQuickSuggest(this, 420)">
+                                            Match spending: $420
+                                        </button>
+                                        <button class="quick-edit-btn" onclick="applyQuickSuggest(this, 462)">
+                                            +10%: $462
+                                        </button>
+                                        <button class="quick-edit-btn" onclick="applyQuickSuggest(this, 378)">
+                                            -10%: $378
+                                        </button>
+                                        <button class="quick-edit-btn" onclick="applyQuickSuggest(this, 450)">
+                                            Round to $450
+                                        </button>
+                                        <button class="quick-edit-btn" onclick="applyQuickSuggest(this, 485)">
+                                            Based on last 3 months: $485
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn-ghost" onclick="hideQuickSuggest(this)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                row.parentNode.insertBefore(quickSuggestRow, row.nextElementSibling);
+            }
+        }
+
+        function hideQuickSuggestRow(row) {
+            const quickSuggestRow = row.nextElementSibling;
+            if (quickSuggestRow && quickSuggestRow.querySelector('.quick-suggest-container')) {
+                quickSuggestRow.remove();
+            }
+        }
+
+        function hideQuickSuggest(button) {
+            const quickSuggestRow = button.closest('tr');
+            quickSuggestRow.remove();
+        }
+
+        function applyQuickSuggest(button, value) {
+            const editRow = button.closest('tr').previousElementSibling;
+            const input = editRow.querySelector('input');
+            if (input) {
+                input.value = value;
+                input.focus();
+            }
+        }
+    </script>
+</body>
+</html>
