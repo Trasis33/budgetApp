@@ -16,16 +16,21 @@ export function BudgetMetricCard({
 }: BudgetMetricCardExtendedProps) {
   const getIconClassName = (color: string) => {
     const colorMap = {
-      green: styles.iconGreen,
+      mint: styles.iconMint,
+      indigo: styles.iconIndigo,
       amber: styles.iconAmber,
-      blue: styles.iconBlue,
-      purple: styles.iconPurple,
-      pink: styles.iconPink,
+      violet: styles.iconViolet,
+      teal: styles.iconTeal,
+      coral: styles.iconCoral,
+      cyan: styles.iconCyan,
+      periwinkle: styles.iconPeriwinkle,
+      golden: styles.iconGolden,
+      yellow: styles.iconYellow,
       success: styles.iconSuccess,
       warning: styles.iconWarning,
       danger: styles.iconDanger,
     };
-    return colorMap[color as keyof typeof colorMap] || styles.iconGreen;
+    return colorMap[color as keyof typeof colorMap] || styles.iconMint;
   };
 
   const getValueClassName = (variant: string) => {

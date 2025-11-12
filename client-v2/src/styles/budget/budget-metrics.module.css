@@ -170,7 +170,7 @@
 }
 
 .metricValueSuccess {
-  color: var(--theme-mint);
+  color: var(--theme-teal);
 }
 
 .metricValueWarning {

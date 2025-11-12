@@ -3,7 +3,7 @@ import { BudgetMetrics, BudgetStatus } from '../../types/budget';
 import { BudgetMetricCard } from './BudgetMetricCard';
 import { formatBudgetAmount } from '../../lib/budgetUtils';
 import styles from '../../styles/budget/budget-metrics.module.css';
-import { Wallet, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Wallet, TrendingUp, AlertCircle, CheckCircle, XCircle, Percent } from 'lucide-react';
 
 interface BudgetMetricsGridProps {
   metrics: BudgetMetrics;
@@ -13,7 +13,7 @@ interface BudgetMetricsGridProps {
 interface StatusConfig {
   text: string;
   icon: React.ReactNode;
-  iconColor: 'success' | 'warning' | 'danger' | 'blue' | 'purple' | 'pink' | 'green' | 'amber';
+  iconColor: 'success' | 'warning' | 'danger' | 'mint' | 'indigo' | 'amber' | 'violet' | 'teal' | 'coral' | 'cyan' | 'periwinkle' | 'golden' | 'yellow';
   dotColor: 'success' | 'warning' | 'danger';
 }
 
@@ -55,22 +55,22 @@ export function BudgetMetricsGrid({
         label="Total Budget"
         value={formatBudgetAmount(metrics.totalBudget)}
         icon={<Wallet className="w-5 h-5" />}
-        iconColor="blue"
+        iconColor="indigo"
       />
       
       <BudgetMetricCard
         label="Total Spent"
         value={formatBudgetAmount(metrics.totalSpent)}
         icon={<TrendingUp className="w-5 h-5" />}
-        iconColor="purple"
-        variant={metrics.overallStatus === 'danger' ? 'danger' : 'default'}
+        iconColor="coral"
+        variant={metrics.overallStatus === 'danger' ? 'danger' : 'warning'}
       />
       
       <BudgetMetricCard
         label="Total Remaining"
         value={formatBudgetAmount(metrics.totalRemaining)}
-        icon={<CheckCircle className="w-5 h-5" />}
-        iconColor="green"
+        icon={<Percent className="w-5 h-5" />}
+        iconColor="teal"
         variant={metrics.totalRemaining >= 0 ? 'success' : 'danger'}
       />
       
