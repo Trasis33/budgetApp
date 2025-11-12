@@ -32,6 +32,16 @@ interface BudgetManagerProps {
   onNavigate?: (view: string) => void;
 }
 
+/**
+ * BudgetManager is a component that manages budgets and expenses for a user.
+ * It displays a list of budgets and expenses, and allows the user to add, edit, and delete
+ * budgets and expenses. It also displays a summary of the user's total budget and expenses.
+ * The component is connected to the budget service and uses the useBudgetData and
+ * useBudgetCalculations custom hooks to fetch and calculate budget data.
+ *
+ * @param {BudgetManagerProps} props - The props for the BudgetManager component.
+ * @returns {JSX.Element} - The BudgetManager component.
+ */
 export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   const navigate = useNavigate();
   const { isLoading: scopeLoading } = useScope();

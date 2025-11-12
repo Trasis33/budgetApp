@@ -47,13 +47,13 @@
 }
 
 .iconPurple {
-  background-color: color-mix(in oklab, var(--theme-lime) 20%, transparent);
-  color: var(--theme-lime);
+  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
+  color: var(--theme-yellow);
 }
 
 .iconPink {
-  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
-  color: var(--theme-yellow);
+  background-color: color-mix(in oklab, var(--theme-golden) 20%, transparent);
+  color: var(--theme-golden);
 }
 
 /* Category info */
