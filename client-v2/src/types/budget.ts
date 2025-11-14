@@ -45,7 +45,24 @@ export interface BudgetMetricCardProps {
   label: string;
   value: string | number;
   icon: React.ReactNode;
-  iconColor: 'green' | 'blue' | 'amber' | 'purple' | 'pink' | 'success' | 'warning' | 'danger';
+  iconColor:
+    | 'green'
+    | 'blue'
+    | 'amber'
+    | 'purple'
+    | 'pink'
+    | 'mint'
+    | 'indigo'
+    | 'violet'
+    | 'teal'
+    | 'coral'
+    | 'cyan'
+    | 'periwinkle'
+    | 'golden'
+    | 'yellow'
+    | 'success'
+    | 'warning'
+    | 'danger';
   variant?: 'default' | 'success' | 'warning' | 'danger';
   className?: string;
 }

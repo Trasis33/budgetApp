@@ -46,7 +46,7 @@ export function BudgetTable({
         <thead className={styles.tableHeader}>
           <tr>
             <th className={styles.colCategory}>Category</th>
-            <th className={styles.colBudget}>Monthly Budget</th>
+            <th className={styles.colBudget}>Budget</th>
             <th className={styles.colSpent}>Spent</th>
             <th className={styles.colRemaining}>Remaining</th>
             <th className={styles.colProgress}>Progress</th>
