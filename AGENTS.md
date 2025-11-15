@@ -1,30 +1,32 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Root: Node.js workspace with `client` (React + Tailwind) and `server` (Express + SQLite/Knex).
-- Client: app code in `client/src` (components, pages, hooks, utils). Static assets in `client/public`.
+- Root: Node.js workspace with `client-v2` (React + TypeScript + Vite + Tailwind) and `server` (Express + SQLite/Knex).
+- Client: app code in `client-v2/src` (components, lib, hooks, api, types). Uses TypeScript (`.tsx`, `.ts`) for all source files.
 - Server: HTTP API in `server/index.js`; routes in `server/routes/*`, middleware in `server/middleware`, data layer in `server/db/*` and helpers in `server/utils/*`.
-- Tests: client unit tests under `client/src/**/__tests__/*.test.js`. Server includes ad‑hoc scripts in `server/test_*.js`.
+- Tests: client unit tests under `client-v2/src/**/__tests__/*.test.tsx`. Server includes ad‑hoc scripts in `server/test_*.js`.
 - Config: copy `.env.example` to `.env` (e.g., `PORT`, `JWT_SECRET`).
 
 ## Build, Test, and Development Commands
 - `npm run setup`: install root deps and client deps.
-- `npm run dev`: run server and client concurrently (API on `:5001`, client on `:3000`).
+- `npm run dev`: run server and client concurrently (API on `:5001`, client on `:3001`).
 - `npm run dev:server` / `npm run dev:client`: run each side in isolation.
-- `npm run build`: build production client to `client/build`.
-- `npm start`: start Express API; in production it serves `client/build`.
-- Tests: `cd client && npm test` for React tests. Root `npm test` runs Jest for Node when present.
+- `npm run build`: build production client to `client-v2/build` using Vite.
+- `npm start`: start Express API; in production it serves `client-v2/build`.
+- Client dev commands: `cd client-v2 && npm run dev` (dev server), `npm run build` (production build), `npm run preview` (preview build).
+- Tests: `cd client-v2 && npm test` for React tests. Root `npm test` runs Jest for Node when present.
 
 ## Coding Style & Naming Conventions
-- JavaScript/React with 2‑space indentation, semicolons, single quotes.
-- Components: PascalCase files (e.g., `SpendingPatternsChart.js`). Hooks/utilities: camelCase.
-- Server: route modules camelCase plural (e.g., `recurringExpenses.js`), avoid side effects in `utils`.
-- Linting: client uses CRA’s ESLint defaults; prefer Tailwind utility classes defined in `tailwind.config.js`.
+- Client: TypeScript/React with 2‑space indentation. Files use `.tsx` for components, `.ts` for utilities.
+- Components: PascalCase files (e.g., `BudgetManager.tsx`). Hooks/utilities: camelCase (e.g., `useBudgetData.ts`).
+- Server: JavaScript with 2‑space indentation, semicolons, single quotes. Route modules camelCase plural (e.g., `recurringExpenses.js`), avoid side effects in `utils`.
+- Linting: client uses TypeScript strict mode; prefer Tailwind utility classes defined in `tailwind.config.js`.
+- Type definitions: Located in `client-v2/src/types/` directory.
 
 ## Testing Guidelines
-- Frameworks: Jest + React Testing Library (client). Place tests near code in `__tests__` using `*.test.js`.
-- Aim for behavior tests around charts/utils; mock API calls with `axios` mocks.
-- Run: `cd client && npm test` (watch mode) or CI-friendly `CI=true npm test`.
+- Frameworks: Jest + React Testing Library + TypeScript (client). Place tests near code in `__tests__` using `*.test.tsx` or `*.test.ts`.
+- Aim for behavior tests around components/utils; mock API calls with `axios` mocks.
+- Run: `cd client-v2 && npm test` (watch mode), `npm run test:watch` (explicit watch), or `npm run test:coverage` (coverage report).
 
 ## Commit & Pull Request Guidelines
 - Use Conventional Commits seen in history: `feat: ...`, `refactor: ...`, `fix: ...`.
@@ -64,7 +66,12 @@
   - DELETE `/incomes/:id`.
 
 - Budgets
+  - GET `/budgets?month=MM&year=YYYY`: list budgets for a specific month/year with category names.
   - POST `/budgets`: `{ category_id, amount, month, year }` (upsert).
+  - DELETE `/budgets/:id`: delete a budget by id.
+  - GET `/budgets/available-categories?month=MM&year=YYYY`: categories without budgets for specified period.
+  - GET `/budgets/summary/:month/:year`: detailed budget summary with spending, progress, and status for all categories.
+  - GET `/budgets/test`: test database connection (dev endpoint).
 
 - Recurring Expenses
   - GET `/recurring-expenses`: active templates.
@@ -112,6 +119,7 @@
 
 - Auth (Additional)
   - GET `/auth/users`: list all users (for couple setup).
+  - POST `/auth/invite-partner`: `{ partnerEmail }` - invite partner to link accounts.
 
 ## API Response Examples
 Example values are illustrative and truncated.
@@ -249,51 +257,221 @@ Optimization
 ]
 ```
 
-## Shared Goal Palette & Pinning
-- Shared accent ramp lives in `client/src/utils/goalColorPalette.js`. Use `getGoalColorScheme(index)` or `assignGoalColors(collection)` for any ordered card list (goals, dashboard tiles, future analytics).
+## Client-v2 Architecture & Libraries
+
+### Technology Stack
+- **Framework**: React 18 with TypeScript 5.9+
+- **Build Tool**: Vite 6.3+ (replaces Create React App)
+- **Routing**: React Router DOM 7.9+
+- **UI Components**: shadcn/ui (Radix UI primitives + Tailwind)
+- **Charts**: Recharts 2.15+
+- **Icons**: Lucide React
+- **Forms**: React Hook Form 7.55+
+- **HTTP Client**: Axios (services in `client-v2/src/api/services/`)
+- **State**: React Context API (`client-v2/src/context/`)
+
+### Directory Structure
+```
+client-v2/src/
+├── components/        # React components (.tsx)
+│   ├── ui/           # shadcn/ui components
+│   ├── budget/       # Budget-specific components
+│   ├── shared/       # Shared utilities
+│   └── ...           # Page-level components
+├── lib/              # Utility functions (.ts)
+├── hooks/            # Custom React hooks (.ts)
+├── api/              # API layer
+│   ├── axios.ts      # Axios instance
+│   └── services/     # API service modules
+├── context/          # React Context providers
+├── types/            # TypeScript type definitions
+└── styles/           # CSS modules
+```
+
+### Key Features
+- **Type Safety**: Full TypeScript coverage with strict mode
+- **Component Library**: shadcn/ui for consistent, accessible UI components
+- **Service Layer**: Organized API services per domain (auth, budget, expense, etc.)
+- **Custom Hooks**: Reusable hooks like `useBudgetData`, `useBudgetCalculations`
+- **Scope System**: Multi-user scope selection via `ScopeContext`
+
+### Shared Goal Palette & Colors
+- Color utilities live in `client-v2/src/lib/` directory (TypeScript modules).
 - Pinning is persisted via `savings_goals.is_pinned`; server routes enforce a single pinned goal per user and send `color_index` for consistent ordering.
-- Client helpers consume the accent object (`surface`, `border`, `ring`, `quickButton`, etc.) to keep cards, progress bars, and buttons aligned with the design spec.
+- Client helpers provide accent colors (`surface`, `border`, `ring`, `quickButton`, etc.) to keep cards, progress bars, and buttons aligned with the design spec.
 - Run `npx knex migrate:latest --knexfile server/db/knexfile.js` after pulling to ensure the new column exists before starting the API.
 
 ## UI Style Guide & Design System
 
-The project follows a comprehensive design specification documented in `docs/design_spec_financial_checkup_ui.md`. Key guidelines:
+The project uses a modern design system built on shadcn/ui components with Tailwind CSS v4 and oklch color space. All styles are defined in `client-v2/src/styles/globals.css` and follow consistent patterns throughout the application.
 
 ### Design Principles
-- **Conversational & Supportive** – copy should feel like a helpful coach
-- **Data-rich, never overwhelming** – every insight has a visual for immediate understanding
-- **Action-oriented** – each card provides clear next steps
-- **Calming confidence** – rounded shapes, soft gradients, gentle shadows
+- **Type-safe**: Full TypeScript coverage with strict typing
+- **Accessible**: WCAG AA compliant with focus states and aria labels
+- **Consistent**: CSS custom properties for themeable design tokens
+- **Responsive**: Mobile-first approach with Tailwind breakpoints
+- **Modern**: oklch color space for perceptual uniformity
 
 ### Color System
-- **Primary**: Emerald (`#10b981`) for wins/savings, Rose (`#fb7185`) for alerts, Indigo (`#6366f1`) for reallocation
-- **Background**: White with `#f8fafc` section dividers
-- **Text**: Primary `#0f172a`, secondary `#475569`, quiet `#94a3b8`
-- **Accent Palette**: 8-color shared system (emerald, teal, sky, indigo, violet, amber, rose, slate)
+Colors use oklch format for better perceptual uniformity and are defined as CSS custom properties in `:root`:
+
+**Core Colors:**
+- `--background`: `#ffffff` (light) / `oklch(0.145 0 0)` (dark)
+- `--foreground`: `oklch(0.145 0 0)` (light) / `oklch(0.985 0 0)` (dark)
+- `--primary`: `#030213` (near-black primary)
+- `--muted`: `#ececf0` (subtle backgrounds)
+- `--muted-foreground`: `#717182` (secondary text)
+- `--border`: `rgba(0, 0, 0, 0.1)` (subtle borders)
+- `--destructive`: `#d4183d` (red for errors/delete)
+
+**Theme Accent Colors:**
+- `--theme-amber`: `oklch(.646 .222 41.116)` - warm amber
+- `--theme-teal`: `oklch(.6 .118 184.704)` - teal
+- `--theme-indigo`: `oklch(.398 .07 227.392)` - deep indigo
+- `--theme-yellow`: `oklch(.828 .189 84.429)` - yellow
+- `--theme-golden`: `oklch(.769 .188 70.08)` - golden yellow
+- `--theme-coral`: `oklch(.71 .18 16)` - soft coral-red
+- `--theme-violet`: `oklch(.74 .16 320)` - lilac/violet
+- `--theme-cyan`: `oklch(.7 .16 200)` - aqua-cyan
+- `--theme-periwinkle`: `oklch(.78 .16 260)` - periwinkle
+- `--theme-mint`: `oklch(.82 .12 140)` - mint green
 
 ### Typography
-- **Headlines**: 600 weight, 24-32px, `#0f172a`
-- **Card titles**: 600 weight, 18px, `#0f172a`
-- **Body**: 14px, line-height 1.6, `#475569`
-- **Meta labels**: Uppercase, 0.08em tracking, 12px, `#64748b`
+Typography uses CSS custom properties with responsive scaling:
 
-### Component Standards
-- **Cards**: `rounded-3xl border border-slate-100 bg-white p-6 shadow-md`
-- **Section banners**: 60px tall, gradient backgrounds, icon + stacked text
-- **Action pills**: Ghost style with hover states, emerald for primary actions
-- **Mini-charts**: 128-160px tall, soft gridlines, 11px axis fonts
-- **Progress bars**: 2px radius, accent colors with smooth transitions
+**Font Sizes:**
+- `--font-size-xs`: 0.75rem (12px)
+- `--font-size-sm`: 0.875rem (14px)
+- `--font-size-base`: 1rem (16px)
+- `--font-size-lg`: 1.125rem (18px)
+- `--font-size-xl`: 1.25rem (20px)
+- `--font-size-2xl`: 1.5rem (24px)
 
-### Implementation
-- Use Flowbite library as base unless specified otherwise
-- Responsive design required (mobile-first approach)
-- Google Fonts: Plus Jakarta Sans, Inter, Roboto, Open Sans, Poppins, etc.
-- Motion: 250ms ease for cards, 150ms for buttons
+**Font Weights:**
+- `--font-weight-normal`: 400
+- `--font-weight-medium`: 500
+- `--font-weight-semibold`: 600
+- `--font-weight-bold`: 700
+
+**Base Typography Styles:**
+- `h1`: 2xl size, medium weight, 1.5 line-height
+- `h2`: xl size, medium weight, 1.5 line-height
+- `h3`: lg size, medium weight, 1.5 line-height
+- `h4`: base size, medium weight, 1.5 line-height
+- `p`: base size, normal weight, 1.5 line-height
+- `label`: base size, medium weight, 1.5 line-height
+- `button`: base size, medium weight, 1.5 line-height
+
+### Component Patterns
+
+**Buttons:**
+shadcn/ui Button component with variants defined in `globals.css`:
+- `.btn-ghost`: Transparent with hover accent background
+- `.btn-primary`: Primary background with text contrast
+- `.btn-secondary`: Secondary background with subtle hover
+- `.btn-destructive`: Red background for delete/remove actions
+
+Example usage:
+```tsx
+<Button variant="ghost">Cancel</Button>
+<Button>Save</Button>
+<Button variant="destructive">Delete</Button>
+```
+
+**Cards:**
+shadcn/ui Card component with standard pattern:
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* content */}
+  </CardContent>
+</Card>
+```
+- Uses `var(--radius)` (0.625rem) for rounded corners
+- Border color: `var(--border)`
+- Background: `var(--card)`
+
+**Inputs:**
+shadcn/ui Input component with consistent styling:
+- Background: `var(--input-background)` (#f3f3f5)
+- Border: `var(--border)`
+- Focus ring: `var(--ring)`
+- Height: standard (h-10)
+
+**Dialogs/Modals:**
+shadcn/ui Dialog component for modals:
+```tsx
+<Dialog open={isOpen} onOpenChange={setIsOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Title</DialogTitle>
+      <DialogDescription>Description</DialogDescription>
+    </DialogHeader>
+    {/* content */}
+    <DialogFooter>
+      {/* actions */}
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+### Spacing & Layout
+Spacing uses CSS custom properties with consistent scale:
+- `--spacing-1` through `--spacing-64` (0.25rem to 16rem)
+- Standard padding/margin: `p-6`, `space-y-6`, `gap-3`
+- Card padding: `p-6` (1.5rem)
+- Section spacing: `space-y-6` (1.5rem vertical gap)
+
+### Radius & Borders
+- `--radius`: 0.625rem (10px) - base radius
+- `--radius-sm`: calc(var(--radius) - 4px)
+- `--radius-md`: calc(var(--radius) - 2px)
+- `--radius-lg`: var(--radius)
+- `--radius-xl`: calc(var(--radius) + 4px)
+
+### Icons
+**Lucide React** for all icons:
+- Standard size: `h-4 w-4` or `h-5 w-5`
+- Icon color inherits text color or uses `text-primary`, `text-muted-foreground`
+- Icons in buttons: gap-2 spacing
+
+Example:
+```tsx
+import { Plus, Target, PlusCircle } from 'lucide-react';
+<Button><Plus className="h-4 w-4 mr-2" />Add</Button>
+```
+
+### Notifications
+**Sonner** toast library for notifications:
+```tsx
+import { toast } from 'sonner';
+toast.success('Budget goal set!');
+toast.error('Could not save changes');
+toast.warning('Click again to confirm');
+```
+
+### Dark Mode Support
+Full dark mode support with automatic theme switching:
+- Uses `.dark` class on root element
+- All color variables have dark mode equivalents
+- Automatic contrast adjustment
 
 ### Accessibility
-- Contrast ratio ≥ 4.5:1 for text
-- All icon-only controls need `aria-label`
-- Focus states visible with accent colors
-- Charts should have alt text summaries
+- Focus rings: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`
+- ARIA labels on icon-only buttons
+- Keyboard navigation supported in all interactive elements
+- Contrast ratio ≥ 4.5:1 maintained
+- Screen reader friendly with semantic HTML
 
-Refer to the full design spec for detailed component patterns, chart styling, and interaction guidelines.
+### Implementation Guidelines
+1. **Always use shadcn/ui components** from `client-v2/src/components/ui/`
+2. **Use CSS custom properties** instead of hard-coded colors
+3. **Apply Tailwind utility classes** for spacing and layout
+4. **Follow consistent patterns** seen in BudgetManager.tsx
+5. **Use toast notifications** for user feedback
+6. **Implement loading states** with spinners and skeleton loaders
+
+Refer to `client-v2/src/styles/globals.css` for complete design token definitions and `client-v2/src/components/BudgetManager.tsx` for comprehensive component usage examples.

@@ -17,10 +17,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Couple-Centric**: Partner-aware interface with shared dashboards
 
 ### Technology Stack
-- **Frontend**: React 18.2.0, React Router DOM 6.14.1, Tailwind CSS 3.3.2, shadcn-ui + Recharts (migrating from Chart.js)
+- **Frontend**: React 18.3.1 + TypeScript 5.9+, React Router DOM 7.9+, Vite 6.3+, Tailwind CSS 4.1+, shadcn-ui (Radix UI) + Recharts 2.15+
 - **Backend**: Node.js + Express 4.18.2, SQLite + Knex.js 2.4.2, JWT + bcryptjs authentication
 - **State Management**: React Context API
-- **UI Libraries**: Flowbite React, Radix UI components, Lucide React icons
+- **UI Libraries**: shadcn/ui components, Lucide React icons, React Hook Form 7.55+
 
 ## Quick Start
 
@@ -31,14 +31,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Installation & Development
 
 ```bash
-# Install all dependencies (root + client)
+# Install all dependencies (root + client-v2)
 npm run setup
 
 # Start both client and server in development
 npm run dev
 
 # Or run individually
-npm run dev:client  # Client on http://localhost:3000
+npm run dev:client  # Client on http://localhost:3001
 npm run dev:server  # Server on http://localhost:5001
 
 # Production build
@@ -49,7 +49,7 @@ npm start
 
 # Run tests
 npm test  # Server tests (Jest)
-cd client && npm test  # Client tests (React Testing Library)
+cd client-v2 && npm test  # Client tests (Jest + React Testing Library + TypeScript)
 
 # Database migrations
 npm run migrate
@@ -69,29 +69,29 @@ JWT_SECRET=your_jwt_secret_here
 
 ```
 budgetApp/
-├── client/                      # React frontend
+├── client-v2/                   # React + TypeScript frontend (Vite)
 │   ├── src/
-│   │   ├── components/          # Reusable UI components
-│   │   │   ├── ui/             # shadcn-ui components
-│   │   │   ├── charts/         # Recharts components
+│   │   ├── components/          # React components (.tsx)
+│   │   │   ├── ui/             # shadcn/ui components
+│   │   │   ├── budget/         # Budget-specific components
+│   │   │   ├── shared/         # Shared utilities
+│   │   │   └── ...             # Page-level components
+│   │   ├── lib/                # Utility functions (.ts)
+│   │   ├── hooks/              # Custom React hooks (.ts)
+│   │   ├── api/                # API layer
+│   │   │   ├── axios.ts        # Axios instance
+│   │   │   └── services/       # API service modules
+│   │   ├── context/            # React Context providers (.tsx)
+│   │   │   ├── AuthContext.tsx
+│   │   │   ├── ScopeContext.tsx
 │   │   │   └── ...
-│   │   ├── pages/              # Route-level components
-│   │   │   ├── Dashboard.js
-│   │   │   ├── Expenses.js
-│   │   │   ├── Analytics.js
-│   │   │   └── ...
-│   │   ├── context/            # React Context providers
-│   │   │   ├── AuthContext.js
-│   │   │   └── ...
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── utils/              # Helper functions
-│   │   │   ├── goalColorPalette.js  # Shared color schemes
-│   │   │   └── ...
-│   │   ├── api/                # API client
-│   │   │   └── axios.js
-│   │   ├── config/             # Configuration files
-│   │   └── styles/             # Global styles
-│   └── public/                 # Static assets
+│   │   ├── types/              # TypeScript type definitions
+│   │   ├── styles/             # CSS modules
+│   │   └── __tests__/          # Test files
+│   ├── index.html              # Vite entry point
+│   ├── vite.config.ts          # Vite configuration
+│   ├── tsconfig.json           # TypeScript configuration
+│   └── tailwind.config.js      # Tailwind configuration
 ├── server/                     # Node.js/Express backend
 │   ├── routes/                # API route handlers
 │   │   ├── auth.js
@@ -131,6 +131,8 @@ All API routes are mounted under `/api` and require JWT authentication (except a
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - Login user
 - `GET /auth/user` - Get current user
+- `GET /auth/users` - List all users (for couple setup)
+- `POST /auth/invite-partner` - Invite partner to link accounts
 - `PUT /auth/profile` - Update profile
 
 #### Expenses
@@ -150,7 +152,12 @@ All API routes are mounted under `/api` and require JWT authentication (except a
 - `DELETE /categories/:id` - Delete category
 
 #### Budgets
+- `GET /budgets?month=MM&year=YYYY` - List budgets for a specific month/year with category names
 - `POST /budgets` - Create/update budget (upsert)
+- `DELETE /budgets/:id` - Delete a budget by id
+- `GET /budgets/available-categories?month=MM&year=YYYY` - Categories without budgets for specified period
+- `GET /budgets/summary/:month/:year` - Detailed budget summary with spending, progress, and status for all categories
+- `GET /budgets/test` - Test database connection (dev endpoint)
 
 #### Recurring Expenses
 - `GET /recurring-expenses` - List active templates
@@ -210,32 +217,40 @@ npx knex migrate:rollback --knexfile server/db/knexfile.js
 
 ### State Management
 
-- **AuthContext**: Manages user authentication state and JWT tokens
+- **AuthContext**: Manages user authentication state and JWT tokens (`client-v2/src/context/AuthContext.tsx`)
+- **ScopeContext**: Multi-user scope selection for filtering data (`client-v2/src/context/ScopeContext.tsx`)
 - **Local State**: useState/useReducer for component-level state
-- **Custom Hooks**: Reusable stateful logic (located in `client/src/hooks/`)
+- **Custom Hooks**: Reusable stateful logic (located in `client-v2/src/hooks/`)
+  - `useBudgetData.ts`: Budget data fetching and management
+  - `useBudgetCalculations.ts`: Budget calculations and metrics
 
 ### UI Components
 
-- **shadcn-ui**: Primary component library (Radix UI + Tailwind)
-- **Recharts**: Data visualization library
-- **Flowbite React**: Additional UI components and modals
-- **Lucide React**: Icon library
+- **shadcn/ui**: Primary component library (Radix UI primitives + Tailwind) located in `client-v2/src/components/ui/`
+- **Recharts**: Data visualization library for charts and analytics
+- **Lucide React**: Icon library for consistent iconography
+- **React Hook Form**: Form validation and management
 
 ### Styling
 
-- **Tailwind CSS**: Primary styling approach
-- **Custom CSS**: `client/src/index.css` for global styles and custom components
-- **Color System**: Shared palette via `client/src/utils/goalColorPalette.js`
-  - Use `getGoalColorScheme(index)` for consistent card colors
-  - Use `assignGoalColors(collection)` for auto-assigning colors
+- **Tailwind CSS**: Primary styling approach with v4.1+ configuration
+- **CSS Modules**: Located in `client-v2/src/styles/` for component-specific styles
+- **Global Styles**: `client-v2/src/index.css` for global styles and custom components
+- **Color System**: Color utilities in `client-v2/src/lib/` directory (TypeScript modules)
+  - Consistent color schemes for cards, progress bars, and UI elements
+  - Design system follows the palette defined in project documentation
 
-### Key Pages & Components
+### Key Components
 
-- **Dashboard** (`client/src/pages/Dashboard.js`): Overview of finances, recent expenses, budgets
-- **Expenses** (`client/src/pages/ExpensesV2.js`): Expense list with filtering
-- **Analytics** (`client/src/pages/Analytics.js`): Charts and spending analysis
-- **Budgets** (`client/src/pages/Budgets.js`): Budget management
-- **Savings** (`client/src/pages/Savings.js`): Savings goals tracking
+- **Dashboard** (`client-v2/src/components/Dashboard.tsx`): Overview of finances, recent expenses, budgets
+- **BudgetManager** (`client-v2/src/components/BudgetManager.tsx`): Comprehensive budget management interface
+- **Analytics** (`client-v2/src/components/Analytics.tsx`): Charts and spending analysis
+- **ExpenseForm** (`client-v2/src/components/ExpenseForm.tsx`): Mobile-first expense entry
+- **ExpenseList** (`client-v2/src/components/ExpenseList.tsx`): Expense list with filtering
+- **Budget Components** (`client-v2/src/components/budget/`): Modular budget UI components
+  - `BudgetTable.tsx`: Budget category table
+  - `BudgetMetricsGrid.tsx`: Budget performance metrics
+  - `BudgetProgressBar.tsx`: Visual progress indicators
 
 ## Coding Conventions
 
@@ -246,12 +261,14 @@ npx knex migrate:rollback --knexfile server/db/knexfile.js
 - **Async/await**: Preferred over callbacks
 - **Error handling**: Try-catch blocks, meaningful error messages
 
-### Frontend (React)
-- **File naming**: PascalCase for components (`Dashboard.js`), camelCase for utilities
+### Frontend (React + TypeScript)
+- **File naming**: PascalCase for components (`BudgetManager.tsx`), camelCase for utilities (`useBudgetData.ts`)
+- **File extensions**: `.tsx` for components with JSX, `.ts` for utilities and types
 - **Indentation**: 2 spaces
-- **Quotes**: Single quotes
+- **TypeScript**: Strict mode enabled, full type coverage required
 - **Components**: Functional components with hooks (no class components)
 - **Styling**: Tailwind utility classes preferred
+- **Type definitions**: Located in `client-v2/src/types/` directory
 
 ### Database
 - **Migrations**: Use descriptive names with timestamps (e.g., `20250904_add_savings_contributions.js`)
@@ -292,30 +309,97 @@ The app is designed for exactly **2 users per installation** (couples).
 
 ## Design System & Colors
 
-### Shared Color Palette
+The project uses a modern design system built on **shadcn/ui** components with **Tailwind CSS v4** and **oklch color space**. All styles are defined in `client-v2/src/styles/globals.css`.
 
-The app uses a **shared goal color palette** (`client/src/utils/goalColorPalette.js`) for consistent visual design across:
-- Savings goal cards
-- Dashboard tiles
-- Analytics visualizations
-- Progress indicators
+### Color System
 
-Each color scheme includes:
-- `surface`: Background color
-- `border`: Border color
-- `ring`: Focus ring color
-- `quickButton`: Button background
-- `text`: Text color
+Colors use **oklch format** for perceptual uniformity and are defined as CSS custom properties:
 
-### shadcn-ui Integration
+**Core Colors:**
+- `--background`: `#ffffff` (light) / `oklch(0.145 0 0)` (dark)
+- `--foreground`: `oklch(0.145 0 0)` (light text)
+- `--primary`: `#030213` (near-black primary)
+- `--muted`: `#ececf0` (subtle backgrounds)
+- `--muted-foreground`: `#717182` (secondary text)
+- `--border`: `rgba(0, 0, 0, 0.1)` (subtle borders)
+- `--destructive`: `#d4183d` (errors/delete actions)
 
-The app is migrating from Chart.js to **shadcn-ui + Recharts** for data visualization. Components are located in `client/src/components/ui/` and follow shadcn patterns.
+**Theme Accent Colors:**
+- `--theme-amber`, `--theme-teal`, `--theme-indigo`, `--theme-yellow`
+- `--theme-golden`, `--theme-coral`, `--theme-violet`, `--theme-cyan`
+- `--theme-periwinkle`, `--theme-mint`
+
+All colors have dark mode variants defined in the `.dark` class.
+
+### Component Patterns
+
+**shadcn/ui components** located in `client-v2/src/components/ui/`:
+
+**Buttons:**
+```tsx
+<Button variant="ghost">Cancel</Button>
+<Button>Save</Button>
+<Button variant="destructive">Delete</Button>
+```
+
+**Cards:**
+```tsx
+<Card>
+  <CardHeader><CardTitle>Title</CardTitle></CardHeader>
+  <CardContent>{/* content */}</CardContent>
+</Card>
+```
+
+**Dialogs:**
+```tsx
+<Dialog open={isOpen} onOpenChange={setIsOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Title</DialogTitle>
+    </DialogHeader>
+    {/* content */}
+  </DialogContent>
+</Dialog>
+```
+
+**Icons:** Lucide React with standard sizes (`h-4 w-4` or `h-5 w-5`)
+
+**Notifications:** Sonner toast library
+```tsx
+import { toast } from 'sonner';
+toast.success('Success message');
+toast.error('Error message');
+```
+
+### Typography
+
+- Font sizes: `--font-size-xs` through `--font-size-2xl` (12px-24px)
+- Font weights: normal (400), medium (500), semibold (600), bold (700)
+- All elements have consistent 1.5 line-height
+
+### Layout & Spacing
+
+- Spacing scale: `--spacing-1` through `--spacing-64`
+- Standard padding: `p-6` (1.5rem)
+- Standard gap: `space-y-6`, `gap-3`
+- Border radius: `--radius` (0.625rem/10px)
 
 ### Responsive Design
 
 - **Mobile-first**: Tailwind breakpoints start from mobile (`sm:`, `md:`, `lg:`)
 - **Touch-friendly**: Button sizes and touch targets optimized for mobile
 - **Flexible layouts**: Flexbox and Grid for responsive structures
+- **Dark mode**: Full support with automatic contrast adjustment
+
+### Implementation Guidelines
+
+1. Use shadcn/ui components from `client-v2/src/components/ui/`
+2. Use CSS custom properties instead of hard-coded colors
+3. Apply Tailwind utility classes for spacing and layout
+4. Follow patterns in `client-v2/src/components/BudgetManager.tsx`
+5. Use toast notifications for user feedback
+
+Refer to `client-v2/src/styles/globals.css` for complete design tokens and `client-v2/src/components/BudgetManager.tsx` for component usage examples.
 
 ## Testing
 
@@ -326,10 +410,13 @@ The app is migrating from Chart.js to **shadcn-ui + Recharts** for data visualiz
 - **Run**: `npm test`
 
 ### Frontend Testing
-- **Framework**: Jest + React Testing Library
-- **Location**: `client/src/**/__tests__/*.test.js`
-- **Example**: `client/src/pages/__tests__/Dashboard.test.js`
-- **Run**: `cd client && npm test`
+- **Framework**: Jest + React Testing Library + TypeScript
+- **Location**: `client-v2/src/**/__tests__/*.test.tsx` or `*.test.ts`
+- **Example**: `client-v2/src/components/budget/__tests__/BudgetProgressBar.test.tsx`
+- **Run**: `cd client-v2 && npm test` (watch mode)
+- **Commands**: 
+  - `npm run test:watch` - Explicit watch mode
+  - `npm run test:coverage` - Generate coverage report
 
 ### API Testing with Jest
 
@@ -365,10 +452,12 @@ describe('Analytics API', () => {
 
 ### Adding a New Component
 
-1. Create file in `client/src/components/` (PascalCase)
-2. Import from `shadcn-ui` when possible
-3. Use Tailwind for styling
-4. Add to relevant page
+1. Create file in `client-v2/src/components/` (PascalCase with `.tsx` extension)
+2. Define TypeScript interfaces for props in the component file or `client-v2/src/types/`
+3. Import from `shadcn/ui` when possible (from `client-v2/src/components/ui/`)
+4. Use Tailwind for styling
+5. Add to relevant page or component
+6. Create test file in `__tests__/` directory if applicable
 
 ### Adding a Database Migration
 
@@ -384,12 +473,13 @@ describe('Analytics API', () => {
 
 ### Adding a New Page
 
-1. Create component in `client/src/pages/` (PascalCase)
-2. Add route in `client/src/App.js`:
-   ```javascript
+1. Create component in `client-v2/src/components/` (PascalCase with `.tsx` extension)
+2. Add route in `client-v2/src/App.tsx`:
+   ```typescript
    <Route path="/new-page" element={<NewPage />} />
    ```
-3. Add navigation link in navbar/sidebar
+3. Add navigation link in `client-v2/src/components/Navigation.tsx`
+4. Create any necessary API services in `client-v2/src/api/services/`
 
 ## Authentication Flow
 
@@ -402,13 +492,13 @@ describe('Analytics API', () => {
 ## Environment-Specific Configuration
 
 ### Development
-- Client: React dev server on port 3000 (with hot reload)
+- Client: Vite dev server on port 3001 (with hot module replacement)
 - Server: Express on port 5001
 - Database: `server/db/expense_tracker.sqlite`
 
 ### Production
-- Client: Built static files served by Express
-- Server: Serves client build from `../client/build`
+- Client: Built static files served by Express (optimized by Vite)
+- Server: Serves client build from `../client-v2/build`
 - Database: Same SQLite file
 
 ## Cursor Rules Integration
@@ -440,10 +530,10 @@ PORT=5002
 
 ### Client Build Issues
 ```bash
-cd client
+cd client-v2
 rm -rf node_modules package-lock.json
 npm install
-npm start
+npm run dev
 ```
 
 ### Server Won't Start
@@ -471,7 +561,7 @@ The app is configured for **Swedish Krona (SEK)**:
 2. **Passwords**: bcryptjs hashing before storage
 3. **SQL Injection**: Use Knex query builder, parameterized queries
 4. **XSS**: Sanitize user input, use React's built-in escaping
-5. **CORS**: Configured for development (port 3000)
+5. **CORS**: Configured for development (port 3001)
 
 ## Future Enhancements (From Specification)
 
@@ -499,8 +589,8 @@ npm run build              # Build client
 npm start                 # Start production server
 
 # Testing
-npm test                  # Server tests
-cd client && npm test    # Client tests
+npm test                    # Server tests
+cd client-v2 && npm test   # Client tests
 ```
 
 ## Key Files Reference
@@ -510,7 +600,8 @@ cd client && npm test    # Client tests
 - **AGENTS.md**: Comprehensive API documentation and development guidelines
 - **COUPLES_BUDGET_SPECIFICATION.md**: Product requirements and couple-focused features
 - **GEMINI.md**: Alternative project overview for AI assistants
-- **client/src/utils/goalColorPalette.js**: Color system implementation
+- **client-v2/src/lib/**: Utility functions and color system implementation
+- **client-v2/src/types/**: TypeScript type definitions
 - **server/db/knexfile.js**: Database configuration
 - **server/index.js**: Express server setup and route registration
 

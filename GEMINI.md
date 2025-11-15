@@ -4,7 +4,7 @@ This document provides a comprehensive overview of the Budget App project, desig
 
 ## Project Overview
 
-The project is a full-stack web application designed to help couples track their expenses, split bills, and manage their personal finances. It features a React-based frontend and a Node.js/Express backend, with a SQLite database.
+The project is a full-stack web application designed to help couples track their expenses, split bills, and manage their personal finances. It features a React + TypeScript frontend (client-v2) built with Vite and a Node.js/Express backend, with a SQLite database.
 
 ### Key Features:
 
@@ -17,12 +17,14 @@ The project is a full-stack web application designed to help couples track their
 
 ### Technology Stack:
 
-*   **Frontend:**
-    *   React 18.2.0
-    *   React Router DOM 6.14.1
-    *   Tailwind CSS 3.3.2
-    *   Chart.js 4.3.0 (migrating to shadcn-ui)
-    *   shadcn-ui + Recharts (in progress)
+*   **Frontend (client-v2):**
+    *   React 18.3.1 + TypeScript 5.9+
+    *   React Router DOM 7.9+
+    *   Vite 6.3+ (build tool)
+    *   Tailwind CSS 4.1+
+    *   shadcn/ui (Radix UI primitives) + Recharts 2.15+
+    *   React Hook Form 7.55+
+    *   Lucide React (icons)
     *   Axios
 *   **Backend:**
     *   Node.js + Express 4.18.2
@@ -52,7 +54,7 @@ The project is a full-stack web application designed to help couples track their
     ```bash
     npm run dev
     ```
-    This starts both the client (port 3000) and server (port 5001) simultaneously.
+    This starts both the client-v2 (port 3001) and server (port 5001) simultaneously.
 
 ### Available Scripts:
 
@@ -66,7 +68,31 @@ The project is a full-stack web application designed to help couples track their
 ## Development Conventions
 
 *   The project uses a feature-branch workflow for contributions.
-*   The frontend is migrating from Chart.js to shadcn-ui and Recharts for data visualizations.
-*   The backend uses Knex.js for database migrations. Migrations are located in `server/db/migrations/`.
-*   API routes are defined in the `server/routes/` directory.
-*   React components are organized into `components/` (reusable) and `pages/` (route-level).
+*   **Frontend (client-v2):**
+    *   TypeScript with strict mode enabled
+    *   Components use `.tsx` extension, utilities use `.ts`
+    *   File naming: PascalCase for components, camelCase for utilities
+    *   shadcn/ui components located in `client-v2/src/components/ui/`
+    *   API services organized by domain in `client-v2/src/api/services/`
+    *   Type definitions in `client-v2/src/types/`
+    *   Testing with Jest + React Testing Library
+*   **Backend:**
+    *   Knex.js for database migrations in `server/db/migrations/`
+    *   API routes defined in `server/routes/` directory
+    *   JavaScript with 2-space indentation, single quotes
+
+## Design System
+
+*   **Styling:** Tailwind CSS v4 with oklch color space for perceptual uniformity
+*   **Components:** shadcn/ui (Radix UI primitives) with TypeScript support
+*   **Colors:** CSS custom properties defined in `client-v2/src/styles/globals.css`
+*   **Icons:** Lucide React for consistent iconography
+*   **Notifications:** Sonner toast library for user feedback
+*   **Dark Mode:** Full support with automatic theme switching
+*   **Patterns:** Follow examples in `client-v2/src/components/BudgetManager.tsx`
+
+Key principles:
+- Mobile-first responsive design
+- Type-safe components with strict TypeScript
+- Consistent spacing using CSS custom properties
+- Accessible (WCAG AA compliant)
