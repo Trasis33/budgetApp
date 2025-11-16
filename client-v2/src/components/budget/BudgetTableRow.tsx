@@ -5,11 +5,12 @@ import { formatBudgetAmount } from '../../lib/budgetUtils';
 import { getEditBudgetSuggestions } from '../../lib/budgetSuggestions';
 import { BudgetProgressBar } from './BudgetProgressBar';
 import { BudgetStatusBadge } from './BudgetStatusBadge';
+import { getIconByName } from '../../lib/categoryIcons';
 // @ts-ignore - CSS module import
 import styles from '../../styles/budget/budget-table.module.css';
 
 import { useState } from 'react';
-import { Edit2, Trash2, AlertTriangle, X, ShoppingCart, Utensils, Zap, Tv, ShoppingBag, Home, Heart, Shield, CreditCard, Book, Plane, Dumbbell, Dog, Gift, MoreHorizontal, Car, Baby, Brush } from 'lucide-react';
+import { Edit2, Trash2, AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { budgetService } from '../../api/services/budgetService';
 
@@ -21,32 +22,7 @@ interface BudgetTableRowProps {
   className?: string;
 }
 
-// Get the appropriate Lucide icon component for a category
-function getCategoryIconComponent(categoryName: string) {
-  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-    'Groceries': ShoppingCart,
-    'Dining Out': Utensils,
-    'Transportation': Car,
-    'Entertainment': Tv,
-    'Shopping': ShoppingBag,
-    'Utilities': Zap,
-    'Healthcare': Heart,
-    'Mortgage': Home,
-    'Subscriptions': CreditCard,
-    'Education': Book,
-    'Travel': Plane,
-    'Fitness': Dumbbell,
-    'Pets': Dog,
-    'Gifts': Gift,
-    'Charity': Heart,
-    'Other': MoreHorizontal,
-    'Kids Clothes': Baby,
-    'Household Items': Brush,
-  };
 
-  const IconComponent = iconMap[categoryName] || MoreHorizontal;
-  return IconComponent;
-}
 
 export function BudgetTableRow({
   budget,
@@ -59,6 +35,8 @@ export function BudgetTableRow({
   const [editingAmount, setEditingAmount] = useState(budget.amount.toString());
   const [showQuickSuggest, setShowQuickSuggest] = useState(false);
 
+  // Use actual category color from database, fallback to default
+  const categoryColor = budget.category_color || '#6366f1';
   const categoryIcon = getCategoryIcon(budget.category_name);
   const iconColor = categoryIcon.color;
   
@@ -142,8 +120,8 @@ export function BudgetTableRow({
     return getEditBudgetSuggestions(currentEditingAmount, budget.spent);
   };
 
-  // Use a simple default icon for now - can be expanded later
-  const IconComponent = getCategoryIconComponent(budget.category_name);
+  // Use icon from database
+  const IconComponent = getIconByName(budget.category_icon);
   const icon = <IconComponent className="w-4 h-4" />;
 
   return (
@@ -152,7 +130,15 @@ export function BudgetTableRow({
         {/* Category Cell */}
         <td className={styles.compactCell}>
           <div className={styles.categoryCell}>
-            <div className={`${styles.categoryIcon} ${getIconClassName(iconColor)}`}>
+            <div 
+              className={styles.categoryIcon}
+              style={{
+                backgroundColor: `${categoryColor}15`,
+                borderColor: `${categoryColor}30`,
+                color: categoryColor,
+                border: '1px solid'
+              }}
+            >
               {icon}
             </div>
             <div className={styles.categoryInfo}>
@@ -199,7 +185,7 @@ export function BudgetTableRow({
           <BudgetProgressBar
             percentage={budget.progress}
             variant={budget.status}
-            categoryColor={categoryIcon.color}
+            categoryColor={categoryColor}
             showLabel={true}
             size="sm"
           />

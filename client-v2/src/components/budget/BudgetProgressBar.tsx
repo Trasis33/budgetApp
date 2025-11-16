@@ -10,8 +10,17 @@ export function BudgetProgressBar({
   categoryColor,
   className = ''
 }: BudgetProgressBarProps) {
+  const isHexColor = (color?: string) => {
+    return color?.startsWith('#') || false;
+  };
+
   const getProgressFillClassName = (categoryColor?: string, variant?: string) => {
-    // Prioritize category color if provided
+    // If it's a hex color, we'll use inline styles instead
+    if (categoryColor && isHexColor(categoryColor)) {
+      return styles.progressFill; // Base style only
+    }
+
+    // Legacy support: named colors
     if (categoryColor) {
       const colorMap: Record<string, string> = {
         mint: styles.progressFillMint,
@@ -49,13 +58,21 @@ export function BudgetProgressBar({
   // Clamp percentage between 0 and 100
   const clampedPercentage = Math.max(0, Math.min(100, percentage));
 
+  // Build inline styles for hex colors
+  const progressFillStyle: React.CSSProperties = {
+    width: `${clampedPercentage}%`,
+    ...(categoryColor && isHexColor(categoryColor) ? {
+      backgroundColor: categoryColor,
+    } : {})
+  };
+
   return (
     <div className={styles.progressContainer}>
       <div className={styles.progressBarWrapper}>
         <div className={`${getProgressBarClassName(size)} ${className}`}>
           <div 
-            className={`${styles.progressFill} ${getProgressFillClassName(categoryColor, variant)}`}
-            style={{ width: `${clampedPercentage}%` }}
+            className={getProgressFillClassName(categoryColor, variant)}
+            style={progressFillStyle}
             role="progressbar"
             aria-valuenow={clampedPercentage}
             aria-valuemin={0}

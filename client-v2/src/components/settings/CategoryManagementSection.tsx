@@ -4,10 +4,12 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Plus, Edit2, Trash2, Tag } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag, Palette } from 'lucide-react';
 import { categoryService } from '../../api/services/categoryService';
 import { Category } from '../../types';
 import { toast } from 'sonner';
+import { CATEGORY_COLORS, getCategoryColor } from '../../lib/categoryColors';
+import { CATEGORY_ICONS, getIconByName } from '../../lib/categoryIcons';
 
 export function CategoryManagementSection() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -19,7 +21,8 @@ export function CategoryManagementSection() {
   
   const [formData, setFormData] = useState({
     name: '',
-    icon: ''
+    icon: 'tag',
+    color: '#6366f1'
   });
 
   useEffect(() => {
@@ -41,13 +44,17 @@ export function CategoryManagementSection() {
 
   const openCreateModal = () => {
     setEditingCategory(null);
-    setFormData({ name: '', icon: '' });
+    setFormData({ name: '', icon: 'tag', color: '#6366f1' });
     setShowFormModal(true);
   };
 
   const openEditModal = (category: Category) => {
     setEditingCategory(category);
-    setFormData({ name: category.name, icon: category.icon || '' });
+    setFormData({ 
+      name: category.name, 
+      icon: category.icon || 'tag', 
+      color: category.color || '#6366f1' 
+    });
     setShowFormModal(true);
   };
 
@@ -101,11 +108,7 @@ export function CategoryManagementSection() {
     }
   };
 
-  const systemCategories = ['Housing', 'Food', 'Transportation', 'Entertainment', 'Utilities', 'Shopping', 'Healthcare', 'Savings', 'Other'];
-  const isSystemCategory = (name: string) => systemCategories.includes(name);
-
-  const systemCats = categories.filter(cat => isSystemCategory(cat.name));
-  const customCats = categories.filter(cat => !isSystemCategory(cat.name));
+  // All categories are now editable - no system vs custom distinction
 
   return (
     <>
@@ -137,103 +140,74 @@ export function CategoryManagementSection() {
           </Button>
 
           {/* Categories List */}
-          <div className="space-y-6">
-            {/* System Categories */}
-            {systemCats.length > 0 && (
-              <div>
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
-                  <Tag className="h-4 w-4" />
-                  System Categories
-                </h3>
-                <div className="space-y-2">
-                  {systemCats.map(category => (
-                    <div
-                      key={category.id}
-                      className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3"
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background">
-                        <Tag className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{category.name}</p>
-                      </div>
-                      <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                        System
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Custom Categories */}
-            {customCats.length > 0 && (
-              <div>
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
-                  <Edit2 className="h-4 w-4" />
-                  Custom Categories
-                </h3>
-                <div className="space-y-2">
-                  {customCats.map(category => {
-                    const isDeleting = deleteConfirm === category.id;
-                    
-                    return (
-                      <div
-                        key={category.id}
-                        className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${
-                          isDeleting 
-                            ? 'border-destructive bg-destructive/10' 
-                            : 'bg-background hover:border-primary/50'
-                        }`}
+          <div className="space-y-2">
+            {categories.map(category => {
+              const isDeleting = deleteConfirm === category.id;
+              const categoryColor = getCategoryColor(category);
+              const IconComponent = getIconByName(category.icon);
+              
+              return (
+                <div
+                  key={category.id}
+                  className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${
+                    isDeleting 
+                      ? 'border-destructive bg-destructive/10' 
+                      : 'bg-background hover:border-primary/50'
+                  }`}
+                >
+                  <div 
+                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    style={{ 
+                      backgroundColor: `${categoryColor}15`, 
+                      borderColor: `${categoryColor}30`,
+                      color: categoryColor,
+                      border: '1px solid'
+                    }}
+                  >
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{category.name}</p>
+                  </div>
+                  
+                  {isDeleting ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(category.id)}
                       >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg border-primary/20 bg-primary/10">
-                          <Tag className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{category.name}</p>
-                        </div>
-                        
-                        {isDeleting ? (
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(category.id)}
-                            >
-                              Confirm
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setDeleteConfirm(null)}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openEditModal(category)}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setDeleteConfirm(category.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDeleteConfirm(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openEditModal(category)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteConfirm(category.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })}
 
             {/* Empty State */}
             {categories.length === 0 && !loading && (
@@ -286,15 +260,60 @@ export function CategoryManagementSection() {
                   disabled={formLoading}
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="category-icon">Icon (optional)</Label>
-                <Input
-                  id="category-icon"
-                  value={formData.icon}
-                  onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                  placeholder="e.g., shopping-cart, home, etc."
-                  disabled={formLoading}
-                />
+                <Label>Icon</Label>
+                <div className="max-h-48 overflow-y-auto rounded-lg border bg-muted/50 p-3">
+                  <div className="grid grid-cols-8 gap-2">
+                    {CATEGORY_ICONS.map((iconDef) => {
+                      const IconComponent = iconDef.icon;
+                      const isSelected = formData.icon === iconDef.name;
+                      return (
+                        <button
+                          key={iconDef.name}
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, icon: iconDef.name }))}
+                          className={`flex h-10 w-10 items-center justify-center rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/10 scale-110'
+                              : 'border-transparent hover:bg-accent hover:scale-105'
+                          }`}
+                          title={iconDef.label}
+                          disabled={formLoading}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Selected: {CATEGORY_ICONS.find(i => i.name === formData.icon)?.label || 'Tag'}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Color</Label>
+                <div className="grid grid-cols-6 gap-2">
+                  {CATEGORY_COLORS.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
+                      className={`h-10 w-full rounded-lg border-2 transition-all ${
+                        formData.color === color.value
+                          ? 'border-primary ring-2 ring-primary/20 scale-110'
+                          : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                      disabled={formLoading}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Selected: {CATEGORY_COLORS.find(c => c.value === formData.color)?.name || 'Custom'}
+                </p>
               </div>
             </div>
             <DialogFooter>

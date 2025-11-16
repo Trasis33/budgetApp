@@ -22,7 +22,8 @@ router.get('/', auth, async (req, res) => {
         'budgets.month',
         'budgets.year',
         'budgets.amount',
-        'categories.name as category_name'
+        'categories.name as category_name',
+        'categories.color as category_color'
       )
       .where('budgets.month', month)
       .andWhere('budgets.year', year);
@@ -162,11 +163,12 @@ router.get('/summary/:month/:year', auth, async (req, res) => {
         'budgets.amount',
         'categories.name as category_name',
         'categories.icon as category_icon',
+        'categories.color as category_color',
         db.raw('COALESCE(SUM(expenses.amount), 0) as spent')
       )
       .where('budgets.month', monthNum)
       .andWhere('budgets.year', yearNum)
-      .groupBy('budgets.id', 'categories.id', 'categories.name', 'categories.icon')
+      .groupBy('budgets.id', 'categories.id', 'categories.name', 'categories.icon', 'categories.color')
       .orderBy('categories.name');
 
     console.log(`Found ${budgets.length} budgets`);

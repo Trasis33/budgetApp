@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Create a new category
 // @access  Private
 router.post('/', auth, async (req, res) => {
-  const { name, icon } = req.body;
+  const { name, icon, color } = req.body;
 
   try {
     if (!name) {
@@ -35,7 +35,8 @@ router.post('/', auth, async (req, res) => {
 
     const [id] = await db('categories').insert({
       name,
-      icon: icon || null
+      icon: icon || null,
+      color: color || '#6366f1'
     });
 
     const category = await db('categories').where('id', id).first();
@@ -50,7 +51,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update a category
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-  const { name, icon } = req.body;
+  const { name, icon, color } = req.body;
 
   try {
     const categoryExists = await db('categories').where('id', req.params.id).first();
@@ -63,7 +64,8 @@ router.put('/:id', auth, async (req, res) => {
       .where('id', req.params.id)
       .update({
         name: name || categoryExists.name,
-        icon: icon !== undefined ? icon : categoryExists.icon
+        icon: icon !== undefined ? icon : categoryExists.icon,
+        color: color !== undefined ? color : categoryExists.color
       });
 
     const category = await db('categories').where('id', req.params.id).first();

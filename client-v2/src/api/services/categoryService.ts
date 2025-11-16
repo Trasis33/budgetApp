@@ -4,6 +4,7 @@ export interface Category {
   id: number;
   name: string;
   icon?: string;
+  color?: string;
 }
 
 export const categoryService = {
@@ -11,11 +12,11 @@ export const categoryService = {
     return apiClient.get<Category[]>('/categories');
   },
 
-  async createCategory(data: { name: string; icon?: string }) {
+  async createCategory(data: { name: string; icon?: string; color?: string }) {
     return apiClient.post('/categories', data);
   },
 
-  async updateCategory(id: number, data: { name?: string; icon?: string }) {
+  async updateCategory(id: number, data: { name?: string; icon?: string; color?: string }) {
     return apiClient.put(`/categories/${id}`, data);
   },
 

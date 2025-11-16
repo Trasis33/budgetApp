@@ -27,6 +27,7 @@ export interface Category {
   id: number;
   name: string;
   icon?: string;
+  color?: string;
 }
 
 export interface Budget {
@@ -34,6 +35,7 @@ export interface Budget {
   category_id: number;
   category_name: string;
   category_icon?: string;
+  category_color?: string;
   amount: number;
   month: number;
   year: number;
