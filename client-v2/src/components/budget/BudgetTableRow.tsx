@@ -37,23 +37,13 @@ export function BudgetTableRow({
 
   // Use actual category color from database, fallback to default
   const categoryColor = budget.category_color || '#6366f1';
-  const categoryIcon = getCategoryIcon(budget.category_name);
-  const iconColor = categoryIcon.color;
   
-  const getIconClassName = (color: string) => {
-    const colorMap = {
-      amber: styles.iconAmber,
-      mint: styles.iconMint,
-      indigo: styles.iconIndigo,
-      yellow: styles.iconYellow,
-      violet: styles.iconViolet,
-      golden: styles.iconGolden,
-      teal: styles.iconTeal,
-      coral: styles.iconCoral,
-      cyan: styles.iconCyan,
-      periwinkle: styles.iconPeriwinkle,
-    };
-    return colorMap[color as keyof typeof colorMap] || styles.iconMint;
+  // Convert hex to rgba for background with 20% opacity (matching CSS classes)
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
   const getAmountClassName = (amount: number) => {
@@ -133,10 +123,8 @@ export function BudgetTableRow({
             <div 
               className={styles.categoryIcon}
               style={{
-                backgroundColor: `${categoryColor}15`,
-                borderColor: `${categoryColor}30`,
-                color: categoryColor,
-                border: '1px solid'
+                backgroundColor: hexToRgba(categoryColor, 0.2),
+                color: categoryColor
               }}
             >
               {icon}

@@ -1,7 +1,16 @@
 // Predefined color palette for categories
 export const CATEGORY_COLORS = [
-  { name: 'Indigo', value: '#6366f1', light: '#eef2ff', text: '#4338ca' },
-  { name: 'Purple', value: '#a855f7', light: '#faf5ff', text: '#7c3aed' },
+  { name: 'Amber', value: '#F5510BFF', light: '#fffbeb', text: '#D94506FF' },
+  { name: 'Teal', value: '#0A9D8CFF', light: '#F0FDFAFF', text: '#0D9488FF' },
+  { name: 'Indigo', value: '#0B4B60FF', light: '#eef2ff', text: '#4338ca' },
+  { name: 'Yellow', value: '#F6C40DFF', light: '#fefce8', text: '#ca8a04' },
+  { name: 'Golden', value: '#F79F23FF', light: '#fefce8', text: '#ca8a04' },
+  { name: 'Coral', value: '#FB7782FF', light: '#fefce8', text: '#ca8a04' },
+  { name: 'Violet', value: '#DA81FDFF', light: '#fefce8', text: '#ca8a04' },
+  { name: 'Cyan', value: '#0CB5C7FF', light: '#fefce8', text: '#ca8a04' },
+  { name: 'Mint', value: '#82E07BFF', light: '#fefce8', text: '#ca8a04' },
+  { name: 'Periwinkle', value: '#5EACFFFF', light: '#fefce8', text: '#ca8a04' },
+/*   { name: 'Purple', value: '#a855f7', light: '#faf5ff', text: '#7c3aed' },
   { name: 'Pink', value: '#ec4899', light: '#fdf2f8', text: '#db2777' },
   { name: 'Red', value: '#ef4444', light: '#fef2f2', text: '#dc2626' },
   { name: 'Orange', value: '#f97316', light: '#fff7ed', text: '#ea580c' },
@@ -17,7 +26,7 @@ export const CATEGORY_COLORS = [
   { name: 'Violet', value: '#8b5cf6', light: '#f5f3ff', text: '#7c3aed' },
   { name: 'Fuchsia', value: '#d946ef', light: '#fdf4ff', text: '#c026d3' },
   { name: 'Rose', value: '#f43f5e', light: '#fff1f2', text: '#e11d48' },
-  { name: 'Slate', value: '#64748b', light: '#f8fafc', text: '#475569' },
+  { name: 'Slate', value: '#64748b', light: '#f8fafc', text: '#475569' }, */
 ];
 
 export const DEFAULT_CATEGORY_COLOR = '#6366f1';

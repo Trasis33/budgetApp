@@ -23,6 +23,7 @@ router.get('/', auth, async (req, res) => {
         'budgets.year',
         'budgets.amount',
         'categories.name as category_name',
+        'categories.icon as category_icon',
         'categories.color as category_color'
       )
       .where('budgets.month', month)
