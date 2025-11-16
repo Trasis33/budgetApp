@@ -146,6 +146,14 @@ export function CategoryManagementSection() {
               const categoryColor = getCategoryColor(category);
               const IconComponent = getIconByName(category.icon);
               
+              // Helper to convert hex to rgba (matching BudgetManager)
+              const hexToRgba = (hex: string, alpha: number) => {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+              };
+              
               return (
                 <div
                   key={category.id}
@@ -156,12 +164,10 @@ export function CategoryManagementSection() {
                   }`}
                 >
                   <div 
-                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg flex-shrink-0"
                     style={{ 
-                      backgroundColor: `${categoryColor}15`, 
-                      borderColor: `${categoryColor}30`,
-                      color: categoryColor,
-                      border: '1px solid'
+                      backgroundColor: hexToRgba(categoryColor, 0.2),
+                      color: categoryColor
                     }}
                   >
                     <IconComponent className="h-5 w-5" />
