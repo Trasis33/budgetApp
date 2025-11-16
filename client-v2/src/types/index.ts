@@ -104,3 +104,6 @@ export const CATEGORIES = [
 ] as const;
 
 export type CategoryType = typeof CATEGORIES[number];
+
+// Export settings types
+export * from './settings';

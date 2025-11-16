@@ -132,7 +132,7 @@ router.post(
 router.get('/user', auth, async (req, res) => {
   try {
     const user = await db('users')
-      .select('id', 'name', 'email')
+      .select('id', 'name', 'email', 'partner_id')
       .where('id', req.user.id)
       .first();
     res.json(user);

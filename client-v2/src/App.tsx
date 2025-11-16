@@ -8,6 +8,7 @@ import { BudgetManager } from './components/BudgetManager';
 import { Analytics } from './components/Analytics';
 import { BillSplitting } from './components/BillSplitting';
 import { MonthlyStatement } from './components/MonthlyStatement';
+import { Settings } from './components/Settings';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -33,6 +34,7 @@ const MainApp = () => {
             <Route path="/analytics" element={<Analytics onNavigate={setCurrentView} />} />
             <Route path="/split" element={<BillSplitting onNavigate={setCurrentView} />} />
             <Route path="/statement" element={<MonthlyStatement onNavigate={setCurrentView} />} />
+            <Route path="/settings" element={<Settings onNavigate={setCurrentView} />} />
           </Routes>
         </main>
         <Toaster />

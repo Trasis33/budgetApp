@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { LayoutDashboard, Receipt, PieChart, DollarSign, BarChart3, FileText, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Receipt, PieChart, DollarSign, BarChart3, FileText, Users, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface NavigationProps {
@@ -20,7 +20,8 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
     { id: 'budgets', label: 'Budgets', icon: BarChart3, path: '/budgets' },
     { id: 'analytics', label: 'Analytics', icon: PieChart, path: '/analytics' },
     { id: 'split', label: 'Bill Splitting', icon: Users, path: '/split' },
-    { id: 'statement', label: 'Statements', icon: FileText, path: '/statement' }
+    { id: 'statement', label: 'Statements', icon: FileText, path: '/statement' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' }
   ];
 
   const isActive = (path: string) => {
@@ -38,7 +39,7 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
           </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-1 flex-1">
+        <div className="hidden md:flex items-center gap-1 flex-1 overflow-x-auto">
           {navItems.map(item => {
             const Icon = item.icon;
             return (
@@ -46,7 +47,7 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
                 key={item.id}
                 variant={isActive(item.path) ? 'default' : 'ghost'}
                 onClick={() => onNavigate(item.id)}
-                className="gap-2"
+                className="gap-2 whitespace-nowrap"
                 asChild
               >
                 <Link to={item.path}>
