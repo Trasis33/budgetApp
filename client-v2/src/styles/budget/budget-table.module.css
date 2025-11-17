@@ -131,12 +131,17 @@
 .budgetTable {
   width: 100%;
   border-collapse: collapse;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 /* Table header */
 .tableHeader {
   background-color: var(--muted);
   border-bottom: 1px solid var(--border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
 }
 
 .tableHeader th {
@@ -147,6 +152,14 @@
   color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.tableHeader th:first-child {
+  border-top-left-radius: var(--radius-lg);
+}
+
+.tableHeader th:last-child {
+  border-top-right-radius: var(--radius-lg);
 }
 
 .tableHeader th:last-child {
@@ -226,6 +239,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
 }
 
 /* Stats footer separation when used under table footer */
