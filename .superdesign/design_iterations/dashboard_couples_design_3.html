@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Design 3 - Financial Wellness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --background: #ffffff;
+            --foreground: oklch(0.145 0 0);
+            --card: #ffffff;
+            --card-foreground: oklch(0.145 0 0);
+            --primary: #030213;
+            --primary-foreground: oklch(1 0 0);
+            --secondary: oklch(0.95 0.0058 264.53);
+            --secondary-foreground: #030213;
+            --muted: #ececf0;
+            --muted-foreground: #717182;
+            --accent: #e9ebef;
+            --accent-foreground: #030213;
+            --destructive: #d4183d;
+            --destructive-foreground: #ffffff;
+            --border: rgba(0, 0, 0, 0.1);
+            --theme-teal: oklch(.6 .118 184.704);
+            --theme-amber: oklch(.646 .222 41.116);
+            --theme-coral: oklch(.71 .18 16);
+            --theme-mint: oklch(.82 .12 140);
+            --theme-indigo: oklch(.398 .07 227.392);
+            --theme-violet: oklch(.74 .16 320);
+            --radius: 0.625rem;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--background);
+            color: var(--foreground);
+        }
+
+        .wellness-card {
+            background: linear-gradient(135deg, var(--theme-mint) 0%, var(--theme-teal) 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wellness-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .metric-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1), 
+                        0 4px 8px -2px rgba(0, 0, 0, 0.06);
+        }
+
+        .metric-card.highlight {
+            border-left: 4px solid var(--theme-mint);
+        }
+
+        .metric-card.warning {
+            border-left: 4px solid var(--theme-amber);
+        }
+
+        .metric-card.danger {
+            border-left: 4px solid var(--theme-coral);
+        }
+
+        .icon-mint {
+            background: color-mix(in oklab, var(--theme-mint) 20%, transparent);
+            color: var(--theme-mint);
+        }
+
+        .icon-teal {
+            background: color-mix(in oklab, var(--theme-teal) 20%, transparent);
+            color: var(--theme-teal);
+        }
+
+        .icon-amber {
+            background: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+            color: var(--theme-amber);
+        }
+
+        .icon-coral {
+            background: color-mix(in oklab, var(--theme-coral) 20%, transparent);
+            color: var(--theme-coral);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            stroke: var(--muted);
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .progress-ring-fill {
+            stroke: var(--theme-teal);
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease-out;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            position: relative;
+        }
+
+        .insight-card.positive {
+            border-left: 4px solid var(--theme-mint);
+        }
+
+        .insight-card.neutral {
+            border-left: 4px solid var(--theme-amber);
+        }
+
+        .insight-card.negative {
+            border-left: 4px solid var(--theme-coral);
+        }
+
+        .partner-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .partner-pill.alice {
+            background: color-mix(in oklab, var(--theme-indigo) 15%, transparent);
+            color: var(--theme-indigo);
+        }
+
+        .partner-pill.bob {
+            background: color-mix(in oklab, var(--theme-teal) 15%, transparent);
+            color: var(--theme-teal);
+        }
+
+        .partner-pill.shared {
+            background: color-mix(in oklab, var(--theme-violet) 15%, transparent);
+            color: var(--theme-violet);
+        }
+
+        .avatar-small {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: white;
+        }
+
+        .avatar-alice {
+            background: var(--theme-indigo);
+        }
+
+        .avatar-bob {
+            background: var(--theme-teal);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary);
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--secondary-foreground);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary);
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted-foreground);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-ghost:hover {
+            background: var(--accent);
+            color: var(--foreground);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted-foreground);
+        }
+
+        .category-bar {
+            height: 0.5rem;
+            background: var(--muted);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .category-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.6s ease-out;
+        }
+
+        .category-fill-groceries {
+            background: var(--theme-teal);
+        }
+
+        .category-fill-transport {
+            background: var(--theme-indigo);
+        }
+
+        .category-fill-entertainment {
+            background: var(--theme-violet);
+        }
+
+        .category-fill-utilities {
+            background: var(--theme-amber);
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+        }
+
+        .floating-action:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.25);
+        }
+
+        .insight-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .insight-badge.positive {
+            background: color-mix(in oklab, var(--theme-mint) 20%, transparent);
+            color: var(--theme-teal);
+        }
+
+        .insight-badge.neutral {
+            background: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+            color: var(--theme-amber);
+        }
+
+        .insight-badge.negative {
+            background: color-mix(in oklab, var(--theme-coral) 20%, transparent);
+            color: var(--theme-coral);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6 max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Financial Wellness</h1>
+                    <p class="text-gray-600">September 2025 • Building your financial future together</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="avatar-small avatar-alice">A</div>
+                        <div class="avatar-small avatar-bob">B</div>
+                        <span class="text-sm text-gray-600">Connected</span>
+                    </div>
+                    <button class="btn-ghost">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wellness Score Card -->
+        <div class="wellness-card mb-6">
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Your Financial Health Score</h2>
+                        <p class="text-white/90 mb-4">Great progress! You're building healthy financial habits together.</p>
+                        <div class="flex items-center gap-6">
+                            <div>
+                                <div class="stat-number">82</div>
+                                <div class="text-white/80 text-sm">Overall Score</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="insight-badge positive">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    On Track
+                                </div>
+                                <div class="insight-badge neutral">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    3 Tips
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <svg width="120" height="120" class="progress-ring">
+                            <circle cx="60" cy="60" r="52" class="progress-ring-bg"></circle>
+                            <circle cx="60" cy="60" r="52" class="progress-ring-fill" 
+                                    stroke-dasharray="326.73" 
+                                    stroke-dashoffset="58.81"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold">82%</div>
+                                <div class="text-xs text-white/80">Healthy</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="metric-card highlight">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <div class="stat-label mb-1">Total Saved</div>
+                        <div class="stat-number text-teal-600">kr4,200</div>
+                    </div>
+                    <div class="icon-mint w-10 h-10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-green-600">+12%</span>
+                    <span class="text-gray-500">vs last month</span>
+                </div>
+            </div>
+
+            <div class="metric-card warning">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <div class="stat-label mb-1">Budget Used</div>
+                        <div class="stat-number text-amber-600">87%</div>
+                    </div>
+                    <div class="icon-amber w-10 h-10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-amber-600">Watch spending</span>
+                    <span class="text-gray-500">5 days left</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <div class="stat-label mb-1">Shared Goals</div>
+                        <div class="stat-number">3/5</div>
+                    </div>
+                    <div class="icon-teal w-10 h-10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-teal-600">On track</span>
+                    <span class="text-gray-500">2 pending</span>
+                </div>
+            </div>
+
+            <div class="metric-card danger">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <div class="stat-label mb-1">Settlement</div>
+                        <div class="stat-number text-coral-600">kr2,550</div>
+                    </div>
+                    <div class="icon-coral w-10 h-10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="partner-pill alice">
+                        <div class="avatar-small avatar-alice">A</div>
+                        Alice owes Bob
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights & Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- AI Insights -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">AI Financial Insights</h3>
+                        <button class="btn-ghost text-sm">
+                            View all
+                            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="insight-card positive">
+                            <div class="flex items-start gap-3">
+                                <div class="icon-mint w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-sm mb-1">Great job on groceries!</h4>
+                                    <p class="text-sm text-gray-600">You spent 15% less than last month. Consider setting this as your new baseline.</p>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="insight-badge positive">Saving</span>
+                                        <span class="text-xs text-gray-500">2 hours ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="insight-card neutral">
+                            <div class="flex items-start gap-3">
+                                <div class="icon-amber w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-sm mb-1">Entertainment budget nearly exceeded</h4>
+                                    <p class="text-sm text-gray-600">You've used 90% of your entertainment budget with 5 days remaining.</p>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="insight-badge neutral">Budget Alert</span>
+                                        <span class="text-xs text-gray-500">5 hours ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="insight-card negative">
+                            <div class="flex items-start gap-3">
+                                <div class="icon-coral w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-sm mb-1">Transport costs increasing</h4>
+                                    <p class="text-sm text-gray-600">Gas prices are up 20% this month. Consider carpooling or public transit.</p>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="insight-badge negative">Cost Increase</span>
+                                        <span class="text-xs text-gray-500">1 day ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending Breakdown -->
+            <div>
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold mb-4">Spending Breakdown</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span>Groceries</span>
+                                <span class="font-medium">kr4,200</span>
+                            </div>
+                            <div class="category-bar">
+                                <div class="category-fill category-fill-groceries" style="width: 35%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span>Transport</span>
+                                <span class="font-medium">kr2,800</span>
+                            </div>
+                            <div class="category-bar">
+                                <div class="category-fill category-fill-transport" style="width: 23%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span>Entertainment</span>
+                                <span class="font-medium">kr2,100</span>
+                            </div>
+                            <div class="category-bar">
+                                <div class="category-fill category-fill-entertainment" style="width: 17%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span>Utilities</span>
+                                <span class="font-medium">kr1,800</span>
+                            </div>
+                            <div class="category-bar">
+                                <div class="category-fill category-fill-utilities" style="width: 15%"></div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium">Other</span>
+                                <span class="font-medium">kr1,550</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Recent Activity</h3>
+                <div class="flex items-center gap-2">
+                    <button class="partner-pill shared">
+                        <div class="avatar-small avatar-alice">A</div>
+                        <div class="avatar-small avatar-bob">B</div>
+                        Shared
+                    </button>
+                    <button class="partner-pill alice">
+                        <div class="avatar-small avatar-alice">A</div>
+                        Alice
+                    </button>
+                    <button class="partner-pill bob">
+                        <div class="avatar-small avatar-bob">B</div>
+                        Bob
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="partner-pill shared">
+                            <div class="avatar-small avatar-alice">A</div>
+                            <div class="avatar-small avatar-bob">B</div>
+                        </div>
+                        <div>
+                            <p class="font-medium text-sm">Walmart Groceries</p>
+                            <p class="text-xs text-gray-500">Shared • 2 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium">kr1,234</p>
+                        <p class="text-xs text-gray-500">Split 50/50</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="partner-pill alice">
+                            <div class="avatar-small avatar-alice">A</div>
+                        </div>
+                        <div>
+                            <p class="font-medium text-sm">Coffee Shop</p>
+                            <p class="text-xs text-gray-500">Personal • 3 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium">kr45</p>
+                        <p class="text-xs text-gray-500">Alice</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="partner-pill bob">
+                            <div class="avatar-small avatar-bob">B</div>
+                        </div>
+                        <div>
+                            <p class="font-medium text-sm">Gas Station</p>
+                            <p class="text-xs text-gray-500">Personal • 5 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium">kr65</p>
+                        <p class="text-xs text-gray-500">Bob</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="floating-action">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+        </button>
+    </div>
+</body>
+</html>

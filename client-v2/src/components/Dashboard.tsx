@@ -2,19 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Progress } from './ui/progress';
 import { Expense, Budget } from '../types';
 import { formatCurrency, formatDate, filterExpensesByMonth, calculateCategorySpending, getBudgetProgress } from '../lib/utils';
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt, ArrowRight } from 'lucide-react';
+import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt, ArrowRight, Users, User, Heart, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
 import { budgetService } from '../api/services/budgetService';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useScope } from '../context/ScopeContext';
-import { Users, User, Heart } from 'lucide-react';
-import type { ScopeType } from '../types/scope';
+import { getIconByName } from '../lib/categoryIcons';
+import { getCategoryColor } from '../lib/categoryColors';
+import styles from '../styles/budget/budget-metrics.module.css';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -93,8 +92,96 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     spent: calculateCategorySpending(monthlyExpenses, budget.category_name)
   })).filter(b => b.spent > 0);
 
+  // Helper functions for consistent styling
+  const getProgressColorClass = (progress: number, categoryColor?: string) => {
+    if (progress >= 100) return styles.progressFillDanger;
+    if (progress >= 80) return styles.progressFillWarning;
+    if (categoryColor) {
+      // Map category colors to progress fill classes
+      const colorMap: { [key: string]: string } = {
+        '#F5510BFF': styles.progressFillAmber,
+        '#0A9D8CFF': styles.progressFillTeal,
+        '#0B4B60FF': styles.progressFillIndigo,
+        '#F6C40DFF': styles.progressFillYellow,
+        '#F79F23FF': styles.progressFillGolden,
+        '#FB7782FF': styles.progressFillCoral,
+        '#DA81FDFF': styles.progressFillViolet,
+        '#0CB5C7FF': styles.progressFillCyan,
+        '#82E07BFF': styles.progressFillMint,
+        '#5EACFFFF': styles.progressFillPeriwinkle,
+      };
+      return colorMap[categoryColor] || styles.progressFillTeal;
+    }
+    return styles.progressFillSuccess;
+  };
+
+  const getIconColorClass = (index: number) => {
+    const colorClasses = [
+      styles.iconTeal,
+      styles.iconCoral,
+      styles.iconAmber,
+      styles.iconIndigo,
+    ];
+    return colorClasses[index % colorClasses.length];
+  };
+
+  const getPartnerInitial = (name?: string) => {
+    return name?.charAt(0).toUpperCase() || 'U';
+  };
+
+  const getPartnerAvatarClass = (isCurrentUser: boolean) => {
+    return isCurrentUser ? 'partner-avatar-primary' : 'partner-avatar-secondary';
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="p-6">
+      {/* Header with Partner Context */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-medium mb-1">Shared Financial Dashboard</h1>
+          <p className="text-sm text-gray-600">{now.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })} • {isPartnerConnected ? 'Partner Connected' : 'Partner Not Connected'}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {isPartnerConnected && (
+            <div className="flex items-center gap-2">
+              <div className={`partner-avatar ${getPartnerAvatarClass(true)}`}>
+                {getPartnerInitial(user?.name)}
+              </div>
+              <div className={`partner-avatar ${getPartnerAvatarClass(false)}`}>
+                P
+              </div>
+            </div>
+          )}
+          <button className="btn-ghost">
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Scope Selector */}
+      <div className="scope-selector w-fit mb-6">
+        <div 
+          className={`scope-option ${currentScope === 'ours' ? 'active' : ''}`}
+          onClick={() => setScope('ours')}
+        >
+          <Users className="w-4 h-4" />
+          Shared
+        </div>
+        <div 
+          className={`scope-option ${currentScope === 'mine' ? 'active' : ''}`}
+          onClick={() => setScope('mine')}
+        >
+          <User className="w-4 h-4" />
+          Personal
+        </div>
+        <div 
+          className={`scope-option ${currentScope === 'partner' ? 'active' : ''}`}
+          onClick={() => setScope('partner')}
+        >
+          <Heart className="w-4 h-4" />
+          Partner
+        </div>
+      </div>
       {/* Partner Invitation Banner for Unpaired Users */}
       {monthlyExpenses.length === 0 && expenses.length === 0 && (
         <div style={{
@@ -131,70 +218,33 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
 
       {/* Welcome Banner */}
       {monthlyExpenses.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100 mb-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-4 mb-3">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  👋 Hey {user?.name}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
-                </h2>
-                <Select value={currentScope} onValueChange={(value: ScopeType) => setScope(value)}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mine">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Personal
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="ours">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        Shared
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="partner">
-                      <div className="flex items-center gap-2">
-                        <Heart className="w-4 h-4" />
-                        Partner
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <p className="text-gray-600">
-                This month you've tracked {monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses totalling {formatCurrency(totalSpent)}
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                👋 Hey{isPartnerConnected ? ' Alice & Bob' : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
+              </h2>
+              <p className="text-gray-600 mb-3">
+                This month you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
               </p>
-              <p className="text-sm text-gray-500 mt-2">
-                {now.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}
-              </p>
-              <div className="mt-3 flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  isPartnerConnected ? 'bg-green-500' : 'bg-gray-300'
-                }`} />
-                <span className="text-xs text-gray-500">
-                  {isPartnerConnected 
-                    ? `Partner connected • Viewing ${currentScope} budget` 
-                    : `Partner not connected • Viewing ${currentScope} budget`
-                  }
-                </span>
-              </div>
-              <div className="flex gap-3 mt-4">
-                {/* <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => navigate('/add-expense')}
-                  className="gap-2"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Add expense
-                </Button> */}
-                
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`status-dot ${budgetProgress < 80 ? 'status-dot-teal' : budgetProgress < 100 ? 'status-dot-amber' : 'status-dot-coral'}`}></div>
+                  <span className="text-gray-600">
+                    {budgetProgress < 80 ? 'On track with budget' : budgetProgress < 100 ? 'Approaching budget limit' : 'Over budget'}
+                  </span>
+                </div>
+                {budgetsWithSpending.filter(b => getBudgetProgress(b, b.spent || 0) >= 80).length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="status-dot status-dot-amber"></div>
+                    <span className="text-gray-600">
+                      {budgetsWithSpending.filter(b => getBudgetProgress(b, b.spent || 0) >= 80).length} categories need attention
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               <Button 
                 type="button" 
                 onClick={() => navigate('/add-expense')} 
@@ -245,155 +295,247 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Total Spent</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div>{formatCurrency(totalSpent)}</div>
-            <p className="text-muted-foreground mt-1">
-              of {formatCurrency(totalBudget)} budget
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>This Month</CardTitle>
-            {spendingChange > 0 ? (
-              <TrendingUp className="h-4 w-4 text-red-500" />
-            ) : (
-              <TrendingDown className="h-4 w-4 text-green-500" />
-            )}
-          </CardHeader>
-          <CardContent>
-            <div>{monthlyExpenses.length} expenses</div>
-            <p className={`mt-1 text-xs ${spendingChange >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
-              {spendingChange >= 0 ? "Great! You're on track" : "Let's see where we can optimize"}
-            </p>
-            <p className={`text-sm ${spendingChange >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
-              {spendingChange >= 0 ? '+' : ''}{spendingChange.toFixed(1)}% vs last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Budget Used</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div>{budgetProgress.toFixed(1)}%</div>
-            <Progress value={budgetProgress} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Avg per Day</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div>{formatCurrency(totalSpent / now.getDate())}</div>
-            <p className="text-muted-foreground mt-1">
-              Based on {now.getDate()} days
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Recent expenses</CardTitle>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/expenses')}
-                  className="text-primary hover:text-primary/80 p-1 h-auto"
-                >
-                  View all
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentExpenses.map(expense => (
-                <div key={expense.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                  <div className="flex-1">
-                    <p>{expense.description}</p>
-                    <p className="text-muted-foreground">
-                      {expense.category_name} • {formatDate(expense.date)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p>{formatCurrency(expense.amount)}</p>
-                    <p className="text-muted-foreground">
-                      {expense.split_type === 'personal' ? 'Personal' : 'Split'}
-                    </p>
+          {/* Metrics Grid using BudgetManager styling */}
+          <div className={`${styles.metricsGrid} mb-6`}>
+            <div className={styles.metricCard}>
+              <div className={styles.metricContent}>
+                <div className={styles.metricInfo}>
+                  <div className={styles.metricLabel}>Total Spent</div>
+                  <div className={styles.metricValue}>{formatCurrency(totalSpent)}</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    of {formatCurrency(totalBudget)} budget
                   </div>
                 </div>
-              ))}
-              {recentExpenses.length === 0 && (
-                <p className="text-muted-foreground text-center py-4">No expenses this month</p>
-              )}
+                <div className={`${styles.metricIcon} ${getIconColorClass(0)}`}>
+                  <DollarSign className="w-5 h-5" />
+                </div>
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => navigate('/expenses')}
-            >
-              View All Expenses
-            </Button>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Budget Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {budgetsWithSpending.slice(0, 5).map(budget => {
-                const progress = getBudgetProgress(budget, budget.spent || 0);
-                const isOverBudget = progress >= 100;
-
-                return (
-                  <div key={budget.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>{budget.category_name}</span>
-                      <span className={isOverBudget ? 'text-red-500' : ''}>
-                        {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.amount || 0)}
-                      </span>
-                    </div>
-                    <Progress
-                      value={progress}
-                      className={isOverBudget ? '[&>div]:bg-red-500' : ''}
-                    />
+            <div className={styles.metricCard}>
+              <div className={styles.metricContent}>
+                <div className={styles.metricInfo}>
+                  <div className={styles.metricLabel}>This Month</div>
+                  <div className={styles.metricValue}>{monthlyExpenses.length} expenses</div>
+                  <div className={`text-sm ${spendingChange <= 0 ? 'text-green-600' : 'text-orange-600'} mt-1`}>
+                    {spendingChange <= 0 ? 'Great! You are on track' : 'Let us see where we can optimize'}
                   </div>
-                );
-              })}
-              {budgetsWithSpending.length === 0 && (
-                <p className="text-muted-foreground text-center py-4">No spending tracked yet</p>
-              )}
+                  <div className={`text-sm ${spendingChange <= 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                    {spendingChange <= 0 ? '+' : ''}{spendingChange.toFixed(1)}% vs last month
+                  </div>
+                </div>
+                <div className={`${styles.metricIcon} ${getIconColorClass(1)}`}>
+                  {spendingChange > 0 ? (
+                    <TrendingUp className="w-5 h-5" />
+                  ) : (
+                    <TrendingDown className="w-5 h-5" />
+                  )}
+                </div>
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => navigate('/budgets')}
-            >
-              Manage Budgets
-            </Button>
-          </CardContent>
-        </Card>
+
+            <div className={styles.metricCard}>
+              <div className={styles.metricContent}>
+                <div className={styles.metricInfo}>
+                  <div className={styles.metricLabel}>Budget Used</div>
+                  <div className={styles.metricValue}>{budgetProgress.toFixed(1)}%</div>
+                  <div className="progress-bar mt-2">
+                    <div className={`progress-fill ${getProgressColorClass(budgetProgress)}`} style={{ width: `${budgetProgress}%` }}></div>
+                  </div>
+                </div>
+                <div className={`${styles.metricIcon} ${getIconColorClass(2)}`}>
+                  <Receipt className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.metricCard}>
+              <div className={styles.metricContent}>
+                <div className={styles.metricInfo}>
+                  <div className={styles.metricLabel}>Avg per Day</div>
+                  <div className={styles.metricValue}>{formatCurrency(totalSpent / now.getDate())}</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Based on {now.getDate()} days
+                  </div>
+                </div>
+                <div className={`${styles.metricIcon} ${getIconColorClass(3)}`}>
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Main Content Grid */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Recent Expenses */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Recent {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</CardTitle>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/expenses')}
+                    className="text-primary hover:text-primary/80 p-1 h-auto"
+                  >
+                    View all
+                    <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentExpenses.map(expense => {
+                    const IconComponent = getIconByName(expense.category_icon);
+                    const categoryColor = getCategoryColor({ color: expense.category_color });
+                    const isCurrentUser = expense.paid_by_user_id === user?.id;
+                    
+                    return (
+                      <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            {isPartnerConnected && (
+                              <div className={`partner-avatar ${getPartnerAvatarClass(isCurrentUser)} text-xs`}>
+                                {getPartnerInitial(isCurrentUser ? user?.name : 'Partner')}
+                              </div>
+                            )}
+                            <div 
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{
+                                backgroundColor: `${categoryColor}20`,
+                                color: categoryColor
+                              }}
+                            >
+                              <IconComponent className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{expense.description}</p>
+                              <p className="text-xs text-gray-500">
+                                {expense.category_name} • {formatDate(expense.date)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm">{formatCurrency(expense.amount)}</p>
+                          <p className="text-xs text-gray-500">
+                            {expense.split_type === 'personal' ? 'Personal' : 'Split'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {recentExpenses.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No expenses this month</p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => navigate('/expenses')}
+                >
+                  View All Expenses
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Budget Performance */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Budget Performance</CardTitle>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/budgets')}
+                    className="text-primary hover:text-primary/80 p-1 h-auto"
+                  >
+                    Manage
+                    <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {budgetsWithSpending.slice(0, 5).map((budget) => {
+                    const progress = getBudgetProgress(budget, budget.spent || 0);
+                    const isOverBudget = progress >= 100;
+                    const IconComponent = getIconByName(budget.category_icon);
+                    const categoryColor = getCategoryColor({ color: budget.category_color });
+
+                    return (
+                      <div key={budget.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-6 h-6 rounded flex items-center justify-center"
+                              style={{
+                                backgroundColor: `${categoryColor}20`,
+                                color: categoryColor
+                              }}
+                            >
+                              <IconComponent className="h-3 w-3" />
+                            </div>
+                            <span className="text-sm font-medium">{budget.category_name}</span>
+                          </div>
+                          <span className={`text-sm font-medium ${isOverBudget ? 'text-red-500' : ''}`}>
+                            {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.amount || 0)}
+                          </span>
+                        </div>
+                        <div className="progress-bar">
+                          <div 
+                            className={`progress-fill ${getProgressColorClass(progress, budget.category_color)}`} 
+                            style={{ width: `${Math.min(progress, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {budgetsWithSpending.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No spending tracked yet</p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => navigate('/budgets')}
+                >
+                  Manage Budgets
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button className="btn-ghost justify-center" onClick={() => navigate('/analytics')}>
+                  <TrendingUp className="w-4 h-4" />
+                  Analytics
+                </button>
+                <button className="btn-ghost justify-center" onClick={() => navigate('/settlement')}>
+                  <DollarSign className="w-4 h-4" />
+                  Settlement
+                </button>
+                <button className="btn-ghost justify-center" onClick={() => navigate('/tips')}>
+                  <Heart className="w-4 h-4" />
+                  Tips
+                </button>
+                <button className="btn-ghost justify-center" onClick={() => navigate('/share')}>
+                  <Users className="w-4 h-4" />
+                  Share
+                </button>
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
       
