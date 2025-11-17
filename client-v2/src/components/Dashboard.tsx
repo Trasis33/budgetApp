@@ -93,9 +93,8 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   })).filter(b => b.spent > 0);
 
   // Helper functions for consistent styling
-  const getProgressColorClass = (progress: number, categoryColor?: string) => {
-    if (progress >= 100) return styles.progressFillDanger;
-    if (progress >= 80) return styles.progressFillWarning;
+  const getProgressColorClass = (_progress: number, categoryColor?: string) => {
+    // Always use category color if available, regardless of progress
     if (categoryColor) {
       // Map category colors to progress fill classes
       const colorMap: { [key: string]: string } = {
@@ -112,7 +111,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
       };
       return colorMap[categoryColor] || styles.progressFillTeal;
     }
+    // Fallback for categories without specific colors
     return styles.progressFillSuccess;
+  };
+
+  const getProgressTextColor = (progress: number) => {
+    if (progress > 100) return 'text-red-500'; // Above budget - red/coral
+    if (progress === 100) return 'text-amber-500'; // At budget - amber/yellow
+    return 'text-emerald-600'; // Under budget - mint/emerald color
   };
 
   const getIconColorClass = (index: number) => {
@@ -462,9 +468,9 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 <div className="space-y-4">
                   {budgetsWithSpending.slice(0, 5).map((budget) => {
                     const progress = getBudgetProgress(budget, budget.spent || 0);
-                    const isOverBudget = progress >= 100;
                     const IconComponent = getIconByName(budget.category_icon);
                     const categoryColor = getCategoryColor({ color: budget.category_color });
+                    const progressTextColor = getProgressTextColor(progress);
 
                     return (
                       <div key={budget.id} className="space-y-2">
@@ -481,7 +487,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             </div>
                             <span className="text-sm font-medium">{budget.category_name}</span>
                           </div>
-                          <span className={`text-sm font-medium ${isOverBudget ? 'text-red-500' : ''}`}>
+                          <span className={`text-sm font-medium ${progressTextColor}`}>
                             {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.amount || 0)}
                           </span>
                         </div>
