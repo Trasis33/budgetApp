@@ -155,6 +155,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     return getCategoryColor({});
   };
 
+  const hexToRgba = (hex: string, alpha: number) => {
+    const cleanedHex = hex.replace('#', '');
+    const r = parseInt(cleanedHex.slice(0, 2), 16);
+    const g = parseInt(cleanedHex.slice(2, 4), 16);
+    const b = parseInt(cleanedHex.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   return (
     <div className="p-6">
       {/* Header with Partner Context */}
@@ -425,7 +433,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             <div 
                               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                               style={{
-                                backgroundColor: `${categoryColor}20`,
+                                backgroundColor: hexToRgba(categoryColor, 0.25),
                                 color: categoryColor
                               }}
                             >
@@ -495,7 +503,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             <div 
                               className="w-6 h-6 rounded flex items-center justify-center"
                               style={{
-                                backgroundColor: `${categoryColor}20`,
+                                backgroundColor: hexToRgba(categoryColor, 0.35),
                                 color: categoryColor
                               }}
                             >
