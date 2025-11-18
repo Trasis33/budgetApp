@@ -139,6 +139,22 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     return isCurrentUser ? 'partner-avatar-primary' : 'partner-avatar-secondary';
   };
 
+  const getExpenseCategoryColor = (expense: Expense, budgets: Budget[]) => {
+    // First try to use the expense's own category color
+    if (expense.category_color) {
+      return getCategoryColor({ color: expense.category_color });
+    }
+    
+    // Fallback: find the matching budget to get the category color
+    const matchingBudget = budgets.find(b => b.category_id === expense.category_id);
+    if (matchingBudget?.category_color) {
+      return getCategoryColor({ color: matchingBudget.category_color });
+    }
+    
+    // Final fallback: use default color
+    return getCategoryColor({});
+  };
+
   return (
     <div className="p-6">
       {/* Header with Partner Context */}
@@ -394,7 +410,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 <div className="space-y-4">
                   {recentExpenses.map(expense => {
                     const IconComponent = getIconByName(expense.category_icon);
-                    const categoryColor = getCategoryColor({ color: expense.category_color });
+                    const categoryColor = getExpenseCategoryColor(expense, budgets);
                     const isCurrentUser = expense.paid_by_user_id === user?.id;
                     
                     return (

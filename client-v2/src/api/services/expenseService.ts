@@ -7,6 +7,7 @@ export interface Expense {
   category_id: number;
   category_name: string;
   category_icon?: string;
+  category_color?: string;
   description: string;
   paid_by_user_id: number;
   paid_by_name: string;
