@@ -165,11 +165,30 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
 
   return (
     <div className="p-6">
-      {/* Header with Partner Context */}
+      {/* Scope Selector */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-medium mb-1">Shared Financial Dashboard</h1>
-          <p className="text-sm text-gray-600">{now.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })} • {isPartnerConnected ? 'Partner Connected' : 'Partner Not Connected'}</p>
+        <div className="scope-selector w-fit">
+          <div 
+            className={`scope-option ${currentScope === 'ours' ? 'active' : ''}`}
+            onClick={() => setScope('ours')}
+          >
+            <Users className="w-4 h-4" />
+            Shared
+          </div>
+          <div 
+            className={`scope-option ${currentScope === 'mine' ? 'active' : ''}`}
+            onClick={() => setScope('mine')}
+          >
+            <User className="w-4 h-4" />
+            Personal
+          </div>
+          <div 
+            className={`scope-option ${currentScope === 'partner' ? 'active' : ''}`}
+            onClick={() => setScope('partner')}
+          >
+            <Heart className="w-4 h-4" />
+            Partner
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {isPartnerConnected && (
@@ -185,31 +204,6 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           <button className="btn-ghost">
             <Settings className="w-4 h-4" />
           </button>
-        </div>
-      </div>
-
-      {/* Scope Selector */}
-      <div className="scope-selector w-fit mb-6">
-        <div 
-          className={`scope-option ${currentScope === 'ours' ? 'active' : ''}`}
-          onClick={() => setScope('ours')}
-        >
-          <Users className="w-4 h-4" />
-          Shared
-        </div>
-        <div 
-          className={`scope-option ${currentScope === 'mine' ? 'active' : ''}`}
-          onClick={() => setScope('mine')}
-        >
-          <User className="w-4 h-4" />
-          Personal
-        </div>
-        <div 
-          className={`scope-option ${currentScope === 'partner' ? 'active' : ''}`}
-          onClick={() => setScope('partner')}
-        >
-          <Heart className="w-4 h-4" />
-          Partner
         </div>
       </div>
       {/* Partner Invitation Banner for Unpaired Users */}
@@ -255,7 +249,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 👋 Hey{isPartnerConnected ? ' Alice & Bob' : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
               </h2>
               <p className="text-gray-600 mb-3">
-                This month you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
+                This {now.toLocaleDateString('en-US', { month: 'long' })} you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
               </p>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
