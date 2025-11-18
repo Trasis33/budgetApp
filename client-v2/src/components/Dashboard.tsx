@@ -505,7 +505,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                     const progressTextColor = getProgressTextColor(progress);
 
                     return (
-                      <div key={budget.id} className="space-y-2">
+                      <div key={budget.id} className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div 

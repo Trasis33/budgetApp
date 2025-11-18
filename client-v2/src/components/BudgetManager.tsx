@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { 
   Dialog, 
   DialogContent, 
@@ -11,11 +18,11 @@ import {
   DialogDescription,
   DialogFooter
 } from './ui/dialog';
-import { Budget, Category } from '../types';
+import { Category } from '../types';
 import { filterExpensesByMonth } from '../lib/utils';
 import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Target, PlusCircle } from 'lucide-react';
+import { Plus, Target, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { budgetService } from '../api/services/budgetService';
 import { categoryService } from '../api/services/categoryService';
 import { toast } from 'sonner';
@@ -50,6 +57,11 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   const { isLoading: scopeLoading } = useScope();
   const [categories, setCategories] = useState<Category[]>([]);
   
+  // Month/Year selection state
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSearchTerm, setModalSearchTerm] = useState('');
@@ -62,13 +74,9 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   // Delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
-
   // Use custom hooks for data and calculations
-  const { budgets, expenses, loading, error, refetch } = useBudgetData(currentMonth, currentYear);
-  const monthlyExpenses = filterExpensesByMonth(expenses, currentYear, now.getMonth());
+  const { budgets, expenses, loading, error, refetch } = useBudgetData(selectedMonth, selectedYear);
+  const monthlyExpenses = filterExpensesByMonth(expenses, selectedYear, selectedMonth - 1);
   
   const { budgetsWithSpending, metrics } = useBudgetCalculations(budgets, monthlyExpenses);
 
@@ -154,8 +162,8 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
     try {
       await budgetService.createOrUpdateBudget({
         category_id: modalSelectedCategory.id,
-        month: currentMonth,
-        year: currentYear,
+        month: selectedMonth,
+        year: selectedYear,
         amount: parseFloat(modalAmount)
       });
 
@@ -183,6 +191,52 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
     } catch (error) {
       toast.error('Could not create budget. Please check your amount and try again');
     }
+  };
+
+  const handlePreviousMonth = () => {
+    if (selectedMonth === 1) {
+      setSelectedMonth(12);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 12) {
+      setSelectedMonth(1);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  const getMonthOptions = () => {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return monthNames.map((name, index) => ({
+      value: (index + 1).toString(),
+      label: name
+    }));
+  };
+
+  const getYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear - 2; i <= currentYear + 2; i++) {
+      years.push({ value: i.toString(), label: i.toString() });
+    }
+    return years;
+  };
+
+  const handleMonthChange = (value: string) => {
+    setSelectedMonth(parseInt(value));
+  };
+
+  const handleYearChange = (value: string) => {
+    setSelectedYear(parseInt(value));
   };
 
   const handleBack = () => {
@@ -251,12 +305,56 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
               <Target className="h-5 w-5" />
               Category budgets
             </CardTitle>
-            {availableCategories.length > 0 && (
-              <Button onClick={handleAddBudget} size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add budget
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-input-background">
+                <button
+                  onClick={handlePreviousMonth}
+                  className="p-0.5 hover:bg-accent rounded transition-colors"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <div className="flex items-center gap-1">
+                  <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
+                    <SelectTrigger className="h-8 w-[110px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getMonthOptions().map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+                    <SelectTrigger className="h-8 w-[75px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getYearOptions().map((year) => (
+                        <SelectItem key={year.value} value={year.value}>
+                          {year.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <button
+                  onClick={handleNextMonth}
+                  className="p-0.5 hover:bg-accent rounded transition-colors"
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              {availableCategories.length > 0 && (
+                <Button onClick={handleAddBudget} size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add budget
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {budgetsWithSpending.length > 0 ? (
@@ -355,7 +453,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
                               onClick={() => setModalSelectedCategory(category)}
                             >
                               <div 
-                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                                 style={{
                                   backgroundColor: hexToRgba(categoryColor, 0.2),
                                   color: categoryColor
