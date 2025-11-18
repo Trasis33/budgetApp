@@ -33,7 +33,7 @@ export const authService = {
     return apiClient.get('/auth/user');
   },
 
-  async updateProfile(data: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) {
+  async updateProfile(data: { name?: string; email?: string; currentPassword?: string; newPassword?: string; color?: string }) {
     return apiClient.put('/auth/profile', data);
   },
 

@@ -25,7 +25,7 @@ export interface DashboardPropsExport {
 
 export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const { user } = useAuth();
-  const { isPartnerConnected, currentScope, setScope, isLoading: scopeLoading } = useScope();
+  const { isPartnerConnected, currentScope, setScope, isLoading: scopeLoading, summary } = useScope();
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -135,6 +135,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     return name?.charAt(0).toUpperCase() || 'U';
   };
 
+  const getPartnerAvatarStyle = (isCurrentUser: boolean) => {
+    if (isCurrentUser && user?.color) {
+      return { backgroundColor: user.color, color: 'white' };
+    }
+    // Fallback to CSS classes for partner or when user has no color
+    return {};
+  };
+
   const getPartnerAvatarClass = (isCurrentUser: boolean) => {
     return isCurrentUser ? 'partner-avatar-primary' : 'partner-avatar-secondary';
   };
@@ -193,11 +201,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         <div className="flex items-center gap-3">
           {isPartnerConnected && (
             <div className="flex items-center gap-2">
-              <div className={`partner-avatar ${getPartnerAvatarClass(true)}`}>
+              <div 
+                className={`partner-avatar ${user?.color ? '' : 'partner-avatar-primary'}`}
+                style={getPartnerAvatarStyle(true)}
+              >
                 {getPartnerInitial(user?.name)}
               </div>
-              <div className={`partner-avatar ${getPartnerAvatarClass(false)}`}>
-                P
+              <div className={`partner-avatar partner-avatar-secondary`}>
+                {getPartnerInitial(summary?.couple?.partner?.name)}
               </div>
             </div>
           )}
@@ -246,7 +257,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                👋 Hey{isPartnerConnected ? ' Alice & Bob' : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
+                👋 Hey{isPartnerConnected ? ` ${user?.name} & ${summary?.couple?.partner?.name}` : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
               </h2>
               <p className="text-gray-600 mb-3">
                 This {now.toLocaleDateString('en-US', { month: 'long' })} you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
@@ -420,8 +431,11 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             {isPartnerConnected && (
-                              <div className={`partner-avatar ${getPartnerAvatarClass(isCurrentUser)} text-xs`}>
-                                {getPartnerInitial(isCurrentUser ? user?.name : 'Partner')}
+                              <div 
+                                className={`partner-avatar text-xs ${isCurrentUser && user?.color ? '' : getPartnerAvatarClass(isCurrentUser)}`}
+                                style={getPartnerAvatarStyle(isCurrentUser)}
+                              >
+                                {getPartnerInitial(isCurrentUser ? user?.name : summary?.couple?.partner?.name)}
                               </div>
                             )}
                             <div 

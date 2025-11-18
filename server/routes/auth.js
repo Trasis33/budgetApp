@@ -132,7 +132,7 @@ router.post(
 router.get('/user', auth, async (req, res) => {
   try {
     const user = await db('users')
-      .select('id', 'name', 'email', 'partner_id')
+      .select('id', 'name', 'email', 'partner_id', 'color')
       .where('id', req.user.id)
       .first();
     res.json(user);
@@ -232,14 +232,21 @@ router.post('/invite-partner', auth, async (req, res) => {
 // @desc    Update user profile
 // @access  Private
 router.put('/profile', auth, async (req, res) => {
-  const { name, email, currentPassword, newPassword } = req.body;
+  const { name, email, currentPassword, newPassword, color } = req.body;
 
   try {
+    console.log('Profile update request:', { name, email, color, userId: req.user.id });
+    
     // Get user from database
     const user = await db('users').where('id', req.user.id).first();
+    
+    if (!user) {
+      console.log('User not found:', req.user.id);
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     // Check if email already exists for another user
-    if (email !== user.email) {
+    if (email && email !== user.email) {
       const emailExists = await db('users')
         .where('email', email)
         .whereNot('id', req.user.id)
@@ -250,11 +257,22 @@ router.put('/profile', auth, async (req, res) => {
       }
     }
 
-    // Update data object
-    const updateData = {
-      name,
-      email
-    };
+    // Update data object - only include fields that are provided
+    const updateData = {};
+    
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+    
+    if (email !== undefined) {
+      updateData.email = email;
+    }
+
+    // Add color if provided
+    if (color !== undefined) {
+      updateData.color = color;
+      console.log('Adding color to update data:', color);
+    }
 
     // If changing password, verify current password and hash new password
     if (currentPassword && newPassword) {
@@ -268,19 +286,25 @@ router.put('/profile', auth, async (req, res) => {
       updateData.password = await bcrypt.hash(newPassword, salt);
     }
 
+    console.log('Final update data:', updateData);
+
     // Update user in database
     await db('users').where('id', req.user.id).update(updateData);
 
+    console.log('Database update successful');
+
     // Return updated user data (without password)
     const updatedUser = await db('users')
-      .select('id', 'name', 'email')
+      .select('id', 'name', 'email', 'color')
       .where('id', req.user.id)
       .first();
 
+    console.log('Returning updated user:', updatedUser);
     res.json(updatedUser);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Profile update error:', err);
+    console.error('Error stack:', err.stack);
+    res.status(500).json({ message: 'Server Error', error: err.message });
   }
 });
 

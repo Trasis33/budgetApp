@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   partner_id?: number;
+  color?: string;
 }
 
 interface AuthContextType {
@@ -15,6 +16,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   isAuthenticated: boolean;
 }
 
@@ -48,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loadCurrentUser = async () => {
     try {
       const userData = await authService.getCurrentUser();
-      setUser(userData);
+      setUser(userData as User);
     } catch (error) {
       console.error('Failed to load user:', error);
       localStorage.removeItem('token');
@@ -78,6 +81,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...userData });
+    }
+  };
+
   const value = {
     user,
     token,
@@ -85,6 +94,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
+    setUser,
     isAuthenticated: !!user,
   };
 

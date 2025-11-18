@@ -3,24 +3,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { User, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { User as UserIcon, Mail, CheckCircle, Palette } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../api/services/authService';
 import { toast } from 'sonner';
+import { ColorPicker } from '../ui/ColorPicker';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { User } from '../../types';
 
 export function ProfileSection() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
-    email: ''
+    email: '',
+    color: ''
   });
   const [loading, setLoading] = useState(false);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
       setFormData({
         name: user.name || '',
-        email: user.email || ''
+        email: user.email || '',
+        color: user.color || ''
       });
     }
   }, [user]);
@@ -31,6 +37,26 @@ export function ProfileSection() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleColorChange = async (color: string) => {
+    setFormData(prev => ({
+      ...prev,
+      color
+    }));
+    
+    // Immediately save the color change
+    try {
+      const updatedUser = await authService.updateProfile({ color });
+      // Update the user in AuthContext to reflect the change immediately
+      setUser(updatedUser as User);
+      toast.success('Avatar color updated successfully');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Error updating avatar color';
+      toast.error(errorMessage);
+    }
+    
+    setIsColorModalOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +75,13 @@ export function ProfileSection() {
     setLoading(true);
 
     try {
-      await authService.updateProfile(formData);
+      // Only send name and email, color is handled separately
+      const updatedUser = await authService.updateProfile({
+        name: formData.name,
+        email: formData.email
+      });
+      // Update the user in AuthContext to reflect the change immediately
+      setUser(updatedUser as User);
       toast.success('Profile updated successfully');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Error updating profile';
@@ -63,7 +95,7 @@ export function ProfileSection() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
+          <UserIcon className="h-5 w-5" />
           Profile Information
         </CardTitle>
         <CardDescription>
@@ -75,9 +107,32 @@ export function ProfileSection() {
           {/* User Info Display */}
           <div className="rounded-lg border bg-muted/50 p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <User className="h-6 w-6" />
-              </div>
+              <Dialog open={isColorModalOpen} onOpenChange={setIsColorModalOpen}>
+                <DialogTrigger asChild>
+                  <button 
+                    className="flex h-12 w-12 items-center justify-center rounded-full text-white font-semibold text-lg transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    style={{ 
+                      backgroundColor: formData.color || 'var(--theme-indigo)',
+                      color: 'white'
+                    }}
+                    title="Click to change avatar color"
+                  >
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Palette className="h-5 w-5" />
+                      Choose Avatar Color
+                    </DialogTitle>
+                  </DialogHeader>
+                  <ColorPicker
+                    selectedColor={formData.color}
+                    onColorChange={handleColorChange}
+                  />
+                </DialogContent>
+              </Dialog>
               <div>
                 <p className="text-sm font-medium">Current Account</p>
                 <p className="text-xs text-muted-foreground">User ID: {user?.id}</p>
@@ -89,7 +144,7 @@ export function ProfileSection() {
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="name"
                 name="name"
