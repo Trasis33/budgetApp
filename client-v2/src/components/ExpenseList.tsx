@@ -48,10 +48,10 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
 
   const now = new Date();
   const currentMonth = now.getMonth();
-  // const currentYear = now.getFullYear(); // Unused
+  const currentYear = now.getFullYear();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [filterYear, setFilterYear] = useState('all');
+  const [filterYear, setFilterYear] = useState(currentYear.toString());
   const [filterMonth, setFilterMonth] = useState('all');
   
   // Sorting state
@@ -64,7 +64,7 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
     const loadData = async () => {
       try {
         const [expensesData, categoriesData, usersData] = await Promise.all([
-          expenseService.getExpenses('all'),
+          expenseService.getExpenses('ours'),
           categoryService.getCategories(),
           userService.getUsers()
         ]);
@@ -496,9 +496,18 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
                             </td>
                             <td className={styles.compactCell}>
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 border border-gray-200">
-                                  {expense.paid_by_name.charAt(0).toUpperCase()}
-                                </div>
+                                {(() => {
+                                  const paidByUser = users.find(u => u.id === expense.paid_by_user_id);
+                                  const userColor = paidByUser?.color;
+                                  return (
+                                    <div 
+                                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${userColor ? 'text-white border-transparent' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
+                                      style={userColor ? { backgroundColor: userColor } : {}}
+                                    >
+                                      {expense.paid_by_name.charAt(0).toUpperCase()}
+                                    </div>
+                                  );
+                                })()}
                                 <span className="text-sm text-gray-600">{expense.paid_by_name}</span>
                               </div>
                             </td>

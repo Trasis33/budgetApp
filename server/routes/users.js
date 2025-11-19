@@ -16,7 +16,7 @@ router.get('/', auth, async (req, res) => {
       userIds.push(currentUser.partner_id);
     }
 
-    const users = await db.select('id', 'name', 'email')
+    const users = await db.select('id', 'name', 'email', 'color')
       .from('users')
       .whereIn('id', userIds);
       
