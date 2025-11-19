@@ -10,6 +10,7 @@ export function BudgetHeader({
   showBackButton = true,
   showExportButton = true,
   showAddButton = true,
+  addButtonLabel,
   className = ''
 }: BudgetHeaderProps) {
   return (
@@ -50,7 +51,7 @@ export function BudgetHeader({
             aria-label="Add new budget"
           >
             <Plus className="w-4 h-4" />
-            Add Budget
+            {addButtonLabel || 'Add Budget'}
           </button>
         )}
       </div>

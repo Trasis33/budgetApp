@@ -4,6 +4,7 @@ import { Navigation } from './components/Navigation';
 import { Dashboard } from './components/Dashboard';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
+// import { ExpenseList } from './components/ExpenseList_v2';
 import { BudgetManager } from './components/BudgetManager';
 import { Analytics } from './components/Analytics';
 import { BillSplitting } from './components/BillSplitting';

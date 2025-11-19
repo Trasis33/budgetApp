@@ -99,6 +99,7 @@ export interface BudgetHeaderProps {
   showBackButton?: boolean;
   showExportButton?: boolean;
   showAddButton?: boolean;
+  addButtonLabel?: string;
   className?: string;
 }
 

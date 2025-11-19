@@ -1,0 +1,215 @@
+/* Reusing styles from budget-table.module.css with adaptations for ExpenseList */
+
+/* Table hover effects */
+.tableRow {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tableRow:hover {
+  background-color: var(--accent);
+  transform: translateX(2px);
+}
+
+/* Compact cell padding */
+.compactCell {
+  padding: 0.75rem 1rem;
+}
+
+/* Category cell with icon */
+.categoryCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.categoryIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Icon color variants - Reusing from budget table */
+.iconAmber {
+  background-color: color-mix(in oklab, var(--theme-amber) 20%, transparent);
+  color: var(--theme-amber);
+}
+.iconMint {
+  background-color: color-mix(in oklab, var(--theme-mint) 20%, transparent);
+  color: var(--theme-mint);
+}
+.iconYellow {
+  background-color: color-mix(in oklab, var(--theme-yellow) 20%, transparent);
+  color: var(--theme-yellow);
+}
+.iconIndigo {
+  background-color: color-mix(in oklab, var(--theme-indigo) 20%, transparent);
+  color: var(--theme-indigo);
+}
+.iconViolet {
+  background-color: color-mix(in oklab, var(--theme-violet) 20%, transparent);
+  color: var(--theme-violet);
+}
+.iconGolden {
+  background-color: color-mix(in oklab, var(--theme-golden) 20%, transparent);
+  color: var(--theme-golden);
+}
+.iconTeal {
+  background-color: color-mix(in oklab, var(--theme-teal) 20%, transparent);
+  color: var(--theme-teal);
+}
+.iconCoral {
+  background-color: color-mix(in oklab, var(--theme-coral) 20%, transparent);
+  color: var(--theme-coral);
+}
+.iconCyan {
+  background-color: color-mix(in oklab, var(--theme-cyan) 20%, transparent);
+  color: var(--theme-cyan);
+}
+.iconPeriwinkle {
+  background-color: color-mix(
+    in oklab,
+    var(--theme-periwinkle) 20%,
+    transparent
+  );
+  color: var(--theme-periwinkle);
+}
+
+/* Table container */
+.tableContainer {
+  overflow-x: auto;
+}
+
+.expenseTable {
+  width: 100%;
+  border-collapse: collapse;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Table header */
+.tableHeader {
+  background-color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.tableHeader th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer; /* Sortable */
+  user-select: none;
+}
+
+.tableHeader th:first-child {
+  border-top-left-radius: var(--radius-lg);
+}
+
+.tableHeader th:last-child {
+  border-top-right-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.tableHeader th:hover {
+  color: var(--foreground);
+  background-color: color-mix(in oklab, var(--muted) 90%, transparent);
+}
+
+/* Column widths for Expenses */
+.colDate {
+  width: 12%;
+}
+.colDescription {
+  width: 30%;
+}
+.colCategory {
+  width: 18%;
+}
+.colPaidBy {
+  width: 15%;
+}
+.colSplit {
+  width: 10%;
+}
+.colAmount {
+  width: 10%;
+  text-align: right;
+}
+.colActions {
+  width: 5%;
+}
+
+/* Table body */
+/* .tableBody {
+  border-bottom removed to avoid double border with footer
+} */
+
+/* Table footer */
+.tableFooter {
+  background-color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* border-bottom-left-radius: var(--radius-lg); */
+  /* border-bottom-right-radius: var(--radius-lg); */
+}
+
+.footerInfo {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+.footerTotal {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground);
+}
+
+/* Filter Styles (inspired by BudgetManager) */
+.filterContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--card);
+  /* border-bottom removed to separate filter from table */
+}
+
+.searchContainer {
+  position: relative;
+  flex: 1;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background-color: var(--input-background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.filterSelect {
+  height: 2rem;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+}
+
+.filterSelect:focus {
+  outline: none;
+  box-shadow: none;
+}

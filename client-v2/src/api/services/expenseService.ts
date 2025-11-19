@@ -39,7 +39,7 @@ export const expenseService = {
   },
 
   async updateExpense(id: number, data: Partial<Expense>) {
-    return apiClient.put(`/expenses/${id}`, data);
+    return apiClient.put<Expense>(`/expenses/${id}`, data);
   },
 
   async deleteExpense(id: number) {

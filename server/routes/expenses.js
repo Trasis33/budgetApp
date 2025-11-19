@@ -19,6 +19,7 @@ router.get('/', auth, async (req, res) => {
         'expenses.*',
         'categories.name as category_name',
         'categories.icon as category_icon',
+        'categories.color as category_color',
         'users.name as paid_by_name'
       );
 
@@ -60,6 +61,7 @@ router.get('/recent', auth, async (req, res) => {
         'expenses.*',
         'categories.name as category_name',
         'categories.icon as category_icon',
+        'categories.color as category_color',
         'users.name as paid_by_name'
       )
       .orderBy('date', 'desc')
@@ -84,6 +86,7 @@ router.get('/:id', auth, async (req, res) => {
         'expenses.*',
         'categories.name as category_name',
         'categories.icon as category_icon',
+        'categories.color as category_color',
         'users.name as paid_by_name'
       )
       .where('expenses.id', req.params.id)
@@ -148,6 +151,7 @@ router.post('/', auth, async (req, res) => {
         'expenses.*',
         'categories.name as category_name',
         'categories.icon as category_icon',
+        'categories.color as category_color',
         'users.name as paid_by_name'
       )
       .where('expenses.id', id)
@@ -202,6 +206,7 @@ router.put('/:id', auth, async (req, res) => {
         'expenses.*',
         'categories.name as category_name',
         'categories.icon as category_icon',
+        'categories.color as category_color',
         'users.name as paid_by_name'
       )
       .where('expenses.id', req.params.id)
