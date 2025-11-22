@@ -52,7 +52,7 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterYear, setFilterYear] = useState(currentYear.toString());
-  const [filterMonth, setFilterMonth] = useState('all');
+  const [filterMonth, setFilterMonth] = useState(currentMonth.toString());
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
@@ -557,14 +557,14 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
                       : 'No expenses match your current filters'
                     }
                   </p>
-                  <Button 
+                    <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => {
                       setSearchTerm('');
                       setFilterCategory('all');
-                      setFilterMonth('all');
-                      setFilterYear('all');
+                      setFilterMonth(currentMonth.toString());
+                      setFilterYear(currentYear.toString());
                     }}
                   >
                     Clear all filters

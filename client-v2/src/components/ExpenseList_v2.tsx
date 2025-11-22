@@ -28,11 +28,13 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // const now = new Date(); // Unused
-  // const currentMonth = now.getMonth(); // Unused
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const defaultMonth = `${currentYear}-${currentMonth}`;
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [filterMonth, setFilterMonth] = useState('all');
+  const [filterMonth, setFilterMonth] = useState(defaultMonth);
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
@@ -339,7 +341,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                   onClick={() => {
                     setSearchTerm('');
                     setFilterCategory('all');
-                    setFilterMonth('all');
+                    setFilterMonth(defaultMonth);
                   }}
                 >
                   Clear all filters

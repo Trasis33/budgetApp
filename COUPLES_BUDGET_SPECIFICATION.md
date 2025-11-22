@@ -23,8 +23,8 @@ Replace manual spreadsheet-based expense tracking with an automated, couple-cent
 - **Privacy-conscious couples** who prefer self-hosted solutions
 
 ### Key User Stories
-1. **"Quick Split Decision"** - Anna buys groceries for 500 SEK and instantly logs it as 50/50 split
-2. **"Monthly Settlement"** - Fredrik and Anna review who owes whom at month-end
+1. **"Quick Split Decision"** - Emma buys groceries for 500 SEK and instantly logs it as 50/50 split
+2. **"Monthly Settlement"** - Fredrik and Emma review who owes whom at month-end
 3. **"Recurring Bill Setup"** - Set up mortgage payment split once, auto-generate monthly
 4. **"Budget Agreement"** - Both partners agree on monthly spending limits per category
 5. **"Expense Transparency"** - Either partner can see all shared and personal expenses
@@ -149,11 +149,11 @@ shared_budgets (
 ```
 +----------------------------------+
 |  👫 CouplesFlow          🔔 [3]  |
-|  Anna & Fredrik                   |
+|  Emma & Fredrik                   |
 +----------------------------------+
 | 📊 This Month                    |
 | Shared: 5,420 SEK               |
-| Anna: 2,150 SEK | Fredrik: 980  |
+| Emma: 2,150 SEK | Fredrik: 980  |
 | Settlement: Fredrik owes 585 SEK |
 +----------------------------------+
 | 🎯 Shared Goals                  |
@@ -169,11 +169,11 @@ shared_budgets (
 | August 2025                      |
 +----------------------------------+
 | Shared Expenses: 4,320 SEK      |
-| Anna paid: 2,150 SEK (50%)      |
+| Emma paid: 2,150 SEK (50%)      |
 | Fredrik paid: 980 SEK (23%)     |
 |                                  |
 | 🎯 RESULT:                      |
-| Fredrik owes Anna 585 SEK       |
+| Fredrik owes Emma 585 SEK       |
 |                                  |
 | [💬 Add Note] [✅ Approve]      |
 +----------------------------------+
