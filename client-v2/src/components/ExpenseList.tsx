@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -17,7 +17,7 @@ import {
 import { Expense, Category, User } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check, X } from 'lucide-react';
+import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check, X, Percent } from 'lucide-react';
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
@@ -25,6 +25,8 @@ import { toast } from 'sonner';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor, getCategoryColorShades } from '../lib/categoryColors';
 import { BudgetHeader } from './budget/BudgetHeader';
+import { Slider } from './ui/slider';
+import { useAuth } from '../context/AuthContext';
 import styles from '@/styles/expense-table.module.css';
 
 interface ExpenseListProps {
@@ -34,8 +36,9 @@ interface ExpenseListProps {
 type SortKey = 'date' | 'description' | 'category' | 'paid_by' | 'split' | 'amount';
 type SortDirection = 'asc' | 'desc';
 
-export function ExpenseList({ onNavigate }: ExpenseListProps) {
+export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -45,6 +48,9 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<Expense>>({});
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [splitPopoverOpen, setSplitPopoverOpen] = useState(false);
+  const splitPanelRef = useRef<HTMLDivElement | null>(null);
+  const adjustSplitButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -81,32 +87,67 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (!splitPopoverOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        splitPanelRef.current &&
+        !splitPanelRef.current.contains(target) &&
+        adjustSplitButtonRef.current &&
+        !adjustSplitButtonRef.current.contains(target)
+      ) {
+        setSplitPopoverOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [splitPopoverOpen]);
+
   const handleEdit = (expense: Expense) => {
     setEditingId(expense.id);
     setEditForm({
       ...expense,
-      date: expense.date.split('T')[0] // Ensure date format for input
+      date: expense.date.split('T')[0], // Ensure date format for input
+      split_ratio_user1: expense.split_ratio_user1 ?? (expense.split_type === 'custom' ? 50 : undefined),
+      split_ratio_user2: expense.split_ratio_user2 ?? (expense.split_type === 'custom' ? 50 : undefined)
     });
+    setSplitPopoverOpen(expense.split_type === 'custom');
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditForm({});
+    setSplitPopoverOpen(false);
   };
 
   const handleSaveEdit = async () => {
     if (!editingId || !editForm) return;
 
     try {
+      const payload: Partial<Expense> = {
+        ...editForm,
+        ...(editForm.split_type === 'custom'
+          ? {
+              split_ratio_user1: editForm.split_ratio_user1 ?? 50,
+              split_ratio_user2: editForm.split_ratio_user2 ?? 50
+            }
+          : {
+              split_ratio_user1: undefined,
+              split_ratio_user2: undefined
+            })
+      };
+
       // Optimistic update
       const updatedExpenses = expenses.map(exp => 
-        exp.id === editingId ? { ...exp, ...editForm } as Expense : exp
+        exp.id === editingId ? { ...exp, ...payload } as Expense : exp
       );
       setExpenses(updatedExpenses);
       setEditingId(null);
+      setSplitPopoverOpen(false);
 
       // API call
-      const updatedExpense = await expenseService.updateExpense(editingId, editForm);
+      const updatedExpense = await expenseService.updateExpense(editingId, payload);
       
       // Update with server response to ensure consistency
       // updatedExpense is already the data object because of apiClient interceptor
@@ -120,6 +161,7 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
       // Revert on error (reload data would be safer but this is quick)
       const originalExpenses = await expenseService.getExpenses('all');
       setExpenses(originalExpenses);
+      setSplitPopoverOpen(false);
     }
   };
 
@@ -192,6 +234,59 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
       return <Badge variant="outline">Bill</Badge>;
     }
     return <Badge variant="default">{expense.split_type}</Badge>;
+  };
+
+  const hasPartner = users.some(u => u.id !== authUser?.id);
+
+  const clampRatio = (value: number) => Math.max(0, Math.min(100, value));
+
+  const updateUserSplitRatio = (value: number) => {
+    setEditForm(prev => {
+      if (!prev) return prev;
+      const clamped = clampRatio(value);
+      return {
+        ...prev,
+        split_ratio_user1: clamped,
+        split_ratio_user2: 100 - clamped
+      };
+    });
+  };
+
+  const updatePartnerSplitRatio = (value: number) => {
+    setEditForm(prev => {
+      if (!prev) return prev;
+      const clamped = clampRatio(value);
+      return {
+        ...prev,
+        split_ratio_user2: clamped,
+        split_ratio_user1: 100 - clamped
+      };
+    });
+  };
+
+  const handleSplitTypeChange = (value: Expense['split_type']) => {
+    if (!hasPartner && (value === 'custom' || value === 'bill')) {
+      return;
+    }
+    const wantsCustom = value === 'custom';
+    setEditForm(prev => {
+      if (!prev) return prev;
+      if (value !== 'custom') {
+        return {
+          ...prev,
+          split_type: value,
+          split_ratio_user1: undefined,
+          split_ratio_user2: undefined
+        };
+      }
+      return {
+        ...prev,
+        split_type: value,
+        split_ratio_user1: prev.split_ratio_user1 ?? 50,
+        split_ratio_user2: prev.split_ratio_user2 ?? 50
+      };
+    });
+    setSplitPopoverOpen(wantsCustom);
   };
 
   const availableYears = Array.from(new Set(
@@ -430,21 +525,87 @@ export function ExpenseList({ onNavigate }: ExpenseListProps) {
                                 </SelectContent>
                               </Select>
                             </td>
-                            <td className={styles.compactCell}>
-                              <Select 
-                                value={editForm.split_type} 
-                                onValueChange={(val: string) => setEditForm({...editForm, split_type: val as any})}
-                              >
-                                <SelectTrigger className="h-8 w-full">
-                                  <SelectValue placeholder="Split" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="50/50">50/50</SelectItem>
-                                  <SelectItem value="personal">Personal</SelectItem>
-                                  <SelectItem value="custom">Custom</SelectItem>
-                                  <SelectItem value="bill">Bill</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <td className={`${styles.compactCell} relative` }>
+                              <div className="flex items-center gap-2">
+                                <Select 
+                                  value={editForm.split_type} 
+                                  onValueChange={(val: Expense['split_type']) => handleSplitTypeChange(val)}
+                                >
+                                  <SelectTrigger className="h-8 w-full">
+                                    <SelectValue placeholder="Split" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="50/50">50/50</SelectItem>
+                                    <SelectItem value="personal">Personal</SelectItem>
+                                    <SelectItem value="custom" disabled={!hasPartner}>Custom</SelectItem>
+                                    <SelectItem value="bill" disabled={!hasPartner}>Bill</SelectItem>
+                                  </SelectContent>
+                                </Select>
+
+                                {editForm.split_type === 'custom' && hasPartner && (
+                                  <Button 
+                                    type="button"
+                                    ref={adjustSplitButtonRef}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 whitespace-nowrap text-xs font-semibold"
+                                    onClick={() => setSplitPopoverOpen(prev => !prev)}
+                                    aria-pressed={splitPopoverOpen}
+                                  >
+                                    <Percent className="mr-1 h-3.5 w-3.5" />
+                                    Adjust split
+                                  </Button>
+                                )}
+                              </div>
+
+                              {editForm.split_type === 'custom' && hasPartner && splitPopoverOpen && (
+                                <div
+                                  ref={splitPanelRef}
+                                  className="absolute left-0 top-full z-50 mt-2 w-72 space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
+                                >
+                                  <div className="space-y-1">
+                                    <p className="text-sm font-semibold text-gray-900">Fine-tune split</p>
+                                    <p className="text-xs text-muted-foreground">Tap or drag to adjust in 5% increments</p>
+                                  </div>
+                                  <Slider
+                                    value={[editForm.split_ratio_user1 ?? 50]}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    onValueChange={(value: number[]) => updateUserSplitRatio(value[0])}
+                                  />
+                                  <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                      <p className="text-xs text-muted-foreground mb-1">You (%)</p>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        value={editForm.split_ratio_user1 ?? 50}
+                                        onChange={(e) => updateUserSplitRatio(parseInt(e.target.value || '0', 10))}
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-muted-foreground mb-1">Partner (%)</p>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        value={editForm.split_ratio_user2 ?? 50}
+                                        onChange={(e) => updatePartnerSplitRatio(parseInt(e.target.value || '0', 10))}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                    <span>Totals stay at 100%</span>
+                                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSplitPopoverOpen(false)}>
+                                      Close
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </td>
                             <td className={styles.compactCell}>
                               <Input 
