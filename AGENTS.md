@@ -297,8 +297,6 @@ client-v2/src/
 
 ### Shared Goal Palette & Colors
 - Color utilities live in `client-v2/src/lib/` directory (TypeScript modules).
-- Pinning is persisted via `savings_goals.is_pinned`; server routes enforce a single pinned goal per user and send `color_index` for consistent ordering.
-- Client helpers provide accent colors (`surface`, `border`, `ring`, `quickButton`, etc.) to keep cards, progress bars, and buttons aligned with the design spec.
 - Run `npx knex migrate:latest --knexfile server/db/knexfile.js` after pulling to ensure the new column exists before starting the API.
 
 ## UI Style Guide & Design System
