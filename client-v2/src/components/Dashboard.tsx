@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -7,8 +7,11 @@ import { formatCurrency, formatDate, filterExpensesByMonth, calculateCategorySpe
 import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt, ArrowRight, Users, User, Heart, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
+import { RecurringTemplatesDialog } from './RecurringTemplatesDialog';
+import { RecurringCard } from './RecurringCard';
 import { expenseService } from '../api/services/expenseService';
 import { budgetService } from '../api/services/budgetService';
+import { useRecurringSummary, useRecurringGeneration } from '../hooks';
 import { toast } from 'sonner';
 import { useScope } from '../context/ScopeContext';
 import { getIconByName } from '../lib/categoryIcons';
@@ -28,23 +31,47 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const { isPartnerConnected, currentScope, setScope, isLoading: scopeLoading, summary } = useScope();
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
 
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  // Recurring expenses
+  const monthStart = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+  const monthEnd = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${new Date(currentYear, currentMonth + 1, 0).getDate()}`;
+  const { templates: recurringTemplates, summary: recurringSummary, refresh: refreshRecurring } = useRecurringSummary({
+    start: monthStart,
+    end: monthEnd,
+    expenses: allExpenses
+  });
+  const { generate: generateRecurring, isGenerating } = useRecurringGeneration();
+
+  const refreshExpensesData = useCallback(async () => {
+    const [scopedExpenses, combinedExpenses] = await Promise.all([
+      expenseService.getExpenses(currentScope),
+      expenseService.getExpenses('all')
+    ]);
+    setExpenses(scopedExpenses);
+    setAllExpenses(combinedExpenses);
+  }, [currentScope]);
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [expensesData, budgetsData] = await Promise.all([
-          expenseService.getExpenses(currentScope),
-          budgetService.getBudgets(new Date().getMonth() + 1, new Date().getFullYear())
+        await Promise.all([
+          (async () => {
+            await refreshExpensesData();
+          })(),
+          (async () => {
+            const budgetsData = await budgetService.getBudgets(new Date().getMonth() + 1, new Date().getFullYear());
+            setBudgets(budgetsData);
+          })()
         ]);
-        setExpenses(expensesData);
-        setBudgets(budgetsData);
       } catch (error) {
         toast.error('Having trouble loading your dashboard. Try refreshing the page');
       } finally {
@@ -55,7 +82,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     if (!scopeLoading) {
       loadData();
     }
-  }, [currentScope, scopeLoading]);
+  }, [currentScope, scopeLoading, refreshExpensesData]);
 
   if (loading || scopeLoading) {
     return (
@@ -253,7 +280,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
 
       {/* Welcome Banner */}
       {monthlyExpenses.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100 mb-6">
+        <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100 mb-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -439,7 +466,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                               </div>
                             )}
                             <div 
-                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                               style={{
                                 backgroundColor: hexToRgba(categoryColor, 0.25),
                                 color: categoryColor
@@ -546,6 +573,21 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Recurring Expenses Card */}
+            <RecurringCard
+              summary={recurringSummary}
+              templateCount={recurringTemplates.length}
+              isGenerating={isGenerating}
+              onGenerate={async () => {
+                await generateRecurring(currentYear, currentMonth + 1, async () => {
+                  // Refresh expenses and recurring data
+                  await refreshExpensesData();
+                  refreshRecurring();
+                });
+              }}
+              onManageTemplates={() => setRecurringDialogOpen(true)}
+            />
           </div>
 
           {/* Quick Actions */}
@@ -584,6 +626,16 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         onSuccess={() => {
           // Refresh data to show updated partnership status
           window.location.reload();
+        }}
+      />
+
+      {/* Recurring Templates Dialog */}
+      <RecurringTemplatesDialog
+        open={recurringDialogOpen}
+        onOpenChange={setRecurringDialogOpen}
+        onRefresh={() => {
+          refreshExpensesData();
+          refreshRecurring();
         }}
       />
     </div>

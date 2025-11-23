@@ -598,7 +598,14 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                               {formatDate(expense.date)}
                             </td>
                             <td className={`${styles.compactCell} font-medium text-gray-900`}>
-                              {expense.description}
+                              <div className="flex items-center gap-2">
+                                {expense.description}
+                                {expense.recurring_expense_id && (
+                                  <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+                                    Recurring
+                                  </Badge>
+                                )}
+                              </div>
                             </td>
                             <td className={styles.compactCell}>
                               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-transparent transition-colors" 

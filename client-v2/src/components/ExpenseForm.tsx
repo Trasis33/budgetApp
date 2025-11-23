@@ -12,6 +12,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
+import { recurringExpenseService } from '../api/services/recurringExpenseService';
 import { categoryService } from '../api/services/categoryService';
 import { authService } from '../api/services/authService';
 import { toast } from 'sonner';
@@ -38,6 +39,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
     split_ratio_user1: 50,
     split_ratio_user2: 50
   });
+
+  const [saveAsRecurring, setSaveAsRecurring] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -70,7 +73,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
     setLoading(true);
 
     try {
-      await expenseService.createExpense({
+      // Create the expense
+      const expense = await expenseService.createExpense({
         amount: parseFloat(formData.amount),
         category_id: formData.category_id,
         description: formData.description,
@@ -83,9 +87,36 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
         })
       });
 
-      toast.success('✨ Expense tracked! Check the dashboard to see how it affects your monthly totals', {
-        duration: 4000
-      });
+      // If "Save as recurring template" is checked, create the template
+      if (saveAsRecurring) {
+        try {
+          await recurringExpenseService.createTemplate({
+            description: formData.description,
+            default_amount: parseFloat(formData.amount),
+            category_id: formData.category_id,
+            paid_by_user_id: formData.paid_by_user_id,
+            split_type: formData.split_type,
+            ...(formData.split_type === 'custom' && {
+              split_ratio_user1: formData.split_ratio_user1,
+              split_ratio_user2: formData.split_ratio_user2
+            })
+          });
+          toast.success('✨ Expense tracked and saved as a recurring template! You can generate this bill automatically each month', {
+            duration: 4000
+          });
+        } catch (templateErr) {
+          // Expense was created successfully, but template creation failed
+          toast.success('✨ Expense tracked, but we couldn\'t save it as a template. Try adding it to your recurring bills later', {
+            duration: 4000
+          });
+          console.error('Template creation failed:', templateErr);
+        }
+      } else {
+        toast.success('✨ Expense tracked! Check the dashboard to see how it affects your monthly totals', {
+          duration: 4000
+        });
+      }
+
       navigate('/dashboard');
     } catch (error: any) {
       const message = error.response?.data?.message;
@@ -293,6 +324,22 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                 </p>
               </div>
             )}
+
+            <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <Switch
+                id="saveAsRecurring"
+                checked={saveAsRecurring}
+                onCheckedChange={setSaveAsRecurring}
+              />
+              <div className="flex-1">
+                <Label htmlFor="saveAsRecurring" className="cursor-pointer text-sm">
+                  Save as recurring template
+                </Label>
+                <p className="text-xs text-gray-600 mt-1">
+                  We'll use this amount, category, payer and split as your monthly bill template
+                </p>
+              </div>
+            </div>
 
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="flex-1" disabled={loading}>

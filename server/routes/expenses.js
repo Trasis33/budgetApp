@@ -30,6 +30,8 @@ router.get('/', auth, async (req, res) => {
         return res.json([]);
       }
       baseQuery.where('expenses.paid_by_user_id', partnerId);
+    } else if (requestedScope === 'all' && partnerId) {
+      baseQuery.whereIn('expenses.paid_by_user_id', [req.user.id, partnerId]);
     } else if (requestedScope === 'ours' && partnerId) {
       baseQuery
         .whereIn('expenses.paid_by_user_id', [req.user.id, partnerId])
