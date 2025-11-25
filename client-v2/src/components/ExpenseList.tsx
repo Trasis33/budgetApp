@@ -662,7 +662,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
           </Card>
 
           {/* Variable Expenses Card */}
-          <Card>
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
@@ -736,12 +736,13 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
           </Card>
 
           {/* Recurring Expenses Card */}
-          <Card>
+          {/* <Card className="bg-gradient-to-br from-slate-50/80 to-indigo-50/40 border-slate-200/60"> */}
+          <Card className={`border-blue-200 bg-linear-to-br from-blue-50 to-transparent ${styles.recurringCard}`}>
             <Collapsible open={recurringExpanded} onOpenChange={toggleRecurringExpanded}>
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <RefreshCw className="h-5 w-5" />
+                    <RefreshCw className="h-5 w-5 text-indigo-600" />
                     <span className="font-semibold">Recurring Expenses</span>
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${recurringExpanded ? '' : '-rotate-90'}`} />
                   </button>
@@ -778,8 +779,8 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                 <CardContent className="pt-0">
                   {recurringExpenses.length > 0 ? (
                     <div className={styles.tableContainer}>
-                      <table className={styles.expenseTable}>
-                        <thead className={styles.tableHeader}>
+                      <table className={`${styles.expenseTable} ${styles.recurringTable}`}>
+                        <thead className={`${styles.tableHeader} ${styles.recurringHeader}`}>
                           <tr>
                             <th className={styles.colDate} onClick={() => handleSort('date')}>
                               <div className="flex items-center gap-1">

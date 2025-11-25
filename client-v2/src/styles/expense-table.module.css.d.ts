@@ -16,6 +16,10 @@ declare const styles: {
   readonly tableContainer: string;
   readonly expenseTable: string;
   readonly tableHeader: string;
+  readonly tableHeaderBlue: string;
+  readonly recurringCard: string;
+  readonly recurringTable: string;
+  readonly recurringHeader: string;
   readonly colDate: string;
   readonly colDescription: string;
   readonly colCategory: string;
