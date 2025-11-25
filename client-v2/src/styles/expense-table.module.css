@@ -80,23 +80,18 @@
 
 /* Table container */
 .tableContainer {
-  overflow-x: auto;
+  overflow: visible;
 }
 
 .expenseTable {
   width: 100%;
   border-collapse: collapse;
-  border-top-left-radius: var(--radius-lg);
-  border-top-right-radius: var(--radius-lg);
-  overflow: hidden;
 }
 
-/* Table header */
+/* Table header - no rounded corners when inside collapsible sections */
 .tableHeader {
   background-color: var(--muted);
   border-bottom: 1px solid var(--border);
-  border-top-left-radius: var(--radius-lg);
-  border-top-right-radius: var(--radius-lg);
 }
 
 .tableHeader th {
@@ -111,12 +106,7 @@
   user-select: none;
 }
 
-.tableHeader th:first-child {
-  border-top-left-radius: var(--radius-lg);
-}
-
 .tableHeader th:last-child {
-  border-top-right-radius: var(--radius-lg);
   text-align: center;
 }
 

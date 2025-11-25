@@ -473,3 +473,23 @@ Full dark mode support with automatic theme switching:
 6. **Implement loading states** with spinners and skeleton loaders
 
 Refer to `client-v2/src/styles/globals.css` for complete design token definitions and `client-v2/src/components/BudgetManager.tsx` for comprehensive component usage examples.
+
+
+<!-- CLAVIX:START -->
+# Clavix - Prompt Improvement Assistant
+
+Clavix is installed in this project. Use the following slash commands:
+
+- `/clavix:fast [prompt]` - Quick prompt improvements with smart triage
+- `/clavix:deep [prompt]` - Comprehensive prompt analysis
+- `/clavix:prd` - Generate a PRD through guided questions
+- `/clavix:start` - Start conversational mode for iterative refinement
+- `/clavix:summarize` - Extract optimized prompt from conversation
+
+**When to use:**
+- **Fast mode**: Quick cleanup for simple prompts
+- **Deep mode**: Comprehensive analysis for complex requirements
+- **PRD mode**: Strategic planning with architecture and business impact
+
+For more information, run `clavix --help` in your terminal.
+<!-- CLAVIX:END -->

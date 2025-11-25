@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent } from './ui/card';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
+import { Checkbox } from './ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +19,7 @@ import {
 import { Expense, Category, User } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check, X } from 'lucide-react';
+import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check, X, ChevronDown, DollarSign, RefreshCw } from 'lucide-react';
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
@@ -27,6 +29,7 @@ import { getCategoryColor, getCategoryColorShades } from '../lib/categoryColors'
 import { BudgetHeader } from './budget/BudgetHeader';
 import { Slider } from './ui/slider';
 import { useAuth } from '../context/AuthContext';
+import { useExpensePreferences } from '../hooks';
 import styles from '@/styles/expense-table.module.css';
 
 interface ExpenseListProps {
@@ -39,6 +42,7 @@ type SortDirection = 'asc' | 'desc';
 export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
+  const { recurringExpanded, rememberRecurringChoice, toggleRecurringExpanded, setRememberRecurringChoice } = useExpensePreferences();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -197,6 +201,40 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     }
   });
 
+  // Categorize expenses into Variable and Recurring sections
+  // Variable: non-recurring expenses + personal recurring expenses
+  // Recurring: shared recurring expenses only (split_type !== 'personal')
+  const { variableExpenses, recurringExpenses } = useMemo(() => {
+    const variable: Expense[] = [];
+    const recurring: Expense[] = [];
+    
+    for (const expense of sortedExpenses) {
+      const isRecurring = !!expense.recurring_expense_id;
+      const isPersonal = expense.split_type === 'personal';
+      
+      // Personal recurring goes to Variable section (with badge)
+      // Shared recurring goes to Recurring section
+      if (isRecurring && !isPersonal) {
+        recurring.push(expense);
+      } else {
+        variable.push(expense);
+      }
+    }
+    
+    return { variableExpenses: variable, recurringExpenses: recurring };
+  }, [sortedExpenses]);
+
+  // Calculate section totals
+  const variableTotal = useMemo(() => 
+    variableExpenses.reduce((sum, exp) => sum + exp.amount, 0), 
+    [variableExpenses]
+  );
+  
+  const recurringTotal = useMemo(() => 
+    recurringExpenses.reduce((sum, exp) => sum + exp.amount, 0), 
+    [recurringExpenses]
+  );
+
   const getSplitBadge = (expense: Expense) => {
     if (expense.split_type === 'personal') {
       return <Badge variant="outline" className="bg-gray-50 text-gray-600 font-normal border-gray-200">Personal</Badge>;
@@ -245,6 +283,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     if (!hasPartner && (value === 'custom' || value === 'bill')) {
       return;
     }
+    
     setEditForm(prev => {
       if (!prev) return prev;
       if (value !== 'custom') {
@@ -263,7 +302,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
       };
     });
   };
-
+  
   const availableYears = Array.from(new Set(
     expenses.map(exp => new Date(exp.date).getFullYear())
   )).sort((a, b) => b - a);
@@ -292,6 +331,231 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     const g = parseInt(cleanedHex.slice(2, 4), 16);
     const b = parseInt(cleanedHex.slice(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Render a single expense row (used in both sections)
+  const renderExpenseRow = (expense: Expense) => {
+    const isEditing = editingId === expense.id;
+    const IconComponent = getIconByName(expense.category_icon);
+    const categoryColor = getCategoryColor({ color: expense.category_color });
+    const categoryShades = getCategoryColorShades({ color: expense.category_color });
+    // Show recurring badge only for personal recurring in Variable section
+    const showRecurringBadge = expense.recurring_expense_id && expense.split_type === 'personal';
+    
+    return (
+      <tr key={expense.id} className={`${styles.tableRow} group`}>
+        {isEditing ? (
+          // Editing Mode
+          <>
+            <td className={styles.compactCell}>
+              <Input 
+                type="date" 
+                value={editForm.date?.toString().split('T')[0]} 
+                onChange={(e) => setEditForm({...editForm, date: e.target.value})}
+                className="h-8 w-full"
+              />
+            </td>
+            <td className={styles.compactCell}>
+              <Input 
+                value={editForm.description} 
+                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                className="h-8 w-full"
+              />
+            </td>
+            <td className={styles.compactCell}>
+              <Select 
+                value={editForm.category_id?.toString()} 
+                onValueChange={(val: string) => setEditForm({...editForm, category_id: parseInt(val)})}
+              >
+                <SelectTrigger className="h-8 w-full">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </td>
+            <td className={styles.compactCell}>
+              <Select 
+                value={editForm.paid_by_user_id?.toString()} 
+                onValueChange={(val: string) => setEditForm({...editForm, paid_by_user_id: parseInt(val)})}
+              >
+                <SelectTrigger className="h-8 w-full">
+                  <SelectValue placeholder="Paid By" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map(user => (
+                    <SelectItem key={user.id} value={user.id.toString()}>{user.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </td>
+            <td className={`${styles.compactCell} relative`}>
+              <div className="flex items-center gap-2">
+                <Select 
+                  value={editForm.split_type} 
+                  onValueChange={(val: Expense['split_type']) => handleSplitTypeChange(val)}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder="Split" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="50/50">50/50</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="custom" disabled={!hasPartner}>Custom</SelectItem>
+                    <SelectItem value="bill" disabled={!hasPartner}>Bill</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editForm.split_type === 'custom' && hasPartner && (
+                <div
+                  ref={splitPanelRef}
+                  className="absolute left-0 top-full z-50 mt-2 w-72 space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
+                >
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-gray-900">Fine-tune split</p>
+                    <p className="text-xs text-muted-foreground">Tap or drag to adjust in 5% increments</p>
+                  </div>
+                  <Slider
+                    value={[editForm.split_ratio_user1 ?? 50]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={(value: number[]) => updateUserSplitRatio(value[0])}
+                  />
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">You (%)</p>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={editForm.split_ratio_user1 ?? 50}
+                        onChange={(e) => updateUserSplitRatio(parseInt(e.target.value || '0', 10))}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Partner (%)</p>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={editForm.split_ratio_user2 ?? 50}
+                        onChange={(e) => updatePartnerSplitRatio(parseInt(e.target.value || '0', 10))}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground text-right">Totals stay at 100%</div>
+                </div>
+              )}
+            </td>
+            <td className={styles.compactCell}>
+              <Input 
+                type="number" 
+                value={editForm.amount} 
+                onChange={(e) => setEditForm({...editForm, amount: parseFloat(e.target.value)})}
+                className="h-8 w-full text-right"
+              />
+            </td>
+            <td className={styles.compactCell}>
+              <div className="flex items-center justify-end gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                  onClick={handleSaveEdit}
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  onClick={handleCancelEdit}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </td>
+          </>
+        ) : (
+          // View Mode
+          <>
+            <td className={`${styles.compactCell} text-gray-600 font-medium text-sm`}>
+              {formatDate(expense.date)}
+            </td>
+            <td className={`${styles.compactCell} font-medium text-gray-900`}>
+              <div className="flex items-center gap-2">
+                {expense.description}
+                {showRecurringBadge && (
+                  <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+                    Recurring
+                  </Badge>
+                )}
+              </div>
+            </td>
+            <td className={styles.compactCell}>
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-transparent transition-colors" 
+                   style={{ 
+                     backgroundColor: hexToRgba(categoryColor, 0.08), 
+                     color: categoryShades.text 
+                   }}>
+                <IconComponent className="h-3.5 w-3.5" />
+                <span className="text-xs font-semibold">{expense.category_name}</span>
+              </div>
+            </td>
+            <td className={styles.compactCell}>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const paidByUser = users.find(u => u.id === expense.paid_by_user_id);
+                  const userColor = paidByUser?.color;
+                  return (
+                    <div 
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${userColor ? 'text-white border-transparent' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
+                      style={userColor ? { backgroundColor: userColor } : {}}
+                    >
+                      {expense.paid_by_name.charAt(0).toUpperCase()}
+                    </div>
+                  );
+                })()}
+                <span className="text-sm text-gray-600">{expense.paid_by_name}</span>
+              </div>
+            </td>
+            <td className={styles.compactCell}>
+              {getSplitBadge(expense)}
+            </td>
+            <td className={`${styles.compactCell} text-right font-bold text-gray-900 tabular-nums`}>
+              {formatCurrency(expense.amount)}
+            </td>
+            <td className={`${styles.compactCell} text-right`}>
+              <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 lg:border-transparent"
+                  onClick={() => handleEdit(expense)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 lg:border-transparent"
+                  onClick={() => setDeleteId(expense.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </td>
+          </>
+        )}
+      </tr>
+    );
   };
 
   if (loading) {
@@ -339,7 +603,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
         <div className="space-y-6">
           {/* Filter Section */}
           <Card className="shadow-sm border-0">
-            <CardContent className="p-0 last:pb-0">
+            <CardContent className="p-0">
               <div className={styles.filterContainer}>
                 <div className={styles.searchContainer}>
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -397,314 +661,219 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
             </CardContent>
           </Card>
 
-          {/* Table Section */}
-          <Card className="shadow-sm overflow-hidden border-0">
-            <CardContent className="p-0 last:pb-0">
-              <div className={styles.tableContainer}>
-                <table className={styles.expenseTable}>
-                  <thead className={styles.tableHeader}>
-                    <tr>
-                      <th className={styles.colDate} onClick={() => handleSort('date')}>
-                        <div className="flex items-center gap-1">
-                          Date
-                          <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-gray-900' : 'text-gray-400'}`} />
-                        </div>
-                      </th>
-                      <th className={styles.colDescription} onClick={() => handleSort('description')}>
-                        <div className="flex items-center gap-1">
-                          Description
-                          <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-gray-900' : 'text-gray-400'}`} />
-                        </div>
-                      </th>
-                      <th className={styles.colCategory} onClick={() => handleSort('category')}>
-                        <div className="flex items-center gap-1">
-                          Category
-                          <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-gray-900' : 'text-gray-400'}`} />
-                        </div>
-                      </th>
-                      <th className={styles.colPaidBy} onClick={() => handleSort('paid_by')}>
-                        <div className="flex items-center gap-1">
-                          Paid By
-                          <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-gray-900' : 'text-gray-400'}`} />
-                        </div>
-                      </th>
-                      <th className={styles.colSplit} onClick={() => handleSort('split')}>
-                        <div className="flex items-center gap-1">
-                          Split
-                          <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-gray-900' : 'text-gray-400'}`} />
-                        </div>
-                      </th>
-                      <th className={styles.colAmount} onClick={() => handleSort('amount')}>
-                        <div className="flex items-center justify-end gap-1">
-                          Amount
-                          <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-gray-900' : 'text-gray-400'}`} />
-                        </div>
-                      </th>
-                      <th className={styles.colActions}></th>
-                    </tr>
-                  </thead>
-                  <tbody className={styles.tableBody}>
-                    {sortedExpenses.map(expense => {
-                      const isEditing = editingId === expense.id;
-                      const IconComponent = getIconByName(expense.category_icon);
-                      const categoryColor = getCategoryColor({ color: expense.category_color });
-                      const categoryShades = getCategoryColorShades({ color: expense.category_color });
-                      
-                      return (
-                      <tr key={expense.id} className={`${styles.tableRow} group`}>
-                        {isEditing ? (
-                          // Editing Mode
-                          <>
-                            <td className={styles.compactCell}>
-                              <Input 
-                                type="date" 
-                                value={editForm.date?.toString().split('T')[0]} 
-                                onChange={(e) => setEditForm({...editForm, date: e.target.value})}
-                                className="h-8 w-full"
-                              />
-                            </td>
-                            <td className={styles.compactCell}>
-                              <Input 
-                                value={editForm.description} 
-                                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                                className="h-8 w-full"
-                              />
-                            </td>
-                            <td className={styles.compactCell}>
-                              <Select 
-                                value={editForm.category_id?.toString()} 
-                                onValueChange={(val: string) => setEditForm({...editForm, category_id: parseInt(val)})}
-                              >
-                                <SelectTrigger className="h-8 w-full">
-                                  <SelectValue placeholder="Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </td>
-                            <td className={styles.compactCell}>
-                              <Select 
-                                value={editForm.paid_by_user_id?.toString()} 
-                                onValueChange={(val: string) => setEditForm({...editForm, paid_by_user_id: parseInt(val)})}
-                              >
-                                <SelectTrigger className="h-8 w-full">
-                                  <SelectValue placeholder="Paid By" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {users.map(user => (
-                                    <SelectItem key={user.id} value={user.id.toString()}>{user.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </td>
-                            <td className={`${styles.compactCell} relative` }>
-                              <div className="flex items-center gap-2">
-                                <Select 
-                                  value={editForm.split_type} 
-                                  onValueChange={(val: Expense['split_type']) => handleSplitTypeChange(val)}
-                                >
-                                  <SelectTrigger className="h-8 w-full">
-                                    <SelectValue placeholder="Split" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="50/50">50/50</SelectItem>
-                                    <SelectItem value="personal">Personal</SelectItem>
-                                    <SelectItem value="custom" disabled={!hasPartner}>Custom</SelectItem>
-                                    <SelectItem value="bill" disabled={!hasPartner}>Bill</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              {editForm.split_type === 'custom' && hasPartner && (
-                                <div
-                                  ref={splitPanelRef}
-                                  className="absolute left-0 top-full z-50 mt-2 w-72 space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
-                                >
-                                  <div className="space-y-1">
-                                    <p className="text-sm font-semibold text-gray-900">Fine-tune split</p>
-                                    <p className="text-xs text-muted-foreground">Tap or drag to adjust in 5% increments</p>
-                                  </div>
-                                  <Slider
-                                    value={[editForm.split_ratio_user1 ?? 50]}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    onValueChange={(value: number[]) => updateUserSplitRatio(value[0])}
-                                  />
-                                  <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                      <p className="text-xs text-muted-foreground mb-1">You (%)</p>
-                                      <Input
-                                        type="number"
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        value={editForm.split_ratio_user1 ?? 50}
-                                        onChange={(e) => updateUserSplitRatio(parseInt(e.target.value || '0', 10))}
-                                      />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-muted-foreground mb-1">Partner (%)</p>
-                                      <Input
-                                        type="number"
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        value={editForm.split_ratio_user2 ?? 50}
-                                        onChange={(e) => updatePartnerSplitRatio(parseInt(e.target.value || '0', 10))}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="text-[11px] text-muted-foreground text-right">Totals stay at 100%</div>
-                                </div>
-                              )}
-                            </td>
-                            <td className={styles.compactCell}>
-                              <Input 
-                                type="number" 
-                                value={editForm.amount} 
-                                onChange={(e) => setEditForm({...editForm, amount: parseFloat(e.target.value)})}
-                                className="h-8 w-full text-right"
-                              />
-                            </td>
-                            <td className={styles.compactCell}>
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  onClick={handleSaveEdit}
-                                >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                  onClick={handleCancelEdit}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          // View Mode
-                          <>
-                            <td className={`${styles.compactCell} text-gray-600 font-medium text-sm`}>
-                              {formatDate(expense.date)}
-                            </td>
-                            <td className={`${styles.compactCell} font-medium text-gray-900`}>
-                              <div className="flex items-center gap-2">
-                                {expense.description}
-                                {expense.recurring_expense_id && (
-                                  <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
-                                    Recurring
-                                  </Badge>
-                                )}
-                              </div>
-                            </td>
-                            <td className={styles.compactCell}>
-                              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-transparent transition-colors" 
-                                   style={{ 
-                                     backgroundColor: hexToRgba(categoryColor, 0.08), 
-                                     color: categoryShades.text 
-                                   }}>
-                                <IconComponent className="h-3.5 w-3.5" />
-                                <span className="text-xs font-semibold">{expense.category_name}</span>
-                              </div>
-                            </td>
-                            <td className={styles.compactCell}>
-                              <div className="flex items-center gap-2">
-                                {(() => {
-                                  const paidByUser = users.find(u => u.id === expense.paid_by_user_id);
-                                  const userColor = paidByUser?.color;
-                                  return (
-                                    <div 
-                                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${userColor ? 'text-white border-transparent' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
-                                      style={userColor ? { backgroundColor: userColor } : {}}
-                                    >
-                                      {expense.paid_by_name.charAt(0).toUpperCase()}
-                                    </div>
-                                  );
-                                })()}
-                                <span className="text-sm text-gray-600">{expense.paid_by_name}</span>
-                              </div>
-                            </td>
-                            <td className={styles.compactCell}>
-                              {getSplitBadge(expense)}
-                            </td>
-                            <td className={`${styles.compactCell} text-right font-bold text-gray-900 tabular-nums`}>
-                              {formatCurrency(expense.amount)}
-                            </td>
-                            <td className={`${styles.compactCell} text-right`}>
-                              <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 lg:border-transparent"
-                                  onClick={() => handleEdit(expense)}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 lg:border-transparent"
-                                  onClick={() => setDeleteId(expense.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    )})}
-                  </tbody>
-                </table>
+          {/* Variable Expenses Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Variable Expenses
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">
+                  {variableExpenses.length} items
+                </span>
+                <span className="text-sm font-semibold">
+                  {formatCurrency(variableTotal)}
+                </span>
               </div>
-
-              {sortedExpenses.length === 0 && expenses.length > 0 && (
-                <div className="text-center py-16 bg-white">
-                  <Search className="h-12 w-12 text-gray-200 mx-auto mb-3" />
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">
-                    No expenses found
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    {searchTerm || filterCategory !== 'all' || filterMonth !== 'all' || filterYear !== 'all'
-                      ? 'Try adjusting your filters or search terms'
-                      : 'No expenses match your current filters'
-                    }
-                  </p>
-                    <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setFilterCategory('all');
-                      setFilterMonth(currentMonth.toString());
-                      setFilterYear(currentYear.toString());
-                    }}
-                  >
-                    Clear all filters
-                  </Button>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {variableExpenses.length > 0 ? (
+                <div className={styles.tableContainer}>
+                  <table className={styles.expenseTable}>
+                    <thead className={styles.tableHeader}>
+                      <tr>
+                        <th className={styles.colDate} onClick={() => handleSort('date')}>
+                          <div className="flex items-center gap-1">
+                            Date
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-gray-900' : 'text-gray-400'}`} />
+                          </div>
+                        </th>
+                        <th className={styles.colDescription} onClick={() => handleSort('description')}>
+                          <div className="flex items-center gap-1">
+                            Description
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-gray-900' : 'text-gray-400'}`} />
+                          </div>
+                        </th>
+                        <th className={styles.colCategory} onClick={() => handleSort('category')}>
+                          <div className="flex items-center gap-1">
+                            Category
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-gray-900' : 'text-gray-400'}`} />
+                          </div>
+                        </th>
+                        <th className={styles.colPaidBy} onClick={() => handleSort('paid_by')}>
+                          <div className="flex items-center gap-1">
+                            Paid By
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-gray-900' : 'text-gray-400'}`} />
+                          </div>
+                        </th>
+                        <th className={styles.colSplit} onClick={() => handleSort('split')}>
+                          <div className="flex items-center gap-1">
+                            Split
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-gray-900' : 'text-gray-400'}`} />
+                          </div>
+                        </th>
+                        <th className={styles.colAmount} onClick={() => handleSort('amount')}>
+                          <div className="flex items-center justify-end gap-1">
+                            Amount
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-gray-900' : 'text-gray-400'}`} />
+                          </div>
+                        </th>
+                        <th className={styles.colActions}></th>
+                      </tr>
+                    </thead>
+                    <tbody className={styles.tableBody}>
+                      {variableExpenses.map(expense => renderExpenseRow(expense))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">No variable expenses this month</p>
                 </div>
               )}
-
-              <div className={styles.tableFooter}>
-                <p className={styles.footerInfo}>
-                  Showing {sortedExpenses.length} of {expenses.length} expenses
-                </p>
-                <p className={styles.footerTotal}>
-                  Total: {formatCurrency(sortedExpenses.reduce((sum, exp) => sum + exp.amount, 0))}
-                </p>
-              </div>
             </CardContent>
           </Card>
+
+          {/* Recurring Expenses Card */}
+          <Card>
+            <Collapsible open={recurringExpanded} onOpenChange={toggleRecurringExpanded}>
+              <CardHeader className="flex flex-row items-center justify-between pb-4">
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <RefreshCw className="h-5 w-5" />
+                    <span className="font-semibold">Recurring Expenses</span>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${recurringExpanded ? '' : '-rotate-90'}`} />
+                  </button>
+                </CollapsibleTrigger>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">
+                      {recurringExpenses.length} items
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {formatCurrency(recurringTotal)}
+                    </span>
+                  </div>
+                  <div 
+                    className="flex items-center gap-2 pl-4 border-l border-border"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox 
+                      id="remember-recurring"
+                      checked={rememberRecurringChoice}
+                      onCheckedChange={(checked: boolean | 'indeterminate') => setRememberRecurringChoice(checked === true)}
+                      className="h-4 w-4"
+                    />
+                    <label 
+                      htmlFor="remember-recurring" 
+                      className="text-xs text-muted-foreground cursor-pointer select-none whitespace-nowrap"
+                    >
+                      Remember
+                    </label>
+                  </div>
+                </div>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  {recurringExpenses.length > 0 ? (
+                    <div className={styles.tableContainer}>
+                      <table className={styles.expenseTable}>
+                        <thead className={styles.tableHeader}>
+                          <tr>
+                            <th className={styles.colDate} onClick={() => handleSort('date')}>
+                              <div className="flex items-center gap-1">
+                                Date
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-gray-900' : 'text-gray-400'}`} />
+                              </div>
+                            </th>
+                            <th className={styles.colDescription} onClick={() => handleSort('description')}>
+                              <div className="flex items-center gap-1">
+                                Description
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-gray-900' : 'text-gray-400'}`} />
+                              </div>
+                            </th>
+                            <th className={styles.colCategory} onClick={() => handleSort('category')}>
+                              <div className="flex items-center gap-1">
+                                Category
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-gray-900' : 'text-gray-400'}`} />
+                              </div>
+                            </th>
+                            <th className={styles.colPaidBy} onClick={() => handleSort('paid_by')}>
+                              <div className="flex items-center gap-1">
+                                Paid By
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-gray-900' : 'text-gray-400'}`} />
+                              </div>
+                            </th>
+                            <th className={styles.colSplit} onClick={() => handleSort('split')}>
+                              <div className="flex items-center gap-1">
+                                Split
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-gray-900' : 'text-gray-400'}`} />
+                              </div>
+                            </th>
+                            <th className={styles.colAmount} onClick={() => handleSort('amount')}>
+                              <div className="flex items-center justify-end gap-1">
+                                Amount
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-gray-900' : 'text-gray-400'}`} />
+                              </div>
+                            </th>
+                            <th className={styles.colActions}></th>
+                          </tr>
+                        </thead>
+                        <tbody className={styles.tableBody}>
+                          {recurringExpenses.map(expense => renderExpenseRow(expense))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">No recurring expenses this month</p>
+                    </div>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+
+          {/* Empty state when no expenses match filters */}
+          {sortedExpenses.length === 0 && expenses.length > 0 && (
+            <Card>
+              <CardContent className="text-center py-16">
+                <Search className="h-12 w-12 text-gray-200 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-gray-900 mb-1">
+                  No expenses found
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {searchTerm || filterCategory !== 'all' || filterMonth !== 'all' || filterYear !== 'all'
+                    ? 'Try adjusting your filters or search terms'
+                    : 'No expenses match your current filters'
+                  }
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setFilterCategory('all');
+                    setFilterMonth(currentMonth.toString());
+                    setFilterYear(currentYear.toString());
+                  }}
+                >
+                  Clear all filters
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Footer summary */}
+          <div className="flex items-center justify-between px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Showing {sortedExpenses.length} of {expenses.length} expenses
+            </span>
+            <span className="font-semibold">
+              Total: {formatCurrency(variableTotal + recurringTotal)}
+            </span>
+          </div>
         </div>
       )}
 
