@@ -381,3 +381,14 @@ html {
   border-radius: 9999px;
   transition: width 0.6s ease-out;
 }
+
+/* Hide spinners in number inputs */
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinners {
+  -moz-appearance: textfield; /* Firefox */
+}
