@@ -104,6 +104,11 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
       return;
     }
 
+    if (!formData.description || formData.description.trim() === '') {
+      toast.error('Please enter a description');
+      return;
+    }
+
     setLoading(true);
 
     try {
