@@ -3,6 +3,8 @@ import styles from '../../styles/budget/budget-metrics.module.css';
 
 interface BudgetMetricCardExtendedProps extends BudgetMetricCardProps {
   statusDotColor?: 'success' | 'warning' | 'danger';
+  progress?: number;
+  progressVariant?: 'success' | 'warning' | 'danger';
 }
 
 export function BudgetMetricCard({
@@ -12,6 +14,8 @@ export function BudgetMetricCard({
   iconColor,
   variant = 'default',
   statusDotColor = 'success',
+  progress,
+  progressVariant = 'success',
   className = ''
 }: BudgetMetricCardExtendedProps) {
   const getIconClassName = (color: string) => {
@@ -52,7 +56,17 @@ export function BudgetMetricCard({
     return dotColorMap[dotColor as keyof typeof dotColorMap] || styles.statusDotSuccess;
   };
 
+  const getProgressFillClassName = (progressVariant: string) => {
+    const variantMap = {
+      success: styles.progressFillSuccess,
+      warning: styles.progressFillWarning,
+      danger: styles.progressFillDanger,
+    };
+    return variantMap[progressVariant as keyof typeof variantMap] || styles.progressFillSuccess;
+  };
+
   const isStatusCard = label === 'Status';
+  const hasProgress = typeof progress === 'number';
 
   return (
     <div className={`${styles.metricCard} ${className}`}>
@@ -66,9 +80,19 @@ export function BudgetMetricCard({
               <span className={`${getStatusDotClassName(statusDotColor)} ${styles.statusDotPulse}`} />
             </div>
           ) : (
-            <div className={`${styles.metricValue} ${getValueClassName(variant)}`}>
-              {value}
-            </div>
+            <>
+              <div className={`${styles.metricValue} ${getValueClassName(variant)}`}>
+                {value}
+              </div>
+              {hasProgress && (
+                <div className={`${styles.progressBar} ${styles.progressBarSm} mt-2`}>
+                  <div 
+                    className={`${styles.progressFill} ${getProgressFillClassName(progressVariant)}`}
+                    style={{ width: `${Math.min(progress!, 100)}%` }}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
 
