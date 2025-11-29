@@ -1,4 +1,5 @@
 import { apiClient } from '../axios';
+import { User } from '../../types';
 
 export interface LoginRequest {
   email: string;
@@ -41,7 +42,7 @@ export const authService = {
     return apiClient.post('/auth/invite-partner', { email });
   },
 
-  async getUsers() {
+  async getUsers(): Promise<User[]> {
     return apiClient.get('/auth/users');
   },
 };

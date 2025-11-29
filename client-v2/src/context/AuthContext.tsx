@@ -6,6 +6,8 @@ interface User {
   name: string;
   email: string;
   partner_id?: number;
+  hasPartner?: boolean;
+  partnerStatus?: 'no_partner' | 'connected' | 'invited';
   color?: string;
 }
 
