@@ -77,8 +77,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   }, []);
 
   const currentUser = users.find(u => u.id === user?.id);
-  const partnerUser = users.find(u => u.id !== user?.id && (u.partner_id === user?.id || u.hasPartner));
-  const hasPartner = !!(user?.partner_id || user?.hasPartner || partnerUser);
+  const partnerUser = users.find(u => u.id !== user?.id);
+  const hasPartner = users.length > 1 && !!partnerUser;
 
   const handleQuickAdd = (value: number) => {
     const current = formData.amount ? parseFloat(formData.amount) : 0;
@@ -86,7 +86,9 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   };
 
   const togglePayer = () => {
-    if (!hasPartner || !partnerUser || !currentUser) return;
+    if (!hasPartner || !partnerUser || !currentUser) {
+      return;
+    }
     
     const isMe = formData.paid_by_user_id === currentUser.id;
     setFormData(prev => ({
@@ -195,7 +197,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     className="min-w-[100px] max-w-[300px] text-6xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent text-left p-0 m-0 no-spinners"
                     autoFocus
-                    style={{ width: `${Math.max(1, formData.amount.length) * 0.6}em` }}
+                    style={{ width: `${Math.max(1, formData.amount.length) * 0.8}em` }}
                   />
                 </div>
                 {/* Quick Presets (Additive) */}
