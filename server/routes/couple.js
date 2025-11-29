@@ -133,12 +133,14 @@ router.get('/summary', auth, async (req, res) => {
           id: currentUser.id,
           name: currentUser.name,
           email: currentUser.email,
+          color: currentUser.color || null,
         },
         partner: partner
           ? {
               id: partner.id,
               name: partner.name,
               email: partner.email,
+              color: partner.color || null,
             }
           : null,
       },

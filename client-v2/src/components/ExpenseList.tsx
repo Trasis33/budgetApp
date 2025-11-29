@@ -19,7 +19,7 @@ import {
 import { Expense, Category, User } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check, X, ChevronDown, DollarSign, RefreshCw } from 'lucide-react';
+import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check, X, ChevronDown, DollarSign, RefreshCw, Users, User as UserIcon, Heart } from 'lucide-react';
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
@@ -31,6 +31,7 @@ import { BudgetHeader } from './budget/BudgetHeader';
 import { Slider } from './ui/slider';
 import { useAuth } from '../context/AuthContext';
 import { useExpensePreferences } from '../hooks';
+import { useScope } from '../context/ScopeContext';
 import styles from '@/styles/expense-table.module.css';
 
 interface ExpenseListProps {
@@ -43,6 +44,7 @@ type SortDirection = 'asc' | 'desc';
 export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
+  const { currentScope, setScope, isLoading: scopeLoading } = useScope();
   const { recurringExpanded, rememberRecurringChoice, toggleRecurringExpanded, setRememberRecurringChoice } = useExpensePreferences();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -73,7 +75,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     const loadData = async () => {
       try {
         const [expensesData, categoriesData, usersData] = await Promise.all([
-          expenseService.getExpenses('ours'),
+          expenseService.getExpenses(currentScope),
           categoryService.getCategories(),
           userService.getUsers()
         ]);
@@ -87,8 +89,10 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
       }
     };
 
-    loadData();
-  }, []);
+    if (!scopeLoading) {
+      loadData();
+    }
+  }, [currentScope, scopeLoading]);
 
   const handleEdit = (expense: Expense) => {
     setEditingId(expense.id);
@@ -546,7 +550,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     );
   };
 
-  if (loading) {
+  if (loading || scopeLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -561,13 +565,40 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     <div className="p-6 max-w-7xl mx-auto">
       <BudgetHeader
         title="Expenses"
-        subtitle={`Manage and track your ${expenses.length} shared and personal expenses`}
+        subtitle={`Manage and track your ${expenses.length} ${currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses`}
         onBack={() => navigate('/dashboard')}
         onAddBudget={() => navigate('/add-expense')}
         showExportButton={false}
         showAddButton={true}
         addButtonLabel="Add Expense"
       />
+
+      {/* Scope Selector */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="scope-selector w-fit">
+          <div 
+            className={`scope-option ${currentScope === 'ours' ? 'active' : ''}`}
+            onClick={() => setScope('ours')}
+          >
+            <Users className="w-4 h-4" />
+            Shared
+          </div>
+          <div 
+            className={`scope-option ${currentScope === 'mine' ? 'active' : ''}`}
+            onClick={() => setScope('mine')}
+          >
+            <UserIcon className="w-4 h-4" />
+            Personal
+          </div>
+          <div 
+            className={`scope-option ${currentScope === 'partner' ? 'active' : ''}`}
+            onClick={() => setScope('partner')}
+          >
+            <Heart className="w-4 h-4" />
+            Partner
+          </div>
+        </div>
+      </div>
 
       {/* New User Empty State */}
       {expenses.length === 0 ? (

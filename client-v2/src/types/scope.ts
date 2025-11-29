@@ -26,11 +26,13 @@ export interface CoupleInfo {
     id: number;
     name: string;
     email: string;
+    color?: string | null
   } | null;
   partner: {
     id: number;
     name: string;
     email: string;
+    color?: string | null;
   } | null;
 }
 

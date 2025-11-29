@@ -150,7 +150,10 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     if (isCurrentUser && user?.color) {
       return { backgroundColor: user.color, color: 'white' };
     }
-    // Fallback to CSS classes for partner or when user has no color
+    if (!isCurrentUser && summary?.couple?.partner?.color) {
+      return { backgroundColor: summary.couple.partner.color, color: 'white' };
+    }
+    // Fallback to CSS classes when no color is set
     return {};
   };
 
@@ -212,7 +215,10 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               >
                 {getPartnerInitial(user?.name)}
               </div>
-              <div className={`partner-avatar partner-avatar-secondary`}>
+              <div 
+                className={`partner-avatar ${summary?.couple?.partner?.color ? '' : 'partner-avatar-secondary'}`}
+                style={getPartnerAvatarStyle(false)}
+              >
                 {getPartnerInitial(summary?.couple?.partner?.name)}
               </div>
             </div>
@@ -437,7 +443,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                           <div className="flex items-center gap-3">
                             {isPartnerConnected && (
                               <div 
-                                className={`partner-avatar text-xs ${isCurrentUser && user?.color ? '' : getPartnerAvatarClass(isCurrentUser)}`}
+                                className={`partner-avatar text-xs ${(isCurrentUser ? user?.color : summary?.couple?.partner?.color) ? '' : getPartnerAvatarClass(isCurrentUser)}`}
                                 style={getPartnerAvatarStyle(isCurrentUser)}
                               >
                                 {getPartnerInitial(isCurrentUser ? user?.name : summary?.couple?.partner?.name)}
