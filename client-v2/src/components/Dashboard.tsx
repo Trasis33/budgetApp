@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useScope } from '../context/ScopeContext';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
+import { getCategoryIconStyle } from '../lib/iconUtils';
 import styles from '../styles/budget/budget-metrics.module.css';
 
 interface DashboardProps {
@@ -190,13 +191,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     return getCategoryColor({});
   };
 
-  const hexToRgba = (hex: string, alpha: number) => {
-    const cleanedHex = hex.replace('#', '');
-    const r = parseInt(cleanedHex.slice(0, 2), 16);
-    const g = parseInt(cleanedHex.slice(2, 4), 16);
-    const b = parseInt(cleanedHex.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
+  // Remove local hexToRgba function since we're using the centralized one
 
   return (
     <div className="p-6">
@@ -467,10 +462,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             )}
                             <div 
                               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                              style={{
-                                backgroundColor: hexToRgba(categoryColor, 0.25),
-                                color: categoryColor
-                              }}
+                              style={getCategoryIconStyle(categoryColor, false, 0.25)}
                             >
                               <IconComponent className="h-4 w-4" />
                             </div>
@@ -537,10 +529,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                           <div className="flex items-center gap-2">
                             <div 
                               className="w-6 h-6 rounded flex items-center justify-center"
-                              style={{
-                                backgroundColor: hexToRgba(categoryColor, 0.35),
-                                color: categoryColor
-                              }}
+                              style={getCategoryIconStyle(categoryColor, false, 0.35)}
                             >
                               <IconComponent className="h-3 w-3" />
                             </div>

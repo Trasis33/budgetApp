@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useScope } from '@/context/ScopeContext';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
+import { getCategoryIconStyle } from '../lib/iconUtils';
 
 // Import new budget components
 import { 
@@ -435,12 +436,6 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
                         .map((category) => {
                           const IconComponent = getIconByName(category.icon);
                           const categoryColor = getCategoryColor(category);
-                          const hexToRgba = (hex: string, alpha: number) => {
-                            const r = parseInt(hex.slice(1, 3), 16);
-                            const g = parseInt(hex.slice(3, 5), 16);
-                            const b = parseInt(hex.slice(5, 7), 16);
-                            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-                          };
                           
                           return (
                             <div
@@ -454,10 +449,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
                             >
                               <div 
                                 className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                                style={{
-                                  backgroundColor: hexToRgba(categoryColor, 0.2),
-                                  color: categoryColor
-                                }}
+                                style={getCategoryIconStyle(categoryColor, false, 0.2)}
                               >
                                 <IconComponent className="h-5 w-5" />
                               </div>

@@ -16,18 +16,14 @@ import { categoryService } from '../api/services/categoryService';
 import { authService } from '../api/services/authService';
 import { toast } from 'sonner';
 import { getIconByName } from '../lib/categoryIcons';
+import { getCategoryIconStyle } from '../lib/iconUtils';
 import { format } from 'date-fns';
 
 interface ExpenseFormProps {
   onCancel: () => void;
 }
 
-const hexToRgba = (hex: string, alpha: number) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
+// Remove local hexToRgba function since we're using the centralized one
 
 export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   const { user } = useAuth();
@@ -237,17 +233,9 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                       >
                         <div 
                           className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
-                            isSelected 
-                              ? 'text-white shadow-lg ring-2 ring-offset-2' 
-                              : 'bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-slate-300 group-hover:shadow-sm'
+                            isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
                           }`}
-                          style={{
-                            backgroundColor: isSelected ? category.color : undefined,
-                            color: isSelected ? 'white' : category.color,
-                            boxShadow: isSelected ? `0 10px 15px -3px ${hexToRgba(category.color || '#64748b', 0.3)}` : undefined,
-                            borderColor: isSelected ? 'transparent' : undefined,
-                            ['--tw-ring-color' as any]: category.color
-                          }}
+                          style={getCategoryIconStyle(category.color || '#64748b', isSelected)}
                         >
                           <Icon className="h-6 w-6" />
                         </div>
@@ -327,16 +315,6 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         onClick={togglePayer}
                         className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
                       >
-                        {(() => {
-                          console.log('currentUser:', currentUser);
-                          console.log('partnerUser:', partnerUser);
-                          console.log('formData.paid_by_user_id:', formData.paid_by_user_id);
-                          const isCurrentUser = formData.paid_by_user_id === currentUser?.id;
-                          const selectedUser = isCurrentUser ? currentUser : partnerUser;
-                          console.log('selectedUser:', selectedUser);
-                          console.log('selectedUser.color:', selectedUser?.color);
-                          return null;
-                        })()}
                         <div 
                           className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
                           style={{

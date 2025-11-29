@@ -25,7 +25,8 @@ import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
 import { toast } from 'sonner';
 import { getIconByName } from '../lib/categoryIcons';
-import { getCategoryColor, getCategoryColorShades } from '../lib/categoryColors';
+import { getCategoryColor } from '../lib/categoryColors';
+import { getCategoryIconStyle } from '../lib/iconUtils';
 import { BudgetHeader } from './budget/BudgetHeader';
 import { Slider } from './ui/slider';
 import { useAuth } from '../context/AuthContext';
@@ -322,23 +323,13 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     { value: '11', label: 'December' },
   ];
 
-  const hexToRgba = (hex: string, alpha: number) => {
-    if (!hex || typeof hex !== 'string') return `rgba(99, 102, 241, ${alpha})`; // Fallback to default indigo
-    const cleanedHex = hex.replace('#', '');
-    if (cleanedHex.length < 6) return `rgba(99, 102, 241, ${alpha})`; // Invalid hex
-    
-    const r = parseInt(cleanedHex.slice(0, 2), 16);
-    const g = parseInt(cleanedHex.slice(2, 4), 16);
-    const b = parseInt(cleanedHex.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
+  // Remove local hexToRgba function since we're using the centralized one
 
   // Render a single expense row (used in both sections)
   const renderExpenseRow = (expense: Expense) => {
     const isEditing = editingId === expense.id;
     const IconComponent = getIconByName(expense.category_icon);
     const categoryColor = getCategoryColor({ color: expense.category_color });
-    const categoryShades = getCategoryColorShades({ color: expense.category_color });
     // Show recurring badge only for personal recurring in Variable section
     const showRecurringBadge = expense.recurring_expense_id && expense.split_type === 'personal';
     
@@ -501,10 +492,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
             </td>
             <td className={styles.compactCell}>
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-transparent transition-colors" 
-                   style={{ 
-                     backgroundColor: hexToRgba(categoryColor, 0.08), 
-                     color: categoryShades.text 
-                   }}>
+                   style={getCategoryIconStyle(categoryColor, false, 0.08)}>
                 <IconComponent className="h-3.5 w-3.5" />
                 <span className="text-xs font-semibold">{expense.category_name}</span>
               </div>

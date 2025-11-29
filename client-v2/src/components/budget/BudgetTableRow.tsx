@@ -1,11 +1,11 @@
 import { BudgetWithSpending } from '../../types/budget';
-import { getCategoryIcon } from '../../lib/budgetUtils';
 import { CATEGORY_DESCRIPTIONS } from '../../lib/constants';
 import { formatBudgetAmount } from '../../lib/budgetUtils';
 import { getEditBudgetSuggestions } from '../../lib/budgetSuggestions';
 import { BudgetProgressBar } from './BudgetProgressBar';
 import { BudgetStatusBadge } from './BudgetStatusBadge';
 import { getIconByName } from '../../lib/categoryIcons';
+import { getCategoryIconStyle } from '../../lib/iconUtils';
 // @ts-ignore - CSS module import
 import styles from '../../styles/budget/budget-table.module.css';
 
@@ -36,15 +36,9 @@ export function BudgetTableRow({
   const [showQuickSuggest, setShowQuickSuggest] = useState(false);
 
   // Use actual category color from database, fallback to default
-  const categoryColor = budget.category_color || '#6366f1';
+  const categoryColor = (budget as any).category_color || '#6366f1';
   
-  // Convert hex to rgba for background with 20% opacity (matching CSS classes)
-  const hexToRgba = (hex: string, alpha: number) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
+  // Remove local hexToRgba function since we're using the centralized one
 
   const getAmountClassName = (amount: number) => {
     if (amount < 0) return styles.amountDanger;
@@ -122,10 +116,7 @@ export function BudgetTableRow({
           <div className={styles.categoryCell}>
             <div 
               className={styles.categoryIcon}
-              style={{
-                backgroundColor: hexToRgba(categoryColor, 0.2),
-                color: categoryColor
-              }}
+              style={getCategoryIconStyle(categoryColor, false)}
             >
               {icon}
             </div>
