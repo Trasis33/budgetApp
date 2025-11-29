@@ -151,13 +151,13 @@ router.get('/users', auth, async (req, res) => {
     
     // Get current user
     const currentUser = await db('users')
-      .select('id', 'name', 'email')
+      .select('id', 'name', 'email', 'color')
       .where('id', currentUserId)
       .first();
     
     // Get user's partner
     const partner = await db('users')
-      .select('id', 'name', 'email')
+      .select('id', 'name', 'email', 'color')
       .where('partner_id', currentUserId)
       .first();
     

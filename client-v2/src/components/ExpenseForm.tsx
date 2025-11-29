@@ -327,8 +327,29 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         onClick={togglePayer}
                         className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
                       >
-                        <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                          {getPayerName().charAt(0)}
+                        {(() => {
+                          console.log('currentUser:', currentUser);
+                          console.log('partnerUser:', partnerUser);
+                          console.log('formData.paid_by_user_id:', formData.paid_by_user_id);
+                          const isCurrentUser = formData.paid_by_user_id === currentUser?.id;
+                          const selectedUser = isCurrentUser ? currentUser : partnerUser;
+                          console.log('selectedUser:', selectedUser);
+                          console.log('selectedUser.color:', selectedUser?.color);
+                          return null;
+                        })()}
+                        <div 
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                          style={{
+                            backgroundColor: formData.paid_by_user_id === currentUser?.id 
+                              ? currentUser?.color || '#64748b' 
+                              : partnerUser?.color || '#64748b',
+                            color: 'white'
+                          }}
+                        >
+                          {formData.paid_by_user_id === currentUser?.id 
+                            ? currentUser?.name?.charAt(0) || 'Y'
+                            : partnerUser?.name?.charAt(0) || 'P'
+                          }
                         </div>
                         <span className="text-sm font-medium text-slate-700">{getPayerName()}</span>
                         <ChevronDown className="h-3 w-3 text-slate-400" />
