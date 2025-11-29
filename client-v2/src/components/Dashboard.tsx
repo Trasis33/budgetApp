@@ -121,26 +121,9 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   })).filter(b => b.spent > 0);
 
   // Helper functions for consistent styling
-  const getProgressColorClass = (_progress: number, categoryColor?: string) => {
-    // Always use category color if available, regardless of progress
-    if (categoryColor) {
-      // Map category colors to progress fill classes
-      const colorMap: { [key: string]: string } = {
-        '#F5510BFF': styles.progressFillAmber,
-        '#0A9D8CFF': styles.progressFillTeal,
-        '#0B4B60FF': styles.progressFillIndigo,
-        '#F6C40DFF': styles.progressFillYellow,
-        '#F79F23FF': styles.progressFillGolden,
-        '#FB7782FF': styles.progressFillCoral,
-        '#DA81FDFF': styles.progressFillViolet,
-        '#0CB5C7FF': styles.progressFillCyan,
-        '#82E07BFF': styles.progressFillMint,
-        '#5EACFFFF': styles.progressFillPeriwinkle,
-      };
-      return colorMap[categoryColor] || styles.progressFillTeal;
-    }
-    // Fallback for categories without specific colors
-    return styles.progressFillSuccess;
+  const getProgressColorClass = () => {
+    // Return base progress fill class - hex colors will be applied as inline styles
+    return styles.progressFill;
   };
 
   const getProgressTextColor = (progress: number) => {
@@ -397,7 +380,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                   <div className={styles.metricLabel}>Budget Used</div>
                   <div className={styles.metricValue}>{budgetProgress.toFixed(1)}%</div>
                   <div className="progress-bar mt-2">
-                    <div className={`progress-fill ${getProgressColorClass(budgetProgress)}`} style={{ width: `${budgetProgress}%` }}></div>
+                    <div className={`progress-fill ${getProgressColorClass()}`} style={{ width: `${budgetProgress}%` }}></div>
                   </div>
                 </div>
                 <div className={`${styles.metricIcon} ${getIconColorClass(2)}`}>
@@ -541,8 +524,11 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                         </div>
                         <div className="progress-bar">
                           <div 
-                            className={`progress-fill ${getProgressColorClass(progress, budget.category_color)}`} 
-                            style={{ width: `${Math.min(progress, 100)}%` }}
+                            className={`progress-fill ${getProgressColorClass()}`} 
+                            style={{ 
+                              width: `${Math.min(progress, 100)}%`,
+                              ...(budget.category_color ? { backgroundColor: budget.category_color } : {})
+                            }}
                           ></div>
                         </div>
                       </div>
