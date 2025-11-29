@@ -4,8 +4,10 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
+import { Calendar } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Expense, Category, User } from '../types';
-import { ArrowLeft, Check, Users, RefreshCw, Plus, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Check, Users, RefreshCw, Plus, ChevronDown, CalendarIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
@@ -14,6 +16,7 @@ import { categoryService } from '../api/services/categoryService';
 import { authService } from '../api/services/authService';
 import { toast } from 'sonner';
 import { getIconByName } from '../lib/categoryIcons';
+import { format } from 'date-fns';
 
 interface ExpenseFormProps {
   onCancel: () => void;
@@ -38,7 +41,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
     amount: '',
     category_id: 0,
     description: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
     paid_by_user_id: user?.id || 0,
     split_type: '50/50' as '50/50' | 'custom' | 'personal' | 'bill',
     split_ratio_user1: 50,
@@ -116,7 +119,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
         amount: parseFloat(formData.amount),
         category_id: formData.category_id,
         description: formData.description,
-        date: formData.date,
+        date: format(formData.date, 'yyyy-MM-dd'),
         paid_by_user_id: formData.paid_by_user_id,
         split_type: formData.split_type,
         ...(formData.split_type === 'custom' && { 
@@ -276,12 +279,25 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                 {/* Date */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                  <input 
-                    type="date" 
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all font-medium text-sm text-slate-700"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal bg-slate-50 border-0 rounded-lg hover:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all text-sm text-slate-700"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.date}
+                        onSelect={(date: Date | undefined) => date && setFormData({ ...formData, date })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {/* Description */}
