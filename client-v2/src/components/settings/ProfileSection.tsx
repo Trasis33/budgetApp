@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { User as UserIcon, Mail, CheckCircle, Palette } from 'lucide-react';
+import { User as UserIcon, Mail, CheckCircle, Palette, Wallet } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../api/services/authService';
 import { toast } from 'sonner';
@@ -16,7 +16,8 @@ export function ProfileSection() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    color: ''
+    color: '',
+    monthly_net_income: ''
   });
   const [loading, setLoading] = useState(false);
   const [isColorModalOpen, setIsColorModalOpen] = useState(false);
@@ -26,7 +27,8 @@ export function ProfileSection() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        color: user.color || ''
+        color: user.color || '',
+        monthly_net_income: user.monthly_net_income ? String(user.monthly_net_income) : ''
       });
     }
   }, [user]);
@@ -75,10 +77,12 @@ export function ProfileSection() {
     setLoading(true);
 
     try {
-      // Only send name and email, color is handled separately
+      // Only send name, email, and income - color is handled separately
+      const incomeValue = formData.monthly_net_income ? parseFloat(formData.monthly_net_income.replace(/\s/g, '')) : undefined;
       const updatedUser = await authService.updateProfile({
         name: formData.name,
-        email: formData.email
+        email: formData.email,
+        monthly_net_income: incomeValue
       });
       // Update the user in AuthContext to reflect the change immediately
       setUser(updatedUser as User);
@@ -173,6 +177,30 @@ export function ProfileSection() {
                 placeholder="Enter your email address"
                 disabled={loading}
               />
+            </div>
+          </div>
+
+          {/* Monthly Net Income Input */}
+          <div className="space-y-2">
+            <Label htmlFor="monthly_net_income">Monthly Net Income</Label>
+            <p className="text-xs text-muted-foreground">Your take-home pay after taxes (used for budget planning)</p>
+            <div className="relative">
+              <Wallet className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="monthly_net_income"
+                name="monthly_net_income"
+                type="text"
+                inputMode="numeric"
+                value={formData.monthly_net_income ? new Intl.NumberFormat('sv-SE').format(parseFloat(formData.monthly_net_income.replace(/\s/g, '')) || 0) : ''}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setFormData(prev => ({ ...prev, monthly_net_income: val }));
+                }}
+                className="pl-10"
+                placeholder="0"
+                disabled={loading}
+              />
+              <span className="absolute right-3 top-3 text-sm text-muted-foreground">kr</span>
             </div>
           </div>
 

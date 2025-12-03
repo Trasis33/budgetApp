@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Category, BudgetWithSpending } from '../../types';
 import { Step1Strategy } from './Step1Strategy';
 import { Step2Architect } from './Step2Architect';
-import { WizardState, StrategyType, STRATEGIES } from './types';
+import { WizardState } from './types';
 import { budgetService } from '../../api/services/budgetService';
 import { toast } from 'sonner';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import { useScope } from '../../context/ScopeContext';
 
 interface SmartBudgetWizardProps {
   isOpen: boolean;
@@ -27,13 +28,40 @@ export function SmartBudgetWizard({
   month,
   year
 }: SmartBudgetWizardProps) {
+  const { summary, refresh } = useScope();
+  
   const [state, setState] = useState<WizardState>({
     step: 1,
-    income: 45000, // Default start value
+    income: 45000, // Default start value (will be updated from couple data)
+    userIncome: 0,
+    partnerIncome: 0,
     selectedStrategy: 'balanced',
     fixedExpenses: {},
     variableAllocations: {}
   });
+
+  // Initialize incomes from couple summary when available
+  useEffect(() => {
+    if (summary?.couple) {
+      const userIncome = summary.couple.user?.monthly_net_income || 0;
+      const partnerIncome = summary.couple.partner?.monthly_net_income || 0;
+      const combined = userIncome + partnerIncome;
+      
+      setState(prev => ({
+        ...prev,
+        userIncome,
+        partnerIncome,
+        income: combined > 0 ? combined : prev.income
+      }));
+    }
+  }, [summary]);
+
+  // Refresh couple data when wizard opens to get latest income values
+  useEffect(() => {
+    if (isOpen) {
+      refresh();
+    }
+  }, [isOpen, refresh]);
 
   // Initialize fixed expenses from existing budgets if available
   React.useEffect(() => {
@@ -115,7 +143,13 @@ export function SmartBudgetWizard({
                     <Step1Strategy
                         key="step1"
                         income={state.income}
-                        setIncome={(val) => updateState({ income: val })}
+                        userIncome={state.userIncome}
+                        partnerIncome={state.partnerIncome}
+                        setUserIncome={(val) => updateState({ userIncome: val, income: val + state.partnerIncome })}
+                        setPartnerIncome={(val) => updateState({ partnerIncome: val, income: state.userIncome + val })}
+                        userName={summary?.couple?.user?.name || 'You'}
+                        partnerName={summary?.couple?.partner?.name || 'Partner'}
+                        hasPartner={summary?.couple?.connected || false}
                         selectedStrategy={state.selectedStrategy}
                         setStrategy={(val) => updateState({ selectedStrategy: val })}
                         onNext={() => updateState({ step: 2 })}

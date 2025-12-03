@@ -6,6 +6,7 @@ export interface User {
   hasPartner?: boolean;
   partnerStatus?: 'no_partner' | 'connected' | 'invited';
   color?: string;
+  monthly_net_income?: number;
 }
 
 export interface Expense {

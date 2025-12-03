@@ -134,6 +134,7 @@ router.get('/summary', auth, async (req, res) => {
           name: currentUser.name,
           email: currentUser.email,
           color: currentUser.color || null,
+          monthly_net_income: currentUser.monthly_net_income || null,
         },
         partner: partner
           ? {
@@ -141,8 +142,10 @@ router.get('/summary', auth, async (req, res) => {
               name: partner.name,
               email: partner.email,
               color: partner.color || null,
+              monthly_net_income: partner.monthly_net_income || null,
             }
           : null,
+        combined_monthly_income: (currentUser.monthly_net_income || 0) + (partner?.monthly_net_income || 0),
       },
       totals: {
         ours: Number(totals.ours.toFixed(2)),

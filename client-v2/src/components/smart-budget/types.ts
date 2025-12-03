@@ -14,7 +14,9 @@ export interface Strategy {
 
 export interface WizardState {
   step: number;
-  income: number;
+  income: number; // Combined income (computed from userIncome + partnerIncome)
+  userIncome: number;
+  partnerIncome: number;
   selectedStrategy: StrategyType;
   fixedExpenses: Record<number, number>; // categoryId -> amount
   variableAllocations: Record<number, number>; // categoryId -> amount

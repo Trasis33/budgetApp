@@ -1,12 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, User, Users } from 'lucide-react';
 import { StrategyType, STRATEGIES } from './types';
 import { cn } from '@/lib/utils';
 
 interface Step1Props {
   income: number;
-  setIncome: (val: number) => void;
+  userIncome: number;
+  partnerIncome: number;
+  setUserIncome: (val: number) => void;
+  setPartnerIncome: (val: number) => void;
+  userName: string;
+  partnerName: string;
+  hasPartner: boolean;
   selectedStrategy: StrategyType;
   setStrategy: (val: StrategyType) => void;
   onNext: () => void;
@@ -15,25 +21,39 @@ interface Step1Props {
 
 export function Step1Strategy({
   income,
-  setIncome,
+  userIncome,
+  partnerIncome,
+  setUserIncome,
+  setPartnerIncome,
+  userName,
+  partnerName,
+  hasPartner,
   selectedStrategy,
   setStrategy,
   onNext,
   onCancel
 }: Step1Props) {
   
-  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Remove non-numeric chars
+  const handleUserIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '');
-    setIncome(val ? parseInt(val) : 0);
+    setUserIncome(val ? parseInt(val) : 0);
+  };
+
+  const handlePartnerIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    setPartnerIncome(val ? parseInt(val) : 0);
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('sv-SE', { groupingSeparator: ' ' }).format(num);
+    return new Intl.NumberFormat('sv-SE').format(num);
   };
 
-  const quickAdd = (amount: number) => {
-    setIncome(income + amount);
+  const quickAddUser = (amount: number) => {
+    setUserIncome(userIncome + amount);
+  };
+
+  const quickAddPartner = (amount: number) => {
+    setPartnerIncome(partnerIncome + amount);
   };
 
   return (
@@ -66,44 +86,97 @@ export function Step1Strategy({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* Left Column: Income */}
-            <div className="lg:col-span-5 space-y-6">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-10 flex flex-col justify-center min-h-[300px] relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-blue-500 to-indigo-500"></div>
-                    
-                    <div className="text-center space-y-6">
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Combined Monthly Income</label>
-                            <p className="text-xs text-slate-400">Net (after tax)</p>
-                        </div>
-
+            <div className="lg:col-span-5 space-y-4">
+                {/* Combined Total Display */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                    <div className="text-center space-y-2">
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Combined Monthly Income</label>
                         <div className="flex items-center justify-center gap-2">
-                            <span className="text-3xl sm:text-4xl text-slate-300 font-light">kr</span>
+                            <span className="text-2xl text-slate-300 font-light">kr</span>
+                            <span className="text-3xl sm:text-4xl font-bold text-slate-900">{formatNumber(income)}</span>
+                        </div>
+                        <p className="text-xs text-slate-400">Net (after tax)</p>
+                    </div>
+                </div>
+
+                {/* Individual Income Fields */}
+                <div className="space-y-3">
+                    {/* Your Income */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <User className="h-4 w-4 text-indigo-600" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700">{userName}</label>
+                                <p className="text-xs text-slate-400">Your monthly net income</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg text-slate-300 font-light">kr</span>
                             <input 
                                 type="text" 
-                                value={formatNumber(income)} 
-                                onChange={handleIncomeChange}
-                                className="w-full max-w-[280px] text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent text-center p-0 m-0"
+                                value={formatNumber(userIncome)} 
+                                onChange={handleUserIncomeChange}
+                                className="flex-1 text-2xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent p-0 m-0"
                                 autoFocus
                             />
                         </div>
-
-                        <div className="flex justify-center gap-2 pt-2 flex-wrap">
-                            {[500, 1000, 5000].map(amount => (
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                            {[1000, 5000, 10000].map(amount => (
                                 <button 
                                     key={amount}
-                                    onClick={() => quickAdd(amount)}
-                                    className="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors"
+                                    onClick={() => quickAddUser(amount)}
+                                    className="px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors"
                                 >
                                     +{formatNumber(amount)}
                                 </button>
                             ))}
                         </div>
                     </div>
+
+                    {/* Partner Income */}
+                    {hasPartner && (
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
+                                    <Users className="h-4 w-4 text-rose-600" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700">{partnerName}</label>
+                                    <p className="text-xs text-slate-400">Partner's monthly net income</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg text-slate-300 font-light">kr</span>
+                                <input 
+                                    type="text" 
+                                    value={formatNumber(partnerIncome)} 
+                                    onChange={handlePartnerIncomeChange}
+                                    className="flex-1 text-2xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent p-0 m-0"
+                                />
+                            </div>
+                            <div className="flex gap-2 mt-3 flex-wrap">
+                                {[1000, 5000, 10000].map(amount => (
+                                    <button 
+                                        key={amount}
+                                        onClick={() => quickAddPartner(amount)}
+                                        className="px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors"
+                                    >
+                                        +{formatNumber(amount)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                <div className="p-4">
+                <div className="p-3">
                     <p className="text-sm text-slate-500 text-center leading-relaxed max-w-sm mx-auto">
-                        This amount will be the foundation for your shared budget. We'll help you split it between fixed bills and flexible spending.
+                        {hasPartner 
+                            ? "Your combined income will be the foundation for your shared budget."
+                            : "Set your income in Settings → Profile to pre-fill this value."}
                     </p>
                 </div>
             </div>

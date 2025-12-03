@@ -132,7 +132,7 @@ router.post(
 router.get('/user', auth, async (req, res) => {
   try {
     const user = await db('users')
-      .select('id', 'name', 'email', 'partner_id', 'color')
+      .select('id', 'name', 'email', 'partner_id', 'color', 'monthly_net_income')
       .where('id', req.user.id)
       .first();
     res.json(user);
@@ -232,7 +232,7 @@ router.post('/invite-partner', auth, async (req, res) => {
 // @desc    Update user profile
 // @access  Private
 router.put('/profile', auth, async (req, res) => {
-  const { name, email, currentPassword, newPassword, color } = req.body;
+  const { name, email, currentPassword, newPassword, color, monthly_net_income } = req.body;
 
   try {
     console.log('Profile update request:', { name, email, color, userId: req.user.id });
@@ -274,6 +274,12 @@ router.put('/profile', auth, async (req, res) => {
       console.log('Adding color to update data:', color);
     }
 
+    // Add monthly_net_income if provided
+    if (monthly_net_income !== undefined) {
+      updateData.monthly_net_income = monthly_net_income;
+      console.log('Adding monthly_net_income to update data:', monthly_net_income);
+    }
+
     // If changing password, verify current password and hash new password
     if (currentPassword && newPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
@@ -295,7 +301,7 @@ router.put('/profile', auth, async (req, res) => {
 
     // Return updated user data (without password)
     const updatedUser = await db('users')
-      .select('id', 'name', 'email', 'color')
+      .select('id', 'name', 'email', 'color', 'monthly_net_income')
       .where('id', req.user.id)
       .first();
 

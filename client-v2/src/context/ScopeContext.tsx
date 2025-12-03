@@ -134,7 +134,8 @@ const fetchCoupleSummary = async (signal: AbortSignal): Promise<ScopeSummary> =>
     couple: {
       connected: Boolean(data.couple?.connected),
       user: data.couple?.user || null,
-      partner: data.couple?.partner || null
+      partner: data.couple?.partner || null,
+      combined_monthly_income: data.couple?.combined_monthly_income || 0
     },
     metadata: {
       currency: data.metadata?.currency || 'USD',

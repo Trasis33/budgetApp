@@ -26,14 +26,17 @@ export interface CoupleInfo {
     id: number;
     name: string;
     email: string;
-    color?: string | null
+    color?: string | null;
+    monthly_net_income?: number | null;
   } | null;
   partner: {
     id: number;
     name: string;
     email: string;
     color?: string | null;
+    monthly_net_income?: number | null;
   } | null;
+  combined_monthly_income?: number;
 }
 
 export interface ScopeSummary {
