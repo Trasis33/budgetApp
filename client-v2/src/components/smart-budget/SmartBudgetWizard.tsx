@@ -127,14 +127,16 @@ export function SmartBudgetWizard({
                         state={state}
                         categories={categories}
                         updateFixed={(catId, val) => {
-                            updateState({
-                                fixedExpenses: { ...state.fixedExpenses, [catId]: val }
-                            });
+                            setState(prev => ({
+                                ...prev,
+                                fixedExpenses: { ...prev.fixedExpenses, [catId]: val }
+                            }));
                         }}
                         updateVariable={(catId, val) => {
-                             updateState({
-                                variableAllocations: { ...state.variableAllocations, [catId]: val }
-                            });
+                            setState(prev => ({
+                                ...prev,
+                                variableAllocations: { ...prev.variableAllocations, [catId]: val }
+                            }));
                         }}
                         onBack={() => updateState({ step: 1 })}
                         onSave={handleSave}

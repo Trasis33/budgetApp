@@ -33,6 +33,9 @@ export function Step2Architect({
 
   const [localFixed, setLocalFixed] = useState<Record<number, number>>(state.fixedExpenses);
   const [localVariable, setLocalVariable] = useState<Record<number, number>>(state.variableAllocations);
+  const [hasUserEditedVariables, setHasUserEditedVariables] = useState(
+    Object.keys(state.variableAllocations || {}).length > 0
+  );
 
   // Helper: get spending role with sensible default
   const getCategoryRole = (cat: Category): 'need' | 'want' | 'save' => {
@@ -75,9 +78,12 @@ export function Step2Architect({
 
   // Initial Allocation Logic based on spending_role (need/want/save)
   useEffect(() => {
-      // Only run if empty to avoid overwriting user changes
-      if (Object.keys(localVariable).length === 0 && disposableIncome > 0) {
-          const newAllocations: Record<number, number> = {};
+      // Only run while user hasn't manually adjusted variable categories
+      if (hasUserEditedVariables || disposableIncome <= 0) {
+          return;
+      }
+
+      const newAllocations: Record<number, number> = {};
 
           const variableNeedCats = variableCats.filter((c) => getCategoryRole(c) === 'need');
           const variableWantCats = variableCats.filter((c) => getCategoryRole(c) === 'want');
@@ -124,8 +130,16 @@ export function Step2Architect({
           }
 
           setLocalVariable(newAllocations);
-      }
-  }, [state.income, strategy, disposableIncome, variableCats, fixedCats, localFixed, localVariable]);
+  }, [
+      state.income,
+      state.selectedStrategy,
+      strategy.distribution.needs,
+      disposableIncome,
+      variableCats,
+      fixedCats,
+      localFixed,
+      hasUserEditedVariables
+  ]);
 
   // Sync local state to parent on unmount or save? 
   // Better to sync on change to keep parent updated
@@ -145,6 +159,7 @@ export function Step2Architect({
   };
 
   const handleVariableChange = (id: number, val: string | number) => {
+      setHasUserEditedVariables(true);
       const num = typeof val === 'string' ? parseInt(val.replace(/\D/g, '')) || 0 : val;
       setLocalVariable(prev => ({ ...prev, [id]: num }));
   };
@@ -259,7 +274,7 @@ export function Step2Architect({
                     </div>
                 </div>
             </div>
-
+ 
             {/* Right Column: Variable Expenses */}
             <div className="lg:col-span-8 space-y-4 flex flex-col">
                 <div className="flex items-center justify-between px-1">
@@ -345,10 +360,27 @@ export function Step2Architect({
                     )}
                 </div>
 
+                {/* Debug summary: how many budgets will be saved */}
+                <div className="text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2">
+                  <span>
+                    Fixed budgets to save:{' '}
+                    {fixedCats.filter(c => (localFixed[c.id] || 0) > 0).length}
+                  </span>
+                  <span>
+                    Variable budgets to save:{' '}
+                    {variableCats.filter(c => (localVariable[c.id] || 0) > 0).length}
+                  </span>
+                  {hasUserEditedVariables && (
+                    <span className="text-[11px] text-slate-400">
+                      Variable allocations are now manual; strategy wont auto-rebalance.
+                    </span>
+                  )}
+                </div>
+
                 {/* Action Button */}
                 <button 
                     onClick={onSave}
-                    className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg"
+                    className="w-full mt-2 py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg"
                 >
                     <Check className="h-5 w-5" />
                     Apply Budget Plan
