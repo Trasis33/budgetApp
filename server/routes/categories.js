@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Create a new category
 // @access  Private
 router.post('/', auth, async (req, res) => {
-  const { name, icon, color } = req.body;
+  const { name, icon, color, is_fixed, spending_role } = req.body;
 
   try {
     if (!name) {
@@ -36,7 +36,9 @@ router.post('/', auth, async (req, res) => {
     const [id] = await db('categories').insert({
       name,
       icon: icon || null,
-      color: color || '#6366f1'
+      color: color || '#6366f1',
+      is_fixed: is_fixed || false,
+      spending_role: spending_role || 'need'
     });
 
     const category = await db('categories').where('id', id).first();
@@ -51,7 +53,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update a category
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-  const { name, icon, color } = req.body;
+  const { name, icon, color, is_fixed, spending_role } = req.body;
 
   try {
     const categoryExists = await db('categories').where('id', req.params.id).first();
@@ -65,7 +67,9 @@ router.put('/:id', auth, async (req, res) => {
       .update({
         name: name || categoryExists.name,
         icon: icon !== undefined ? icon : categoryExists.icon,
-        color: color !== undefined ? color : categoryExists.color
+        color: color !== undefined ? color : categoryExists.color,
+        is_fixed: is_fixed !== undefined ? is_fixed : categoryExists.is_fixed,
+        spending_role: spending_role !== undefined ? spending_role : categoryExists.spending_role
       });
 
     const category = await db('categories').where('id', req.params.id).first();

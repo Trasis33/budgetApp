@@ -49,6 +49,8 @@ export interface Category {
   name: string;
   icon?: string;
   color?: string;
+  is_fixed?: boolean;
+  spending_role?: 'need' | 'want' | 'save';
 }
 
 export interface Budget {

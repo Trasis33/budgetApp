@@ -3,13 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Plus, Edit2, Trash2, Tag, Palette } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag, Palette, Lock } from 'lucide-react';
 import { categoryService } from '../../api/services/categoryService';
 import { Category } from '../../types';
 import { toast } from 'sonner';
 import { CATEGORY_COLORS, getCategoryColor } from '../../lib/categoryColors';
 import { CATEGORY_ICONS, getIconByName } from '../../lib/categoryIcons';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 export function CategoryManagementSection() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -22,7 +24,9 @@ export function CategoryManagementSection() {
   const [formData, setFormData] = useState({
     name: '',
     icon: 'tag',
-    color: '#6366f1'
+    color: '#6366f1',
+    is_fixed: false,
+    spending_role: 'need' as 'need' | 'want' | 'save'
   });
 
   useEffect(() => {
@@ -44,7 +48,7 @@ export function CategoryManagementSection() {
 
   const openCreateModal = () => {
     setEditingCategory(null);
-    setFormData({ name: '', icon: 'tag', color: '#6366f1' });
+    setFormData({ name: '', icon: 'tag', color: '#6366f1', is_fixed: false, spending_role: 'need' });
     setShowFormModal(true);
   };
 
@@ -53,7 +57,9 @@ export function CategoryManagementSection() {
     setFormData({ 
       name: category.name, 
       icon: category.icon || 'tag', 
-      color: category.color || '#6366f1' 
+      color: category.color || '#6366f1',
+      is_fixed: category.is_fixed || false,
+      spending_role: category.spending_role || 'need'
     });
     setShowFormModal(true);
   };
@@ -61,7 +67,7 @@ export function CategoryManagementSection() {
   const closeFormModal = () => {
     setShowFormModal(false);
     setEditingCategory(null);
-    setFormData({ name: '', icon: '' });
+    setFormData({ name: '', icon: '', color: '#6366f1', is_fixed: false, spending_role: 'need' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,8 +178,9 @@ export function CategoryManagementSection() {
                   >
                     <IconComponent className="h-5 w-5" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 flex items-center gap-2">
                     <p className="font-medium">{category.name}</p>
+                    {category.is_fixed && <Lock className="h-3 w-3 text-muted-foreground" />}
                   </div>
                   
                   {isDeleting ? (
@@ -265,6 +272,39 @@ export function CategoryManagementSection() {
                   placeholder="e.g., Groceries, Rent, etc."
                   disabled={formLoading}
                 />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is-fixed">Fixed Expense</Label>
+                  <p className="text-[0.8rem] text-muted-foreground">
+                    Mark as a mandatory monthly bill (e.g., Rent, Insurance).
+                  </p>
+                </div>
+                <Switch
+                  id="is-fixed"
+                  checked={formData.is_fixed}
+                  onCheckedChange={(checked: any) => setFormData(prev => ({ ...prev, is_fixed: checked }))}
+                  disabled={formLoading}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Spending Role</Label>
+                <Select
+                  value={formData.spending_role}
+                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, spending_role: value }))}
+                  disabled={formLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select spending role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="need">Need</SelectItem>
+                    <SelectItem value="want">Want</SelectItem>
+                    <SelectItem value="save">Save</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">

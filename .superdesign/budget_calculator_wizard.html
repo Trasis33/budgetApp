@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Calculator - Wizard Approach</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(215 20.2% 65.1%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 47.4% 11.2%)",
+                        primary: {
+                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(222.2 47.4% 11.2%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(222.2 47.4% 11.2%)",
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 p-8 flex items-center justify-center min-h-screen font-sans antialiased">
+
+    <!-- Modal Container -->
+    <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Smart Budget Calculator</h2>
+                <p class="text-sm text-gray-500">Step 2 of 3: Fixed Expenses</p>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="h-1 w-full bg-gray-100">
+            <div class="h-full bg-primary w-2/3"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto">
+            
+            <!-- Context Banner -->
+            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3 items-start">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <div>
+                    <h3 class="text-sm font-medium text-blue-900">Monthly Income: $8,500</h3>
+                    <p class="text-sm text-blue-700 mt-1">First, let's lock in the bills you <b>have</b> to pay every month. We'll calculate the rest later.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wider">Fixed Categories</h3>
+                
+                <!-- Fixed Item Active -->
+                <div class="flex items-center gap-4 p-4 rounded-lg border border-primary/20 bg-primary/5 transition-all">
+                    <div class="h-10 w-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-lg">🏠</div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-medium text-gray-900">Housing (Mortgage/Rent)</label>
+                            <span class="text-xs font-medium text-primary bg-white px-2 py-0.5 rounded-full border border-primary/20">Fixed</span>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                            <input type="text" value="2,400" class="w-full pl-7 pr-3 py-1.5 text-sm border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none shadow-sm">
+                        </div>
+                    </div>
+                    <div class="flex items-center h-full pt-6">
+                        <input type="checkbox" checked class="h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                    </div>
+                </div>
+
+                <!-- Fixed Item Inactive -->
+                <div class="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all opacity-75">
+                    <div class="h-10 w-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-lg">🚗</div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-medium text-gray-700">Transportation</label>
+                        </div>
+                        <p class="text-sm text-gray-500">Car payments, insurance, gas...</p>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" class="h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                    </div>
+                </div>
+
+                <!-- Fixed Item Active -->
+                <div class="flex items-center gap-4 p-4 rounded-lg border border-primary/20 bg-primary/5 transition-all">
+                    <div class="h-10 w-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-lg">⚡</div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-medium text-gray-900">Utilities</label>
+                            <span class="text-xs font-medium text-primary bg-white px-2 py-0.5 rounded-full border border-primary/20">Fixed</span>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                            <input type="text" value="350" class="w-full pl-7 pr-3 py-1.5 text-sm border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none shadow-sm">
+                        </div>
+                    </div>
+                    <div class="flex items-center h-full pt-6">
+                        <input type="checkbox" checked class="h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Summary Footer for Step -->
+            <div class="mt-8 p-4 bg-gray-50 rounded-lg flex justify-between items-center">
+                <div>
+                    <span class="block text-xs text-gray-500">Fixed Expenses Total</span>
+                    <span class="block text-xl font-bold text-gray-900">$2,750</span>
+                </div>
+                <div>
+                     <span class="block text-xs text-gray-500 text-right">Remaining for Lifestyle</span>
+                     <span class="block text-xl font-bold text-green-600">$5,750</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
+            <button class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">Back</button>
+            <button class="px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg shadow hover:bg-primary/90 transition-colors">Next: Variable Expenses</button>
+        </div>
+
+    </div>
+
+</body>
+</html>

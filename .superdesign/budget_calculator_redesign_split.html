@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Budget - Step 2: Architect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
+
+    <div class="w-full max-w-6xl bg-transparent">
+        
+        <!-- Header/Navigation -->
+        <div class="mb-6 flex items-center justify-between">
+            <button class="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors">
+                <div class="p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                </div>
+                <span class="font-medium">Change Strategy</span>
+            </button>
+            
+            <!-- Income Summary Pill -->
+            <div class="hidden md:flex items-center gap-6 bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm">
+                <div class="text-right">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Income</span>
+                    <span class="block text-lg font-bold text-slate-900">kr 45 000</span>
+                </div>
+                <div class="h-8 w-px bg-slate-100"></div>
+                <div class="text-left">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unallocated</span>
+                    <span class="block text-lg font-bold text-green-600">kr 0</span>
+                </div>
+            </div>
+
+            <div class="w-32"></div> <!-- Spacer -->
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Fixed Expenses (Span 4) -->
+            <div class="lg:col-span-4 space-y-4">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Fixed Expenses</h2>
+                    <span class="text-xs font-medium text-slate-500">Total: kr 18 500</span>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="divide-y divide-slate-50">
+                        
+                        <!-- Fixed Item: Housing -->
+                        <div class="p-4 hover:bg-slate-50 transition-colors group">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-lg">
+                                        🏠
+                                    </div>
+                                    <span class="text-sm font-semibold text-slate-700">Housing</span>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">kr</span>
+                                <input type="text" value="12 000" class="w-full pl-8 pr-3 py-2 bg-slate-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all font-bold text-slate-900 text-right">
+                            </div>
+                        </div>
+
+                        <!-- Fixed Item: Utilities -->
+                        <div class="p-4 hover:bg-slate-50 transition-colors group">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-lg">
+                                        ⚡
+                                    </div>
+                                    <span class="text-sm font-semibold text-slate-700">Utilities</span>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">kr</span>
+                                <input type="text" value="2 500" class="w-full pl-8 pr-3 py-2 bg-slate-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all font-bold text-slate-900 text-right">
+                            </div>
+                        </div>
+
+                         <!-- Fixed Item: Insurance -->
+                         <div class="p-4 hover:bg-slate-50 transition-colors group">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-lg">
+                                        🛡️
+                                    </div>
+                                    <span class="text-sm font-semibold text-slate-700">Insurance</span>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">kr</span>
+                                <input type="text" value="4 000" class="w-full pl-8 pr-3 py-2 bg-slate-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all font-bold text-slate-900 text-right">
+                            </div>
+                        </div>
+
+                        <!-- Add Button -->
+                        <button class="w-full py-3 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Fixed Category
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Variable Expenses (Span 8) -->
+            <div class="lg:col-span-8 space-y-4 flex flex-col">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Variable Lifestyle & Savings</h2>
+                    <span class="text-xs font-medium text-slate-500">Disposable: kr 26 500</span>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 p-6 space-y-6">
+                    
+                    <!-- Variable Item -->
+                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-xl text-orange-600">
+                                    🍔
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Food & Dining</h3>
+                                    <p class="text-xs text-slate-500">Groceries, Restaurants</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="text-right">
+                                    <input type="text" value="6 000" class="w-24 text-right font-bold text-lg text-slate-900 border-b border-slate-200 focus:border-blue-500 outline-none bg-transparent transition-colors">
+                                    <span class="text-xs text-slate-400 ml-1">kr</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="26500" value="6000" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-orange-500">
+                        <div class="flex justify-between mt-2">
+                            <span class="text-[10px] font-medium text-slate-400">0%</span>
+                            <span class="text-[10px] font-bold text-orange-600">22% of disposable</span>
+                        </div>
+                    </div>
+
+                    <!-- Variable Item -->
+                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-xl text-purple-600">
+                                    🎬
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Entertainment</h3>
+                                    <p class="text-xs text-slate-500">Movies, Fun, Hobbies</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="text-right">
+                                    <input type="text" value="3 000" class="w-24 text-right font-bold text-lg text-slate-900 border-b border-slate-200 focus:border-blue-500 outline-none bg-transparent transition-colors">
+                                    <span class="text-xs text-slate-400 ml-1">kr</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="26500" value="3000" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                         <div class="flex justify-between mt-2">
+                            <span class="text-[10px] font-medium text-slate-400">0%</span>
+                            <span class="text-[10px] font-bold text-purple-600">11% of disposable</span>
+                        </div>
+                    </div>
+
+                    <!-- Variable Item: Savings -->
+                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-green-500/20">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-xl text-green-600">
+                                    💰
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Savings & Investments</h3>
+                                    <p class="text-xs text-slate-500">Future You</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="text-right">
+                                    <input type="text" value="5 000" class="w-24 text-right font-bold text-lg text-green-600 border-b border-slate-200 focus:border-green-500 outline-none bg-transparent transition-colors">
+                                    <span class="text-xs text-slate-400 ml-1">kr</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="26500" value="5000" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-green-500">
+                         <div class="flex justify-between mt-2">
+                            <span class="text-[10px] font-medium text-slate-400">0%</span>
+                            <span class="text-[10px] font-bold text-green-600">19% of disposable</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Action Button -->
+                <button class="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    Apply Budget Plan
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

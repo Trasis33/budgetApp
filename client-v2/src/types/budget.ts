@@ -96,6 +96,7 @@ export interface BudgetHeaderProps {
   onBack?: () => void;
   onExport?: () => void;
   onAddBudget?: () => void;
+  onAutoBudget?: () => void;
   showBackButton?: boolean;
   showExportButton?: boolean;
   showAddButton?: boolean;

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Budget - Step 1: Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        primary: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
+
+    <div class="w-full max-w-5xl bg-transparent">
+        
+        <!-- Header/Navigation -->
+        <div class="mb-8 flex items-center justify-between">
+            <button class="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors">
+                <div class="p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                </div>
+                <span class="font-medium">Cancel</span>
+            </button>
+            <div class="text-center">
+                <h1 class="text-lg font-semibold text-slate-900">Smart Budget Setup</h1>
+                <p class="text-xs text-slate-500">Step 1 of 2</p>
+            </div>
+            <div class="w-20"></div> <!-- Spacer -->
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Income Input (Span 5) -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-10 flex flex-col justify-center min-h-[300px] relative overflow-hidden">
+                    <!-- Decorative -->
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                    
+                    <div class="text-center space-y-6">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Combined Monthly Income</label>
+                            <p class="text-xs text-slate-400">Net (after tax)</p>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-4xl text-slate-300 font-light">kr</span>
+                            <input 
+                                type="text" 
+                                value="45 000" 
+                                class="w-full max-w-[280px] text-5xl md:text-6xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent text-center p-0 m-0"
+                                autofocus
+                            />
+                        </div>
+
+                        <!-- Quick Add Pills -->
+                        <div class="flex justify-center gap-2 pt-2">
+                            <button class="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">+500</button>
+                            <button class="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">+1 000</button>
+                            <button class="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">+5 000</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="p-4">
+                    <p class="text-sm text-slate-500 text-center leading-relaxed">
+                        This amount will be the foundation for your shared budget. We'll help you split it between fixed bills and flexible spending.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Column: Strategy Selection (Span 7) -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Choose a Strategy</label>
+                </div>
+
+                <!-- Strategy Card: Balanced -->
+                <button class="w-full text-left group relative bg-white rounded-2xl border-2 border-indigo-600 shadow-lg shadow-indigo-500/10 p-5 transition-all hover:-translate-y-0.5">
+                    <div class="absolute -top-3 right-4 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">RECOMMENDED</div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-2xl shrink-0">
+                            ⚖️
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-base font-bold text-slate-900 mb-1">Balanced Approach</h3>
+                            <p class="text-sm text-slate-500 mb-3">The classic 50/30/20 rule. Good mix of fun today and security tomorrow.</p>
+                            
+                            <!-- Visual Bar -->
+                            <div class="flex h-2 w-full rounded-full overflow-hidden bg-slate-100">
+                                <div class="bg-slate-800 w-[50%]" title="Needs"></div>
+                                <div class="bg-slate-400 w-[30%]" title="Wants"></div>
+                                <div class="bg-indigo-500 w-[20%]" title="Savings"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400 mt-1.5 font-medium">
+                                <span>50% Needs</span>
+                                <span>30% Wants</span>
+                                <span class="text-indigo-600">20% Savings</span>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Strategy Card: Saver -->
+                <button class="w-full text-left group bg-white rounded-2xl border border-slate-200 p-5 transition-all hover:border-green-500 hover:shadow-md opacity-80 hover:opacity-100">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl shrink-0">
+                            🌱
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-base font-bold text-slate-900 mb-1">Aggressive Saver</h3>
+                            <p class="text-sm text-slate-500 mb-3">Prioritize future goals. Minimizes lifestyle spending to maximize savings rate.</p>
+                            
+                            <div class="flex h-2 w-full rounded-full overflow-hidden bg-slate-100">
+                                <div class="bg-slate-800 w-[50%]"></div>
+                                <div class="bg-slate-400 w-[15%]"></div>
+                                <div class="bg-green-500 w-[35%]"></div>
+                            </div>
+                             <div class="flex justify-between text-[10px] text-slate-400 mt-1.5 font-medium">
+                                <span>50% Needs</span>
+                                <span>15% Wants</span>
+                                <span class="text-green-600">35% Savings</span>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Strategy Card: Spender -->
+                <button class="w-full text-left group bg-white rounded-2xl border border-slate-200 p-5 transition-all hover:border-purple-500 hover:shadow-md opacity-80 hover:opacity-100">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl shrink-0">
+                            🏙️
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-base font-bold text-slate-900 mb-1">High Cost of Living</h3>
+                            <p class="text-sm text-slate-500 mb-3">For when rent and bills eat up most of the budget. Focuses on essentials.</p>
+                            
+                            <div class="flex h-2 w-full rounded-full overflow-hidden bg-slate-100">
+                                <div class="bg-slate-800 w-[70%]"></div>
+                                <div class="bg-slate-400 w-[20%]"></div>
+                                <div class="bg-purple-500 w-[10%]"></div>
+                            </div>
+                             <div class="flex justify-between text-[10px] text-slate-400 mt-1.5 font-medium">
+                                <span>70% Needs</span>
+                                <span>20% Wants</span>
+                                <span class="text-purple-600">10% Save</span>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+
+                <div class="pt-4">
+                    <button class="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg">
+                        Continue to Details
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -18,10 +18,10 @@ import {
   DialogDescription,
   DialogFooter
 } from './ui/dialog';
+import { useNavigate } from 'react-router-dom';
 import { Category } from '../types';
 import { filterExpensesByMonth } from '../lib/utils';
 import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
-import { useNavigate } from 'react-router-dom';
 import { Plus, Target, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { budgetService } from '../api/services/budgetService';
 import { categoryService } from '../api/services/categoryService';
@@ -31,13 +31,9 @@ import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
 
-// Import new budget components
-import { 
-  BudgetHeader,
-  BudgetMetricsGrid,
-  BudgetTable
-} from './budget';
+import { BudgetHeader, BudgetMetricsGrid, BudgetTable } from './budget';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
+import { SmartBudgetWizard } from './smart-budget/SmartBudgetWizard';
 
 interface BudgetManagerProps {
   onNavigate?: (view: string) => void;
@@ -65,6 +61,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [modalSearchTerm, setModalSearchTerm] = useState('');
   const [modalSelectedCategory, setModalSelectedCategory] = useState<Category | null>(null);
   const [modalAmount, setModalAmount] = useState('');
@@ -275,6 +272,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
         onBack={handleBack}
         onExport={handleExport}
         onAddBudget={handleAddBudget}
+        onAutoBudget={() => setIsWizardOpen(true)}
       />
 
       <div className="space-y-6">
@@ -349,12 +347,6 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
               </div>
-              {availableCategories.length > 0 && (
-                <Button onClick={handleAddBudget} size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add budget
-                </Button>
-              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -577,6 +569,20 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Smart Budget Wizard */}
+        <SmartBudgetWizard
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          onComplete={() => {
+            refetch();
+            setIsWizardOpen(false);
+          }}
+          categories={categories}
+          existingBudgets={budgetsWithSpending}
+          month={selectedMonth}
+          year={selectedYear}
+        />
       </div>
     </div>
   );
