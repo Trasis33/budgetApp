@@ -9,6 +9,7 @@ import { AccountActionsSection } from './settings/AccountActionsSection';
 import { CategoryManagementSection } from './settings/CategoryManagementSection';
 import { PreferencesSection } from './settings/PreferencesSection';
 import { DataPrivacySection } from './settings/DataPrivacySection';
+import { RecurringBillsSection } from './settings/RecurringBillsSection';
 
 interface SettingsProps {
   onNavigate?: (view: string) => void;
@@ -79,9 +80,10 @@ export function Settings({}: SettingsProps = {}) {
             <PartnerSection />
           </TabsContent>
 
-          {/* Categories Tab */}
+          {/* Categories & Bills Tab */}
           <TabsContent value="categories" className="space-y-6">
             <CategoryManagementSection />
+            <RecurringBillsSection />
           </TabsContent>
 
           {/* Preferences Tab */}

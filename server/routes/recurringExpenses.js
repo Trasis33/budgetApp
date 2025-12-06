@@ -33,16 +33,26 @@ router.get('/:id', auth, async (req, res) => {
 // Add a new recurring expense
 router.post('/', auth, async (req, res) => {
   try {
-    const { description, default_amount, category_id, paid_by_user_id, split_type, split_ratio_user1, split_ratio_user2 } = req.body;
+    const {
+      description,
+      default_amount,
+      category_id,
+      paid_by_user_id,
+      split_type,
+      split_ratio_user1,
+      split_ratio_user2,
+      bill_managed
+    } = req.body;
     
     const [id] = await db('recurring_expenses').insert({
-        description,
-        default_amount,
-        category_id,
-        paid_by_user_id,
-        split_type,
-        split_ratio_user1,
-        split_ratio_user2
+      description,
+      default_amount,
+      category_id,
+      paid_by_user_id,
+      split_type,
+      split_ratio_user1,
+      split_ratio_user2,
+      bill_managed: bill_managed ?? false
     });
     const newExpense = await db('recurring_expenses').where({ id }).first();
     res.status(201).json(newExpense);
@@ -55,7 +65,16 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { description, default_amount, category_id, paid_by_user_id, split_type, split_ratio_user1, split_ratio_user2 } = req.body;
+        const {
+          description,
+          default_amount,
+          category_id,
+          paid_by_user_id,
+          split_type,
+          split_ratio_user1,
+          split_ratio_user2,
+          bill_managed
+        } = req.body;
 
         const expense = await db('recurring_expenses').where({ id }).first();
 
@@ -64,13 +83,21 @@ router.put('/:id', auth, async (req, res) => {
         }
 
         await db('recurring_expenses').where({ id }).update({
-            description,
-            default_amount,
-            category_id,
-            paid_by_user_id,
-            split_type,
-            split_ratio_user1,
-            split_ratio_user2
+          description: description ?? expense.description,
+          default_amount: default_amount ?? expense.default_amount,
+          category_id: category_id ?? expense.category_id,
+          paid_by_user_id: paid_by_user_id ?? expense.paid_by_user_id,
+          split_type: split_type ?? expense.split_type,
+          split_ratio_user1:
+            split_ratio_user1 !== undefined
+              ? split_ratio_user1
+              : expense.split_ratio_user1,
+          split_ratio_user2:
+            split_ratio_user2 !== undefined
+              ? split_ratio_user2
+              : expense.split_ratio_user2,
+          bill_managed:
+            bill_managed !== undefined ? bill_managed : expense.bill_managed
         });
 
         const updatedExpense = await db('recurring_expenses').where({ id }).first();

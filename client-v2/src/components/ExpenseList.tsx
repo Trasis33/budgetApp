@@ -23,6 +23,7 @@ import { Search, Filter, Trash2, PlusCircle, Receipt, ArrowUpDown, Edit2, Check,
 import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
+import { recurringExpenseService } from '../api/services/recurringExpenseService';
 import { toast } from 'sonner';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
@@ -55,6 +56,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<Expense>>({});
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [generatingBills, setGeneratingBills] = useState(false);
   const splitPanelRef = useRef<HTMLDivElement | null>(null);
 
   const now = new Date();
@@ -257,6 +259,33 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   };
 
   const hasPartner = users.some(u => u.id !== authUser?.id);
+
+  const handleGenerateBills = async () => {
+    const selectedYear = filterYear === 'all' ? currentYear : parseInt(filterYear);
+    const selectedMonth = filterMonth === 'all' ? currentMonth + 1 : parseInt(filterMonth) + 1;
+
+    setGeneratingBills(true);
+    try {
+      const result = await recurringExpenseService.generate({
+        year: selectedYear,
+        month: selectedMonth
+      });
+
+      if (result.generatedCount > 0) {
+        toast.success(`Generated ${result.generatedCount} recurring expenses`);
+        // Reload expenses to show the new ones
+        const expensesData = await expenseService.getExpenses(currentScope);
+        setExpenses(expensesData);
+      } else {
+        toast.info('All recurring expenses already exist for this month');
+      }
+    } catch (error) {
+      console.error('Failed to generate recurring expenses:', error);
+      toast.error('Failed to generate recurring expenses');
+    } finally {
+      setGeneratingBills(false);
+    }
+  };
 
   const clampRatio = (value: number) => Math.max(0, Math.min(100, value));
 
@@ -767,6 +796,23 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                   </button>
                 </CollapsibleTrigger>
                 <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleGenerateBills();
+                    }}
+                    disabled={generatingBills}
+                    className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                  >
+                    {generatingBills ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                    )}
+                    Generate Bills
+                  </Button>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">
                       {recurringExpenses.length} items

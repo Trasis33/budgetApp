@@ -36,6 +36,8 @@ export interface RecurringTemplate {
   default_amount: number;
   category_id: number;
   paid_by_user_id: number;
+  /** If true, this template represents a core bill that should be treated as a pre-filled expense each month. */
+  bill_managed?: boolean;
   /** Split type. 'personal' means paid by single user, '50/50' splits equally, 'custom' uses custom ratios (must sum to 100), 'bill' is a special couple split. */
   split_type: '50/50' | 'custom' | 'personal' | 'bill';
   split_ratio_user1?: number;

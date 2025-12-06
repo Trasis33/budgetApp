@@ -11,6 +11,7 @@ import { getCategoryIconStyle } from '@/lib/iconUtils';
 interface Step2Props {
   state: WizardState;
   categories: Category[];
+  billCategoryIds: number[];
   updateFixed: (catId: number, val: number) => void;
   updateVariable: (catId: number, val: number) => void;
   onBack: () => void;
@@ -20,6 +21,7 @@ interface Step2Props {
 export function Step2Architect({
   state,
   categories,
+  billCategoryIds,
   updateFixed,
   updateVariable,
   onBack,
@@ -33,14 +35,29 @@ export function Step2Architect({
 
   const [localFixed, setLocalFixed] = useState<Record<number, number>>(state.fixedExpenses);
   const [localVariable, setLocalVariable] = useState<Record<number, number>>(state.variableAllocations);
-  const [hasUserEditedVariables, setHasUserEditedVariables] = useState(
-    Object.keys(state.variableAllocations || {}).length > 0
-  );
+  // Tracks only *manual* edits done in Step 2. Seeding from previous months
+  // or other automatic state changes should not flip this to true.
+  const [hasUserEditedVariables, setHasUserEditedVariables] = useState(false);
+
+  // Keep local fixed/variable state in sync when the parent wizard state changes
+  useEffect(() => {
+    setLocalFixed(state.fixedExpenses || {});
+  }, [state.fixedExpenses]);
+
+  useEffect(() => {
+    const parentVariable = state.variableAllocations || {};
+    setLocalVariable(parentVariable);
+  }, [state.variableAllocations]);
 
   // Helper: get spending role with sensible default
   const getCategoryRole = (cat: Category): 'need' | 'want' | 'save' => {
       return cat.spending_role || 'need';
   };
+
+  const billCategoryIdSet = useMemo(
+    () => new Set<number>(billCategoryIds || []),
+    [billCategoryIds]
+  );
 
   // Define fixed vs variable categories
   // Prioritize the is_fixed flag from the database, fallback to name matching for legacy/defaults
@@ -77,91 +94,97 @@ export function Step2Architect({
   const needsActualPercent = state.income > 0 ? (needsTotal / state.income) * 100 : 0;
 
   // Initial Allocation Logic based on spending_role (need/want/save)
+  // This distributes budgets across ALL variable categories proportionally,
+  // rather than only filling unassigned ones.
   useEffect(() => {
-      // Only run while user hasn't manually adjusted variable categories
+      // Once the user has manually adjusted variable categories, we stop
+      // auto-rebalancing and leave their choices untouched.
       if (hasUserEditedVariables || disposableIncome <= 0) {
           return;
       }
 
+      const variableNeedCats = variableCats.filter((c) => getCategoryRole(c) === 'need');
+      const variableWantCats = variableCats.filter((c) => getCategoryRole(c) === 'want');
+      const variableSaveCats = variableCats.filter((c) => getCategoryRole(c) === 'save');
+
+      // Fixed needs already committed
+      const fixedNeeds = fixedCats
+        .filter((c) => getCategoryRole(c) === 'need')
+        .reduce((sum, c) => sum + (localFixed[c.id] || 0), 0);
+
+      // Calculate target budgets for each bucket based on strategy
+      // Variable needs = needs target minus what's already in fixed
+      let variableNeedsBudget = Math.max(0, needsTargetAmount - fixedNeeds);
+      let wantsBudget = state.income * strategy.distribution.wants;
+      let savingsBudget = state.income * strategy.distribution.savings;
+
+      // Scale down if total exceeds disposable income
+      const plannedTotal = variableNeedsBudget + wantsBudget + savingsBudget;
+      if (plannedTotal > disposableIncome && plannedTotal > 0) {
+        const scale = disposableIncome / plannedTotal;
+        variableNeedsBudget *= scale;
+        wantsBudget *= scale;
+        savingsBudget *= scale;
+      }
+
       const newAllocations: Record<number, number> = {};
 
-          const variableNeedCats = variableCats.filter((c) => getCategoryRole(c) === 'need');
-          const variableWantCats = variableCats.filter((c) => getCategoryRole(c) === 'want');
-          const variableSaveCats = variableCats.filter((c) => getCategoryRole(c) === 'save');
+      // Distribute each bucket evenly among its categories
+      if (variableNeedCats.length > 0 && variableNeedsBudget > 0) {
+        const perCat = variableNeedsBudget / variableNeedCats.length;
+        variableNeedCats.forEach((c) => {
+          newAllocations[c.id] = Math.round(perCat);
+        });
+      }
 
-          // How much of the Needs bucket is already taken by fixed expenses?
-          const fixedNeeds = fixedCats
-            .filter((c) => getCategoryRole(c) === 'need')
-            .reduce((sum, c) => sum + (localFixed[c.id] || 0), 0);
+      if (variableWantCats.length > 0 && wantsBudget > 0) {
+        const perCat = wantsBudget / variableWantCats.length;
+        variableWantCats.forEach((c) => {
+          newAllocations[c.id] = Math.round(perCat);
+        });
+      }
 
-          let variableNeedsBudget = Math.max(0, needsTargetAmount - fixedNeeds);
-          let wantsBudget = state.income * strategy.distribution.wants;
-          let savingsBudget = state.income * strategy.distribution.savings;
+      if (variableSaveCats.length > 0 && savingsBudget > 0) {
+        const perCat = savingsBudget / variableSaveCats.length;
+        variableSaveCats.forEach((c) => {
+          newAllocations[c.id] = Math.round(perCat);
+        });
+      }
 
-          const plannedTotal = variableNeedsBudget + wantsBudget + savingsBudget;
+      // Update local slider/input state
+      setLocalVariable(newAllocations);
 
-          if (plannedTotal > 0) {
-              // Do not allocate more than disposable income
-              const scale = Math.min(1, disposableIncome / plannedTotal);
-              variableNeedsBudget *= scale;
-              wantsBudget *= scale;
-              savingsBudget *= scale;
-          }
-
-          if (variableNeedCats.length > 0 && variableNeedsBudget > 0) {
-              const perCat = variableNeedsBudget / variableNeedCats.length;
-              variableNeedCats.forEach((c) => {
-                  newAllocations[c.id] = Math.round(perCat);
-              });
-          }
-
-          if (variableWantCats.length > 0 && wantsBudget > 0) {
-              const perCat = wantsBudget / variableWantCats.length;
-              variableWantCats.forEach((c) => {
-                  newAllocations[c.id] = Math.round(perCat);
-              });
-          }
-
-          if (variableSaveCats.length > 0 && savingsBudget > 0) {
-              const perCat = savingsBudget / variableSaveCats.length;
-              variableSaveCats.forEach((c) => {
-                  newAllocations[c.id] = Math.round(perCat);
-              });
-          }
-
-          setLocalVariable(newAllocations);
+      // Also push the auto-calculated allocations up to the wizard state so that
+      // the final save call persists them.
+      Object.entries(newAllocations).forEach(([id, val]) => {
+        updateVariable(parseInt(id, 10), val as number);
+      });
   }, [
       state.income,
       state.selectedStrategy,
-      strategy.distribution.needs,
+      needsTargetAmount,
       disposableIncome,
       variableCats,
       fixedCats,
       localFixed,
-      hasUserEditedVariables
+      hasUserEditedVariables,
+      updateVariable,
+      strategy.distribution.wants,
+      strategy.distribution.savings
   ]);
-
-  // Sync local state to parent on unmount or save? 
-  // Better to sync on change to keep parent updated
-  useEffect(() => {
-      // We can optimize this to not run on every keystroke if needed, but for now it's fine
-      Object.entries(localFixed).forEach(([id, val]) => updateFixed(parseInt(id), val));
-  }, [localFixed]);
-
-  useEffect(() => {
-      Object.entries(localVariable).forEach(([id, val]) => updateVariable(parseInt(id), val));
-  }, [localVariable]);
 
 
   const handleFixedChange = (id: number, val: string) => {
       const num = parseInt(val.replace(/\D/g, '')) || 0;
       setLocalFixed(prev => ({ ...prev, [id]: num }));
+      updateFixed(id, num);
   };
 
   const handleVariableChange = (id: number, val: string | number) => {
       setHasUserEditedVariables(true);
       const num = typeof val === 'string' ? parseInt(val.replace(/\D/g, '')) || 0 : val;
       setLocalVariable(prev => ({ ...prev, [id]: num }));
+      updateVariable(id, num);
   };
 
   const formatNumber = (num: number) => new Intl.NumberFormat('sv-SE', { useGrouping: true }).format(num);
@@ -238,6 +261,7 @@ export function Step2Architect({
                             const Icon = getIconByName(category.icon);
                             const color = getCategoryColor(category);
                             const amount = localFixed[category.id] || 0;
+                            const isBill = billCategoryIdSet.has(category.id);
 
                             return (
                                 <div key={category.id} className="p-4 hover:bg-slate-50 transition-colors group">
@@ -250,6 +274,11 @@ export function Step2Architect({
                                                 <Icon className="h-4 w-4" />
                                             </div>
                                             <span className="text-sm font-semibold text-slate-700">{category.name}</span>
+                                            {isBill && (
+                                              <span className="ml-1 text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 uppercase tracking-wide">
+                                                Bill
+                                              </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="relative">
@@ -364,7 +393,7 @@ export function Step2Architect({
                 <div className="text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2">
                   <span>
                     Fixed budgets to save:{' '}
-                    {fixedCats.filter(c => (localFixed[c.id] || 0) > 0).length}
+                    {fixedCats.filter(c => (localFixed[c.id] || 0) > 0 && !billCategoryIdSet.has(c.id)).length}
                   </span>
                   <span>
                     Variable budgets to save:{' '}

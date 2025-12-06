@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
-import { Category, BudgetWithSpending } from '../../types';
+import { Category, BudgetWithSpending, Budget, RecurringTemplate } from '../../types';
 import { Step1Strategy } from './Step1Strategy';
 import { Step2Architect } from './Step2Architect';
 import { WizardState } from './types';
 import { budgetService } from '../../api/services/budgetService';
+import { recurringExpenseService } from '../../api/services/recurringExpenseService';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
 import { useScope } from '../../context/ScopeContext';
@@ -40,6 +41,8 @@ export function SmartBudgetWizard({
     variableAllocations: {}
   });
 
+  const [recurringTemplates, setRecurringTemplates] = useState<RecurringTemplate[]>([]);
+
   // Initialize incomes from couple summary when available
   useEffect(() => {
     if (summary?.couple) {
@@ -63,40 +66,145 @@ export function SmartBudgetWizard({
     }
   }, [isOpen, refresh]);
 
-  // Initialize fixed expenses from existing budgets if available
+  // Reset wizard step on open
   React.useEffect(() => {
-    if (isOpen) {
-      const initialFixed: Record<number, number> = {};
-      existingBudgets.forEach(b => {
-        // We'll need a way to identify fixed vs variable eventually. 
-        // For now, we can check if the category name implies fixed costs or rely on future backend flag
-        // Or just pre-fill if the amount > 0
-        if (b.amount > 0) {
-          // initialFixed[b.category_id] = b.amount; 
-          // Actually, let's not pre-fill too aggressively to allow a clean slate feel
-          // unless the user specifically wants to 'edit' their plan.
-          // For this MVP, let's start clean or maybe pre-fill common fixed categories
+    if (!isOpen) return;
+    setState(prev => ({
+      ...prev,
+      step: 1
+    }));
+  }, [isOpen]);
+
+  // Seed from previous month's budgets for "memory" behaviour
+  React.useEffect(() => {
+    if (!isOpen || !categories.length) return;
+
+    const loadPreviousBudgets = async () => {
+      try {
+        // Compute previous month/year
+        let prevMonth = month - 1;
+        let prevYear = year;
+        if (prevMonth <= 0) {
+          prevMonth = 12;
+          prevYear = year - 1;
+        }
+
+        const previousBudgets = (await budgetService.getBudgets(
+          prevMonth,
+          prevYear
+        )) as unknown as Budget[];
+
+        if (!previousBudgets || !previousBudgets.length) {
+          // Nothing to seed from
+          return;
+        }
+
+        const categoryMap = new Map<number, Category>();
+        categories.forEach(c => categoryMap.set(c.id, c));
+
+        const fixed: Record<number, number> = {};
+        const variable: Record<number, number> = {};
+
+        previousBudgets.forEach(b => {
+          const cat = categoryMap.get(b.category_id);
+          if (!cat) return;
+          const amountNum = typeof b.amount === 'number' ? b.amount : Number(b.amount || 0);
+          if (!amountNum || amountNum <= 0) return;
+
+          if (cat.is_fixed) {
+            fixed[b.category_id] = Math.round(amountNum);
+          } else {
+            variable[b.category_id] = Math.round(amountNum);
+          }
+        });
+
+        // If everything was zero or unmapped, don't override
+        if (
+          Object.keys(fixed).length === 0 &&
+          Object.keys(variable).length === 0
+        ) {
+          return;
+        }
+
+        // Seed wizard state; Step2 will treat non-empty variableAllocations
+        // as "user edited" and won't auto-override them.
+        //
+        // IMPORTANT: For fixed expenses, put seeded values FIRST so that
+        // bill-managed defaults (which come from recurring templates overlay)
+        // take precedence. For variable, merge normally.
+        setState(prev => ({
+          ...prev,
+          fixedExpenses: { ...fixed, ...prev.fixedExpenses },
+          variableAllocations: { ...prev.variableAllocations, ...variable }
+        }));
+      } catch (error) {
+        console.error('Failed to seed Smart Budget wizard from previous budgets:', error);
+      }
+    };
+
+    void loadPreviousBudgets();
+  }, [isOpen, month, year, categories]);
+
+  // Load recurring templates when wizard opens (used to identify bill-managed categories)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadTemplates = async () => {
+      try {
+        const templates = await recurringExpenseService.getTemplates();
+        setRecurringTemplates(templates);
+      } catch (error) {
+        console.error('Failed to load recurring templates for Smart Budget wizard:', error);
+      }
+    };
+
+    void loadTemplates();
+  }, [isOpen]);
+
+  // Overlay bill-managed template amounts into fixedExpenses so bills are always in sync
+  useEffect(() => {
+    if (!isOpen || recurringTemplates.length === 0) return;
+
+    const billDefaults: Record<number, number> = {};
+    recurringTemplates
+      .filter((t) => t.bill_managed)
+      .forEach((t) => {
+        const amountNum =
+          typeof t.default_amount === 'number'
+            ? t.default_amount
+            : Number(t.default_amount || 0);
+        if (amountNum > 0) {
+          billDefaults[t.category_id] = Math.round(amountNum);
         }
       });
-      
-      // Reset state on open
-      setState(prev => ({
-        ...prev,
-        step: 1,
-        // income: prev.income // keep income if they set it previously
-      }));
-    }
-  }, [isOpen, existingBudgets]);
+
+    if (Object.keys(billDefaults).length === 0) return;
+
+    setState((prev) => ({
+      ...prev,
+      fixedExpenses: {
+        ...prev.fixedExpenses,
+        ...billDefaults,
+      },
+    }));
+  }, [isOpen, recurringTemplates]);
 
   const handleSave = async () => {
     try {
       const promises = [];
+
+      const billCategoryIds = new Set(
+        recurringTemplates
+          .filter((t) => t.bill_managed)
+          .map((t) => t.category_id)
+      );
       
-      // Save Fixed Expenses
-      for (const [catId, amount] of Object.entries(state.fixedExpenses)) {
-        if (amount > 0) {
+      // Save Fixed Expenses (skip bill-managed categories; those are handled as recurring bills)
+      for (const [catIdStr, amount] of Object.entries(state.fixedExpenses)) {
+        const catId = parseInt(catIdStr, 10);
+        if (amount > 0 && !billCategoryIds.has(catId)) {
           promises.push(budgetService.createOrUpdateBudget({
-            category_id: parseInt(catId),
+            category_id: catId,
             amount,
             month,
             year
@@ -104,11 +212,12 @@ export function SmartBudgetWizard({
         }
       }
 
-      // Save Variable Allocations
-      for (const [catId, amount] of Object.entries(state.variableAllocations)) {
+      // Save Variable Allocations (these are the true budgets for "what's left")
+      for (const [catIdStr, amount] of Object.entries(state.variableAllocations)) {
+        const catId = parseInt(catIdStr, 10);
         if (amount > 0) {
           promises.push(budgetService.createOrUpdateBudget({
-            category_id: parseInt(catId),
+            category_id: catId,
             amount,
             month,
             year
@@ -160,6 +269,7 @@ export function SmartBudgetWizard({
                         key="step2"
                         state={state}
                         categories={categories}
+                        billCategoryIds={recurringTemplates.filter(t => t.bill_managed).map(t => t.category_id)}
                         updateFixed={(catId, val) => {
                             setState(prev => ({
                                 ...prev,

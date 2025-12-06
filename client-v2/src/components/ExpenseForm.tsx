@@ -30,6 +30,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [billManagedCategoryIds, setBillManagedCategoryIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
@@ -49,15 +50,26 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [categoriesData, usersData] = await Promise.all([
+        const [categoriesData, usersData, recurringTemplates] = await Promise.all([
           categoryService.getCategories(),
-          authService.getUsers()
+          authService.getUsers(),
+          recurringExpenseService.getTemplates()
         ]);
         setCategories(categoriesData);
         setUsers(usersData);
 
-        if (categoriesData.length > 0 && !formData.category_id) {
-          setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
+        // Track which categories have bill-managed recurring templates
+        const billCatIds = new Set<number>(
+          recurringTemplates
+            .filter(t => t.bill_managed)
+            .map(t => t.category_id)
+        );
+        setBillManagedCategoryIds(billCatIds);
+
+        // Filter out bill-managed categories for default selection
+        const selectableCategories = categoriesData.filter(c => !billCatIds.has(c.id));
+        if (selectableCategories.length > 0 && !formData.category_id) {
+          setFormData(prev => ({ ...prev, category_id: selectableCategories[0].id }));
         }
         
         // Ensure paid_by_user_id is set if not already
@@ -127,18 +139,20 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
       });
 
       if (saveAsRecurring) {
-        try {
-          await recurringExpenseService.createTemplate({
-            description: formData.description,
-            default_amount: parseFloat(formData.amount),
-            category_id: formData.category_id,
-            paid_by_user_id: formData.paid_by_user_id,
-            split_type: formData.split_type,
-            ...(formData.split_type === 'custom' && {
-              split_ratio_user1: formData.split_ratio_user1,
-              split_ratio_user2: formData.split_ratio_user2
-            })
-          });
+          try {
+            await recurringExpenseService.createTemplate({
+              description: formData.description,
+              default_amount: parseFloat(formData.amount),
+              category_id: formData.category_id,
+              paid_by_user_id: formData.paid_by_user_id,
+              split_type: formData.split_type,
+              ...(formData.split_type === 'custom' && {
+                split_ratio_user1: formData.split_ratio_user1,
+                split_ratio_user2: formData.split_ratio_user2
+              }),
+              // For now, treat "Save as recurring" from the expense form as a bill-managed template.
+              bill_managed: true
+            });
           toast.success('✨ Expense tracked and saved as recurring!', { duration: 4000 });
         } catch (templateErr) {
           toast.success('✨ Expense tracked, but recurring template failed.', { duration: 4000 });
@@ -218,38 +232,40 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                 </div>
                 
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-3">
-                  {categories.map((category) => {
-                    const Icon = getIconByName(category.icon);
-                    const isSelected = formData.category_id === category.id;
-                    
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, category_id: category.id })}
-                        className={`group flex flex-col items-center gap-2 p-2 rounded-xl transition-all ${
-                          isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        <div 
-                          className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
+                  {categories
+                    .filter(category => !billManagedCategoryIds.has(category.id))
+                    .map((category) => {
+                      const Icon = getIconByName(category.icon);
+                      const isSelected = formData.category_id === category.id;
+                      
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, category_id: category.id })}
+                          className={`group flex flex-col items-center gap-2 p-2 rounded-xl transition-all ${
                             isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
                           }`}
-                          style={getCategoryIconStyle(category.color || '#64748b', isSelected)}
                         >
-                          <Icon className="h-6 w-6" />
-                        </div>
-                        <span 
-                          className={`text-xs font-medium transition-colors ${
-                            isSelected ? 'font-semibold' : 'text-slate-600'
-                          }`}
-                          style={{ color: isSelected ? category.color : undefined }}
-                        >
-                          {category.name}
-                        </span>
-                      </button>
-                    );
-                  })}
+                          <div 
+                            className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
+                              isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
+                            }`}
+                            style={getCategoryIconStyle(category.color || '#64748b', isSelected)}
+                          >
+                            <Icon className="h-6 w-6" />
+                          </div>
+                          <span 
+                            className={`text-xs font-medium transition-colors ${
+                              isSelected ? 'font-semibold' : 'text-slate-600'
+                            }`}
+                            style={{ color: isSelected ? category.color : undefined }}
+                          >
+                            {category.name}
+                          </span>
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             </div>

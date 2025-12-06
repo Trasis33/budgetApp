@@ -29,6 +29,7 @@ export const recurringExpenseService = {
     split_type: '50/50' | 'custom' | 'personal' | 'bill';
     split_ratio_user1?: number;
     split_ratio_user2?: number;
+    bill_managed?: boolean;
   }): Promise<RecurringTemplate> {
     return apiClient.post<RecurringTemplate>('/recurring-expenses', payload);
   },
@@ -48,6 +49,7 @@ export const recurringExpenseService = {
       split_type: '50/50' | 'custom' | 'personal' | 'bill';
       split_ratio_user1?: number;
       split_ratio_user2?: number;
+      bill_managed?: boolean;
     }>
   ): Promise<RecurringTemplate> {
     return apiClient.put<RecurringTemplate>(`/recurring-expenses/${id}`, payload);
