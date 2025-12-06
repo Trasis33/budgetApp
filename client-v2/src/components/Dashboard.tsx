@@ -97,19 +97,28 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   }
   
   const monthlyExpenses = filterExpensesByMonth(expenses, currentYear, currentMonth);
+  
+  // Separate variable (budgeted) vs fixed (recurring) expenses
+  const budgetedCategoryIds = new Set(budgets.map(b => b.category_id));
+  const variableExpenses = monthlyExpenses.filter(exp => budgetedCategoryIds.has(exp.category_id));
+  const fixedExpenses = monthlyExpenses.filter(exp => exp.recurring_expense_id != null);
+  
+  const variableSpent = variableExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const fixedSpent = fixedExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
 
   const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
   const previousMonthExpenses = filterExpensesByMonth(expenses, previousYear, previousMonth);
-  const previousMonthTotal = previousMonthExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const previousMonthVariableExpenses = previousMonthExpenses.filter(exp => budgetedCategoryIds.has(exp.category_id));
+  const previousMonthVariableTotal = previousMonthVariableExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
 
-  const spendingChange = previousMonthTotal > 0
-    ? ((totalSpent - previousMonthTotal) / previousMonthTotal) * 100
+  const spendingChange = previousMonthVariableTotal > 0
+    ? ((variableSpent - previousMonthVariableTotal) / previousMonthVariableTotal) * 100
     : 0;
 
   const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
-  const budgetProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const budgetProgress = totalBudget > 0 ? (variableSpent / totalBudget) * 100 : 0;
 
   const recentExpenses = [...monthlyExpenses]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -345,13 +354,17 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         <>
           {/* Metrics Grid using BudgetManager styling */}
           <div className={`${styles.metricsGrid} mb-6`}>
+            {/* Budget Status - Variable spending vs budget */}
             <div className={styles.metricCard}>
               <div className={styles.metricContent}>
                 <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>Total Spent</div>
-                  <div className={styles.metricValue}>{formatCurrency(totalSpent)}</div>
+                  <div className={styles.metricLabel}>Budget Status</div>
+                  <div className={styles.metricValue}>{formatCurrency(variableSpent)}</div>
                   <div className="text-sm text-gray-500 mt-1">
-                    of {formatCurrency(totalBudget)} budget
+                    of {formatCurrency(totalBudget)} budgeted
+                  </div>
+                  <div className={`${styles.progressBar} ${styles.progressBarSm} mt-2`}>
+                    <div className={`${styles.progressFill} ${getProgressColorClass()}`} style={{ width: `${Math.min(budgetProgress, 100)}%` }}></div>
                   </div>
                 </div>
                 <div className={`${styles.metricIcon} ${getIconColorClass(0)}`}>
@@ -360,19 +373,35 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </div>
             </div>
 
+            {/* Fixed Costs */}
             <div className={styles.metricCard}>
               <div className={styles.metricContent}>
                 <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>This Month</div>
-                  <div className={styles.metricValue}>{monthlyExpenses.length} expenses</div>
-                  <div className={`text-sm ${spendingChange <= 0 ? 'text-green-600' : 'text-orange-600'} mt-1`}>
-                    {spendingChange <= 0 ? 'Great! You are on track' : 'Let us see where we can optimize'}
-                  </div>
-                  <div className={`text-sm ${spendingChange <= 0 ? 'text-green-600' : 'text-orange-600'}`}>
-                    {spendingChange <= 0 ? '+' : ''}{spendingChange.toFixed(1)}% vs last month
+                  <div className={styles.metricLabel}>Fixed Costs</div>
+                  <div className={styles.metricValue}>{formatCurrency(fixedSpent)}</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {fixedExpenses.length} recurring expense{fixedExpenses.length !== 1 ? 's' : ''}
                   </div>
                 </div>
                 <div className={`${styles.metricIcon} ${getIconColorClass(1)}`}>
+                  <Receipt className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Spending Trend */}
+            <div className={styles.metricCard}>
+              <div className={styles.metricContent}>
+                <div className={styles.metricInfo}>
+                  <div className={styles.metricLabel}>Trend</div>
+                  <div className={`${styles.metricValue} ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                    {spendingChange <= 0 ? '' : '+'}{spendingChange.toFixed(1)}%
+                  </div>
+                  <div className={`text-sm ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'} mt-1`}>
+                    {spendingChange <= 0 ? 'Under last month' : 'Over last month'}
+                  </div>
+                </div>
+                <div className={`${styles.metricIcon} ${getIconColorClass(2)}`}>
                   {spendingChange > 0 ? (
                     <TrendingUp className="w-5 h-5" />
                   ) : (
@@ -382,26 +411,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </div>
             </div>
 
-            <div className={styles.metricCard}>
-              <div className={styles.metricContent}>
-                <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>Budget Used</div>
-                  <div className={styles.metricValue}>{budgetProgress.toFixed(1)}%</div>
-                  <div className={`${styles.progressBar} ${styles.progressBarSm} mt-2`}>
-                    <div className={`${styles.progressFill} ${getProgressColorClass()}`} style={{ width: `${Math.min(budgetProgress, 100)}%` }}></div>
-                  </div>
-                </div>
-                <div className={`${styles.metricIcon} ${getIconColorClass(2)}`}>
-                  <Receipt className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
-
+            {/* Avg per Day */}
             <div className={styles.metricCard}>
               <div className={styles.metricContent}>
                 <div className={styles.metricInfo}>
                   <div className={styles.metricLabel}>Avg per Day</div>
-                  <div className={styles.metricValue}>{formatCurrency(totalSpent / now.getDate())}</div>
+                  <div className={styles.metricValue}>
+                    {formatCurrency(variableSpent / Math.max(1, now.getDate()))}
+                  </div>
                   <div className="text-sm text-gray-500 mt-1">
                     Based on {now.getDate()} days
                   </div>
