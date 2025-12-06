@@ -3,11 +3,13 @@ import { RecurringTemplate } from '../../types';
 
 export const recurringExpenseService = {
   /**
-   * Get all active recurring templates for the authenticated couple.
+   * Get recurring templates for the authenticated couple.
    * Templates are couple-level; ownership is shared.
+   * @param includeInactive If true, also returns deactivated templates
    */
-  async getTemplates(): Promise<RecurringTemplate[]> {
-    return apiClient.get<RecurringTemplate[]>('/recurring-expenses');
+  async getTemplates(includeInactive = false): Promise<RecurringTemplate[]> {
+    const params = includeInactive ? '?includeInactive=true' : '';
+    return apiClient.get<RecurringTemplate[]>(`/recurring-expenses${params}`);
   },
 
   /**
@@ -57,10 +59,29 @@ export const recurringExpenseService = {
 
   /**
    * Deactivate a recurring template (soft delete). Does not delete generated expenses.
+   * Template can be reactivated later.
    * @param id Template ID
    */
   async deactivateTemplate(id: number): Promise<void> {
     return apiClient.delete(`/recurring-expenses/${id}`);
+  },
+
+  /**
+   * Reactivate a previously deactivated template.
+   * @param id Template ID
+   */
+  async reactivateTemplate(id: number): Promise<RecurringTemplate> {
+    return apiClient.post<RecurringTemplate>(`/recurring-expenses/${id}/reactivate`, {});
+  },
+
+  /**
+   * Permanently delete a recurring template.
+   * @param id Template ID
+   * @param deleteExpenses If true, also deletes all linked expenses. If false, expenses are unlinked but kept.
+   */
+  async permanentlyDeleteTemplate(id: number, deleteExpenses = false): Promise<{ deleted: boolean; linkedExpensesDeleted: boolean; linkedExpenseCount: number }> {
+    const params = deleteExpenses ? '?deleteExpenses=true' : '';
+    return apiClient.delete(`/recurring-expenses/${id}/permanent${params}`);
   },
 
   /**

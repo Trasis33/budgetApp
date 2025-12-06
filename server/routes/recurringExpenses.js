@@ -4,9 +4,15 @@ const db = require('../db/database');
 const auth = require('../middleware/auth');
 
 // Get all recurring expenses for the authenticated user
+// Query param: includeInactive=true to also return deactivated templates
 router.get('/', auth, async (req, res) => {
   try {
-    const expenses = await db('recurring_expenses').where('is_active', true);
+    const includeInactive = req.query.includeInactive === 'true';
+    let query = db('recurring_expenses');
+    if (!includeInactive) {
+      query = query.where('is_active', true);
+    }
+    const expenses = await query;
     res.json(expenses);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -107,7 +113,7 @@ router.put('/:id', auth, async (req, res) => {
     }
 });
 
-// Delete a recurring expense (deactivate)
+// Deactivate a recurring expense (soft delete)
 router.delete('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
@@ -120,6 +126,65 @@ router.delete('/:id', auth, async (req, res) => {
 
         await db('recurring_expenses').where({ id }).update({ is_active: false });
         res.status(204).send();
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Reactivate a deactivated recurring expense
+router.post('/:id/reactivate', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const expense = await db('recurring_expenses').where({ id }).first();
+
+        if (!expense) {
+            return res.status(404).json({ message: 'Recurring expense not found' });
+        }
+
+        await db('recurring_expenses').where({ id }).update({ is_active: true });
+        const updatedExpense = await db('recurring_expenses').where({ id }).first();
+        res.json(updatedExpense);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Permanently delete a recurring expense template
+// Query param: deleteExpenses=true to also delete all linked expenses
+router.delete('/:id/permanent', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleteExpenses = req.query.deleteExpenses === 'true';
+
+        const expense = await db('recurring_expenses').where({ id }).first();
+
+        if (!expense) {
+            return res.status(404).json({ message: 'Recurring expense not found' });
+        }
+
+        // Count linked expenses for response
+        const linkedExpenseCount = await db('expenses')
+            .where({ recurring_expense_id: id })
+            .count('id as count')
+            .first();
+
+        if (deleteExpenses) {
+            // Delete all linked expenses first
+            await db('expenses').where({ recurring_expense_id: id }).del();
+        } else {
+            // Unlink expenses from this template (set recurring_expense_id to null)
+            await db('expenses').where({ recurring_expense_id: id }).update({ recurring_expense_id: null });
+        }
+
+        // Permanently delete the template
+        await db('recurring_expenses').where({ id }).del();
+
+        res.json({ 
+            deleted: true, 
+            linkedExpensesDeleted: deleteExpenses,
+            linkedExpenseCount: linkedExpenseCount?.count || 0
+        });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
