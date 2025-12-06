@@ -120,7 +120,13 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
   const budgetProgress = totalBudget > 0 ? (variableSpent / totalBudget) * 100 : 0;
 
-  const recentExpenses = [...monthlyExpenses]
+  // Separate recent variable vs fixed expenses for display
+  const recentVariableExpenses = [...monthlyExpenses]
+    .filter(exp => exp.recurring_expense_id == null)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+  
+  const recentFixedExpenses = [...fixedExpenses]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
@@ -430,13 +436,15 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             </div>
           </div>
 
-          {/* Main Content Grid */}
+          {/* Main Content Grid - 2x2 layout */}
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Recent Expenses */}
+            {/* Row 1: Recent Variable Expenses + Budget Performance */}
+            
+            {/* Recent Variable Expenses */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Recent {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</CardTitle>
+                  <CardTitle className="text-lg">Recent expenses</CardTitle>
                   <Button
                     type="button"
                     variant="ghost"
@@ -451,7 +459,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentExpenses.map(expense => {
+                  {recentVariableExpenses.map(expense => {
                     const IconComponent = getIconByName(expense.category_icon);
                     const categoryColor = getExpenseCategoryColor(expense, budgets);
                     const isCurrentUser = expense.paid_by_user_id === user?.id;
@@ -491,8 +499,8 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                       </div>
                     );
                   })}
-                  {recentExpenses.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">No expenses this month</p>
+                  {recentVariableExpenses.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No variable expenses this month</p>
                   )}
                 </div>
                 <Button
@@ -574,7 +582,68 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </CardContent>
             </Card>
 
-            {/* Recurring Expenses Card */}
+            {/* Row 2: Fixed Expenses + Recurring Bills Card */}
+            
+            {/* Fixed Expenses */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Fixed expenses</CardTitle>
+                  <span className="text-sm text-muted-foreground">
+                    {formatCurrency(fixedSpent)} total
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentFixedExpenses.map(expense => {
+                    const IconComponent = getIconByName(expense.category_icon);
+                    const categoryColor = getExpenseCategoryColor(expense, budgets);
+                    const isCurrentUser = expense.paid_by_user_id === user?.id;
+                    
+                    return (
+                      <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            {isPartnerConnected && (
+                              <div 
+                                className={`partner-avatar text-xs ${(isCurrentUser ? user?.color : summary?.couple?.partner?.color) ? '' : getPartnerAvatarClass(isCurrentUser)}`}
+                                style={getPartnerAvatarStyle(isCurrentUser)}
+                              >
+                                {getPartnerInitial(isCurrentUser ? user?.name : summary?.couple?.partner?.name)}
+                              </div>
+                            )}
+                            <div 
+                              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                              style={getCategoryIconStyle(categoryColor, false, 0.25)}
+                            >
+                              <IconComponent className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{expense.description}</p>
+                              <p className="text-xs text-gray-500">
+                                {expense.category_name} • {formatDate(expense.date)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm">{formatCurrency(expense.amount)}</p>
+                          <p className="text-xs text-gray-500">
+                            {expense.split_type === 'personal' ? 'Personal' : 'Split'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {recentFixedExpenses.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No fixed expenses this month</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recurring Bills Card */}
             <RecurringCard
               summary={recurringSummary}
               templateCount={recurringTemplates.length}
