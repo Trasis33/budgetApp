@@ -52,26 +52,25 @@ export function BudgetMetricsGrid({
   return (
     <div className={`${styles.metricsGrid} ${className}`}>
       <BudgetMetricCard
-        label="Total Budget"
+        label="Spent"
+        value={formatBudgetAmount(metrics.totalSpent)}
+        icon={<TrendingUp className="w-5 h-5" />}
+        iconColor="coral"
+      />
+      
+      <BudgetMetricCard
+        label="Budgeted"
         value={formatBudgetAmount(metrics.totalBudget)}
         icon={<Wallet className="w-5 h-5" />}
         iconColor="indigo"
       />
       
       <BudgetMetricCard
-        label="Total Spent"
-        value={formatBudgetAmount(metrics.totalSpent)}
-        icon={<TrendingUp className="w-5 h-5" />}
-        iconColor="coral"
-        variant={metrics.overallStatus === 'danger' ? 'danger' : 'warning'}
-      />
-      
-      <BudgetMetricCard
-        label="Total Remaining"
-        value={formatBudgetAmount(metrics.totalRemaining)}
+        label="Used"
+        value={`${Math.round(metrics.overallProgress)}%`}
         icon={<Percent className="w-5 h-5" />}
         iconColor="teal"
-        variant={metrics.totalRemaining >= 0 ? 'success' : 'danger'}
+        variant={metrics.overallStatus}
       />
       
       <BudgetMetricCard
