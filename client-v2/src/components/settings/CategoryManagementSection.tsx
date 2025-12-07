@@ -180,7 +180,7 @@ export function CategoryManagementSection() {
                   </div>
                   <div className="flex-1 flex items-center gap-2">
                     <p className="font-medium">{category.name}</p>
-                    {category.is_fixed && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    {category.is_fixed ? <Lock className="h-3 w-3 text-muted-foreground" /> : null}
                   </div>
                   
                   {isDeleting ? (
