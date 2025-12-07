@@ -2,15 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Expense, Budget } from '../types';
+import { Expense, Budget, Category } from '../types';
 import { formatCurrency, formatDate, filterExpensesByMonth, calculateCategorySpending, getBudgetProgress } from '../lib/utils';
 import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt, ArrowRight, Users, User, Heart, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { RecurringTemplatesDialog } from './RecurringTemplatesDialog';
 import { RecurringCard } from './RecurringCard';
+import { BudgetVsActualWidget } from './dashboard/BudgetVsActualWidget';
 import { expenseService } from '../api/services/expenseService';
 import { budgetService } from '../api/services/budgetService';
+import { categoryService } from '../api/services/categoryService';
 import { useRecurringSummary, useRecurringGeneration } from '../hooks';
 import { toast } from 'sonner';
 import { useScope } from '../context/ScopeContext';
@@ -34,6 +36,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
@@ -71,6 +74,10 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           (async () => {
             const budgetsData = await budgetService.getBudgets(new Date().getMonth() + 1, new Date().getFullYear());
             setBudgets(budgetsData);
+          })(),
+          (async () => {
+            const categoriesData = await categoryService.getCategories();
+            setCategories(categoriesData);
           })()
         ]);
       } catch (error) {
@@ -656,6 +663,16 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 });
               }}
               onManageTemplates={() => setRecurringDialogOpen(true)}
+            />
+          </div>
+
+          {/* Budget vs Actual Widget */}
+          <div className="mt-6">
+            <BudgetVsActualWidget
+              expenses={monthlyExpenses}
+              categories={categories}
+              totalIncome={summary?.couple?.combined_monthly_income || user?.monthly_net_income || 0}
+              fixedExpensesTotal={fixedSpent}
             />
           </div>
 
