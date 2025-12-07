@@ -16,6 +16,9 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { AlertCircle, CalendarIcon, CreditCard, RefreshCw, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { getIconByName } from '../../lib/categoryIcons';
+import { getCategoryColor } from '../../lib/categoryColors';
+import { getCategoryIconStyle } from '../../lib/iconUtils';
 import { recurringExpenseService } from '../../api/services/recurringExpenseService';
 import { categoryService } from '../../api/services/categoryService';
 import { authService } from '../../api/services/authService';
@@ -221,11 +224,19 @@ export function RecurringBillsSection() {
         <div className="space-y-0.5">
           <div className="font-medium flex items-center gap-2">
             {tpl.description}
-            {category && (
-              <span className="text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                {category.name}
-              </span>
-            )}
+            {category && (() => {
+              const IconComponent = getIconByName(category.icon);
+              const categoryColor = getCategoryColor({ color: category.color });
+              return (
+                <div 
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-transparent transition-colors" 
+                  style={getCategoryIconStyle(categoryColor, false, 0.08)}
+                >
+                  <IconComponent className="h-3 w-3" />
+                  <span className="text-xs font-semibold">{category.name}</span>
+                </div>
+              );
+            })()}
             {isDeactivated && (
               <span className="text-xs rounded-full bg-destructive/10 text-destructive px-2 py-0.5">
                 Deactivated
