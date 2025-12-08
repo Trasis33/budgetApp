@@ -29,7 +29,7 @@ export interface Expense {
   recurring_expense_id?: number | null;
 }
 
-/** Recurring expense template for couple-level monthly bills. All amounts are defaults used when generating concrete expenses. */
+/** Recurring expense template for couple-level monthly bills and subscriptions. All amounts are defaults used when generating concrete expenses. */
 export interface RecurringTemplate {
   id: number;
   description: string;
@@ -42,6 +42,8 @@ export interface RecurringTemplate {
   split_type: '50/50' | 'custom' | 'personal' | 'bill';
   split_ratio_user1?: number;
   split_ratio_user2?: number;
+  /** Day of month (1-28) when this recurring expense is due. Used for subscriptions that aren't on the 1st. */
+  day_of_month?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

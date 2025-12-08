@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog';
-import { AlertCircle, CalendarIcon, CreditCard, RefreshCw, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertCircle, CreditCard, RefreshCw, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { getIconByName } from '../../lib/categoryIcons';
 import { getCategoryColor } from '../../lib/categoryColors';
 import { getCategoryIconStyle } from '../../lib/iconUtils';
@@ -412,17 +412,15 @@ export function RecurringBillsSection() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories
-                        .filter((c) => c.is_fixed && c.spending_role === 'need')
-                        .map((cat) => (
-                          <SelectItem key={cat.id} value={String(cat.id)}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Only fixed "Need" categories are shown (e.g., Mortgage, Car Lease, Daycare).
+                    Select the category for this recurring expense (bills, subscriptions, etc.)
                   </p>
                 </div>
 

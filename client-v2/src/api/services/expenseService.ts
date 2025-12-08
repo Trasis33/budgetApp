@@ -34,6 +34,7 @@ export const expenseService = {
     split_type: '50/50' | 'custom' | 'personal' | 'bill';
     split_ratio_user1?: number;
     split_ratio_user2?: number;
+    recurring_expense_id?: number;
   }) {
     return apiClient.post('/expenses', data);
   },

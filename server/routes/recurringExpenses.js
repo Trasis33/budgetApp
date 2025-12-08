@@ -47,7 +47,8 @@ router.post('/', auth, async (req, res) => {
       split_type,
       split_ratio_user1,
       split_ratio_user2,
-      bill_managed
+      bill_managed,
+      day_of_month
     } = req.body;
     
     const [id] = await db('recurring_expenses').insert({
@@ -58,7 +59,8 @@ router.post('/', auth, async (req, res) => {
       split_type,
       split_ratio_user1,
       split_ratio_user2,
-      bill_managed: bill_managed ?? false
+      bill_managed: bill_managed ?? false,
+      day_of_month: day_of_month ?? 1 // Default to 1st of month
     });
     const newExpense = await db('recurring_expenses').where({ id }).first();
     res.status(201).json(newExpense);
@@ -79,7 +81,8 @@ router.put('/:id', auth, async (req, res) => {
           split_type,
           split_ratio_user1,
           split_ratio_user2,
-          bill_managed
+          bill_managed,
+          day_of_month
         } = req.body;
 
         const expense = await db('recurring_expenses').where({ id }).first();
@@ -103,7 +106,9 @@ router.put('/:id', auth, async (req, res) => {
               ? split_ratio_user2
               : expense.split_ratio_user2,
           bill_managed:
-            bill_managed !== undefined ? bill_managed : expense.bill_managed
+            bill_managed !== undefined ? bill_managed : expense.bill_managed,
+          day_of_month:
+            day_of_month !== undefined ? day_of_month : expense.day_of_month
         });
 
         const updatedExpense = await db('recurring_expenses').where({ id }).first();
@@ -213,38 +218,46 @@ router.post('/generate', auth, async (req, res) => {
             return res.json({ generatedCount: 0, generatedAmount: 0, year, month });
         }
 
-        // Generate the first day of the month for consistency
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-
         let generatedCount = 0;
         let generatedAmount = 0;
 
         // For each template, try to insert a new expense if one doesn't already exist for this month
         for (const template of templates) {
             try {
-                // Use onConflict().ignore() for idempotence
-                const result = await db('expenses')
-                    .insert({
-                        date: dateStr,
-                        amount: template.default_amount,
-                        category_id: template.category_id,
-                        paid_by_user_id: template.paid_by_user_id,
-                        split_type: template.split_type,
-                        split_ratio_user1: template.split_ratio_user1,
-                        split_ratio_user2: template.split_ratio_user2,
-                        description: template.description,
-                        recurring_expense_id: template.id,
-                        created_at: new Date(),
-                        updated_at: new Date()
-                    })
-                    .onConflict(['recurring_expense_id', 'date'])
-                    .ignore();
+                // Use template's day_of_month (default to 1 if not set)
+                // Clamp to 28 to avoid issues with short months
+                const day = Math.min(template.day_of_month || 1, 28);
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-                // Only count if insert was successful (result > 0 means rows affected)
-                if (result > 0) {
-                    generatedCount++;
-                    generatedAmount += template.default_amount;
+                // Check if an expense already exists for this template in this month
+                // (regardless of exact day, to prevent duplicates)
+                const existingExpense = await db('expenses')
+                    .where({ recurring_expense_id: template.id })
+                    .whereRaw('strftime("%Y-%m", date) = ?', [`${year}-${String(month).padStart(2, '0')}`])
+                    .first();
+
+                if (existingExpense) {
+                    // Already exists for this month, skip
+                    continue;
                 }
+
+                // Insert new expense
+                await db('expenses').insert({
+                    date: dateStr,
+                    amount: template.default_amount,
+                    category_id: template.category_id,
+                    paid_by_user_id: template.paid_by_user_id,
+                    split_type: template.split_type,
+                    split_ratio_user1: template.split_ratio_user1,
+                    split_ratio_user2: template.split_ratio_user2,
+                    description: template.description,
+                    recurring_expense_id: template.id,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                });
+
+                generatedCount++;
+                generatedAmount += template.default_amount;
             } catch (templateErr) {
                 // Log but continue with other templates
                 console.error(`Failed to generate expense for template ${template.id}:`, templateErr.message);

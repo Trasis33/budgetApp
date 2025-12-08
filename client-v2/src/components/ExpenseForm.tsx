@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Switch } from './ui/switch';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Expense, Category, User } from '../types';
-import { ArrowLeft, Check, Users, RefreshCw, Plus, ChevronDown, CalendarIcon } from 'lucide-react';
+import { Category, User } from '../types';
+import { ArrowLeft, Check, Users, RefreshCw, ChevronDown, CalendarIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { expenseService } from '../api/services/expenseService';
@@ -58,18 +56,17 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
         setCategories(categoriesData);
         setUsers(usersData);
 
-        // Track which categories have bill-managed recurring templates
+        // Track which categories have bill-managed recurring templates (for visual hint only)
         const billCatIds = new Set<number>(
           recurringTemplates
-            .filter(t => t.bill_managed)
+            .filter(t => t.bill_managed && t.is_active)
             .map(t => t.category_id)
         );
         setBillManagedCategoryIds(billCatIds);
 
-        // Filter out bill-managed categories for default selection
-        const selectableCategories = categoriesData.filter(c => !billCatIds.has(c.id));
-        if (selectableCategories.length > 0 && !formData.category_id) {
-          setFormData(prev => ({ ...prev, category_id: selectableCategories[0].id }));
+        // Select first category as default (no longer filtering out recurring categories)
+        if (categoriesData.length > 0 && !formData.category_id) {
+          setFormData(prev => ({ ...prev, category_id: categoriesData[0].id }));
         }
         
         // Ensure paid_by_user_id is set if not already
@@ -125,6 +122,36 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
     setLoading(true);
 
     try {
+      let recurringTemplateId: number | undefined;
+
+      // If saving as recurring, create the template FIRST to get its ID
+      if (saveAsRecurring) {
+        try {
+          // Use the day from the expense date for the recurring template
+          // This allows subscriptions to be on any day of the month
+          const dayOfMonth = Math.min(formData.date.getDate(), 28); // Clamp to 28 for safety
+          
+          const template = await recurringExpenseService.createTemplate({
+            description: formData.description,
+            default_amount: parseFloat(formData.amount),
+            category_id: formData.category_id,
+            paid_by_user_id: formData.paid_by_user_id,
+            split_type: formData.split_type,
+            ...(formData.split_type === 'custom' && {
+              split_ratio_user1: formData.split_ratio_user1,
+              split_ratio_user2: formData.split_ratio_user2
+            }),
+            bill_managed: true,
+            day_of_month: dayOfMonth
+          });
+          recurringTemplateId = template.id;
+        } catch (templateErr) {
+          console.error('Failed to create recurring template:', templateErr);
+          // Continue without the template link
+        }
+      }
+
+      // Create the expense, linking to the recurring template if one was created
       await expenseService.createExpense({
         amount: parseFloat(formData.amount),
         category_id: formData.category_id,
@@ -135,28 +162,14 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
         ...(formData.split_type === 'custom' && { 
           split_ratio_user1: formData.split_ratio_user1,
           split_ratio_user2: formData.split_ratio_user2 
-        })
+        }),
+        ...(recurringTemplateId && { recurring_expense_id: recurringTemplateId })
       });
 
-      if (saveAsRecurring) {
-          try {
-            await recurringExpenseService.createTemplate({
-              description: formData.description,
-              default_amount: parseFloat(formData.amount),
-              category_id: formData.category_id,
-              paid_by_user_id: formData.paid_by_user_id,
-              split_type: formData.split_type,
-              ...(formData.split_type === 'custom' && {
-                split_ratio_user1: formData.split_ratio_user1,
-                split_ratio_user2: formData.split_ratio_user2
-              }),
-              // For now, treat "Save as recurring" from the expense form as a bill-managed template.
-              bill_managed: true
-            });
-          toast.success('✨ Expense tracked and saved as recurring!', { duration: 4000 });
-        } catch (templateErr) {
-          toast.success('✨ Expense tracked, but recurring template failed.', { duration: 4000 });
-        }
+      if (saveAsRecurring && recurringTemplateId) {
+        toast.success('✨ Expense tracked and saved as recurring!', { duration: 4000 });
+      } else if (saveAsRecurring) {
+        toast.success('✨ Expense tracked, but recurring template failed.', { duration: 4000 });
       } else {
         toast.success('✨ Expense tracked!', { duration: 4000 });
       }
@@ -232,40 +245,42 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                 </div>
                 
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-3">
-                  {categories
-                    .filter(category => !billManagedCategoryIds.has(category.id))
-                    .map((category) => {
-                      const Icon = getIconByName(category.icon);
-                      const isSelected = formData.category_id === category.id;
-                      
-                      return (
-                        <button
-                          key={category.id}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, category_id: category.id })}
-                          className={`group flex flex-col items-center gap-2 p-2 rounded-xl transition-all ${
+                  {categories.map((category) => {
+                    const Icon = getIconByName(category.icon);
+                    const isSelected = formData.category_id === category.id;
+                    const hasRecurring = billManagedCategoryIds.has(category.id);
+                    
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, category_id: category.id })}
+                        className={`group flex flex-col items-center gap-2 p-2 rounded-xl transition-all relative ${
+                          isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
+                        }`}
+                      >
+                        <div 
+                          className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
                             isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
                           }`}
+                          style={getCategoryIconStyle(category.color || '#64748b', isSelected)}
                         >
-                          <div 
-                            className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
-                              isSelected ? 'scale-105' : 'opacity-70 hover:opacity-100'
-                            }`}
-                            style={getCategoryIconStyle(category.color || '#64748b', isSelected)}
-                          >
-                            <Icon className="h-6 w-6" />
-                          </div>
-                          <span 
-                            className={`text-xs font-medium transition-colors ${
-                              isSelected ? 'font-semibold' : 'text-slate-600'
-                            }`}
-                            style={{ color: isSelected ? category.color : undefined }}
-                          >
-                            {category.name}
-                          </span>
-                        </button>
-                      );
-                    })}
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <span 
+                          className={`text-xs font-medium transition-colors ${
+                            isSelected ? 'font-semibold' : 'text-slate-600'
+                          }`}
+                          style={{ color: isSelected ? category.color : undefined }}
+                        >
+                          {category.name}
+                        </span>
+                        {hasRecurring && (
+                          <RefreshCw className="absolute top-1 right-1 h-3 w-3 text-blue-500" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

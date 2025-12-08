@@ -75,8 +75,21 @@ const setupDatabase = async () => {
             table.decimal('split_ratio_user1', 5, 2).nullable();
             table.decimal('split_ratio_user2', 5, 2).nullable();
             table.boolean('is_active').defaultTo(true);
+            table.integer('day_of_month').defaultTo(1); // 1-28 for subscriptions, 1 = first of month (bills)
             table.timestamps(true, true);
         });
+    }
+
+    // Add day_of_month column to existing recurring_expenses table if missing
+    const hasRecurringTable = await db.schema.hasTable('recurring_expenses');
+    if (hasRecurringTable) {
+        const hasDayOfMonth = await db.schema.hasColumn('recurring_expenses', 'day_of_month');
+        if (!hasDayOfMonth) {
+            console.log('Adding day_of_month column to recurring_expenses table...');
+            await db.schema.alterTable('recurring_expenses', (table) => {
+                table.integer('day_of_month').defaultTo(1);
+            });
+        }
     }
 
     // Create expenses table if it doesn't exist

@@ -122,7 +122,8 @@ router.post('/', auth, async (req, res) => {
     split_type,
     split_ratio_user1,
     split_ratio_user2,
-    description
+    description,
+    recurring_expense_id
   } = req.body;
 
   try {
@@ -135,6 +136,31 @@ router.post('/', auth, async (req, res) => {
     const today = new Date();
     const defaultDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
 
+    // If linking to a recurring template, check for duplicates to prevent double-entry
+    if (recurring_expense_id) {
+      const existingLinked = await db('expenses')
+        .where({ recurring_expense_id })
+        .where(db.raw('DATE(date) = DATE(?)', [date || defaultDate]))
+        .first();
+      
+      if (existingLinked) {
+        // Return the existing expense instead of creating a duplicate
+        const expense = await db('expenses')
+          .join('categories', 'expenses.category_id', 'categories.id')
+          .join('users', 'expenses.paid_by_user_id', 'users.id')
+          .select(
+            'expenses.*',
+            'categories.name as category_name',
+            'categories.icon as category_icon',
+            'categories.color as category_color',
+            'users.name as paid_by_name'
+          )
+          .where('expenses.id', existingLinked.id)
+          .first();
+        return res.json(expense);
+      }
+    }
+
     const [id] = await db('expenses').insert({
       date: date || defaultDate,
       amount,
@@ -143,7 +169,8 @@ router.post('/', auth, async (req, res) => {
       split_type: split_type || '50/50',
       split_ratio_user1: split_ratio_user1 || null,
       split_ratio_user2: split_ratio_user2 || null,
-      description
+      description,
+      recurring_expense_id: recurring_expense_id || null
     });
 
     const expense = await db('expenses')
