@@ -650,7 +650,17 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </CardContent>
             </Card>
 
-            {/* Recurring Bills Card */}
+            {/* Budget vs Actual Widget */}
+            <BudgetVsActualWidget
+              expenses={monthlyExpenses}
+              categories={categories}
+              totalIncome={summary?.couple?.combined_monthly_income || user?.monthly_net_income || 0}
+              fixedExpensesTotal={fixedSpent}
+            />
+          </div>
+
+          {/* Recurring Bills Card */}
+          <div className="mt-6">
             <RecurringCard
               summary={recurringSummary}
               templateCount={recurringTemplates.length}
@@ -663,16 +673,6 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 });
               }}
               onManageTemplates={() => setRecurringDialogOpen(true)}
-            />
-          </div>
-
-          {/* Budget vs Actual Widget */}
-          <div className="mt-6">
-            <BudgetVsActualWidget
-              expenses={monthlyExpenses}
-              categories={categories}
-              totalIncome={summary?.couple?.combined_monthly_income || user?.monthly_net_income || 0}
-              fixedExpensesTotal={fixedSpent}
             />
           </div>
 
