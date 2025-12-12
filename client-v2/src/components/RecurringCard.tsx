@@ -22,7 +22,7 @@ export function RecurringCard({
   const hasUpcoming = summary.upcomingCount > 0;
 
   return (
-    <Card className="border-blue-200 bg-linear-to-br from-blue-50 to-transparent">
+    <Card className="border-blue-200 bg-linear-to-br from-blue-50 to-transparent mt-6 mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Zap className="h-5 w-5 text-blue-600" />
