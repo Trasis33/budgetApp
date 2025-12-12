@@ -785,9 +785,9 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
 
           {/* Recurring Expenses Card */}
           {/* <Card className="bg-gradient-to-br from-slate-50/80 to-indigo-50/40 border-slate-200/60"> */}
-          <Card className={`border-blue-200 bg-linear-to-br from-blue-50 to-transparent ${styles.recurringCard}`}>
+          <Card className={`border-blue-200 bg-linear-to-br from-blue-50 to-transparent mt-6 mb-6 ${styles.recurringCard}`}>
             <Collapsible open={recurringExpanded} onOpenChange={toggleRecurringExpanded}>
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardHeader className="flex flex-row items-center justify-between pb-4 h-8">
                 <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <RefreshCw className="h-5 w-5 text-indigo-600" />
