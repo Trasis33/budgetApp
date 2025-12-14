@@ -119,6 +119,8 @@
 .recurringCard {
   /* Slightly stronger blue border to match the recurring card tint */
   border-color: rgba(59,130,246,0.12); /* tailwind blue-500 @ 12% */
+  margin-top: 24px;
+  margin-bottom: 24px;
 }
 
 .recurringTable {
@@ -222,6 +224,7 @@
   background-color: var(--input-background);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  height: 36px;
 }
 
 .filterSelect {
