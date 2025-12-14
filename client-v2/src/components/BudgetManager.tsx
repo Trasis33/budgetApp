@@ -305,7 +305,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
               Category budgets
             </CardTitle>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-input-background">
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-input-background h-9">
                 <button
                   onClick={handlePreviousMonth}
                   className="p-0.5 hover:bg-accent rounded transition-colors"
