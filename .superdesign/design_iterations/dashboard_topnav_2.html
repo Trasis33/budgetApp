@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CouplesFlow Dashboard - Top Navigation Refined</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+    body { background: #f8fafc !important; }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+    }
+    
+    .notification-badge {
+      animation: bounce-subtle 2s infinite;
+    }
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50/30">
+  <!-- Top Navigation -->
+  <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <span class="font-bold text-slate-900">CouplesFlow</span>
+            <span class="text-xs text-slate-400 block -mt-0.5">Money, together</span>
+          </div>
+        </div>
+        
+        <!-- Center Navigation -->
+        <div class="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+          <a href="#" class="px-4 py-2 rounded-lg bg-white shadow-sm text-sm font-medium text-slate-900">Dashboard</a>
+          <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Expenses</a>
+          <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Budgets</a>
+          <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors relative">
+            Bills
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+          </a>
+          <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Analytics</a>
+        </div>
+        
+        <!-- Right Side -->
+        <div class="flex items-center gap-3">
+          <!-- Notification Dropdown -->
+          <div class="relative">
+            <button class="relative p-2.5 rounded-xl hover:bg-slate-100 transition-colors group">
+              <svg class="w-5 h-5 text-slate-500 group-hover:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full notification-badge"></span>
+            </button>
+          </div>
+          
+          <button class="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add expense
+          </button>
+          
+          <!-- User Avatars -->
+          <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
+            <div class="flex -space-x-2">
+              <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-xs font-semibold text-white ring-2 ring-white">F</div>
+              <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-semibold text-white ring-2 ring-white">E</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Notification Banner - Dismissible -->
+    <div class="mb-6 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-orange-500/20">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <div>
+          <p class="font-semibold">🔔 Netflix subscription due tomorrow!</p>
+          <p class="text-sm text-white/80">Plus 2 more subscriptions this week totalling 298 kr</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="px-4 py-2 bg-white text-orange-600 rounded-xl text-sm font-semibold hover:bg-orange-50 transition-colors">
+          View upcoming
+        </button>
+        <button class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- View Toggle & Welcome -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Good evening, Fredrik & Emma 👋</h1>
+        <p class="text-slate-500">Here's your December overview</p>
+      </div>
+      <div class="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-200">
+        <button class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium">Shared</button>
+        <button class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-900">Personal</button>
+        <button class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-900">Partner</button>
+      </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:shadow-slate-200/50 transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Budget Left</span>
+          <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg">On track</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">20 762 kr</p>
+        <p class="text-sm text-slate-500 mt-1">of 22 614 kr budgeted</p>
+        <div class="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full" style="width: 8%"></div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:shadow-slate-200/50 transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Spent This Month</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">27 393 kr</p>
+        <p class="text-sm text-slate-500 mt-1">10 shared expenses</p>
+        <div class="mt-3 flex items-center gap-2">
+          <span class="text-emerald-600 text-sm font-medium flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+            </svg>
+            12% less
+          </span>
+          <span class="text-xs text-slate-400">vs last month</span>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:shadow-slate-200/50 transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fixed Costs</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">25 541 kr</p>
+        <p class="text-sm text-slate-500 mt-1">8 recurring bills</p>
+        <div class="mt-3 flex items-center gap-2">
+          <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg">100% generated</span>
+        </div>
+      </div>
+      
+      <div class="bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-5 text-white hover:shadow-lg hover:shadow-orange-500/30 transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold text-white/70 uppercase tracking-wider">Upcoming</span>
+          <span class="px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-lg">This week</span>
+        </div>
+        <p class="text-3xl font-bold">752 kr</p>
+        <p class="text-sm text-white/80 mt-1">5 subscriptions due</p>
+        <button class="mt-3 w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors">
+          View all →
+        </button>
+      </div>
+    </div>
+    
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-3 gap-6">
+      <!-- Left Column - 2 spans -->
+      <div class="col-span-2 space-y-6">
+        <!-- Recent Expenses -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="font-semibold text-slate-900 text-lg">Recent expenses</h3>
+            <a href="#" class="text-sm text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1">
+              View all
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+          
+          <div class="space-y-2">
+            <div class="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <span class="text-xl">🛒</span>
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900">Ica Maxi</p>
+                  <p class="text-sm text-slate-500">Groceries · Today</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-semibold text-slate-900">1 200,00 kr</p>
+                <div class="flex items-center gap-1 justify-end">
+                  <div class="w-4 h-4 rounded-full bg-orange-500 flex items-center justify-center text-[8px] text-white font-bold">F</div>
+                  <span class="text-xs text-slate-400">Split 50/50</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <span class="text-xl">🛍️</span>
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900">H&M</p>
+                  <p class="text-sm text-slate-500">Shopping & Misc · Yesterday</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-semibold text-slate-900">652,00 kr</p>
+                <div class="flex items-center gap-1 justify-end">
+                  <div class="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[8px] text-white font-bold">E</div>
+                  <span class="text-xs text-slate-400">Split 50/50</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <span class="text-xl">🏠</span>
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900">Huslån</p>
+                  <p class="text-sm text-slate-500">Mortgage · Dec 1</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-semibold text-slate-900">10 580,00 kr</p>
+                <div class="flex items-center gap-1 justify-end">
+                  <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded">RECURRING</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Budget Performance -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="font-semibold text-slate-900 text-lg">Budget performance</h3>
+            <a href="#" class="text-sm text-orange-600 hover:text-orange-700 font-medium">Manage budgets →</a>
+          </div>
+          
+          <div class="space-y-5">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <span>🛒</span>
+                  </div>
+                  <span class="font-medium text-slate-700">Groceries</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-semibold text-slate-900">1 200 kr</span>
+                  <span class="text-sm text-slate-400"> / 6 000 kr</span>
+                </div>
+              </div>
+              <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all" style="width: 20%"></div>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">4 800 kr remaining · 23 days left</p>
+            </div>
+            
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center">
+                    <span>🛍️</span>
+                  </div>
+                  <span class="font-medium text-slate-700">Shopping & Misc</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-semibold text-slate-900">652 kr</span>
+                  <span class="text-sm text-slate-400"> / 4 194 kr</span>
+                </div>
+              </div>
+              <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-violet-400 to-violet-500 rounded-full transition-all" style="width: 15%"></div>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">3 542 kr remaining · 23 days left</p>
+            </div>
+            
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+                    <span>🍽️</span>
+                  </div>
+                  <span class="font-medium text-slate-700">Dining Out</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-semibold text-amber-600">1 850 kr</span>
+                  <span class="text-sm text-slate-400"> / 2 000 kr</span>
+                </div>
+              </div>
+              <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all" style="width: 92%"></div>
+              </div>
+              <p class="text-xs text-amber-600 mt-1">⚠️ Only 150 kr remaining</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column - Upcoming Expenses -->
+      <div class="space-y-6">
+        <!-- Upcoming Expenses Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-semibold text-slate-900">Upcoming expenses</h3>
+                <p class="text-sm text-slate-500">Next 30 days</p>
+              </div>
+              <a href="#" class="text-sm text-orange-600 hover:text-orange-700 font-medium">See all</a>
+            </div>
+          </div>
+          
+          <div class="p-4 space-y-2">
+            <!-- Due Soon - Highlighted -->
+            <div class="p-3 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                    <span class="text-lg">📺</span>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Netflix</p>
+                    <p class="text-xs text-red-600 font-medium">Due tomorrow</p>
+                  </div>
+                </div>
+                <p class="font-semibold text-slate-900">149 kr</p>
+              </div>
+            </div>
+            
+            <div class="p-3 rounded-xl hover:bg-slate-50 transition-colors">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                    <span class="text-lg">🎵</span>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Spotify</p>
+                    <p class="text-xs text-slate-500">Dec 12</p>
+                  </div>
+                </div>
+                <p class="font-semibold text-slate-900">179 kr</p>
+              </div>
+            </div>
+            
+            <div class="p-3 rounded-xl hover:bg-slate-50 transition-colors">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <span class="text-lg">☁️</span>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">iCloud</p>
+                    <p class="text-xs text-slate-500">Dec 15</p>
+                  </div>
+                </div>
+                <p class="font-semibold text-slate-900">25 kr</p>
+              </div>
+            </div>
+            
+            <div class="p-3 rounded-xl hover:bg-slate-50 transition-colors">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <span class="text-lg">💪</span>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Gym</p>
+                    <p class="text-xs text-slate-500">Dec 20</p>
+                  </div>
+                </div>
+                <p class="font-semibold text-slate-900">399 kr</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-600">Total upcoming</span>
+              <span class="font-bold text-slate-900">752 kr</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 class="font-semibold text-slate-900 mb-4">Quick actions</h3>
+          <div class="space-y-2">
+            <button class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors text-left">
+              <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-slate-900">Generate bills</p>
+                <p class="text-xs text-slate-500">Create this month's recurring</p>
+              </div>
+            </button>
+            
+            <button class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors text-left">
+              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-slate-900">Settle up</p>
+                <p class="text-xs text-slate-500">Emma owes you 1 250 kr</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
