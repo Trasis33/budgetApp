@@ -5,10 +5,13 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { 
   Plus, 
   ChevronLeft, 
   ChevronRight, 
+  ChevronDown,
+  ChevronUp,
   AlertTriangle,
   CheckCircle2,
   Pencil,
@@ -20,20 +23,194 @@ import {
   CreditCard,
   Plane,
   Heart,
-  ArrowRight
+  ArrowRight,
+  MessageSquare,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  Bell,
+  Send,
+  BarChart3,
+  X
 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 
-// Mock Data following the design specs
-const MOCK_BUDGETS = [
-  { id: 1, category: 'Groceries', icon: ShoppingCart, spent: 3250, budget: 5000, color: 'var(--theme-mint)' },
-  { id: 2, category: 'Dining Out', icon: Utensils, spent: 4250, budget: 5000, color: 'var(--theme-amber)' },
-  { id: 3, category: 'Transport', icon: Car, spent: 900, budget: 2000, color: 'var(--theme-cyan)' },
-  { id: 4, category: 'Entertainment', icon: Tv, spent: 2760, budget: 3000, color: 'var(--theme-coral)' },
-  { id: 5, category: 'Utilities', icon: Zap, spent: 3000, budget: 3000, color: 'var(--theme-yellow)' },
-  { id: 6, category: 'Subscriptions', icon: CreditCard, spent: 450, budget: 750, color: 'var(--theme-violet)' },
-  { id: 7, category: 'Travel', icon: Plane, spent: 1200, budget: 4000, color: 'var(--theme-periwinkle)' },
-  { id: 8, category: 'Healthcare', icon: Heart, spent: 800, budget: 1500, color: 'var(--theme-teal)' },
+// Types for couples-centric data
+interface Transaction {
+  id: number;
+  description: string;
+  amount: number;
+  date: string;
+  paidBy: 'user' | 'partner';
+  splitType: '50/50' | 'personal' | 'custom' | 'bill';
+}
+
+interface Comment {
+  id: number;
+  author: 'user' | 'partner';
+  text: string;
+  timestamp: string;
+}
+
+interface BudgetCategory {
+  id: number;
+  category: string;
+  icon: React.ComponentType<{ className?: string }>;
+  spent: number;
+  budget: number;
+  color: string;
+  userSpent: number;
+  partnerSpent: number;
+  transactions: Transaction[];
+  comments: Comment[];
+  hasPartnerChanges: boolean;
+  agreedByBoth: boolean;
+}
+
+// Mock Data with couples-centric enhancements
+const MOCK_BUDGETS: BudgetCategory[] = [
+  { 
+    id: 1, 
+    category: 'Groceries', 
+    icon: ShoppingCart, 
+    spent: 3250, 
+    budget: 5000, 
+    color: 'var(--theme-mint)',
+    userSpent: 1800,
+    partnerSpent: 1450,
+    hasPartnerChanges: false,
+    agreedByBoth: true,
+    transactions: [
+      { id: 1, description: 'ICA Maxi', amount: 892, date: '2024-12-18', paidBy: 'user', splitType: '50/50' },
+      { id: 2, description: 'Coop Forum', amount: 456, date: '2024-12-15', paidBy: 'partner', splitType: '50/50' },
+      { id: 3, description: 'Hemköp', amount: 234, date: '2024-12-12', paidBy: 'user', splitType: '50/50' },
+    ],
+    comments: [
+      { id: 1, author: 'partner', text: 'Should we bulk buy more this month?', timestamp: '2 days ago' }
+    ]
+  },
+  { 
+    id: 2, 
+    category: 'Dining Out', 
+    icon: Utensils, 
+    spent: 4250, 
+    budget: 5000, 
+    color: 'var(--theme-amber)',
+    userSpent: 2100,
+    partnerSpent: 2150,
+    hasPartnerChanges: true, // Partner changed this budget
+    agreedByBoth: true,
+    transactions: [
+      { id: 4, description: 'Restaurant Namu', amount: 1200, date: '2024-12-17', paidBy: 'partner', splitType: '50/50' },
+      { id: 5, description: 'Bastard Burgers', amount: 380, date: '2024-12-14', paidBy: 'user', splitType: '50/50' },
+      { id: 6, description: 'Deliveroo order', amount: 290, date: '2024-12-10', paidBy: 'user', splitType: 'personal' },
+    ],
+    comments: []
+  },
+  { 
+    id: 3, 
+    category: 'Transport', 
+    icon: Car, 
+    spent: 900, 
+    budget: 2000, 
+    color: 'var(--theme-cyan)',
+    userSpent: 600,
+    partnerSpent: 300,
+    hasPartnerChanges: false,
+    agreedByBoth: true,
+    transactions: [
+      { id: 7, description: 'SL monthly pass', amount: 450, date: '2024-12-01', paidBy: 'user', splitType: 'personal' },
+      { id: 8, description: 'Taxi to airport', amount: 320, date: '2024-12-08', paidBy: 'partner', splitType: '50/50' },
+    ],
+    comments: []
+  },
+  { 
+    id: 4, 
+    category: 'Entertainment', 
+    icon: Tv, 
+    spent: 2760, 
+    budget: 3000, 
+    color: 'var(--theme-coral)',
+    userSpent: 1200,
+    partnerSpent: 1560,
+    hasPartnerChanges: true,
+    agreedByBoth: false, // Pending agreement
+    transactions: [
+      { id: 9, description: 'Concert tickets', amount: 1200, date: '2024-12-16', paidBy: 'partner', splitType: '50/50' },
+      { id: 10, description: 'Cinema', amount: 340, date: '2024-12-13', paidBy: 'user', splitType: '50/50' },
+    ],
+    comments: [
+      { id: 2, author: 'user', text: 'Can we increase this for the holidays?', timestamp: '1 day ago' },
+      { id: 3, author: 'partner', text: 'Maybe by 500kr?', timestamp: '5 hours ago' }
+    ]
+  },
+  { 
+    id: 5, 
+    category: 'Utilities', 
+    icon: Zap, 
+    spent: 3000, 
+    budget: 3000, 
+    color: 'var(--theme-yellow)',
+    userSpent: 3000,
+    partnerSpent: 0,
+    hasPartnerChanges: false,
+    agreedByBoth: true,
+    transactions: [
+      { id: 11, description: 'Electricity bill', amount: 1800, date: '2024-12-05', paidBy: 'user', splitType: 'bill' },
+      { id: 12, description: 'Water bill', amount: 400, date: '2024-12-05', paidBy: 'user', splitType: 'bill' },
+    ],
+    comments: []
+  },
+  { 
+    id: 6, 
+    category: 'Subscriptions', 
+    icon: CreditCard, 
+    spent: 450, 
+    budget: 750, 
+    color: 'var(--theme-violet)',
+    userSpent: 250,
+    partnerSpent: 200,
+    hasPartnerChanges: false,
+    agreedByBoth: true,
+    transactions: [
+      { id: 13, description: 'Spotify Family', amount: 179, date: '2024-12-01', paidBy: 'user', splitType: '50/50' },
+      { id: 14, description: 'Netflix', amount: 169, date: '2024-12-01', paidBy: 'partner', splitType: '50/50' },
+    ],
+    comments: []
+  },
+  { 
+    id: 7, 
+    category: 'Travel', 
+    icon: Plane, 
+    spent: 1200, 
+    budget: 4000, 
+    color: 'var(--theme-periwinkle)',
+    userSpent: 600,
+    partnerSpent: 600,
+    hasPartnerChanges: false,
+    agreedByBoth: true,
+    transactions: [
+      { id: 15, description: 'Flight booking deposit', amount: 1200, date: '2024-12-10', paidBy: 'user', splitType: '50/50' },
+    ],
+    comments: []
+  },
+  { 
+    id: 8, 
+    category: 'Healthcare', 
+    icon: Heart, 
+    spent: 800, 
+    budget: 1500, 
+    color: 'var(--theme-teal)',
+    userSpent: 500,
+    partnerSpent: 300,
+    hasPartnerChanges: false,
+    agreedByBoth: true,
+    transactions: [
+      { id: 16, description: 'Pharmacy', amount: 320, date: '2024-12-11', paidBy: 'user', splitType: 'personal' },
+      { id: 17, description: 'Doctor visit', amount: 480, date: '2024-12-09', paidBy: 'partner', splitType: 'personal' },
+    ],
+    comments: []
+  },
 ];
 
 const MONTHS = [
@@ -52,6 +229,10 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
   const [selectedYear, setSelectedYear] = useState(2024);
   const [scope, setScope] = useState<ScopeType>('shared');
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
+  const [showMobileSummary, setShowMobileSummary] = useState(false);
+  const [showSettlementDetails, setShowSettlementDetails] = useState(false);
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
 
   // Calculations
   const totalBudget = MOCK_BUDGETS.reduce((acc, b) => acc + b.budget, 0);
@@ -65,7 +246,22 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
   }).length;
   
   const overBudgetCount = MOCK_BUDGETS.filter(b => b.spent >= b.budget).length;
-  const daysLeftInMonth = 12; // Mock value
+  const pendingAgreements = MOCK_BUDGETS.filter(b => !b.agreedByBoth).length;
+  const partnerChangesCount = MOCK_BUDGETS.filter(b => b.hasPartnerChanges).length;
+  const daysLeftInMonth = 12;
+  
+  // Enhancement #7: Daily Burn Rate
+  const dailyBurnRate = daysLeftInMonth > 0 ? Math.round(remaining / daysLeftInMonth) : 0;
+  const isOnTrack = dailyBurnRate >= 0;
+
+  // Enhancement #13: Check if it's month-end (last 5 days)
+  const isMonthEnd = daysLeftInMonth <= 5;
+
+  // Settlement data
+  const userTotalPaid = MOCK_BUDGETS.reduce((acc, b) => acc + b.userSpent, 0);
+  const partnerTotalPaid = MOCK_BUDGETS.reduce((acc, b) => acc + b.partnerSpent, 0);
+  const settlementAmount = Math.abs(userTotalPaid - partnerTotalPaid) / 2;
+  const userOwes = userTotalPaid < partnerTotalPaid;
 
   // Sort budgets: at-risk first, then by progress descending
   const sortedBudgets = [...MOCK_BUDGETS].sort((a, b) => {
@@ -124,11 +320,102 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
     };
   };
 
+  const getSplitTypeBadge = (splitType: string) => {
+    const styles: Record<string, string> = {
+      '50/50': 'bg-blue-100 text-blue-700',
+      'personal': 'bg-gray-100 text-gray-700',
+      'custom': 'bg-purple-100 text-purple-700',
+      'bill': 'bg-orange-100 text-orange-700',
+    };
+    return styles[splitType] || styles['50/50'];
+  };
+
   const overallStatus = overallProgress >= 90 
     ? { label: 'Over budget', color: 'text-[var(--theme-coral)]', dot: 'bg-[var(--theme-coral)]' }
     : overallProgress >= 80 
     ? { label: 'Near limit', color: 'text-[var(--theme-amber)]', dot: 'bg-[var(--theme-amber)]' }
     : { label: 'On track', color: 'text-[var(--theme-teal)]', dot: 'bg-[var(--theme-teal)]' };
+
+  const handleAddComment = (budgetId: number) => {
+    const text = commentInputs[budgetId]?.trim();
+    if (!text) return;
+    // In a real app, this would call an API
+    console.log('Adding comment to budget:', budgetId, text);
+    setCommentInputs(prev => ({ ...prev, [budgetId]: '' }));
+  };
+
+  // Enhancement #10: Mobile Summary Component
+  const MobileSummaryHeader = () => (
+    <div className="lg:hidden sticky top-0 z-10 bg-background border-b border-border">
+      <button 
+        onClick={() => setShowMobileSummary(!showMobileSummary)}
+        className="w-full p-4 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-4">
+          <div className="text-left">
+            <div className="text-lg font-semibold text-foreground">{formatCurrency(remaining)}</div>
+            <div className="text-xs text-muted-foreground">remaining</div>
+          </div>
+          <div className={`status-dot`} style={{ backgroundColor: overallStatus.dot.includes('var') ? overallStatus.dot.replace('bg-[', '').replace(']', '') : undefined }} />
+        </div>
+        <div className="flex items-center gap-2">
+          {partnerChangesCount > 0 && (
+            <Badge variant="destructive" className="text-[10px]">
+              {partnerChangesCount} updates
+            </Badge>
+          )}
+          {showMobileSummary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+      </button>
+      
+      {showMobileSummary && (
+        <div className="p-4 pt-0 space-y-4 border-t border-border/50">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Budget</div>
+              <div className="text-sm font-medium">{formatCurrency(totalBudget)}</div>
+            </div>
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Spent</div>
+              <div className="text-sm font-medium">{formatCurrency(totalSpent)}</div>
+            </div>
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Daily</div>
+              <div className={`text-sm font-medium ${isOnTrack ? 'text-[var(--theme-teal)]' : 'text-[var(--theme-coral)]'}`}>
+                {formatCurrency(dailyBurnRate)}
+              </div>
+            </div>
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Days</div>
+              <div className="text-sm font-medium">{daysLeftInMonth}</div>
+            </div>
+          </div>
+          
+          {/* Settlement */}
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-5 w-5">
+                <AvatarFallback className={`text-[8px] text-white ${userOwes ? 'bg-[var(--theme-indigo)]' : 'bg-[var(--theme-teal)]'}`}>
+                  {userOwes ? 'F' : 'E'}
+                </AvatarFallback>
+              </Avatar>
+              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              <Avatar className="h-5 w-5">
+                <AvatarFallback className={`text-[8px] text-white ${userOwes ? 'bg-[var(--theme-teal)]' : 'bg-[var(--theme-indigo)]'}`}>
+                  {userOwes ? 'E' : 'F'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{formatCurrency(settlementAmount)}</span>
+            </div>
+            <Button variant="ghost" size="sm" className="text-xs text-[var(--theme-teal)]">
+              Settle
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,8 +468,8 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                 ))}
               </div>
 
-              {/* Connected Status */}
-              <div className="flex items-center gap-1.5">
+              {/* Connected Status with Partner Changes Badge (#11) */}
+              <div className="flex items-center gap-1.5 relative">
                 <div className="flex -space-x-2">
                   <Avatar className="h-6 w-6 ring-2 ring-background">
                     <AvatarFallback className="bg-[var(--theme-indigo)] text-white text-[10px]">F</AvatarFallback>
@@ -191,6 +478,18 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                     <AvatarFallback className="bg-[var(--theme-teal)] text-white text-[10px]">E</AvatarFallback>
                   </Avatar>
                 </div>
+                {partnerChangesCount > 0 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="absolute -top-1 -right-1 h-4 w-4 bg-[var(--theme-coral)] rounded-full flex items-center justify-center">
+                        <Bell className="h-2.5 w-2.5 text-white" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Emma updated {partnerChangesCount} budget{partnerChangesCount > 1 ? 's' : ''}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 <CheckCircle2 className="h-3.5 w-3.5 text-[var(--theme-teal)]" />
               </div>
 
@@ -204,12 +503,34 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
         </div>
       </header>
 
+      {/* Enhancement #10: Mobile Collapsible Summary */}
+      <MobileSummaryHeader />
+
+      {/* Enhancement #13: Month-End Review CTA */}
+      {isMonthEnd && (
+        <div className="bg-gradient-to-r from-[var(--theme-indigo)] to-[var(--theme-teal)] text-white">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5" />
+              <div>
+                <span className="font-medium">Month ending soon!</span>
+                <span className="ml-2 opacity-90">{daysLeftInMonth} days left to review and settle</span>
+              </div>
+            </div>
+            <Button variant="secondary" size="sm" className="gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              Review & Settle
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content - Two Column Layout */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column - Summary Dashboard (40%) */}
-          <aside className="lg:col-span-5 space-y-6">
+          {/* Left Column - Summary Dashboard (40%) - Hidden on mobile via MobileSummaryHeader */}
+          <aside className="hidden lg:block lg:col-span-5 space-y-6">
             
             {/* Month At A Glance Card */}
             <Card>
@@ -242,8 +563,7 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                   </div>
                   {/* Status */}
                   <div className="flex items-center gap-2">
-                    <span className={`status-dot ${overallStatus.dot.replace('bg-', 'bg-')}`} 
-                          style={{ backgroundColor: overallStatus.dot.includes('var') ? overallStatus.dot.replace('bg-[', '').replace(']', '') : undefined }} />
+                    <span className={`status-dot`} style={{ backgroundColor: overallStatus.dot.includes('var') ? overallStatus.dot.replace('bg-[', '').replace(']', '') : undefined }} />
                     <span className={`text-sm font-medium`} style={{ color: overallStatus.color.includes('var') ? overallStatus.color.replace('text-[', '').replace(']', '') : undefined }}>
                       {overallStatus.label}
                     </span>
@@ -252,7 +572,7 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
               </CardContent>
             </Card>
 
-            {/* Quick Stats Grid */}
+            {/* Quick Stats Grid - Now with Daily Burn Rate (#7) */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -269,9 +589,19 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                     <div className="text-xs text-muted-foreground mb-1">Total Spent</div>
                     <div className="text-lg font-semibold text-foreground">{formatCurrency(totalSpent)}</div>
                   </div>
+                  {/* Enhancement #7: Daily Burn Rate */}
                   <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Categories</div>
-                    <div className="text-lg font-semibold text-foreground">{MOCK_BUDGETS.length} active</div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                      Daily Target
+                      {isOnTrack ? (
+                        <TrendingUp className="h-3 w-3 text-[var(--theme-teal)]" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 text-[var(--theme-coral)]" />
+                      )}
+                    </div>
+                    <div className={`text-lg font-semibold ${isOnTrack ? 'text-[var(--theme-teal)]' : 'text-[var(--theme-coral)]'}`}>
+                      {formatCurrency(dailyBurnRate)}/day
+                    </div>
                   </div>
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <div className="text-xs text-muted-foreground mb-1">Days Left</div>
@@ -281,31 +611,87 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
               </CardContent>
             </Card>
 
-            {/* Settlement Mini Card */}
+            {/* Enhanced Settlement Card (#4) */}
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Settlement
                 </CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs h-6 px-2"
+                  onClick={() => setShowSettlementDetails(!showSettlementDetails)}
+                >
+                  {showSettlementDetails ? 'Hide' : 'Details'}
+                </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5">
                       <Avatar className="h-6 w-6">
-                        <AvatarFallback className="bg-[var(--theme-indigo)] text-white text-[10px]">F</AvatarFallback>
+                        <AvatarFallback className={`text-[10px] text-white ${userOwes ? 'bg-[var(--theme-indigo)]' : 'bg-[var(--theme-teal)]'}`}>
+                          {userOwes ? 'F' : 'E'}
+                        </AvatarFallback>
                       </Avatar>
                       <ArrowRight className="h-3 w-3 text-muted-foreground" />
                       <Avatar className="h-6 w-6">
-                        <AvatarFallback className="bg-[var(--theme-teal)] text-white text-[10px]">E</AvatarFallback>
+                        <AvatarFallback className={`text-[10px] text-white ${userOwes ? 'bg-[var(--theme-teal)]' : 'bg-[var(--theme-indigo)]'}`}>
+                          {userOwes ? 'E' : 'F'}
+                        </AvatarFallback>
                       </Avatar>
                     </div>
-                    <span className="text-sm font-medium text-foreground">kr 585</span>
+                    <span className="text-sm font-medium text-foreground">{formatCurrency(settlementAmount)}</span>
                   </div>
                   <Button variant="ghost" size="sm" className="text-xs text-[var(--theme-teal)] hover:text-[var(--theme-teal)]">
                     Reconcile
                   </Button>
                 </div>
+
+                {/* Settlement Details Breakdown (#4) */}
+                {showSettlementDetails && (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarFallback className="bg-[var(--theme-indigo)] text-white text-[8px]">F</AvatarFallback>
+                        </Avatar>
+                        <span className="text-muted-foreground">Fredrik paid</span>
+                      </div>
+                      <span className="font-medium">{formatCurrency(userTotalPaid)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarFallback className="bg-[var(--theme-teal)] text-white text-[8px]">E</AvatarFallback>
+                        </Avatar>
+                        <span className="text-muted-foreground">Emma paid</span>
+                      </div>
+                      <span className="font-medium">{formatCurrency(partnerTotalPaid)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Difference</span>
+                      <span className="font-medium">{formatCurrency(Math.abs(userTotalPaid - partnerTotalPaid))}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">50/50 Settlement</span>
+                      <span className="font-semibold text-[var(--theme-teal)]">{formatCurrency(settlementAmount)}</span>
+                    </div>
+                    
+                    {/* Monthly Trend */}
+                    <div className="mt-3 p-2 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <BarChart3 className="h-3 w-3" />
+                        <span>Last 3 months avg: {formatCurrency(620)}</span>
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                          -5.6%
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -335,6 +721,15 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                     )}
                     {overBudgetCount} over budget
                   </Badge>
+                  {pendingAgreements > 0 && (
+                    <Badge 
+                      variant="outline"
+                      className="border-[var(--theme-violet)] text-[var(--theme-violet)] bg-[var(--theme-violet)]/10"
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      {pendingAgreements} pending agreement
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -356,95 +751,275 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
               <CardContent className="pt-0">
                 <Separator className="mb-4" />
                 
-                {/* Category List */}
+                {/* Category List with Expandable Rows (#3) */}
                 <div className="space-y-1">
                   {sortedBudgets.map((budget) => {
                     const progress = (budget.spent / budget.budget) * 100;
                     const status = getStatusInfo(budget.spent, budget.budget);
                     const Icon = budget.icon;
                     const StatusIcon = status.icon;
+                    const isExpanded = expandedCategory === budget.id;
 
                     return (
-                      <div 
-                        key={budget.id}
-                        className="group flex items-center gap-4 p-3 -mx-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                        onMouseEnter={() => setHoveredRow(budget.id)}
-                        onMouseLeave={() => setHoveredRow(null)}
-                      >
-                        {/* Category Icon */}
+                      <Collapsible key={budget.id} open={isExpanded} onOpenChange={() => setExpandedCategory(isExpanded ? null : budget.id)}>
                         <div 
-                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ 
-                            backgroundColor: `color-mix(in oklch, ${budget.color} 20%, transparent)`,
-                            color: budget.color 
-                          }}
+                          className={`group rounded-lg transition-colors ${isExpanded ? 'bg-accent/30' : 'hover:bg-accent/50'}`}
+                          onMouseEnter={() => setHoveredRow(budget.id)}
+                          onMouseLeave={() => setHoveredRow(null)}
                         >
-                          <Icon className="h-4 w-4" />
-                        </div>
+                          <CollapsibleTrigger className="w-full">
+                            <div className="flex items-center gap-4 p-3 cursor-pointer">
+                              {/* Category Icon with notification dot (#11) */}
+                              <div className="relative">
+                                <div 
+                                  className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                                  style={{ 
+                                    backgroundColor: `color-mix(in oklch, ${budget.color} 20%, transparent)`,
+                                    color: budget.color 
+                                  }}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </div>
+                                {budget.hasPartnerChanges && (
+                                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-[var(--theme-coral)] rounded-full border-2 border-background" />
+                                )}
+                              </div>
 
-                        {/* Category Name */}
-                        <div className="w-28 shrink-0">
-                          <span className="text-sm font-medium text-foreground">{budget.category}</span>
-                        </div>
+                              {/* Category Name */}
+                              <div className="w-28 shrink-0 text-left">
+                                <span className="text-sm font-medium text-foreground">{budget.category}</span>
+                                {budget.comments.length > 0 && (
+                                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <MessageSquare className="h-2.5 w-2.5" />
+                                    {budget.comments.length}
+                                  </div>
+                                )}
+                              </div>
 
-                        {/* Progress Bar */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 progress-bar">
-                              <div 
-                                className={`progress-fill ${status.fill}`}
-                                style={{ width: `${Math.min(100, progress)}%` }}
-                              />
+                              {/* Progress Bar */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 progress-bar">
+                                    <div 
+                                      className={`progress-fill ${status.fill}`}
+                                      style={{ width: `${Math.min(100, progress)}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-muted-foreground w-10 text-right shrink-0">
+                                    {Math.round(progress)}%
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Amount */}
+                              <div className="text-right shrink-0 w-32">
+                                <span className="text-sm text-muted-foreground">
+                                  {formatCurrency(budget.spent)} / {formatCurrency(budget.budget)}
+                                </span>
+                              </div>
+
+                              {/* Status Badge */}
+                              <div className="shrink-0 w-24">
+                                <Badge 
+                                  variant={status.variant}
+                                  className={`text-[10px] ${
+                                    status.label === 'Near limit' ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' :
+                                    status.label === 'On track' ? 'border-[var(--theme-teal)] text-[var(--theme-teal)] bg-[var(--theme-teal)]/10' :
+                                    ''
+                                  }`}
+                                >
+                                  {StatusIcon && <StatusIcon className="h-2.5 w-2.5" />}
+                                  {status.label}
+                                </Badge>
+                              </div>
+
+                              {/* Action Icons */}
+                              <div className="flex items-center gap-1 shrink-0">
+                                {/* Quick Add Expense (#5) */}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button 
+                                      className={`p-1.5 rounded transition-all ${
+                                        hoveredRow === budget.id 
+                                          ? 'opacity-100 hover:bg-accent text-[var(--theme-teal)]' 
+                                          : 'opacity-0'
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log('Quick add expense to:', budget.category);
+                                      }}
+                                      aria-label={`Add expense to ${budget.category}`}
+                                    >
+                                      <Plus className="h-3.5 w-3.5" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Add expense</TooltipContent>
+                                </Tooltip>
+                                
+                                {/* Edit Button */}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button 
+                                      className={`p-1.5 rounded transition-all ${
+                                        hoveredRow === budget.id 
+                                          ? 'opacity-100 hover:bg-accent' 
+                                          : 'opacity-0'
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log('Edit budget:', budget.category);
+                                      }}
+                                      aria-label={`Edit ${budget.category} budget`}
+                                    >
+                                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit budget</TooltipContent>
+                                </Tooltip>
+
+                                {/* Expand indicator */}
+                                <div className="p-1">
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-xs text-muted-foreground w-10 text-right shrink-0">
-                              {Math.round(progress)}%
-                            </span>
-                          </div>
-                        </div>
+                          </CollapsibleTrigger>
 
-                        {/* Amount */}
-                        <div className="text-right shrink-0 w-32">
-                          <span className="text-sm text-muted-foreground">
-                            {formatCurrency(budget.spent)} / {formatCurrency(budget.budget)}
-                          </span>
-                        </div>
+                          {/* Expandable Content (#3 - Drilldown) */}
+                          <CollapsibleContent>
+                            <div className="px-3 pb-4 space-y-4">
+                              <Separator />
+                              
+                              {/* Partner Breakdown */}
+                              <div className="flex gap-4">
+                                <div className="flex-1 p-3 bg-muted/30 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Avatar className="h-5 w-5">
+                                      <AvatarFallback className="bg-[var(--theme-indigo)] text-white text-[8px]">F</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs text-muted-foreground">Fredrik</span>
+                                  </div>
+                                  <div className="text-sm font-semibold">{formatCurrency(budget.userSpent)}</div>
+                                </div>
+                                <div className="flex-1 p-3 bg-muted/30 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Avatar className="h-5 w-5">
+                                      <AvatarFallback className="bg-[var(--theme-teal)] text-white text-[8px]">E</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs text-muted-foreground">Emma</span>
+                                  </div>
+                                  <div className="text-sm font-semibold">{formatCurrency(budget.partnerSpent)}</div>
+                                </div>
+                              </div>
 
-                        {/* Status Badge */}
-                        <div className="shrink-0 w-24">
-                          <Badge 
-                            variant={status.variant}
-                            className={`text-[10px] ${
-                              status.label === 'Near limit' ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' :
-                              status.label === 'On track' ? 'border-[var(--theme-teal)] text-[var(--theme-teal)] bg-[var(--theme-teal)]/10' :
-                              ''
-                            }`}
-                          >
-                            {StatusIcon && <StatusIcon className="h-2.5 w-2.5" />}
-                            {status.label}
-                          </Badge>
-                        </div>
+                              {/* Top 3 Transactions */}
+                              <div>
+                                <div className="text-xs font-medium text-muted-foreground mb-2">Recent Transactions</div>
+                                <div className="space-y-2">
+                                  {budget.transactions.slice(0, 3).map((tx) => (
+                                    <div key={tx.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="h-5 w-5">
+                                          <AvatarFallback className={`text-[8px] text-white ${tx.paidBy === 'user' ? 'bg-[var(--theme-indigo)]' : 'bg-[var(--theme-teal)]'}`}>
+                                            {tx.paidBy === 'user' ? 'F' : 'E'}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <div className="text-sm">{tx.description}</div>
+                                          <div className="text-[10px] text-muted-foreground">{tx.date}</div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${getSplitTypeBadge(tx.splitType)}`}>
+                                          {tx.splitType}
+                                        </span>
+                                        <span className="text-sm font-medium">{formatCurrency(tx.amount)}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <Button variant="ghost" size="sm" className="w-full mt-2 text-xs">
+                                  View all transactions
+                                </Button>
+                              </div>
 
-                        {/* Edit Icon (appears on hover) */}
-                        <div className="w-8 shrink-0">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button 
-                                className={`p-1.5 rounded transition-all ${
-                                  hoveredRow === budget.id 
-                                    ? 'opacity-100 hover:bg-accent' 
-                                    : 'opacity-0'
-                                }`}
-                                aria-label={`Edit ${budget.category} budget`}
-                              >
-                                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Edit budget
-                            </TooltipContent>
-                          </Tooltip>
+                              {/* Comment Thread (#12) */}
+                              <div>
+                                <div className="text-xs font-medium text-muted-foreground mb-2">
+                                  Discussion ({budget.comments.length})
+                                </div>
+                                
+                                {budget.comments.length > 0 ? (
+                                  <div className="space-y-2 mb-3">
+                                    {budget.comments.map((comment) => (
+                                      <div key={comment.id} className={`flex gap-2 ${comment.author === 'user' ? '' : 'flex-row-reverse'}`}>
+                                        <Avatar className="h-6 w-6 shrink-0">
+                                          <AvatarFallback className={`text-[9px] text-white ${comment.author === 'user' ? 'bg-[var(--theme-indigo)]' : 'bg-[var(--theme-teal)]'}`}>
+                                            {comment.author === 'user' ? 'F' : 'E'}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div className={`flex-1 p-2 rounded-lg text-sm ${comment.author === 'user' ? 'bg-muted/50' : 'bg-[var(--theme-teal)]/10'}`}>
+                                          <p>{comment.text}</p>
+                                          <span className="text-[10px] text-muted-foreground">{comment.timestamp}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground mb-3">No comments yet. Start a discussion about this budget.</p>
+                                )}
+                                
+                                {/* Add Comment Input */}
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Add a comment..."
+                                    value={commentInputs[budget.id] || ''}
+                                    onChange={(e) => setCommentInputs(prev => ({ ...prev, [budget.id]: e.target.value }))}
+                                    className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleAddComment(budget.id);
+                                      }
+                                    }}
+                                  />
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleAddComment(budget.id)}
+                                    disabled={!commentInputs[budget.id]?.trim()}
+                                  >
+                                    <Send className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Agreement Status */}
+                              {!budget.agreedByBoth && (
+                                <div className="flex items-center justify-between p-3 bg-[var(--theme-violet)]/10 rounded-lg border border-[var(--theme-violet)]/30">
+                                  <div className="flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-[var(--theme-violet)]" />
+                                    <span className="text-sm text-[var(--theme-violet)]">Pending your agreement</span>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                                      <X className="h-3 w-3 mr-1" />
+                                      Decline
+                                    </Button>
+                                    <Button size="sm" className="h-7 text-xs bg-[var(--theme-violet)] hover:bg-[var(--theme-violet)]/90">
+                                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                                      Agree
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
                         </div>
-                      </div>
+                      </Collapsible>
                     );
                   })}
                 </div>
