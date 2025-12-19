@@ -19,7 +19,6 @@ Replace manual spreadsheet-based expense tracking with an automated, couple-cent
 ### Primary Users
 - **Committed couples** (married, cohabitating, or in serious relationships)
 - **Swedish market focus** (SEK currency, local financial practices)
-- **Mobile-first users** who want quick expense entry on-the-go
 - **Privacy-conscious couples** who prefer self-hosted solutions
 
 ### Key User Stories
@@ -36,8 +35,7 @@ Replace manual spreadsheet-based expense tracking with an automated, couple-cent
 ### 1. **Dual-User System**
 - **Exactly 2 users per installation** (not scalable multi-user)
 - **Partner-aware interface** showing "Your" vs "Partner's" expenses
-- **Shared login option** or quick partner switching
-- **Joint decision prompts** for budget changes affecting both
+- **Shared login option** or quick partner switching, ability to choose payer on expense
 
 ### 2. **Intelligent Bill Splitting**
 - **Split Types:**
@@ -90,7 +88,9 @@ users (
   partner_id,              -- Links to partner
   income_share_percentage, -- For automatic split ratios
   notification_preferences,
-  created_at, updated_at
+  created_at, updated_at,
+  monthly_net_income,
+  color
 )
 
 -- Enhanced Expenses Table (Couple-aware)
@@ -133,8 +133,6 @@ shared_budgets (
 ---
 
 ## User Experience Design
-
-### Mobile-First Couples Interface
 
 #### 1. **Expense Entry Flow**
 ```
@@ -189,61 +187,6 @@ shared_budgets (
 
 ---
 
-## Implementation Roadmap
-
-### Phase 1: Couples Foundation (Weeks 1-2)
-**Priority: Critical - Restore Core Mission**
-
-#### A. Enhanced User System
-- [ ] **Limit system to exactly 2 users**
-- [ ] **Add partner linking in user profiles**
-- [ ] **Create partner-switching interface**
-- [ ] **Add partner notification system**
-
-#### B. Couples-Aware Expense Entry
-- [ ] **Redesign AddExpense form with split-first UI**
-- [ ] **Add "paid by partner" quick selection**
-- [ ] **Implement split type decision tree**
-- [ ] **Create expense approval workflow for large amounts**
-
-#### C. Enhanced Settlement System
-- [ ] **Restore and improve BillSplitter page**
-- [ ] **Create monthly settlement approval flow**
-- [ ] **Add settlement history and trends**
-- [ ] **Build "settle up" confirmation system**
-
-### Phase 2: Shared Decision Making (Weeks 3-4)
-**Priority: High - Collaborative Features**
-
-#### A. Budget Collaboration
-- [ ] **Shared budget setting interface**
-- [ ] **Partner approval for budget changes**
-- [ ] **Joint savings goals system**
-- [ ] **Spending limit notifications**
-
-#### B. Communication Features  
-- [ ] **Expense comment system**
-- [ ] **Monthly review workflow**
-- [ ] **Expense dispute resolution**
-- [ ] **Partner notification preferences**
-
-### Phase 3: Advanced Couples Analytics (Weeks 5-6)
-**Priority: Medium - Enhanced Insights**
-
-#### A. Couples-Specific Analytics
-- [ ] **Partner spending comparison charts**
-- [ ] **Fair share analysis over time**
-- [ ] **Joint vs personal expense trends**
-- [ ] **Settlement history visualization**
-
-#### B. Financial Health for Couples
-- [ ] **Couples savings rate tracking**
-- [ ] **Joint financial goal progress**
-- [ ] **Spending pattern compatibility analysis**
-- [ ] **Budget fairness metrics**
-
----
-
 ## Success Metrics
 
 ### Quantitative Goals
@@ -275,34 +218,6 @@ shared_budgets (
 
 5. **Collaborative Budget Management**: Both partners must agree on spending limits, fostering communication
 
-6. **Mobile-Optimized for Real Usage**: Quick expense entry while grocery shopping, not desktop-focused analysis
-
----
-
-## Technical Migration Plan
-
-### Current State → Couples-Focused State
-
-1. **Database Enhancements**
-   - Add partner relationship fields
-   - Enhance expense tracking for approvals
-   - Create settlement tracking tables
-
-2. **UI/UX Overhaul**
-   - Redesign all forms to be split-aware
-   - Add partner-specific dashboard elements
-   - Create settlement and approval interfaces
-
-3. **API Enhancements**
-   - Add partner-aware endpoints
-   - Implement approval workflows
-   - Create settlement calculation services
-
-4. **Feature Restoration**
-   - Bring back and improve BillSplitter
-   - Enhance recurring expenses for couples
-   - Create partner notification system
-
 ---
 
 ## Conclusion
@@ -310,5 +225,3 @@ shared_budgets (
 CouplesFlow represents a return to the original vision: **a purpose-built tool for couples to manage money together transparently and fairly**. By focusing on the unique needs of 2-person households, we can create something much more valuable than generic personal finance software.
 
 The app should feel like **"our money management system"** rather than **"a finance app we both use"**.
-
-**Next Steps**: Begin Phase 1 implementation to restore couples-specific features while preserving the advanced analytics and visualization capabilities that have been built.

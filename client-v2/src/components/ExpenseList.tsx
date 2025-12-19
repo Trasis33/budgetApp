@@ -33,6 +33,7 @@ import { Slider } from './ui/slider';
 import { useAuth } from '../context/AuthContext';
 import { useExpensePreferences } from '../hooks';
 import { useScope } from '../context/ScopeContext';
+import ScopeSelector from './ScopeSelector';
 import styles from '@/styles/expense-table.module.css';
 
 interface ExpenseListProps {
@@ -604,29 +605,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
 
       {/* Scope Selector */}
       <div className="flex items-center justify-between mb-6">
-        <div className="scope-selector w-fit">
-          <div 
-            className={`scope-option ${currentScope === 'ours' ? 'active' : ''}`}
-            onClick={() => setScope('ours')}
-          >
-            <Users className="w-4 h-4" />
-            Shared
-          </div>
-          <div 
-            className={`scope-option ${currentScope === 'mine' ? 'active' : ''}`}
-            onClick={() => setScope('mine')}
-          >
-            <UserIcon className="w-4 h-4" />
-            Personal
-          </div>
-          <div 
-            className={`scope-option ${currentScope === 'partner' ? 'active' : ''}`}
-            onClick={() => setScope('partner')}
-          >
-            <Heart className="w-4 h-4" />
-            Partner
-          </div>
-        </div>
+        <ScopeSelector />
       </div>
 
       {/* New User Empty State */}

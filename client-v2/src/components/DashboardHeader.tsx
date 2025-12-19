@@ -33,11 +33,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           
           {showScopeSelector && (
             <div className="ml-8">
-              <ScopeSelector 
-                variant="pills"
-                size="sm"
-                className="shadow-sm"
-              />
+              <ScopeSelector />
             </div>
           )}
         </div>

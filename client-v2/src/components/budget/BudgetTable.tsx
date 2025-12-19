@@ -19,7 +19,7 @@ export function BudgetTable({
   onUpdate,
   className = ''
 }: BudgetTableProps) {
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(true);
 
   if (budgets.length === 0) {
     return (

@@ -11,6 +11,7 @@ import { BillSplitting } from './components/BillSplitting';
 import { MonthlyStatement } from './components/MonthlyStatement';
 import { BillsDesignOne } from './components/mockups/BillsDesignOne';
 import { BillsDesignTwo } from './components/mockups/BillsDesignTwo';
+import { BudgetManagerDesignThree } from './components/mockups/BudgetManagerDesignThree';
 import { Settings } from './components/Settings';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
@@ -40,6 +41,7 @@ const MainApp = () => {
             <Route path="/settings" element={<Settings onNavigate={setCurrentView} />} />
             <Route path="/bills-design-one" element={<BillsDesignOne onNavigate={setCurrentView} />} />
             <Route path="/bills-design-two" element={<BillsDesignTwo onNavigate={setCurrentView} />} />
+            <Route path="/budget-design-three" element={<BudgetManagerDesignThree onNavigate={setCurrentView} />} />
           </Routes>
         </main>
         <Toaster />

@@ -12,6 +12,8 @@
 /build
 /client/build
 /client-v2/build
+# tailwind build artifacts (client-v2)
+/client-v2/src/index.css
 # database
 /server/db/*.sqlite
 /server/db/*.sqlite-journal

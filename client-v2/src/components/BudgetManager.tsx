@@ -22,14 +22,16 @@ import { useNavigate } from 'react-router-dom';
 import { Category } from '../types';
 import { filterExpensesByMonth } from '../lib/utils';
 import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
-import { Plus, Target, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Target, PlusCircle, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
 import { budgetService } from '../api/services/budgetService';
 import { categoryService } from '../api/services/categoryService';
 import { toast } from 'sonner';
 import { useScope } from '@/context/ScopeContext';
+import ScopeSelector from './ScopeSelector';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
+import { formatBudgetAmount } from '../lib/budgetUtils';
 
 import { BudgetHeader, BudgetMetricsGrid, BudgetTable } from './budget';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
@@ -51,7 +53,11 @@ interface BudgetManagerProps {
  */
 export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   const navigate = useNavigate();
-  const { isLoading: scopeLoading } = useScope();
+  const {
+    isLoading: scopeLoading,
+    summary,
+    isPartnerConnected
+  } = useScope();
   const [categories, setCategories] = useState<Category[]>([]);
   
   // Month/Year selection state
@@ -77,6 +83,23 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
   const monthlyExpenses = filterExpensesByMonth(expenses, selectedYear, selectedMonth - 1);
   
   const { budgetsWithSpending, metrics } = useBudgetCalculations(budgets, monthlyExpenses);
+
+  const monthLabel = new Date(selectedYear, selectedMonth - 1, 1)
+    .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const coupleLabel = (() => {
+    const userName = summary?.couple?.user?.name;
+    const partnerName = summary?.couple?.partner?.name;
+    if (isPartnerConnected && userName && partnerName) {
+      return `${userName} & ${partnerName}`;
+    }
+    return userName || 'Your budget';
+  })();
+
+  const atRiskBudgets = budgetsWithSpending
+    .filter(b => b.status !== 'success')
+    .sort((a, b) => b.progress - a.progress)
+    .slice(0, 3);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -268,14 +291,86 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
     <div className="p-6">
       <BudgetHeader
         title="Budget Manager"
-        subtitle="September 2025 • Partner Connected"
+        subtitle={`Manage and track your spending goals for ${monthLabel}`}
         onBack={handleBack}
-        onExport={handleExport}
-        onAddBudget={handleAddBudget}
-        onAutoBudget={() => setIsWizardOpen(true)}
+        showAddButton={false}
+        showExportButton={false}
       />
 
       <div className="space-y-6">
+        {/* Context toolbar: scope + period + actions */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border shadow-sm">
+          <div className="flex items-center gap-3">
+            <ScopeSelector />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-input-background h-10">
+              <button
+                onClick={handlePreviousMonth}
+                className="p-1 hover:bg-accent rounded transition-colors"
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </button>
+              <div className="flex items-center gap-1">
+                <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
+                  <SelectTrigger className="h-9 w-[120px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getMonthOptions().map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+                  <SelectTrigger className="h-9 w-[90px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getYearOptions().map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <button
+                onClick={handleNextMonth}
+                className="p-1 hover:bg-accent rounded transition-colors"
+                aria-label="Next month"
+              >
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="h-8 w-px bg-border hidden md:block mx-1" />
+
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsWizardOpen(true)}
+                className="h-10 gap-2"
+              >
+                <Wand2 className="h-4 w-4 text-indigo-600" />
+                <span className="hidden sm:inline">Smart Budget</span>
+              </Button>
+              <Button 
+                onClick={handleAddBudget}
+                className="h-10 gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Budget</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
           {/* <CardContent> */}
             {metrics.totalBudget > 0 ? (
               <div className="space-y-4">
@@ -297,6 +392,74 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
               </div>
             )}
 
+        {/* At Risk (quick review) */}
+        {budgetsWithSpending.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">At risk</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {atRiskBudgets.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-3">
+                  {atRiskBudgets.map((b) => {
+                    const IconComponent = getIconByName(b.category_icon);
+                    const categoryColor = getCategoryColor({
+                      id: b.category_id,
+                      name: b.category_name,
+                      icon: b.category_icon
+                    } as Category);
+
+                    return (
+                      <div key={b.id} className="rounded-lg border p-4 bg-card">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                              style={getCategoryIconStyle(categoryColor, false, 0.2)}
+                            >
+                              <IconComponent className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <div className="font-medium">{b.category_name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatBudgetAmount(b.spent)} of {formatBudgetAmount(b.amount)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.round(b.progress)}%
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={
+                                b.status === 'danger'
+                                  ? 'h-full bg-[var(--theme-coral)]'
+                                  : 'h-full bg-[var(--theme-amber)]'
+                              }
+                              style={{ width: `${Math.min(100, b.progress)}%` }}
+                            />
+                          </div>
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            {b.remaining >= 0
+                              ? `${formatBudgetAmount(b.remaining)} remaining`
+                              : `${formatBudgetAmount(Math.abs(b.remaining))} over`}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Nothing is close to the limit for this view.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Category Budgets Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -304,50 +467,7 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
               <Target className="h-5 w-5" />
               Category budgets
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-input-background h-9">
-                <button
-                  onClick={handlePreviousMonth}
-                  className="p-0.5 hover:bg-accent rounded transition-colors"
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-                </button>
-                <div className="flex items-center gap-1">
-                  <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
-                    <SelectTrigger className="h-8 w-[110px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getMonthOptions().map((month) => (
-                        <SelectItem key={month.value} value={month.value}>
-                          {month.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
-                    <SelectTrigger className="h-8 w-[75px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getYearOptions().map((year) => (
-                        <SelectItem key={year.value} value={year.value}>
-                          {year.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <button
-                  onClick={handleNextMonth}
-                  className="p-0.5 hover:bg-accent rounded transition-colors"
-                  aria-label="Next month"
-                >
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
-              </div>
-            </div>
+            <div className="text-sm text-muted-foreground">{monthLabel}</div>
           </CardHeader>
           <CardContent className="space-y-6">
             {budgetsWithSpending.length > 0 ? (
