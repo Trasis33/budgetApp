@@ -1,6 +1,6 @@
 # Ground rules NEVER BREAK IT, NO EXCEPTIONS
 
-- At the end of a response, always ask the user through the tool `ask_user` (or `mcp_ask_user`)
+- Whenever you have a question, or a decision to make OR at the end of a response, always ask the user through the tool `ask_user` (or `mcp_ask_user`)
 - NEVER stop a task without permission from the tool `ask_user` (or `mcp_ask_user`)
 
 # Gemini Project: Budget App

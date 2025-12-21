@@ -604,100 +604,110 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
 
                       return (
                         <Collapsible key={budget.id} open={isExpanded} onOpenChange={() => setExpandedCategory(isExpanded ? null : budget.id)}>
-                          <div 
-                            className={`group rounded-lg transition-colors ${isExpanded ? 'bg-accent/30' : 'hover:bg-accent/50'}`}
-                            onMouseEnter={() => setHoveredRow(budget.id)}
-                            onMouseLeave={() => setHoveredRow(null)}
-                          >
-                            <CollapsibleTrigger className="w-full">
-                              <div className="flex items-center gap-4 p-3 cursor-pointer">
-                                {/* Category Icon */}
-                                <div 
-                                  className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                                  style={{ 
-                                    backgroundColor: `color-mix(in oklch, ${budget.category_color || categoryColor} 20%, transparent)`,
-                                    color: budget.category_color || categoryColor
-                                  }}
-                                >
-                                  <CategoryIcon className="h-4 w-4" />
-                                </div>
-
-                                {/* Category Name */}
-                                <div className="w-28 shrink-0 text-left">
-                                  <span className="text-sm font-medium text-foreground">{budget.category_name}</span>
-                                </div>
-
-                                {/* Progress Bar */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
-                                      <div 
-                                        className="h-full rounded-full transition-all duration-500"
-                                        style={{ 
-                                          width: `${Math.min(100, budget.progress)}%`,
-                                          backgroundColor: budget.category_color || categoryColor
-                                        }}
-                                      />
-                                    </div>
-                                    <span className="text-xs text-muted-foreground w-9 text-right shrink-0 font-medium">
-                                      {Math.round(budget.progress)}%
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Amount */}
-                                <div className="text-right shrink-0 w-20">
-                                  <div className="text-sm font-medium text-foreground">{formatCurrency(budget.spent)}</div>
-                                  <div className="text-[10px] text-muted-foreground">of {formatCurrency(budget.amount)}</div>
-                                </div>
-
-                                {/* Status Badge */}
-                                <div className="shrink-0 w-24">
-                                  <Badge 
-                                    variant={status.variant}
-                                    className={`text-[10px] ${
-                                      status.label === 'Near limit' ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' :
-                                      status.label === 'On track' ? 'border-[var(--theme-teal)] text-[var(--theme-teal)] bg-[var(--theme-teal)]/10' : ''
-                                    }`}
+                            <div 
+                              className={`group flex items-center gap-4 p-3 rounded-lg transition-colors ${isExpanded ? 'bg-accent/30' : 'hover:bg-accent/50'}`}
+                              onMouseEnter={() => setHoveredRow(budget.id)}
+                              onMouseLeave={() => setHoveredRow(null)}
+                            >
+                              <CollapsibleTrigger asChild>
+                                <div className="flex-1 flex items-center gap-4 cursor-pointer">
+                                  {/* Category Icon */}
+                                  <div 
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                                    style={{ 
+                                      backgroundColor: `color-mix(in oklch, ${budget.category_color || categoryColor} 20%, transparent)`,
+                                      color: budget.category_color || categoryColor
+                                    }}
                                   >
-                                    {StatusIcon && <StatusIcon className="h-2.5 w-2.5" />}
-                                    {status.label}
-                                  </Badge>
-                                </div>
+                                    <CategoryIcon className="h-4 w-4" />
+                                  </div>
 
-                                {/* Action Icons */}
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button 
-                                        className={`p-1.5 rounded transition-all ${hoveredRow === budget.id ? 'opacity-100 hover:bg-accent text-[var(--theme-teal)]' : 'opacity-0'}`}
-                                        onClick={(e) => { e.stopPropagation(); handleQuickAddExpense(budget.category_id, budget.category_name); }}
-                                      >
-                                        <Plus className="h-3.5 w-3.5" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Add expense</TooltipContent>
-                                  </Tooltip>
-                                  
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button 
-                                        className={`p-1.5 rounded transition-all ${hoveredRow === budget.id ? 'opacity-100 hover:bg-accent' : 'opacity-0'}`}
-                                        onClick={(e) => { e.stopPropagation(); navigate(`/budgets/${budget.id}/edit`); }}
-                                      >
-                                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Edit budget</TooltipContent>
-                                  </Tooltip>
+                                  {/* Category Name */}
+                                  <div className="w-28 shrink-0 text-left">
+                                    <span className="text-sm font-medium text-foreground">{budget.category_name}</span>
+                                  </div>
 
-                                  <div className="p-1">
-                                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                                  {/* Progress Bar */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                          className="h-full rounded-full transition-all duration-500"
+                                          style={{ 
+                                            width: `${Math.min(100, budget.progress)}%`,
+                                            backgroundColor: budget.category_color || categoryColor
+                                          }}
+                                        />
+                                      </div>
+                                      <span className="text-xs text-muted-foreground w-9 text-right shrink-0 font-medium">
+                                        {Math.round(budget.progress)}%
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Amount */}
+                                  <div className="text-right shrink-0 w-20">
+                                    <div className="text-sm font-medium text-foreground">{formatCurrency(budget.spent)}</div>
+                                    <div className="text-[10px] text-muted-foreground">of {formatCurrency(budget.amount)}</div>
+                                  </div>
+
+                                  {/* Status Badge */}
+                                  <div className="shrink-0 w-24">
+                                    <Badge 
+                                      variant={status.variant}
+                                      className={`text-[10px] ${
+                                        status.label === 'Near limit' ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' :
+                                        status.label === 'On track' ? 'border-[var(--theme-teal)] text-[var(--theme-teal)] bg-[var(--theme-teal)]/10' : ''
+                                      }`}
+                                    >
+                                      {StatusIcon && <StatusIcon className="h-2.5 w-2.5" />}
+                                      {status.label}
+                                    </Badge>
                                   </div>
                                 </div>
-                              </div>
-                            </CollapsibleTrigger>
+                              </CollapsibleTrigger>
 
+                              {/* Action Icons - Outside Trigger */}
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'} hover:text-[var(--theme-teal)]`}
+                                      onClick={(e) => { e.stopPropagation(); handleQuickAddExpense(budget.category_id, budget.category_name); }}
+                                    >
+                                      <Plus className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Add expense</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost" 
+                                      size="icon"
+                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'}`}
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/budgets/${budget.id}/edit`); }}
+                                    >
+                                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit budget</TooltipContent>
+                                </Tooltip>
+                              </div>
+
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                            </div>
                             {/* Expanded Content */}
                             <CollapsibleContent>
                               <div className="px-3 pb-4 space-y-4">
@@ -821,7 +831,6 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                 )}
                               </div>
                             </CollapsibleContent>
-                          </div>
                         </Collapsible>
                       );
                     })}

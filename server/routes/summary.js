@@ -161,17 +161,32 @@ router.get('/settle', auth, async (req, res) => {
   try {
     await generateRecurringExpenses(year, month);
 
-    const users = await db('users').select('id', 'name');
-    if (users.length !== 2) {
-      return res.status(400).json({ message: 'This feature is designed for two users.' });
+    // Get current user and partner
+    const currentUser = await db('users').where('id', req.user.id).first();
+    
+    if (!currentUser.partner_id) {
+       return res.status(400).json({ message: 'You need to be connected to a partner to use this feature.' });
     }
 
-    const [user1, user2] = users;
+    const partner = await db('users').where('id', currentUser.partner_id).first();
+    
+    if (!partner) {
+       // Should technically not happen if FK integrity is good, but just in case
+        return res.status(400).json({ message: 'Partner user not found.' });
+    }
+
+    const user1 = currentUser;
+    const user2 = partner;
+    
+    // Define involved user IDs for filtering
+    const userIds = [user1.id, user2.id];
 
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const endDate = new Date(year, month, 0).toISOString().split('T')[0];
 
-    const expenses = await db('expenses').whereBetween('date', [startDate, endDate]);
+    const expenses = await db('expenses')
+      .whereBetween('date', [startDate, endDate])
+      .whereIn('paid_by_user_id', userIds);
 
     let totalSharedExpenses = 0;
     const userShares = { [user1.id]: 0, [user2.id]: 0 };
@@ -194,8 +209,12 @@ router.get('/settle', auth, async (req, res) => {
         userShares[user1.id] += amount / 2;
         userShares[user2.id] += amount / 2;
       } else if (expense.split_type === 'custom') {
-        userShares[user1.id] += amount * (expense.split_ratio_user1 / 100);
-        userShares[user2.id] += amount * (expense.split_ratio_user2 / 100);
+        // Handle potential null ratios (default to 50 if missing)
+        const ratio1 = expense.split_ratio_user1 || 50;
+        const ratio2 = expense.split_ratio_user2 || 50;
+        
+        userShares[user1.id] += amount * (ratio1 / 100);
+        userShares[user2.id] += amount * (ratio2 / 100);
       }
     }
 
@@ -204,6 +223,9 @@ router.get('/settle', auth, async (req, res) => {
     let settlement = {};
     const amountOwed = Math.abs(balance1);
 
+    // Logic: If I paid more than my share (balance > 0), partner owes me.
+    // If I paid less than my share (balance < 0), I owe partner.
+    
     if (balance1 > 0) {
       settlement.message = `${user2.name} owes ${user1.name} ${amountOwed.toFixed(2)} SEK`;
     } else if (balance1 < 0) {
