@@ -796,26 +796,25 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                                 )}
                               </div>
 
-                              {/* Progress Bar */}
+                              {/* Progress Bar - Enhanced for visibility */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3">
-                                  <div className="flex-1 progress-bar">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                                     <div 
-                                      className={`progress-fill ${status.fill}`}
+                                      className={`h-full rounded-full transition-all duration-500 ${status.fill}`}
                                       style={{ width: `${Math.min(100, progress)}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs text-muted-foreground w-10 text-right shrink-0">
+                                  <span className="text-xs text-muted-foreground w-9 text-right shrink-0 font-medium">
                                     {Math.round(progress)}%
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Amount */}
-                              <div className="text-right shrink-0 w-32">
-                                <span className="text-sm text-muted-foreground">
-                                  {formatCurrency(budget.spent)} / {formatCurrency(budget.budget)}
-                                </span>
+                              {/* Amount - Compact stacked layout */}
+                              <div className="text-right shrink-0 w-20">
+                                <div className="text-sm font-medium text-foreground">{formatCurrency(budget.spent)}</div>
+                                <div className="text-[10px] text-muted-foreground">of {formatCurrency(budget.budget)}</div>
                               </div>
 
                               {/* Status Badge */}
