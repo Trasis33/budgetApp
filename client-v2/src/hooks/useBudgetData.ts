@@ -25,8 +25,29 @@ export function useBudgetData(month?: number, year?: number) {
         expenseService.getExpenses(currentScope)
       ]);
       
+      // Filter expenses for the specific month
+      // use raw date string comparison to avoid timezone issues
+      const monthlyExpenses = expensesData.filter(expense => {
+        if (!expense.date) return false;
+        
+        // Handle YYYY-MM-DD string format directly
+        if (typeof expense.date === 'string' && expense.date.includes('-')) {
+          const [yearStr, monthStr] = expense.date.split('-');
+          const expYear = parseInt(yearStr);
+          const expMonth = parseInt(monthStr); // 1-12
+          
+          if (!isNaN(expYear) && !isNaN(expMonth)) {
+            return expYear === targetYear && expMonth === targetMonth;
+          }
+        }
+        
+        // Fallback to Date object parsing
+        const d = new Date(expense.date);
+        return d.getFullYear() === targetYear && d.getMonth() === (targetMonth - 1);
+      });
+      
       setBudgets(budgetsData);
-      setExpenses(expensesData);
+      setExpenses(monthlyExpenses);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to load budgets');
       setError(error);
