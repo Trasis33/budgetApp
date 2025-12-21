@@ -1,220 +1,144 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter
-} from './ui/dialog';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Category } from '../types';
-import { filterExpensesByMonth } from '../lib/utils';
-import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
-import { Plus, Target, PlusCircle, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
-import { budgetService } from '../api/services/budgetService';
-import { categoryService } from '../api/services/categoryService';
-import { toast } from 'sonner';
-import { useScope } from '@/context/ScopeContext';
-import ScopeSelector from './ScopeSelector';
-import { getIconByName } from '../lib/categoryIcons';
-import { getCategoryColor } from '../lib/categoryColors';
-import { getCategoryIconStyle } from '../lib/iconUtils';
-import { formatBudgetAmount } from '../lib/budgetUtils';
-
-import { BudgetHeader, BudgetMetricsGrid, BudgetTable } from './budget';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Separator } from './ui/separator';
+import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { 
+  Plus, 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  CheckCircle2,
+  Pencil,
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  Send,
+  Loader2
+} from 'lucide-react';
+import { formatCurrency } from '../lib/utils';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
-import { SmartBudgetWizard } from './smart-budget/SmartBudgetWizard';
+import { useSettlement } from '../hooks/useSettlement';
+import { useScope } from '../context/ScopeContext';
+import { budgetCommentService, BudgetComment } from '../api/services/budgetCommentService';
+import { getIconByName } from '../lib/categoryIcons';
+import type { Expense } from '../types';
+
+const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
 
 interface BudgetManagerProps {
   onNavigate?: (view: string) => void;
 }
 
-/**
- * BudgetManager is a component that manages budgets and expenses for a user.
- * It displays a list of budgets and expenses, and allows the user to add, edit, and delete
- * budgets and expenses. It also displays a summary of the user's total budget and expenses.
- * The component is connected to the budget service and uses the useBudgetData and
- * useBudgetCalculations custom hooks to fetch and calculate budget data.
- *
- * @param {BudgetManagerProps} props - The props for the BudgetManager component.
- * @returns {JSX.Element} - The BudgetManager component.
- */
-export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
+
+export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const navigate = useNavigate();
-  const {
-    isLoading: scopeLoading,
-    summary,
-    isPartnerConnected
-  } = useScope();
-  const [categories, setCategories] = useState<Category[]>([]);
-  
-  // Month/Year selection state
   const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1-indexed
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
+  const [showMobileSummary, setShowMobileSummary] = useState(false);
+  const [showSettlementDetails, setShowSettlementDetails] = useState(false);
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+  const [comments, setComments] = useState<Record<number, BudgetComment[]>>({});
+  const [loadingComments, setLoadingComments] = useState<Record<number, boolean>>({});
+
+  // Use real hooks
+  const { currentScope, setScope, summary: scopeSummary, isPartnerConnected } = useScope();
+  const { budgets, expenses, loading: dataLoading, refetch } = useBudgetData(selectedMonth, selectedYear);
+  const { budgetsWithSpending, metrics } = useBudgetCalculations(budgets, expenses);
+  const { data: settlementData, loading: settlementLoading } = useSettlement(selectedMonth, selectedYear);
+
+  // Couple info from scope context
+  const user = scopeSummary?.couple?.user;
+  const partner = scopeSummary?.couple?.partner;
+
+  // Calculations from real data
+  const totalBudget = metrics.totalBudget;
+  const totalSpent = metrics.totalSpent;
+  const remaining = metrics.totalRemaining;
+  const overallProgress = metrics.overallProgress;
   
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [modalSearchTerm, setModalSearchTerm] = useState('');
-  const [modalSelectedCategory, setModalSelectedCategory] = useState<Category | null>(null);
-  const [modalAmount, setModalAmount] = useState('');
-  const [suggestions, setSuggestions] = useState<BudgetSuggestions | null>(null);
-  const [alertAt80Percent, setAlertAt80Percent] = useState(true);
-  const [alertOnExceed, setAlertOnExceed] = useState(true);
+  const nearLimitCount = budgetsWithSpending.filter(b => b.progress >= 80 && b.progress < 100).length;
+  const overBudgetCount = budgetsWithSpending.filter(b => b.progress >= 100).length;
   
-  // Delete confirmation state
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-
-  // Use custom hooks for data and calculations
-  const { budgets, expenses, loading, error, refetch } = useBudgetData(selectedMonth, selectedYear);
-  const monthlyExpenses = filterExpensesByMonth(expenses, selectedYear, selectedMonth - 1);
+  // Calculate days left in month
+  const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+  const currentDay = now.getMonth() + 1 === selectedMonth && now.getFullYear() === selectedYear 
+    ? now.getDate() 
+    : lastDay;
+  const daysLeftInMonth = Math.max(0, lastDay - currentDay);
   
-  const { budgetsWithSpending, metrics } = useBudgetCalculations(budgets, monthlyExpenses);
+  // Daily burn rate
+  const dailyBurnRate = daysLeftInMonth > 0 ? Math.round(remaining / daysLeftInMonth) : 0;
+  const isOnTrack = dailyBurnRate >= 0;
 
-  const monthLabel = new Date(selectedYear, selectedMonth - 1, 1)
-    .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  // Check if month-end (last 5 days)
+  const isMonthEnd = daysLeftInMonth <= 5 && daysLeftInMonth > 0;
 
-  const coupleLabel = (() => {
-    const userName = summary?.couple?.user?.name;
-    const partnerName = summary?.couple?.partner?.name;
-    if (isPartnerConnected && userName && partnerName) {
-      return `${userName} & ${partnerName}`;
-    }
-    return userName || 'Your budget';
-  })();
+  // Sort budgets: at-risk first, then by progress descending
+  const sortedBudgets = [...budgetsWithSpending].sort((a, b) => {
+    const isAtRiskA = a.progress >= 80;
+    const isAtRiskB = b.progress >= 80;
+    if (isAtRiskA && !isAtRiskB) return -1;
+    if (!isAtRiskA && isAtRiskB) return 1;
+    return b.progress - a.progress;
+  });
 
-  const atRiskBudgets = budgetsWithSpending
-    .filter(b => b.status !== 'success')
-    .sort((a, b) => b.progress - a.progress)
-    .slice(0, 3);
+  // Calculate per-user spending for expanded category
+  const getUserSpending = useCallback((categoryName: string) => {
+    const categoryExpenses = expenses.filter(e => e.category_name === categoryName);
+    const userSpent = categoryExpenses
+      .filter(e => e.paid_by_user_id === user?.id)
+      .reduce((sum, e) => sum + e.amount, 0);
+    const partnerSpent = categoryExpenses
+      .filter(e => e.paid_by_user_id === partner?.id)
+      .reduce((sum, e) => sum + e.amount, 0);
+    return { userSpent, partnerSpent };
+  }, [expenses, user?.id, partner?.id]);
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const categoriesData = await categoryService.getCategories();
-        setCategories(categoriesData);
+  // Get transactions for a category
+  const getCategoryTransactions = useCallback((categoryName: string): Expense[] => {
+    return expenses
+      .filter(e => e.category_name === categoryName)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3);
+  }, [expenses]);
 
-        // Categories loaded successfully
-      } catch (error) {
-        toast.error('Having trouble loading categories. Check your connection and try again');
-      }
-    };
-
-    if (!scopeLoading) {
-      loadCategories();
-    }
-  }, [scopeLoading]);
-
-  useEffect(() => {
-    if (modalSelectedCategory) {
-      const sug = calculateCategorySuggestions(modalSelectedCategory.name, monthlyExpenses);
-      setSuggestions(sug);
-    } else {
-      setSuggestions(null);
-    }
-  }, [modalSelectedCategory, monthlyExpenses]);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      // Load alert preferences when modal opens (we'll use a dummy user ID for now)
-      const prefs = getAlertPreferences(1);
-      setAlertAt80Percent(prefs.alertAt80Percent);
-      setAlertOnExceed(prefs.alertOnExceed);
-    }
-  }, [isModalOpen]);
-
-  const usedCategories = budgets.map(b => b.category_name);
-  const availableCategories = categories.filter(cat => !usedCategories.includes(cat.name));
-
-
-  const handleDelete = async (budgetId: number) => {
-    // First click - show warning and change icon
-    if (deleteConfirmId !== budgetId) {
-      setDeleteConfirmId(budgetId);
-      toast.warning('Click again to confirm deletion', {
-        duration: 3000,
-        action: {
-          label: 'Cancel',
-          onClick: () => setDeleteConfirmId(null)
-        }
-      });
-      return;
-    }
+  // Load comments for a budget
+  const loadComments = useCallback(async (budgetId: number) => {
+    if (comments[budgetId] || loadingComments[budgetId]) return;
     
-    // Second click - actually delete
+    setLoadingComments(prev => ({ ...prev, [budgetId]: true }));
     try {
-      await budgetService.deleteBudget(budgetId);
-      refetch();
-      setDeleteConfirmId(null);
-      toast.success('Budget removed');
-    } catch (error) {
-      toast.error('Could not delete budget. Please try again');
+      const result = await budgetCommentService.getComments(budgetId);
+      setComments(prev => ({ ...prev, [budgetId]: result }));
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    } finally {
+      setLoadingComments(prev => ({ ...prev, [budgetId]: false }));
     }
-  };
+  }, [comments, loadingComments]);
 
-  const handleExport = () => {
-    // Export functionality - can be implemented later
-    toast.info('Export functionality coming soon!');
-  };
-
-  const handleAddBudget = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleModalSubmit = async (saveAndAddAnother: boolean = false) => {
-    if (!modalSelectedCategory || !modalAmount) {
-      toast.error('Please select a category and enter an amount');
-      return;
+  // Load comments when category is expanded
+  useEffect(() => {
+    if (expandedCategory) {
+      loadComments(expandedCategory);
     }
+  }, [expandedCategory, loadComments]);
 
-    try {
-      await budgetService.createOrUpdateBudget({
-        category_id: modalSelectedCategory.id,
-        month: selectedMonth,
-        year: selectedYear,
-        amount: parseFloat(modalAmount)
-      });
-
-      // Save alert preferences
-      saveAlertPreferences(1, {
-        alertAt80Percent,
-        alertOnExceed
-      });
-
-      await refetch();
-
-      if (saveAndAddAnother) {
-        setModalSelectedCategory(null);
-        setModalAmount('');
-        setModalSearchTerm('');
-        setSuggestions(null);
-        toast.success('✨ Budget goal set! Add another one');
-      } else {
-        setModalSelectedCategory(null);
-        setModalAmount('');
-        setModalSearchTerm('');
-        setIsModalOpen(false);
-        toast.success('✨ Budget goal set! We\'ll track your progress');
-      }
-    } catch (error) {
-      toast.error('Could not create budget. Please check your amount and try again');
-    }
-  };
-
-  const handlePreviousMonth = () => {
+  const handlePrevMonth = () => {
     if (selectedMonth === 1) {
       setSelectedMonth(12);
       setSelectedYear(selectedYear - 1);
@@ -232,478 +156,682 @@ export function BudgetManager({ onNavigate }: BudgetManagerProps = {}) {
     }
   };
 
-  const getMonthOptions = () => {
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return monthNames.map((name, index) => ({
-      value: (index + 1).toString(),
-      label: name
-    }));
+  const getStatusInfo = (progress: number) => {
+    if (progress >= 100) return { 
+      variant: 'secondary' as const, 
+      label: 'Complete', 
+      fill: 'bg-muted-foreground',
+      icon: CheckCircle2
+    };
+    if (progress >= 90) return { 
+      variant: 'destructive' as const, 
+      label: 'Critical', 
+      fill: 'bg-[var(--theme-coral)]',
+      icon: AlertTriangle
+    };
+    if (progress >= 80) return { 
+      variant: 'outline' as const, 
+      label: 'Near limit', 
+      fill: 'bg-[var(--theme-amber)]',
+      icon: AlertTriangle
+    };
+    return { 
+      variant: 'outline' as const, 
+      label: 'On track', 
+      fill: 'bg-[var(--theme-teal)]',
+      icon: null
+    };
   };
 
-  const getYearOptions = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = currentYear - 2; i <= currentYear + 2; i++) {
-      years.push({ value: i.toString(), label: i.toString() });
+  const getSplitTypeBadge = (splitType: string) => {
+    const styles: Record<string, string> = {
+      '50/50': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      'personal': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+      'custom': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+      'bill': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    };
+    return styles[splitType] || styles['50/50'];
+  };
+
+  const overallStatus = overallProgress >= 90 
+    ? { label: 'Over budget', color: 'text-[var(--theme-coral)]', dot: 'bg-[var(--theme-coral)]' }
+    : overallProgress >= 80 
+    ? { label: 'Near limit', color: 'text-[var(--theme-amber)]', dot: 'bg-[var(--theme-amber)]' }
+    : { label: 'On track', color: 'text-[var(--theme-teal)]', dot: 'bg-[var(--theme-teal)]' };
+
+  const handleAddComment = async (budgetId: number) => {
+    const text = commentInputs[budgetId]?.trim();
+    if (!text) return;
+    
+    try {
+      const newComment = await budgetCommentService.addComment(budgetId, text);
+      setComments(prev => ({
+        ...prev,
+        [budgetId]: [...(prev[budgetId] || []), newComment]
+      }));
+      setCommentInputs(prev => ({ ...prev, [budgetId]: '' }));
+    } catch (err) {
+      console.error('Failed to add comment:', err);
     }
-    return years;
   };
 
-  const handleMonthChange = (value: string) => {
-    setSelectedMonth(parseInt(value));
+  const handleQuickAddExpense = (categoryId: number, categoryName: string) => {
+    navigate(`/add-expense?category=${categoryId}&name=${encodeURIComponent(categoryName)}`);
   };
 
-  const handleYearChange = (value: string) => {
-    setSelectedYear(parseInt(value));
-  };
+  // Settlement amounts from real data
+  const user1Paid = parseFloat(settlementData?.user1?.paid || '0');
+  const user2Paid = parseFloat(settlementData?.user2?.paid || '0');
+  const settlementAmount = Math.abs(user1Paid - user2Paid) / 2;
+  const userOwes = user1Paid < user2Paid;
 
-  const handleBack = () => {
-    navigate('/dashboard');
-  };
-
-  if (loading) {
+  // Loading state
+  if (dataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Getting your budget goals ready...</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">⚠️</div>
-          <p className="text-gray-600">Failed to load budgets. Please try again.</p>
-          <Button onClick={refetch} className="mt-4">Retry</Button>
+  // Mobile Summary Component
+  const MobileSummaryHeader = () => (
+    <div className="lg:hidden sticky top-0 z-10 bg-background border-b border-border">
+      <button 
+        onClick={() => setShowMobileSummary(!showMobileSummary)}
+        className="w-full p-4 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-4">
+          <div className="text-left">
+            <div className="text-lg font-semibold text-foreground">{formatCurrency(remaining)}</div>
+            <div className="text-xs text-muted-foreground">remaining</div>
+          </div>
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: overallStatus.dot.includes('var') ? overallStatus.dot.replace('bg-[', '').replace(']', '') : undefined }} />
         </div>
-      </div>
-    );
-  }
+        <div className="flex items-center gap-2">
+          {showMobileSummary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+      </button>
+      
+      {showMobileSummary && (
+        <div className="p-4 pt-0 space-y-4 border-t border-border/50">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Budget</div>
+              <div className="text-sm font-medium">{formatCurrency(totalBudget)}</div>
+            </div>
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Spent</div>
+              <div className="text-sm font-medium">{formatCurrency(totalSpent)}</div>
+            </div>
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Daily</div>
+              <div className={`text-sm font-medium ${isOnTrack ? 'text-[var(--theme-teal)]' : 'text-[var(--theme-coral)]'}`}>
+                {formatCurrency(dailyBurnRate)}
+              </div>
+            </div>
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <div className="text-xs text-muted-foreground">Days</div>
+              <div className="text-sm font-medium">{daysLeftInMonth}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="p-6">
-      <BudgetHeader
-        title="Budget Manager"
-        subtitle={`Manage and track your spending goals for ${monthLabel}`}
-        onBack={handleBack}
-        showAddButton={false}
-        showExportButton={false}
-      />
-
-      <div className="space-y-6">
-        {/* Context toolbar: scope + period + actions */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border shadow-sm">
-          <div className="flex items-center gap-3">
-            <ScopeSelector />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-input-background h-10">
-              <button
-                onClick={handlePreviousMonth}
-                className="p-1 hover:bg-accent rounded transition-colors"
-                aria-label="Previous month"
-              >
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </button>
-              <div className="flex items-center gap-1">
-                <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
-                  <SelectTrigger className="h-9 w-[120px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getMonthOptions().map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
-                  <SelectTrigger className="h-9 w-[90px] border-0 bg-transparent px-2 focus:ring-0 focus:ring-offset-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getYearOptions().map((year) => (
-                      <SelectItem key={year.value} value={year.value}>
-                        {year.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <h1 className="text-xl font-medium text-foreground">Budget Manager</h1>
+              
+              <div className="flex items-center gap-1 text-sm">
+                <button 
+                  onClick={handlePrevMonth}
+                  className="p-1 hover:bg-accent rounded transition-colors"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <span className="px-2 py-1 font-medium text-foreground">
+                  {MONTHS[selectedMonth - 1]} {selectedYear}
+                </span>
+                <button 
+                  onClick={handleNextMonth}
+                  className="p-1 hover:bg-accent rounded transition-colors"
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
               </div>
-              <button
-                onClick={handleNextMonth}
-                className="p-1 hover:bg-accent rounded transition-colors"
-                aria-label="Next month"
-              >
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
             </div>
 
-            <div className="h-8 w-px bg-border hidden md:block mx-1" />
+            <div className="flex items-center gap-4">
+              {/* Scope Tabs */}
+              <div className="flex items-center gap-1 text-sm bg-muted rounded-lg p-1">
+                {(['ours', 'mine', 'partner'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setScope(s)}
+                    disabled={s === 'partner' && !isPartnerConnected}
+                    className={`px-3 py-1.5 rounded-md transition-colors capitalize ${
+                      currentScope === s
+                        ? 'text-foreground bg-card shadow-sm font-medium'
+                        : 'text-muted-foreground hover:text-foreground'
+                    } ${s === 'partner' && !isPartnerConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {s === 'ours' ? 'Shared' : s === 'mine' ? 'Mine' : "Partner's"}
+                  </button>
+                ))}
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsWizardOpen(true)}
-                className="h-10 gap-2"
-              >
-                <Wand2 className="h-4 w-4 text-indigo-600" />
-                <span className="hidden sm:inline">Smart Budget</span>
-              </Button>
-              <Button 
-                onClick={handleAddBudget}
-                className="h-10 gap-2"
-              >
+              {/* Connected Status */}
+              {isPartnerConnected && user && partner && (
+                <div className="flex items-center gap-1.5">
+                  <div className="flex -space-x-2">
+                    <Avatar className="h-6 w-6 ring-2 ring-background">
+                      <AvatarFallback 
+                        className="text-white text-[10px]"
+                        style={{ backgroundColor: user.color || 'var(--theme-indigo)' }}
+                      >
+                        {user.name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Avatar className="h-6 w-6 ring-2 ring-background">
+                      <AvatarFallback 
+                        className="text-white text-[10px]"
+                        style={{ backgroundColor: partner.color || 'var(--theme-teal)' }}
+                      >
+                        {partner.name?.[0] || 'P'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[var(--theme-teal)]" />
+                </div>
+              )}
+
+              <Button size="sm" variant="outline" className="gap-1.5 text-sm" onClick={() => navigate('/add-budget')}>
                 <Plus className="h-4 w-4" />
-                <span>Add Budget</span>
+                Add Budget
               </Button>
             </div>
           </div>
         </div>
+      </header>
 
-          {/* <CardContent> */}
-            {metrics.totalBudget > 0 ? (
-              <div className="space-y-4">
-                <BudgetMetricsGrid metrics={metrics} />
+      <MobileSummaryHeader />
+
+      {/* Month-End Review CTA */}
+      {isMonthEnd && (
+        <div className="bg-gradient-to-r from-[var(--theme-indigo)] to-[var(--theme-teal)] text-white">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5" />
+              <div>
+                <span className="font-medium">Month ending soon!</span>
+                <span className="ml-2 opacity-90">{daysLeftInMonth} days left to review and settle</span>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Ready to set your first budget?
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Budgets help you plan spending before it happens. Start with categories 
-                  you spend on most – groceries, gas, or fun money.
-                </p>
-                <p className="text-xs text-gray-500">
-                  💡 Pro tip: Start with 2-3 categories, you can always add more
-                </p>
-              </div>
-            )}
+            </div>
+            <Button variant="secondary" size="sm" className="gap-2" onClick={() => navigate('/settlements')}>
+              <CheckCircle2 className="h-4 w-4" />
+              Review & Settle
+            </Button>
+          </div>
+        </div>
+      )}
 
-        {/* At Risk (quick review) */}
-        {budgetsWithSpending.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">At risk</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {atRiskBudgets.length > 0 ? (
-                <div className="grid gap-3 md:grid-cols-3">
-                  {atRiskBudgets.map((b) => {
-                    const IconComponent = getIconByName(b.category_icon);
-                    const categoryColor = getCategoryColor({
-                      id: b.category_id,
-                      name: b.category_name,
-                      icon: b.category_icon
-                    } as Category);
-
-                    return (
-                      <div key={b.id} className="rounded-lg border p-4 bg-card">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                              style={getCategoryIconStyle(categoryColor, false, 0.2)}
-                            >
-                              <IconComponent className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <div className="font-medium">{b.category_name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {formatBudgetAmount(b.spent)} of {formatBudgetAmount(b.amount)}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {Math.round(b.progress)}%
-                          </div>
-                        </div>
-                        <div className="mt-3">
-                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                            <div
-                              className={
-                                b.status === 'danger'
-                                  ? 'h-full bg-[var(--theme-coral)]'
-                                  : 'h-full bg-[var(--theme-amber)]'
-                              }
-                              style={{ width: `${Math.min(100, b.progress)}%` }}
-                            />
-                          </div>
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            {b.remaining >= 0
-                              ? `${formatBudgetAmount(b.remaining)} remaining`
-                              : `${formatBudgetAmount(Math.abs(b.remaining))} over`}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  Nothing is close to the limit for this view.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Category Budgets Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Category budgets
-            </CardTitle>
-            <div className="text-sm text-muted-foreground">{monthLabel}</div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {budgetsWithSpending.length > 0 ? (
-              <BudgetTable
-                budgets={budgetsWithSpending}
-                onDelete={handleDelete}
-                deleteConfirmId={deleteConfirmId}
-                onUpdate={refetch}
-              />
-            ) : (
-              <div className="text-center py-12">
-                  <Target className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Ready to plan ahead?
-                  </h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Budgets help you decide what to spend before you spend it. 
-                    Start with categories you spend on most – groceries, gas, fun money.
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column - Summary */}
+          <aside className="hidden lg:block lg:col-span-5 space-y-6">
+            
+            {/* Month At A Glance */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Month at a Glance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="text-4xl font-semibold text-foreground tracking-tight">
+                    {formatCurrency(remaining)}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    remaining of {formatCurrency(totalBudget)}
                   </p>
-                  <div className="space-y-3 max-w-xs mx-auto">
-                    <Button onClick={handleAddBudget} className="w-full">
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Create my first budget
-                    </Button>
-                    <p className="text-xs text-gray-500">
-                      💡 Pro tip: Start with 2-3 categories, you can always add more
-                    </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all ${
+                        overallProgress >= 90 ? 'bg-[var(--theme-coral)]' : 
+                        overallProgress >= 80 ? 'bg-[var(--theme-amber)]' : 'bg-[var(--theme-teal)]'
+                      }`}
+                      style={{ width: `${Math.min(100, overallProgress)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: overallStatus.dot.includes('var') ? overallStatus.dot.replace('bg-[', '').replace(']', '') : undefined }} />
+                    <span className="text-sm font-medium" style={{ color: overallStatus.color.includes('var') ? overallStatus.color.replace('text-[', '').replace(']', '') : undefined }}>
+                      {overallStatus.label}
+                    </span>
                   </div>
                 </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Add Budget Modal */}
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Budget</DialogTitle>
-              <DialogDescription>
-                Set a spending limit for a category
-              </DialogDescription>
-            </DialogHeader>
+            {/* Quick Stats */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Quick Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Total Budget</div>
+                    <div className="text-lg font-semibold text-foreground">{formatCurrency(totalBudget)}</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Total Spent</div>
+                    <div className="text-lg font-semibold text-foreground">{formatCurrency(totalSpent)}</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                      Daily Target
+                      {isOnTrack ? (
+                        <TrendingUp className="h-3 w-3 text-[var(--theme-teal)]" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 text-[var(--theme-coral)]" />
+                      )}
+                    </div>
+                    <div className={`text-lg font-semibold ${isOnTrack ? 'text-[var(--theme-teal)]' : 'text-[var(--theme-coral)]'}`}>
+                      {formatCurrency(dailyBurnRate)}/day
+                    </div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Days Left</div>
+                    <div className="text-lg font-semibold text-foreground">{daysLeftInMonth}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="space-y-6">
-              {/* Category Selection */}
-              <div className="space-y-3">
-                <Label>Category</Label>
-                {availableCategories.length === 0 ? (
-                  <div className="text-center py-8 p-3 border rounded-lg bg-muted/30">
-                    <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="font-medium text-sm mb-2">All categories have budgets!</p>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Want to adjust an existing one instead?
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsModalOpen(false);
-                      }}
-                    >
-                      View Existing Budgets
+            {/* Settlement Card */}
+            {isPartnerConnected && settlementData && (
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Settlement
+                  </CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs h-6 px-2"
+                    onClick={() => setShowSettlementDetails(!showSettlementDetails)}
+                  >
+                    {showSettlementDetails ? 'Hide' : 'Details'}
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback 
+                            className="text-[10px] text-white"
+                            style={{ backgroundColor: userOwes ? (user?.color || 'var(--theme-indigo)') : (partner?.color || 'var(--theme-teal)') }}
+                          >
+                            {userOwes ? user?.name?.[0] : partner?.name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback 
+                            className="text-[10px] text-white"
+                            style={{ backgroundColor: userOwes ? (partner?.color || 'var(--theme-teal)') : (user?.color || 'var(--theme-indigo)') }}
+                          >
+                            {userOwes ? partner?.name?.[0] : user?.name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <span className="text-sm font-medium text-foreground">{formatCurrency(settlementAmount)}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-xs text-[var(--theme-teal)]" onClick={() => navigate('/settlements')}>
+                      Reconcile
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-3">
-                      💡 You can delete a budget to create a different one
-                    </p>
+                  </div>
+
+                  {showSettlementDetails && (
+                    <div className="space-y-2 pt-2 border-t border-border">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: user?.color || 'var(--theme-indigo)' }}>
+                              {user?.name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-muted-foreground">{user?.name} paid</span>
+                        </div>
+                        <span className="font-medium">{formatCurrency(user1Paid)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: partner?.color || 'var(--theme-teal)' }}>
+                              {partner?.name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-muted-foreground">{partner?.name} paid</span>
+                        </div>
+                        <span className="font-medium">{formatCurrency(user2Paid)}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">50/50 Settlement</span>
+                        <span className="font-semibold text-[var(--theme-teal)]">{formatCurrency(settlementAmount)}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Alerts */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <Badge 
+                    variant={nearLimitCount > 0 ? 'outline' : 'secondary'}
+                    className={nearLimitCount > 0 ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' : ''}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {nearLimitCount} near limit
+                  </Badge>
+                  <Badge variant={overBudgetCount > 0 ? 'destructive' : 'secondary'}>
+                    {overBudgetCount > 0 ? <AlertTriangle className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
+                    {overBudgetCount} over budget
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+
+          {/* Right Column - Categories */}
+          <section className="lg:col-span-7">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  All Categories ({sortedBudgets.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Separator className="mb-4" />
+                
+                {sortedBudgets.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground mb-4">No budgets set for this month</p>
+                    <Button onClick={() => navigate('/add-budget')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Budget
+                    </Button>
                   </div>
                 ) : (
-                  <>
-                    <Input
-                      placeholder="Search categories..."
-                      value={modalSearchTerm}
-                      onChange={(e) => setModalSearchTerm(e.target.value)}
-                    />
-                    <div className="max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg bg-muted/50">
-                      {availableCategories
-                        .filter(cat => cat.name.toLowerCase().includes(modalSearchTerm.toLowerCase()))
-                        .map((category) => {
-                          const IconComponent = getIconByName(category.icon);
-                          const categoryColor = getCategoryColor(category);
-                          
-                          return (
-                            <div
-                              key={category.id}
-                              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                                modalSelectedCategory?.id === category.id
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:bg-accent'
-                              }`}
-                              onClick={() => setModalSelectedCategory(category)}
-                            >
-                              <div 
-                                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                                style={getCategoryIconStyle(categoryColor, false, 0.2)}
-                              >
-                                <IconComponent className="h-5 w-5" />
+                  <div className="space-y-1">
+                    {sortedBudgets.map((budget) => {
+                      const status = getStatusInfo(budget.progress);
+                      const StatusIcon = status.icon;
+                      const isExpanded = expandedCategory === budget.id;
+                      const CategoryIcon = getIconByName(budget.category_icon);
+                      const categoryColor = budget.category_color || 'var(--theme-teal)';
+                      const { userSpent, partnerSpent } = getUserSpending(budget.category_name);
+                      const transactions = getCategoryTransactions(budget.category_name);
+                      const budgetComments = comments[budget.id] || [];
+
+                      return (
+                        <Collapsible key={budget.id} open={isExpanded} onOpenChange={() => setExpandedCategory(isExpanded ? null : budget.id)}>
+                          <div 
+                            className={`group rounded-lg transition-colors ${isExpanded ? 'bg-accent/30' : 'hover:bg-accent/50'}`}
+                            onMouseEnter={() => setHoveredRow(budget.id)}
+                            onMouseLeave={() => setHoveredRow(null)}
+                          >
+                            <CollapsibleTrigger className="w-full">
+                              <div className="flex items-center gap-4 p-3 cursor-pointer">
+                                {/* Category Icon */}
+                                <div 
+                                  className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                                  style={{ 
+                                    backgroundColor: `color-mix(in oklch, ${budget.category_color || categoryColor} 20%, transparent)`,
+                                    color: budget.category_color || categoryColor
+                                  }}
+                                >
+                                  <CategoryIcon className="h-4 w-4" />
+                                </div>
+
+                                {/* Category Name */}
+                                <div className="w-28 shrink-0 text-left">
+                                  <span className="text-sm font-medium text-foreground">{budget.category_name}</span>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                                      <div 
+                                        className="h-full rounded-full transition-all duration-500"
+                                        style={{ 
+                                          width: `${Math.min(100, budget.progress)}%`,
+                                          backgroundColor: budget.category_color || categoryColor
+                                        }}
+                                      />
+                                    </div>
+                                    <span className="text-xs text-muted-foreground w-9 text-right shrink-0 font-medium">
+                                      {Math.round(budget.progress)}%
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Amount */}
+                                <div className="text-right shrink-0 w-20">
+                                  <div className="text-sm font-medium text-foreground">{formatCurrency(budget.spent)}</div>
+                                  <div className="text-[10px] text-muted-foreground">of {formatCurrency(budget.amount)}</div>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className="shrink-0 w-24">
+                                  <Badge 
+                                    variant={status.variant}
+                                    className={`text-[10px] ${
+                                      status.label === 'Near limit' ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' :
+                                      status.label === 'On track' ? 'border-[var(--theme-teal)] text-[var(--theme-teal)] bg-[var(--theme-teal)]/10' : ''
+                                    }`}
+                                  >
+                                    {StatusIcon && <StatusIcon className="h-2.5 w-2.5" />}
+                                    {status.label}
+                                  </Badge>
+                                </div>
+
+                                {/* Action Icons */}
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button 
+                                        className={`p-1.5 rounded transition-all ${hoveredRow === budget.id ? 'opacity-100 hover:bg-accent text-[var(--theme-teal)]' : 'opacity-0'}`}
+                                        onClick={(e) => { e.stopPropagation(); handleQuickAddExpense(budget.category_id, budget.category_name); }}
+                                      >
+                                        <Plus className="h-3.5 w-3.5" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Add expense</TooltipContent>
+                                  </Tooltip>
+                                  
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button 
+                                        className={`p-1.5 rounded transition-all ${hoveredRow === budget.id ? 'opacity-100 hover:bg-accent' : 'opacity-0'}`}
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/budgets/${budget.id}/edit`); }}
+                                      >
+                                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit budget</TooltipContent>
+                                  </Tooltip>
+
+                                  <div className="p-1">
+                                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium">{category.name}</p>
-                              </div>
-                              <div className={`w-4 h-4 rounded-full border-2 ${
-                                modalSelectedCategory?.id === category.id
-                                  ? 'border-primary bg-primary'
-                                  : 'border-border'
-                              }`}>
-                                {modalSelectedCategory?.id === category.id && (
-                                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
+                            </CollapsibleTrigger>
+
+                            {/* Expanded Content */}
+                            <CollapsibleContent>
+                              <div className="px-3 pb-4 space-y-4">
+                                <Separator />
+                                
+                                {/* Partner Breakdown */}
+                                {isPartnerConnected && (
+                                  <div className="flex gap-4">
+                                    <div className="flex-1 p-3 bg-muted/30 rounded-lg">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Avatar className="h-5 w-5">
+                                          <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: user?.color || 'var(--theme-indigo)' }}>
+                                            {user?.name?.[0]}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-xs text-muted-foreground">{user?.name}</span>
+                                      </div>
+                                      <div className="text-sm font-semibold">{formatCurrency(userSpent)}</div>
+                                    </div>
+                                    <div className="flex-1 p-3 bg-muted/30 rounded-lg">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Avatar className="h-5 w-5">
+                                          <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: partner?.color || 'var(--theme-teal)' }}>
+                                            {partner?.name?.[0]}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-xs text-muted-foreground">{partner?.name}</span>
+                                      </div>
+                                      <div className="text-sm font-semibold">{formatCurrency(partnerSpent)}</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Recent Transactions */}
+                                {transactions.length > 0 && (
+                                  <div>
+                                    <div className="text-xs font-medium text-muted-foreground mb-2">Recent Transactions</div>
+                                    <div className="space-y-2">
+                                      {transactions.map((tx) => (
+                                        <div key={tx.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                            <Avatar className="h-5 w-5">
+                                              <AvatarFallback 
+                                                className="text-[8px] text-white"
+                                                style={{ backgroundColor: tx.paid_by_user_id === user?.id ? (user?.color || 'var(--theme-indigo)') : (partner?.color || 'var(--theme-teal)') }}
+                                              >
+                                                {tx.paid_by_name?.[0] || '?'}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <div className="text-sm">{tx.description}</div>
+                                              <div className="text-[10px] text-muted-foreground">{tx.date}</div>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${getSplitTypeBadge(tx.split_type)}`}>
+                                              {tx.split_type}
+                                            </span>
+                                            <span className="text-sm font-medium">{formatCurrency(tx.amount)}</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Comments */}
+                                {isPartnerConnected && (
+                                  <div>
+                                    <div className="text-xs font-medium text-muted-foreground mb-2">
+                                      Discussion ({budgetComments.length})
+                                    </div>
+                                    
+                                    {loadingComments[budget.id] ? (
+                                      <div className="flex justify-center py-4">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      </div>
+                                    ) : budgetComments.length > 0 ? (
+                                      <div className="space-y-2 mb-3">
+                                        {budgetComments.map((comment) => (
+                                          <div key={comment.id} className={`flex gap-2 ${comment.user_id === user?.id ? '' : 'flex-row-reverse'}`}>
+                                            <Avatar className="h-6 w-6 shrink-0">
+                                              <AvatarFallback 
+                                                className="text-[9px] text-white"
+                                                style={{ backgroundColor: comment.user_color || (comment.user_id === user?.id ? 'var(--theme-indigo)' : 'var(--theme-teal)') }}
+                                              >
+                                                {comment.user_name?.[0]}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div className={`flex-1 p-2 rounded-lg text-sm ${comment.user_id === user?.id ? 'bg-muted/50' : 'bg-[var(--theme-teal)]/10'}`}>
+                                              <p>{comment.text}</p>
+                                              <span className="text-[10px] text-muted-foreground">
+                                                {new Date(comment.created_at).toLocaleDateString()}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground mb-3">No comments yet.</p>
+                                    )}
+                                    
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Add a comment..."
+                                        value={commentInputs[budget.id] || ''}
+                                        onChange={(e) => setCommentInputs(prev => ({ ...prev, [budget.id]: e.target.value }))}
+                                        className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(budget.id); }}
+                                      />
+                                      <Button 
+                                        size="sm" 
+                                        onClick={() => handleAddComment(budget.id)}
+                                        disabled={!commentInputs[budget.id]?.trim()}
+                                      >
+                                        <Send className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </>
+                            </CollapsibleContent>
+                          </div>
+                        </Collapsible>
+                      );
+                    })}
+                  </div>
                 )}
-              </div>
-
-              {availableCategories.length > 0 && (
-                <>
-                  {/* Budget Amount */}
-                  <div className="space-y-3">
-                    <Label>Monthly Budget Amount</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">kr</span>
-                      <Input
-                        placeholder="0.00"
-                        value={modalAmount}
-                        onChange={(e) => setModalAmount(e.target.value)}
-                        className="pl-8"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                      />
-                    </div>
-
-                    {/* Quick Suggestions */}
-                    {suggestions && (
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground">Quick suggestions based on recent spending:</p>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setModalAmount(suggestions.matchAvg.toString())}
-                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
-                          >
-                            Match avg: kr{suggestions.matchAvg}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setModalAmount(suggestions.plusTen.toString())}
-                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
-                          >
-                            +10%: kr{suggestions.plusTen}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setModalAmount(suggestions.minusTen.toString())}
-                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
-                          >
-                            -10%: kr{suggestions.minusTen}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setModalAmount(suggestions.rounded.toString())}
-                            className="px-3 py-1 text-xs rounded-lg border border-border bg-muted hover:bg-accent transition-all"
-                          >
-                            Round: kr{suggestions.rounded}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Alert Preferences */}
-                  <div className="space-y-3">
-                    <Label>Alert me when</Label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={alertAt80Percent}
-                          onChange={(e) => setAlertAt80Percent(e.target.checked)}
-                          className="rounded border-border"
-                        />
-                        <span className="text-sm">I reach 80% of budget</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={alertOnExceed}
-                          onChange={(e) => setAlertOnExceed(e.target.checked)}
-                          className="rounded border-border"
-                        />
-                        <span className="text-sm">I exceed the budget</span>
-                      </label>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              {availableCategories.length > 0 && (
-                <Button
-                  variant="ghost"
-                  onClick={() => handleModalSubmit(true)}
-                >
-                  Save & Add Another
-                </Button>
-              )}
-              <Button onClick={() => handleModalSubmit(false)}>
-                Add Budget
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Smart Budget Wizard */}
-        <SmartBudgetWizard
-          isOpen={isWizardOpen}
-          onClose={() => setIsWizardOpen(false)}
-          onComplete={() => {
-            refetch();
-            setIsWizardOpen(false);
-          }}
-          categories={categories}
-          existingBudgets={budgetsWithSpending}
-          month={selectedMonth}
-          year={selectedYear}
-        />
-      </div>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }

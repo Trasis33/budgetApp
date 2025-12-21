@@ -142,6 +142,20 @@ const setupDatabase = async () => {
       });
     }
 
+    // Create budget_comments table for couples to discuss budgets
+    if (!(await db.schema.hasTable('budget_comments'))) {
+      console.log('Creating budget_comments table...');
+      await db.schema.createTable('budget_comments', (table) => {
+        table.increments('id').primary();
+        table.integer('budget_id').unsigned().notNullable()
+          .references('id').inTable('budgets').onDelete('CASCADE');
+        table.integer('user_id').unsigned().notNullable()
+          .references('id').inTable('users').onDelete('CASCADE');
+        table.text('text').notNullable();
+        table.timestamp('created_at').defaultTo(db.fn.now());
+      });
+    }
+
     // Seed demo users only if they don't exist
     try {
       const user1 = await db('users').where('email', 'user1@example.com').first();

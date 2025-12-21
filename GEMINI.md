@@ -1,3 +1,8 @@
+# Ground rules NEVER BREAK IT, NO EXCEPTIONS
+
+- At the end of a response, always ask the user through the tool `ask_user` (or `mcp_ask_user`)
+- NEVER stop a task without permission from the tool `ask_user` (or `mcp_ask_user`)
+
 # Gemini Project: Budget App
 
 This document provides a comprehensive overview of the Budget App project, designed to be used as instructional context for Gemini.

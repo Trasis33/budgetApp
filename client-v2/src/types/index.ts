@@ -96,6 +96,16 @@ export interface BudgetStats {
   overBudget: number;
 }
 
+export interface BudgetComment {
+  id: number;
+  budget_id: number;
+  user_id: number;
+  user_name: string;
+  user_color?: string;
+  text: string;
+  created_at: string;
+}
+
 export interface Income {
   id: number;
   source: string;
