@@ -21,7 +21,8 @@ import {
   TrendingDown,
   Clock,
   Send,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
@@ -29,7 +30,9 @@ import { useSettlement } from '../hooks/useSettlement';
 import { useScope } from '../context/ScopeContext';
 import { budgetCommentService, BudgetComment } from '../api/services/budgetCommentService';
 import { getIconByName } from '../lib/categoryIcons';
-import type { Expense } from '../types';
+import type { Expense, Category } from '../types';
+import { SmartBudgetWizard } from './smart-budget/SmartBudgetWizard';
+import { categoryService } from '../api/services/categoryService';
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -60,9 +63,20 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const { budgetsWithSpending, metrics } = useBudgetCalculations(budgets, expenses);
   const { data: settlementData, loading: settlementLoading } = useSettlement(selectedMonth, selectedYear);
 
+  // Wizard State
+  const [isWizardOpen, setWizardOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
   // Couple info from scope context
   const user = scopeSummary?.couple?.user;
   const partner = scopeSummary?.couple?.partner;
+
+  // Load categories for wizard
+  useEffect(() => {
+    if (isWizardOpen && categories.length === 0) {
+      categoryService.getCategories().then(setCategories).catch(console.error);
+    }
+  }, [isWizardOpen, categories.length]);
 
   // Calculations from real data
   const totalBudget = metrics.totalBudget;
@@ -353,6 +367,16 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                   <CheckCircle2 className="h-3.5 w-3.5 text-[var(--theme-teal)]" />
                 </div>
               )}
+
+              <Button 
+                size="sm" 
+                variant="default"
+                className="gap-1.5 text-sm bg-gradient-to-r from-[var(--theme-indigo)] to-[var(--theme-teal)] hover:opacity-90 border-0 text-white"
+                onClick={() => setWizardOpen(true)}
+              >
+                <Sparkles className="h-4 w-4" />
+                Smart Setup
+              </Button>
 
               <Button size="sm" variant="outline" className="gap-1.5 text-sm" onClick={() => navigate('/add-budget')}>
                 <Plus className="h-4 w-4" />
@@ -841,6 +865,20 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
           </section>
         </div>
       </main>
+
+      {/* Smart Budget Wizard */}
+      <SmartBudgetWizard
+        isOpen={isWizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={() => {
+          refetch();
+          setWizardOpen(false);
+        }}
+        categories={categories}
+        existingBudgets={budgetsWithSpending}
+        month={selectedMonth}
+        year={selectedYear}
+      />
     </div>
   );
 }
