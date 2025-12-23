@@ -18,7 +18,7 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
     { id: 'add-expense', label: 'Add Expense', icon: Receipt, path: '/add-expense' },
     { id: 'expenses', label: 'Expenses', icon: DollarSign, path: '/expenses' },
     { id: 'budgets', label: 'Budgets', icon: BarChart3, path: '/budgets' },
-    { id: 'bills', label: 'Bills & Subscriptions', icon: FileText, path: '/bills-design-two' },
+    { id: 'bills', label: 'Bills & Subscriptions', icon: FileText, path: '/recurring' },
     { id: 'analytics', label: 'Analytics', icon: PieChart, path: '/analytics' },
     { id: 'split', label: 'Bill Splitting', icon: Users, path: '/split' },
     { id: 'statement', label: 'Statements', icon: FileText, path: '/statement' },

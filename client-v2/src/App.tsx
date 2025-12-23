@@ -7,6 +7,7 @@ import { ExpenseList } from './components/ExpenseList';
 // import { ExpenseList } from './components/ExpenseList_v2';
 import { BudgetManager } from './components/BudgetManager';
 import { BudgetForm } from './components/BudgetForm';
+import { RecurringExpenses } from './components/RecurringExpenses';
 import { Analytics } from './components/Analytics';
 import { BillSplitting } from './components/BillSplitting';
 import { MonthlyStatement } from './components/MonthlyStatement';
@@ -38,6 +39,7 @@ const MainApp = () => {
             <Route path="/edit-budget/:id" element={<BudgetForm onCancel={() => setCurrentView('budgets')} />} />
             <Route path="/expenses" element={<ExpenseList onNavigate={setCurrentView} />} />
             <Route path="/budgets" element={<BudgetManager onNavigate={setCurrentView} />} />
+            <Route path="/recurring" element={<RecurringExpenses />} />
             <Route path="/analytics" element={<Analytics onNavigate={setCurrentView} />} />
             <Route path="/split" element={<BillSplitting onNavigate={setCurrentView} />} />
             <Route path="/statement" element={<MonthlyStatement onNavigate={setCurrentView} />} />

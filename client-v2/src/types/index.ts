@@ -45,6 +45,12 @@ export interface RecurringTemplate {
   /** Day of month (1-28) when this recurring expense is due. Used for subscriptions that aren't on the 1st. */
   day_of_month?: number;
   is_active: boolean;
+  /** Whether the expense is shared between partners. */
+  is_shared: boolean;
+  /** Type of recurring expense. */
+  recurring_type: 'bill' | 'subscription';
+  /** Optional notes for the template. */
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
