@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Implement robust Recurring Expenses management system
+## [~] Track: Implement robust Recurring Expenses management system
 *Link: [./conductor/tracks/recurring_expenses_20251222/](./conductor/tracks/recurring_expenses_20251222/)*
