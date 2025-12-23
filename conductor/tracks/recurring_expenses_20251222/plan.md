@@ -8,7 +8,7 @@
 
 ## Phase 2: Frontend Management UI
 - [x] Task: Create Recurring Expense management page in client-v2 da92962
-- [ ] Task: Implement form for creating/editing recurring expenses using React Hook Form
+- [x] Task: Implement form for creating/editing recurring expenses using React Hook Form db6736e
 - [ ] Task: Add list view with shared/personal visual indicators
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Management UI' (Protocol in workflow.md)
 
