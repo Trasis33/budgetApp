@@ -200,8 +200,12 @@ export function RecurringExpenses() {
                     <Badge variant="secondary" className="text-[10px]">
                       {getCategoryName(template.category_id)}
                     </Badge>
-                    {!template.is_shared && (
-                      <Badge variant="outline" className="text-[10px] border-theme-amber text-theme-amber">
+                    {template.is_shared ? (
+                      <Badge variant="outline" className="text-[10px] border-theme-teal text-theme-teal bg-theme-teal/5">
+                        Shared
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] border-theme-amber text-theme-amber bg-theme-amber/5">
                         Personal
                       </Badge>
                     )}
