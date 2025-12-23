@@ -48,7 +48,10 @@ router.post('/', auth, async (req, res) => {
       split_ratio_user1,
       split_ratio_user2,
       bill_managed,
-      day_of_month
+      day_of_month,
+      notes,
+      recurring_type,
+      is_shared
     } = req.body;
     
     const [id] = await db('recurring_expenses').insert({
@@ -60,7 +63,10 @@ router.post('/', auth, async (req, res) => {
       split_ratio_user1,
       split_ratio_user2,
       bill_managed: bill_managed ?? false,
-      day_of_month: day_of_month ?? 1 // Default to 1st of month
+      day_of_month: day_of_month ?? 1, // Default to 1st of month
+      notes,
+      recurring_type: recurring_type ?? 'bill',
+      is_shared: is_shared ?? true
     });
     const newExpense = await db('recurring_expenses').where({ id }).first();
     res.status(201).json(newExpense);
@@ -82,7 +88,10 @@ router.put('/:id', auth, async (req, res) => {
           split_ratio_user1,
           split_ratio_user2,
           bill_managed,
-          day_of_month
+          day_of_month,
+          notes,
+          recurring_type,
+          is_shared
         } = req.body;
 
         const expense = await db('recurring_expenses').where({ id }).first();
@@ -108,7 +117,10 @@ router.put('/:id', auth, async (req, res) => {
           bill_managed:
             bill_managed !== undefined ? bill_managed : expense.bill_managed,
           day_of_month:
-            day_of_month !== undefined ? day_of_month : expense.day_of_month
+            day_of_month !== undefined ? day_of_month : expense.day_of_month,
+          notes: notes !== undefined ? notes : expense.notes,
+          recurring_type: recurring_type !== undefined ? recurring_type : expense.recurring_type,
+          is_shared: is_shared !== undefined ? is_shared : expense.is_shared
         });
 
         const updatedExpense = await db('recurring_expenses').where({ id }).first();
