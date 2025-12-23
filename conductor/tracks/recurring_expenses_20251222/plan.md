@@ -3,7 +3,7 @@
 ## Phase 1: Backend API & Data Model
 - [x] Task: Create database migration for recurring expenses table 9b0673f
 - [x] Task: Implement CRUD routes in Express for recurring expenses a5052fa
-- [ ] Task: Write unit tests for recurring expense API
+- [x] Task: Write unit tests for recurring expense API d1b4276
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend API & Data Model' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Management UI
