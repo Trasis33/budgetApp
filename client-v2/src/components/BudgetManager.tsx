@@ -22,17 +22,35 @@ import {
   Clock,
   Send,
   Loader2,
-  Sparkles
+  Search,
+  Sparkles,
+  Trash2
 } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
 import { useSettlement } from '../hooks/useSettlement';
 import { useScope } from '../context/ScopeContext';
 import { budgetCommentService, BudgetComment } from '../api/services/budgetCommentService';
+import { budgetService } from '../api/services/budgetService';
 import { getIconByName } from '../lib/categoryIcons';
 import type { Expense, Category } from '../types';
 import { SmartBudgetWizard } from './smart-budget/SmartBudgetWizard';
 import { categoryService } from '../api/services/categoryService';
+import { toast } from 'sonner';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Switch } from './ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from './ui/dialog';
+import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
+import { getCategoryColor } from '../lib/categoryColors';
+import { getCategoryIconStyle } from '../lib/iconUtils';
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -56,6 +74,16 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [comments, setComments] = useState<Record<number, BudgetComment[]>>({});
   const [loadingComments, setLoadingComments] = useState<Record<number, boolean>>({});
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+
+  // Add Budget Modal State
+  const [isAddBudgetOpen, setAddBudgetOpen] = useState(false);
+  const [modalSearchTerm, setModalSearchTerm] = useState('');
+  const [modalSelectedCategory, setModalSelectedCategory] = useState<Category | null>(null);
+  const [modalAmount, setModalAmount] = useState('');
+  const [suggestions, setSuggestions] = useState<BudgetSuggestions | null>(null);
+  const [alertAt80Percent, setAlertAt80Percent] = useState(true);
+  const [alertOnExceed, setAlertOnExceed] = useState(true);
 
   // Use real hooks
   const { currentScope, setScope, summary: scopeSummary, isPartnerConnected } = useScope();
@@ -71,12 +99,74 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const user = scopeSummary?.couple?.user;
   const partner = scopeSummary?.couple?.partner;
 
-  // Load categories for wizard
+  // Load categories for wizard or modal
   useEffect(() => {
-    if (isWizardOpen && categories.length === 0) {
+    if ((isWizardOpen || isAddBudgetOpen) && categories.length === 0) {
       categoryService.getCategories().then(setCategories).catch(console.error);
     }
-  }, [isWizardOpen, categories.length]);
+  }, [isWizardOpen, isAddBudgetOpen, categories.length]);
+
+  // Calculate suggestions
+  useEffect(() => {
+    if (modalSelectedCategory) {
+      const sug = calculateCategorySuggestions(modalSelectedCategory.name, expenses);
+      setSuggestions(sug);
+    } else {
+      setSuggestions(null);
+    }
+  }, [modalSelectedCategory, expenses]);
+
+  // Load alert prefs
+  useEffect(() => {
+    if (isAddBudgetOpen) {
+      const prefs = getAlertPreferences(user?.id || 1);
+      setAlertAt80Percent(prefs.alertAt80Percent);
+      setAlertOnExceed(prefs.alertOnExceed);
+    }
+  }, [isAddBudgetOpen, user?.id]);
+
+  const usedCategories = budgets.map(b => b.category_name);
+  const availableCategories = categories.filter(cat => !usedCategories.includes(cat.name));
+
+  const handleAddBudgetSubmit = async (saveAndAddAnother: boolean = false) => {
+    if (!modalSelectedCategory || !modalAmount) {
+      toast.error('Please select a category and enter an amount');
+      return;
+    }
+
+    try {
+      await budgetService.createOrUpdateBudget({
+        category_id: modalSelectedCategory.id,
+        month: selectedMonth,
+        year: selectedYear,
+        amount: parseFloat(modalAmount)
+      });
+
+      saveAlertPreferences(user?.id || 1, {
+        alertAt80Percent,
+        alertOnExceed
+      });
+
+      await refetch();
+
+      if (saveAndAddAnother) {
+        setModalSelectedCategory(null);
+        setModalAmount('');
+        setModalSearchTerm('');
+        setSuggestions(null);
+        toast.success('Budget goal set! Add another one');
+      } else {
+        setModalSelectedCategory(null);
+        setModalAmount('');
+        setModalSearchTerm('');
+        setAddBudgetOpen(false);
+        toast.success('Budget goal set!');
+      }
+    } catch (error) {
+      toast.error('Could not create budget');
+      console.error(error);
+    }
+  };
 
   // Calculations from real data
   const totalBudget = metrics.totalBudget;
@@ -233,6 +323,18 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     navigate(`/add-expense?category=${categoryId}&name=${encodeURIComponent(categoryName)}`);
   };
 
+  const handleDeleteBudget = async (budgetId: number) => {
+    try {
+      await budgetService.deleteBudget(budgetId);
+      toast.success('Budget deleted successfully');
+      setDeleteConfirm(null);
+      refetch(); // Refresh the budget list
+    } catch (error) {
+      toast.error('Failed to delete budget');
+      console.error('Delete budget error:', error);
+    }
+  };
+
   // Settlement amounts from real data
   const user1Paid = parseFloat(settlementData?.user1?.paid || '0');
   const user2Paid = parseFloat(settlementData?.user2?.paid || '0');
@@ -378,7 +480,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                 Smart Setup
               </Button>
 
-              <Button size="sm" variant="outline" className="gap-1.5 text-sm" onClick={() => navigate('/add-budget')}>
+              <Button size="sm" variant="outline" className="gap-1.5 text-sm" onClick={() => setAddBudgetOpen(true)}>
                 <Plus className="h-4 w-4" />
                 Add Budget
               </Button>
@@ -609,7 +711,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                 {sortedBudgets.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground mb-4">No budgets set for this month</p>
-                    <Button onClick={() => navigate('/add-budget')}>
+                    <Button onClick={() => setAddBudgetOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
                       Add Your First Budget
                     </Button>
@@ -713,12 +815,26 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                       variant="ghost" 
                                       size="icon"
                                       className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'}`}
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/budgets/${budget.id}/edit`); }}
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/edit-budget/${budget.id}`); }}
                                     >
                                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Edit budget</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost" 
+                                      size="icon"
+                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'} hover:text-red-500`}
+                                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm(budget.id); }}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete budget</TooltipContent>
                                 </Tooltip>
                               </div>
 
@@ -871,14 +987,243 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
         isOpen={isWizardOpen}
         onClose={() => setWizardOpen(false)}
         onComplete={() => {
-          refetch();
           setWizardOpen(false);
+          refetch();
         }}
         categories={categories}
         existingBudgets={budgetsWithSpending}
         month={selectedMonth}
         year={selectedYear}
       />
+
+      {/* Add Budget Modal - Redesigned */}
+      <Dialog open={isAddBudgetOpen} onOpenChange={setAddBudgetOpen}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden bg-card">
+          <div className="p-6 pb-4 border-b border-border/50">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold tracking-tight">
+                {modalSelectedCategory ? 'Set Budget Goal' : 'New Budget'}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                {modalSelectedCategory 
+                  ? `Plan your spending for ${modalSelectedCategory.name}`
+                  : 'Select a category to start tracking'}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {!modalSelectedCategory ? (
+              /* Phase 1: Category Selection */
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search categories..."
+                    value={modalSearchTerm}
+                    onChange={(e) => setModalSearchTerm(e.target.value)}
+                    className="pl-9 bg-muted/30 border-transparent focus:bg-background transition-all"
+                  />
+                </div>
+
+                {availableCategories.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed rounded-xl bg-muted/10">
+                    <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="font-medium text-sm mb-1">All set!</p>
+                    <p className="text-xs text-muted-foreground">
+                      Every category already has a budget.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                    {availableCategories
+                      .filter(cat => cat.name.toLowerCase().includes(modalSearchTerm.toLowerCase()))
+                      .map((category) => {
+                        const IconComponent = getIconByName(category.icon);
+                        const categoryColor = getCategoryColor(category);
+                        
+                        return (
+                          <button
+                            key={category.id}
+                            onClick={() => setModalSelectedCategory(category)}
+                            className="flex flex-col items-center justify-center p-4 gap-3 rounded-xl border border-border/50 bg-card hover:border-[var(--theme-indigo)] hover:bg-[var(--theme-indigo)]/5 hover:shadow-sm transition-all group text-center"
+                          >
+                            <div 
+                              className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                              style={getCategoryIconStyle(categoryColor, false, 0.15)}
+                            >
+                              <IconComponent className="h-5 w-5" />
+                            </div>
+                            <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground line-clamp-1">
+                              {category.name}
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Phase 2: Amount & Configuration */
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
+                
+                {/* Selected Category Header */}
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={getCategoryIconStyle(getCategoryColor(modalSelectedCategory), false, 0.2)}
+                    >
+                      {(() => {
+                        const Icon = getIconByName(modalSelectedCategory.icon);
+                        return <Icon className="h-5 w-5" />;
+                      })()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{modalSelectedCategory.name}</p>
+                      <p className="text-xs text-muted-foreground">Monthly Budget</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setModalSelectedCategory(null)}
+                    className="text-xs h-8 hover:bg-background"
+                  >
+                    Change
+                  </Button>
+                </div>
+
+                {/* Amount Input */}
+                <div className="space-y-4 text-center">
+                  <div className="relative inline-block w-full max-w-[200px]">
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 text-2xl font-medium text-muted-foreground/50">kr</span>
+                    <Input
+                      autoFocus
+                      placeholder="0"
+                      value={modalAmount}
+                      onChange={(e) => setModalAmount(e.target.value)}
+                      className="text-4xl font-bold text-center h-16 border-none bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/20 px-8"
+                      type="number"
+                      step="100"
+                      min="0"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    How much do you want to spend?
+                  </p>
+                </div>
+
+                {/* Smart Suggestions */}
+                {suggestions && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Sparkles className="h-3 w-3 text-[var(--theme-amber)]" />
+                      <span>Smart Suggestions</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setModalAmount(suggestions.matchAvg.toString())}
+                        className="flex flex-col items-start p-2.5 rounded-lg border border-border/50 bg-muted/20 hover:bg-[var(--theme-teal)]/10 hover:border-[var(--theme-teal)]/30 transition-all text-left"
+                      >
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Average</span>
+                        <span className="text-sm font-medium">{formatCurrency(suggestions.matchAvg)}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalAmount(suggestions.plusTen.toString())}
+                        className="flex flex-col items-start p-2.5 rounded-lg border border-border/50 bg-muted/20 hover:bg-[var(--theme-teal)]/10 hover:border-[var(--theme-teal)]/30 transition-all text-left"
+                      >
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Growth (+10%)</span>
+                        <span className="text-sm font-medium">{formatCurrency(suggestions.plusTen)}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Alerts Configuration */}
+                <div className="space-y-4 pt-4 border-t border-border/50">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Near Limit Alert</Label>
+                      <p className="text-[10px] text-muted-foreground">Notify when 80% is reached</p>
+                    </div>
+                    <Switch
+                      checked={alertAt80Percent}
+                      onCheckedChange={setAlertAt80Percent}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Over Budget Alert</Label>
+                      <p className="text-[10px] text-muted-foreground">Notify when budget is exceeded</p>
+                    </div>
+                    <Switch
+                      checked={alertOnExceed}
+                      onCheckedChange={setAlertOnExceed}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="p-6 pt-2 border-t border-border/50 bg-muted/10">
+            <Button variant="ghost" onClick={() => setAddBudgetOpen(false)}>
+              Cancel
+            </Button>
+            {modalSelectedCategory && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => handleAddBudgetSubmit(true)}
+                  className="hidden sm:flex"
+                >
+                  Save & Add Another
+                </Button>
+                <Button 
+                  onClick={() => handleAddBudgetSubmit(false)}
+                  className="bg-[var(--theme-indigo)] hover:bg-[var(--theme-indigo)]/90 text-white min-w-[100px]"
+                  disabled={!modalAmount}
+                >
+                  Set Budget
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-semibold mb-2">Delete Budget?</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              This will remove the budget but won't affect any existing expenses. You can always create a new budget later.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteBudget(deleteConfirm)}
+                className="flex-1"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

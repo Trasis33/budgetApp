@@ -6,6 +6,7 @@ import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
 // import { ExpenseList } from './components/ExpenseList_v2';
 import { BudgetManager } from './components/BudgetManager';
+import { BudgetForm } from './components/BudgetForm';
 import { Analytics } from './components/Analytics';
 import { BillSplitting } from './components/BillSplitting';
 import { MonthlyStatement } from './components/MonthlyStatement';
@@ -33,15 +34,17 @@ const MainApp = () => {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard onNavigate={setCurrentView} />} />
             <Route path="/add-expense" element={<ExpenseForm onCancel={() => setCurrentView('dashboard')} />} />
+            <Route path="/add-budget" element={<BudgetForm onCancel={() => setCurrentView('budgets')} />} />
+            <Route path="/edit-budget/:id" element={<BudgetForm onCancel={() => setCurrentView('budgets')} />} />
             <Route path="/expenses" element={<ExpenseList onNavigate={setCurrentView} />} />
             <Route path="/budgets" element={<BudgetManager onNavigate={setCurrentView} />} />
             <Route path="/analytics" element={<Analytics onNavigate={setCurrentView} />} />
             <Route path="/split" element={<BillSplitting onNavigate={setCurrentView} />} />
             <Route path="/statement" element={<MonthlyStatement onNavigate={setCurrentView} />} />
             <Route path="/settings" element={<Settings onNavigate={setCurrentView} />} />
-            <Route path="/bills-design-one" element={<BillsDesignOne onNavigate={setCurrentView} />} />
-            <Route path="/bills-design-two" element={<BillsDesignTwo onNavigate={setCurrentView} />} />
-            <Route path="/budget-design-three" element={<BudgetManagerDesignThree onNavigate={setCurrentView} />} />
+            <Route path="/bills-design-one" element={<BillsDesignOne />} />
+            <Route path="/bills-design-two" element={<BillsDesignTwo />} />
+            <Route path="/budget-design-three" element={<BudgetManagerDesignThree />} />
           </Routes>
         </main>
         <Toaster />
