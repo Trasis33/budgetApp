@@ -424,6 +424,30 @@ export function RecurringExpenses() {
               </div>
             )}
 
+            {editingForm?.is_shared && editingForm?.split_type === 'custom' && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="ratio" className="text-right text-xs">Your Share (%)</Label>
+                <div className="col-span-3 flex items-center gap-4">
+                  <Input
+                    id="ratio"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editingForm?.split_ratio_user1 || 50}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      const clamped = Math.min(100, Math.max(0, val));
+                      setEditingForm(prev => prev ? { ...prev, split_ratio_user1: clamped, split_ratio_user2: 100 - clamped } : null);
+                    }}
+                    className="w-20"
+                  />
+                  <div className="text-sm text-muted-foreground flex-1">
+                    Partner: <span className="font-medium text-foreground">{100 - (editingForm?.split_ratio_user1 || 50)}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="payer" className="text-right">Paid By</Label>
               <Select
