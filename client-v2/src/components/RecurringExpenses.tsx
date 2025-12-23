@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -382,7 +382,7 @@ export function RecurringExpenses() {
               <Label htmlFor="category" className="text-right">Category</Label>
               <Select
                 value={editingForm?.category_id.toString()}
-                onValueChange={(val) => setEditingForm(prev => prev ? { ...prev, category_id: parseInt(val) } : null)}
+                onValueChange={(val: string) => setEditingForm(prev => prev ? { ...prev, category_id: parseInt(val) } : null)}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select category" />
@@ -401,7 +401,7 @@ export function RecurringExpenses() {
                 <Switch 
                   id="shared"
                   checked={editingForm?.is_shared}
-                  onCheckedChange={(val) => setEditingForm(prev => prev ? { ...prev, is_shared: val, split_type: val ? '50/50' : 'personal' } : null)}
+                  onCheckedChange={(val: boolean) => setEditingForm(prev => prev ? { ...prev, is_shared: val, split_type: val ? '50/50' : 'personal' } : null)}
                 />
                 <span className="text-sm text-muted-foreground">
                   {editingForm?.is_shared ? 'Shared with partner' : 'Personal expense'}
@@ -456,7 +456,7 @@ export function RecurringExpenses() {
               <Label htmlFor="payer" className="text-right">Paid By</Label>
               <Select
                 value={editingForm?.paid_by_user_id.toString()}
-                onValueChange={(val) => setEditingForm(prev => prev ? { ...prev, paid_by_user_id: parseInt(val) } : null)}
+                onValueChange={(val: string) => setEditingForm(prev => prev ? { ...prev, paid_by_user_id: parseInt(val) } : null)}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue />
@@ -493,7 +493,7 @@ export function RecurringExpenses() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog open={deleteId !== null} onOpenChange={(open: boolean) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete permanently?</AlertDialogTitle>
