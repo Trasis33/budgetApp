@@ -13,7 +13,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Management UI' (Protocol in workflow.md) a736f65
 
 ## Phase 3: Monthly Reconciliation Integration
-- [ ] Task: Integrate recurring expenses into the end-of-month workflow
+- [x] Task: Integrate recurring expenses into the end-of-month workflow 4fa01e6
 - [ ] Task: Implement "Commit Recurring Expenses" functionality for the current period
 - [ ] Task: Verify split calculations include committed recurring items
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Monthly Reconciliation Integration' (Protocol in workflow.md)
