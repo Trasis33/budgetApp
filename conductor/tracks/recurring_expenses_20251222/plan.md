@@ -15,5 +15,5 @@
 ## Phase 3: Monthly Reconciliation Integration
 - [x] Task: Integrate recurring expenses into the end-of-month workflow 4fa01e6
 - [x] Task: Implement "Commit Recurring Expenses" functionality for the current period 6b6a8a4
-- [~] Task: Verify split calculations include committed recurring items
+- [x] Task: Verify split calculations include committed recurring items d88a0f6
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Monthly Reconciliation Integration' (Protocol in workflow.md)
