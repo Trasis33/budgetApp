@@ -28,7 +28,9 @@ import {
 } from './ui/alert-dialog';
 import { RecurringTemplate, Category, User } from '../types';
 import { formatCurrency } from '../lib/utils';
-import { Trash2, Edit2, Plus, Calendar, CreditCard, Info } from 'lucide-react';
+import { getCategoryIconStyle } from '../lib/iconUtils';
+import { getIconByName } from '../lib/categoryIcons';
+import { Trash2, Edit2, Plus, Calendar, CreditCard, Info, Tag, Search, Filter } from 'lucide-react';
 import { recurringExpenseService } from '../api/services/recurringExpenseService';
 import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
@@ -57,6 +59,8 @@ export function RecurringExpenses() {
   const [editingForm, setEditingForm] = useState<EditingForm | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
 
   useEffect(() => {
     loadData();
@@ -178,76 +182,111 @@ export function RecurringExpenses() {
   const getUserName = (id: number) => users.find(u => u.id === id)?.name || 'Unknown';
 
   const renderTemplateList = (type: 'bill' | 'subscription') => {
-    const filtered = templates.filter(t => (t.recurring_type || 'bill') === type);
+    const filtered = templates
+      .filter(t => (t.recurring_type || 'bill') === type)
+      .filter(t => 
+        t.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (filterCategory === 'all' || t.category_id.toString() === filterCategory)
+      )
+      .sort((a, b) => (a.day_of_month || 1) - (b.day_of_month || 1));
     
     if (filtered.length === 0) {
       return (
         <div className="py-12 text-center border-2 border-dashed rounded-lg bg-muted/20">
-          <p className="text-muted-foreground">No recurring {type}s found.</p>
+          <p className="text-muted-foreground">No recurring {type}s found matching your filters.</p>
         </div>
       );
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map(template => (
-          <Card key={template.id} className={!template.is_active ? 'opacity-60 grayscale' : ''}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">{template.description}</CardTitle>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary" className="text-[10px]">
-                      {getCategoryName(template.category_id)}
-                    </Badge>
-                    {template.is_shared ? (
-                      <Badge variant="outline" className="text-[10px] border-theme-teal text-theme-teal bg-theme-teal/5">
-                        Shared
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] border-theme-amber text-theme-amber bg-theme-amber/5">
-                        Personal
-                      </Badge>
-                    )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map(template => {
+          const category = categories.find(c => c.id === template.category_id);
+          const CategoryIcon = getIconByName(category?.icon);
+          const categoryColor = category?.color || 'var(--theme-indigo)';
+          const typeColor = type === 'bill' ? 'var(--theme-indigo)' : 'var(--theme-violet)';
+          const accentColor = type === 'bill' ? 'text-indigo-600' : 'text-violet-600';
+
+          return (
+            <Card 
+              key={template.id} 
+              className={`shadow-sm hover:shadow-md transition-all border-t-4 gap-0 overflow-hidden ${!template.is_active ? 'opacity-60 grayscale' : ''}`}
+              style={{ borderTopColor: typeColor }}
+            >
+              <CardHeader className="pb-3 pt-5 px-4 bg-card">
+                <div className="flex justify-between items-start">
+                  <div className="flex gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/10"
+                      style={{ 
+                        backgroundColor: `color-mix(in oklch, ${categoryColor} 15%, white)`,
+                        color: categoryColor
+                      }}
+                    >
+                      <CategoryIcon className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <CardTitle className="text-base font-bold leading-tight text-foreground">{template.description}</CardTitle>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge variant="outline" className="text-[9px] h-4 font-normal py-0 border-muted-foreground/20">
+                          {category?.name || 'Unknown'}
+                        </Badge>
+                        {template.is_shared ? (
+                          <Badge variant="secondary" className="text-[9px] h-4 bg-theme-teal/10 text-theme-teal border-theme-teal/20 font-medium py-0">
+                            Shared
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[9px] h-4 bg-theme-amber/10 text-theme-amber border-theme-amber/20 font-medium py-0">
+                            Personal
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-bold text-lg ${accentColor} tracking-tight`}>
+                      {formatCurrency(template.default_amount)}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                      Day {template.day_of_month || 1}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-indigo-600">
-                    {formatCurrency(template.default_amount)}
+              </CardHeader>
+              <CardContent className="pt-2 px-4 pb-4 bg-card">
+                {template.notes && (
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 mb-4 bg-muted/30 p-2.5 rounded-lg italic border border-border/30">
+                    {template.notes}
+                  </p>
+                )}
+                <div className="flex justify-between items-center mt-2 border-t pt-3 border-border/50">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      Payer: <span className="font-medium text-foreground">{getUserName(template.paid_by_user_id)}</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-indigo-500/60 uppercase tracking-widest">
+                      {template.split_type}
+                    </span>
                   </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    Day {template.day_of_month || 1}
+                  <div className="flex items-center gap-1.5">
+                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted rounded-full" onClick={() => handleEdit(template)}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => setDeleteId(template.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <div className="w-px h-4 bg-border/60 mx-1" />
+                    <Switch 
+                      checked={template.is_active} 
+                      onCheckedChange={() => toggleActive(template)} 
+                      className="scale-75"
+                    />
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {template.notes && (
-                <p className="text-xs text-muted-foreground line-clamp-2 mb-4 bg-muted/30 p-2 rounded italic">
-                  "{template.notes}"
-                </p>
-              )}
-              <div className="flex justify-between items-center mt-2">
-                <div className="text-[10px] text-muted-foreground">
-                  By {getUserName(template.paid_by_user_id)} • {template.split_type}
-                </div>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleEdit(template)}>
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => setDeleteId(template.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <Switch 
-                    checked={template.is_active} 
-                    onCheckedChange={() => toggleActive(template)} 
-                    className="scale-75"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     );
   };
@@ -274,6 +313,32 @@ export function RecurringExpenses() {
           <Plus className="h-4 w-4 mr-2" />
           Add New Recurring
         </Button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-muted/30 p-4 rounded-xl border border-border/50 shadow-sm">
+        <div className="relative flex-1 w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search descriptions..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-10 bg-background border-border/50 focus-visible:ring-indigo-500/30"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background border-border/50 focus:ring-indigo-500/30">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs defaultValue="bill" className="w-full">
