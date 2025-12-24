@@ -12,8 +12,8 @@
 - [x] Task: Add list view with shared/personal visual indicators fffcebb
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Management UI' (Protocol in workflow.md) a736f65
 
-## Phase 3: Monthly Reconciliation Integration
+## Phase 3: Monthly Reconciliation Integration [checkpoint: 5ff2a16]
 - [x] Task: Integrate recurring expenses into the end-of-month workflow 4fa01e6
 - [x] Task: Implement "Commit Recurring Expenses" functionality for the current period 6b6a8a4
 - [x] Task: Verify split calculations include committed recurring items d88a0f6
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Monthly Reconciliation Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Monthly Reconciliation Integration' (Protocol in workflow.md) 5ff2a16
