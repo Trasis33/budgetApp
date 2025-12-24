@@ -30,8 +30,9 @@ import { RecurringTemplate, Category, User } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { getCategoryIconStyle } from '../lib/iconUtils';
 import { getIconByName } from '../lib/categoryIcons';
-import { Trash2, Edit2, Plus, Calendar, CreditCard, Info, Tag, Search, Filter } from 'lucide-react';
+import { Trash2, Edit2, Plus, Calendar, CreditCard, Info, Tag, Search, Filter, RefreshCw, CalendarClock, Loader2 } from 'lucide-react';
 import { recurringExpenseService } from '../api/services/recurringExpenseService';
+import { expenseService } from '../api/services/expenseService';
 import { categoryService } from '../api/services/categoryService';
 import { userService } from '../api/services/userService';
 import { toast } from 'sonner';
@@ -61,6 +62,12 @@ export function RecurringExpenses() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [pendingCount, setPendingCount] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
 
   useEffect(() => {
     loadData();
@@ -69,19 +76,57 @@ export function RecurringExpenses() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [templatesData, categoriesData, usersData] = await Promise.all([
+      const [templatesData, categoriesData, usersData, expensesData] = await Promise.all([
         recurringExpenseService.getTemplates(true), // Include inactive for management
         categoryService.getCategories(),
-        userService.getUsers()
+        userService.getUsers(),
+        expenseService.getExpenses('all')
       ]);
       setTemplates(templatesData);
       setCategories(categoriesData);
       setUsers(usersData);
+
+      // Check for pending templates for this month
+      const monthlyExpenses = expensesData.filter((e: any) => {
+        const d = new Date(e.date);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      });
+      
+      const generatedTemplateIds = new Set(
+        monthlyExpenses
+          .filter((e: any) => e.recurring_expense_id)
+          .map((e: any) => e.recurring_expense_id)
+      );
+      
+      const pending = templatesData.filter(t => t.is_active && !generatedTemplateIds.has(t.id));
+      setPendingCount(pending.length);
+
     } catch (error) {
       toast.error('Failed to load recurring expenses');
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    try {
+      setIsGenerating(true);
+      const result = await recurringExpenseService.generate({
+        year: currentYear,
+        month: currentMonth + 1
+      });
+      
+      if (result.generatedCount > 0) {
+        toast.success(`Generated ${result.generatedCount} expenses for ${now.toLocaleDateString('en-US', { month: 'long' })}`);
+        loadData();
+      } else {
+        toast.info('All expenses for this month are already generated.');
+      }
+    } catch (error) {
+      toast.error('Generation failed');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -295,24 +340,44 @@ export function RecurringExpenses() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bills & Subscriptions</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">Bills & Subscriptions</h1>
+            {pendingCount > 0 && (
+              <Badge className="bg-theme-amber text-white hover:bg-theme-amber/90 border-0 animate-pulse">
+                {pendingCount} Pending
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Manage recurring monthly expenses. Indigo for bills, Violet for subscriptions.
           </p>
         </div>
-        <Button onClick={() => setEditingForm({
-          description: '',
-          default_amount: 0,
-          category_id: categories[0]?.id || 1,
-          paid_by_user_id: users[0]?.id || 1,
-          split_type: '50/50',
-          recurring_type: 'bill',
-          is_shared: true,
-          day_of_month: 1
-        })}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Recurring
-        </Button>
+        <div className="flex items-center gap-2">
+          {pendingCount > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={handleGenerate} 
+              disabled={isGenerating}
+              className="border-theme-indigo text-theme-indigo hover:bg-theme-indigo/5 gap-2"
+            >
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Sync {now.toLocaleDateString('en-US', { month: 'short' })}
+            </Button>
+          )}
+          <Button onClick={() => setEditingForm({
+            description: '',
+            default_amount: 0,
+            category_id: categories[0]?.id || 1,
+            paid_by_user_id: users[0]?.id || 1,
+            split_type: '50/50',
+            recurring_type: 'bill',
+            is_shared: true,
+            day_of_month: 1
+          })}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add New
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-muted/30 p-4 rounded-xl border border-border/50 shadow-sm">
