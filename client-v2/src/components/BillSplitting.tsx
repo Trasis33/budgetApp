@@ -4,10 +4,11 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Expense, User } from '../types';
 import { formatCurrency, calculateBalance, calculateExpenseShare, filterExpensesByMonth } from '../lib/utils';
-import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign, CalendarClock, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 import { expenseService } from '../api/services/expenseService';
 import { analyticsService } from '../api/services/analyticsService';
 import { authService } from '../api/services/authService';
+import { recurringExpenseService } from '../api/services/recurringExpenseService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
@@ -21,35 +22,73 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [settlement, setSettlement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [pendingTemplatesCount, setPendingTemplatesCount] = useState(0);
 
   const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [expensesData, usersData, settlementData, templates] = await Promise.all([
+        expenseService.getExpenses('all'),
+        authService.getUsers(),
+        analyticsService.getCurrentSettlement(),
+        recurringExpenseService.getTemplates()
+      ]);
+
+      setExpenses(expensesData || []);
+      setUsers(usersData || []);
+      setSettlement(settlementData?.settlement || null);
+
+      // Check for pending templates for this month
+      const monthlyExpenses = filterExpensesByMonth(expensesData || [], currentYear, currentMonth);
+      const generatedTemplateIds = new Set(
+        monthlyExpenses
+          .filter(e => e.recurring_expense_id)
+          .map(e => e.recurring_expense_id)
+      );
+      
+      const pending = templates.filter(t => t.is_active && !generatedTemplateIds.has(t.id));
+      setPendingTemplatesCount(pending.length);
+
+    } catch (error) {
+      console.error('Failed to load bill splitting data:', error);
+      toast.error('Failed to load bill splitting data');
+      setExpenses([]);
+      setUsers([]);
+      setSettlement(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [expensesData, usersData, settlementData] = await Promise.all([
-          expenseService.getExpenses('all'),
-          authService.getUsers(),
-          analyticsService.getCurrentSettlement()
-        ]);
-
-        setExpenses(expensesData || []);
-        setUsers(usersData || []);
-        setSettlement(settlementData?.settlement || null);
-      } catch (error) {
-        console.error('Failed to load bill splitting data:', error);
-        toast.error('Failed to load bill splitting data');
-        // Set empty arrays on error to prevent undefined issues
-        setExpenses([]);
-        setUsers([]);
-        setSettlement(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
   }, []);
+
+  const handleGenerateRecurring = async () => {
+    try {
+      setIsGenerating(true);
+      const result = await recurringExpenseService.generate({
+        year: currentYear,
+        month: currentMonth + 1 // API uses 1-indexed months
+      });
+      
+      if (result.generatedCount > 0) {
+        toast.success(`Successfully confirmed ${result.generatedCount} recurring expenses!`);
+        await loadData(); // Refresh everything
+      } else {
+        toast.info('No new recurring expenses to confirm.');
+      }
+    } catch (error) {
+      toast.error('Failed to confirm recurring expenses');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -132,6 +171,45 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
       </Button>
 
       <div className="space-y-6">
+        {pendingTemplatesCount > 0 && (
+          <Card className="border-indigo-200 bg-indigo-50/30 overflow-hidden shadow-md animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="h-1.5 w-full bg-indigo-500" />
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4 text-center md:text-left">
+                  <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                    <CalendarClock className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-indigo-900">Ready to finalize the month?</h2>
+                    <p className="text-sm text-indigo-700/80 max-w-md">
+                      You have <span className="font-bold">{pendingTemplatesCount}</span> recurring bills & subscriptions pending for this period. 
+                      Confirm them now to include them in your settlement.
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleGenerateRecurring} 
+                  disabled={isGenerating}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 h-auto text-base shadow-lg shadow-indigo-200 gap-2 min-w-[200px]"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-5 w-5" />
+                      Confirm & Add All
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Settlement Summary</CardTitle>
