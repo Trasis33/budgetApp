@@ -24,11 +24,11 @@
   - [x] Test: Props interface matches WizardState
   - [x] Test: Back navigation works correctly
 - [x] Task: Implement basic component structure with Framer Motion
-- [ ] Task: Update SmartBudgetWizard.tsx to support step 3
-  - [ ] Write failing test for step 3 navigation
-  - [ ] Test: Step 3 is accessible from Step 2
-  - [ ] Test: Back button preserves Step 2 amounts
-  - [ ] Test: Step counter displays correctly
+- [x] Task: Update SmartBudgetWizard.tsx to support step 3 [3160cc0]
+  - [x] Write failing test for step 3 navigation
+  - [x] Test: Step 3 is accessible from Step 2
+  - [x] Test: Back button preserves Step 2 amounts
+  - [x] Test: Step counter displays correctly
 - [ ] Task: Update Step 2 "Apply" button to "Review Suggestions"
   - [ ] Write failing test for button text change
   - [ ] Test: Button text is correct when wizard has Step 3 capability
