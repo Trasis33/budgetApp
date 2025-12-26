@@ -29,7 +29,7 @@
   - [x] Test: Step 3 is accessible from Step 2
   - [x] Test: Back button preserves Step 2 amounts
   - [x] Test: Step counter displays correctly
-- [x] Task: Update Step 2 "Apply" button to "Review Suggestions" [845df46]
+- [x] Task: Update Step 2 "Apply" button to "Review Suggestions" [6ac54d1]
   - [x] Write failing test for button text change
   - [x] Test: Button text is correct when wizard has Step 3 capability
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Step 3 Component - Core Layout' (Protocol in workflow.md)
