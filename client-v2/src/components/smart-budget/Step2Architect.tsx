@@ -407,12 +407,12 @@ export function Step2Architect({
                 </div>
 
                 {/* Action Button */}
-                <button 
+                <button
                     onClick={onSave}
                     className="w-full mt-2 py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg"
                 >
                     <Check className="h-5 w-5" />
-                    Apply Budget Plan
+                    Review Suggestions
                 </button>
             </div>
 
