@@ -285,7 +285,7 @@ export function SmartBudgetWizard({
                             }));
                         }}
                         onBack={() => updateState({ step: 1 })}
-                        onSave={handleSave}
+                        onSave={() => updateState({ step: 3 })}
                     />
                 ) : (
                     <Step3Recommendations

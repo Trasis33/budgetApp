@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Step2Architect } from '../Step2Architect';
 import { WizardState } from '../types';
 import { Category } from '../../types';
@@ -39,5 +39,8 @@ describe('Step2Architect - Review Suggestions Button', () => {
 
     const saveButton = screen.getByText('Review Suggestions');
     expect(saveButton).toBeInTheDocument();
+
+    fireEvent.click(saveButton);
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
   });
 });
