@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dia
 import { Category, BudgetWithSpending, Budget, RecurringTemplate } from '../../types';
 import { Step1Strategy } from './Step1Strategy';
 import { Step2Architect } from './Step2Architect';
+import { Step3Recommendations } from './Step3Recommendations';
 import { WizardState } from './types';
 import { budgetService } from '../../api/services/budgetService';
 import { recurringExpenseService } from '../../api/services/recurringExpenseService';
@@ -32,13 +33,14 @@ export function SmartBudgetWizard({
   const { summary, refresh } = useScope();
   
   const [state, setState] = useState<WizardState>({
-    step: 1,
+    step:1,
     income: 45000, // Default start value (will be updated from couple data)
     userIncome: 0,
     partnerIncome: 0,
     selectedStrategy: 'balanced',
     fixedExpenses: {},
-    variableAllocations: {}
+    variableAllocations: {},
+    appliedSuggestions: {}
   });
 
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringTemplate[]>([]);
@@ -264,7 +266,7 @@ export function SmartBudgetWizard({
                         onNext={() => updateState({ step: 2 })}
                         onCancel={onClose}
                     />
-                ) : (
+                ) : state.step === 2 ? (
                     <Step2Architect
                         key="step2"
                         state={state}
@@ -283,6 +285,26 @@ export function SmartBudgetWizard({
                             }));
                         }}
                         onBack={() => updateState({ step: 1 })}
+                        onSave={handleSave}
+                    />
+                ) : (
+                    <Step3Recommendations
+                        key="step3"
+                        state={state}
+                        categories={categories}
+                        updateFixed={(catId, val) => {
+                            setState(prev => ({
+                                ...prev,
+                                fixedExpenses: { ...prev.fixedExpenses, [catId]: val }
+                            }));
+                        }}
+                        updateVariable={(catId, val) => {
+                            setState(prev => ({
+                                ...prev,
+                                variableAllocations: { ...prev.variableAllocations, [catId]: val }
+                            }));
+                        }}
+                        onBack={() => updateState({ step: 2 })}
                         onSave={handleSave}
                     />
                 )}

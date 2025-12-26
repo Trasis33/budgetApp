@@ -20,6 +20,7 @@ export interface WizardState {
   selectedStrategy: StrategyType;
   fixedExpenses: Record<number, number>; // categoryId -> amount
   variableAllocations: Record<number, number>; // categoryId -> amount
+  appliedSuggestions: Record<number, number>; // categoryId -> amount (for tracking applied recommendations)
 }
 
 export const STRATEGIES: Strategy[] = [
