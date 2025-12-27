@@ -52,6 +52,11 @@
   - [x] Test: Display unused amounts correctly
   - [x] Test: Color coding is green/emerald for opportunity
 - [x] Task: Add helper function to categorize budget health (overspending/healthy/underutilized) [8f99bbc]
+- [x] Task: Fix critical bugs in Step3Recommendations [d85c201]
+  - [x] Removed hardcoded mock data causing category duplication
+  - [x] Fixed apply button infinite recalculation bug with state tracking
+  - [x] Added suggestedAmount field to track original suggestion values
+  - [x] Updated tests to expect empty state instead of mock data
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
 ## Phase 4: Insight Sections - Trends & Seasonal [ ]
