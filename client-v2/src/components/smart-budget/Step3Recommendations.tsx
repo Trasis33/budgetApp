@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
 import { WizardState } from './types';
 import { cn } from '@/lib/utils';
 import { TrendSparkline } from './TrendSparkline';
@@ -29,6 +29,15 @@ interface TrendingBudget {
   trend: 'increasing' | 'decreasing' | 'stable';
   percentageChange: number;
   monthlyData: { month: string; value: number }[];
+  categoryColor: string;
+}
+
+interface SeasonalPattern {
+  categoryId: number;
+  categoryName: string;
+  patternType: 'spike' | 'trough' | 'consistent';
+  upcomingSpikeMonth: string;
+  suggestedPreparation: number;
   categoryColor: string;
 }
 
@@ -65,9 +74,14 @@ export function Step3Recommendations({
     return [];
   };
 
+  const getSeasonalCategories = (): SeasonalPattern[] => {
+    return [];
+  };
+
   const overspendingCategories = getOverspendingCategories();
   const underutilizedCategories = getUnderutilizedCategories();
   const trendingCategories = getTrendingCategories();
+  const seasonalCategories = getSeasonalCategories();
 
   const applySuggestion = (categoryId: number, suggestedAmount: number) => {
     const budget = state.fixedExpenses[categoryId];
@@ -261,6 +275,71 @@ export function Step3Recommendations({
                       height={60}
                       width={400}
                     />
+                  </div>
+                 </div>
+               ))}
+             </div>
+           </div>
+         )}
+
+        {seasonalCategories.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-amber-600 mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Seasonal Patterns
+            </h3>
+            <div className="space-y-3">
+              {seasonalCategories.map((seasonal) => (
+                <div
+                  key={seasonal.categoryId}
+                  data-testid={`seasonal-${seasonal.categoryId}`}
+                  className={cn(
+                    'p-4 rounded-xl border-l-4 shadow-sm',
+                    seasonal.patternType === 'spike' && 'bg-rose-50 border-rose-200',
+                    seasonal.patternType === 'trough' && 'bg-emerald-50 border-emerald-200',
+                    seasonal.patternType === 'consistent' && 'bg-indigo-50 border-indigo-200'
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+                        style={{ backgroundColor: `var(--theme-${seasonal.categoryColor})` }}
+                      >
+                        {seasonal.categoryName.charAt(0)}
+                      </div>
+                      <span className="font-semibold text-slate-900">{seasonal.categoryName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          'text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1',
+                          seasonal.patternType === 'spike' && 'bg-rose-100 text-rose-700',
+                          seasonal.patternType === 'trough' && 'bg-emerald-100 text-emerald-700',
+                          seasonal.patternType === 'consistent' && 'bg-indigo-100 text-indigo-700'
+                        )}
+                      >
+                        {seasonal.patternType === 'spike' && '⚡ Spike'}
+                        {seasonal.patternType === 'trough' && '📉 Consistent'}
+                        {seasonal.patternType === 'consistent' && '➡️ Average'}
+                      </span>
+                      {seasonal.upcomingSpikeMonth && (
+                        <span className="text-xs text-amber-600 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          {seasonal.upcomingSpikeMonth}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-slate-600">
+                      <span className="font-medium">3-month average: </span>
+                      <span className="text-slate-900 font-semibold">{formatCurrency(seasonal.suggestedPreparation)}</span>
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      <span className="font-medium">Typical range: </span>
+                      <span className="text-slate-900">{formatCurrency(seasonal.suggestedPreparation * 0.8)} - {formatCurrency(seasonal.suggestedPreparation * 1.2)}</span>
+                    </div>
                   </div>
                 </div>
               ))}
