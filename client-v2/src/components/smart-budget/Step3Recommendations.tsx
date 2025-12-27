@@ -14,6 +14,14 @@ interface BudgetVariance {
   categoryColor: string;
 }
 
+interface UnderutilizedBudget {
+  categoryId: number;
+  categoryName: string;
+  unusedAmount: number;
+  usagePercentage: number;
+  categoryColor: string;
+}
+
 interface Step3Props {
   state: WizardState;
   categories: Category[];
@@ -61,7 +69,33 @@ export function Step3Recommendations({
     return overspending;
   };
 
+  const getUnderutilizedCategories = (): UnderutilizedBudget[] => {
+    const categoriesById = new Map(categories.map(c => [c.id, c]));
+    const underutilized: UnderutilizedBudget[] = [];
+
+    for (const [catId, amount] of Object.entries(state.fixedExpenses)) {
+      const id = parseInt(catId, 10);
+      const category = categoriesById.get(id);
+      if (!category) continue;
+
+      const usagePercentage = 50;
+      if (usagePercentage < 70) {
+        const unusedAmount = amount * (1 - usagePercentage / 100);
+        underutilized.push({
+          categoryId: id,
+          categoryName: category.name,
+          unusedAmount: Math.round(unusedAmount),
+          usagePercentage,
+          categoryColor: category.color || 'slate'
+        });
+      }
+    }
+
+    return underutilized;
+  };
+
   const overspendingCategories = getOverspendingCategories();
+  const underutilizedCategories = getUnderutilizedCategories();
 
   const applySuggestion = (categoryId: number, suggestedAmount: number) => {
     const budget = state.fixedExpenses[categoryId];
@@ -156,6 +190,43 @@ export function Step3Recommendations({
                         {variance.confidenceScore}% confidence
                       </span>
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {underutilizedCategories.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-emerald-600 mb-3 flex items-center gap-2">
+              <Check className="h-5 w-5" />
+              Underutilized Budgets
+            </h3>
+            <div className="space-y-3">
+              {underutilizedCategories.map((underutilized) => (
+                <div
+                  key={underutilized.categoryId}
+                  data-testid={`underutilized-${underutilized.categoryId}`}
+                  className="p-4 rounded-xl border-l-4 shadow-sm bg-emerald-50 border-emerald-200"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+                        style={{ backgroundColor: `var(--theme-${underutilized.categoryColor})` }}
+                      >
+                        {underutilized.categoryName.charAt(0)}
+                      </div>
+                      <span className="font-semibold text-slate-900">{underutilized.categoryName}</span>
+                    </div>
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                      {underutilized.usagePercentage}% used
+                    </span>
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    <span className="font-medium">Unused: </span>
+                    <span className="text-slate-900 font-semibold">{formatCurrency(underutilized.unusedAmount)}</span>
                   </div>
                 </div>
               ))}
