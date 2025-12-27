@@ -70,7 +70,25 @@
   - [ ] Test: Color coding for seasonal anomalies
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
-## Phase 4: Insight Sections - Trends & Seasonal [checkpoint: b10c10d]
+## Phase 4: Insight Sections - Trends & Seasonal [~]
+
+- [x] Task: Implement spending trend insights section [69b8231]
+  - [x] Write failing tests for trend display
+  - [x] Test: Show trend direction (increasing/decreasing/stable)
+  - [x] Test: Display sparkline chart with 3-6 months
+  - [x] Test: Show enhanced metrics (percentage change, confidence)
+  - [x] Test: Color coding matches trend direction
+- [x] Task: Create TrendSparkline mini-component for trend visualization [69b8231]
+  - [x] Write failing tests for sparkline rendering
+  - [x] Test: Renders line chart correctly
+  - [x] Test: Handles empty data gracefully
+  - [x] Test: Displays correct colors per trend direction
+- [x] Task: Implement seasonal pattern alerts section [bc779df]
+  - [x] Write failing tests for seasonal display
+  - [x] Test: Show categories with strong seasonal patterns
+  - [x] Test: Alert for upcoming seasonal spike in 1-2 months
+  - [x] Test: Display suggested preparation amount
+  - [x] Test: Calendar icon displays with warning
 
 - [x] Task: Implement spending trend insights section [69b8231]
   - [x] Write failing tests for trend display
@@ -83,13 +101,13 @@
    - [x] Test: Renders line chart correctly
    - [x] Test: Handles empty data gracefully
    - [x] Test: Displays correct colors per trend direction
-   - [~] Task: Implement seasonal pattern alerts section
-   - [ ] Write failing tests for seasonal display
-   - [ ] Test: Show categories with strong seasonal patterns
-   - [ ] Test: Alert for upcoming seasonal spike in 1-2 months
-   - [ ] Test: Display suggested preparation amount
-   - [ ] Test: Calendar icon displays with warning
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Insight Sections - Trends & Seasonal' (Protocol in workflow.md)
+   - [x] Task: Implement seasonal pattern alerts section [bc779df]
+  - [x] Write failing tests for seasonal display
+  - [x] Test: Show categories with strong seasonal patterns
+  - [x] Test: Alert for upcoming seasonal spike in 1-2 months
+  - [x] Test: Display suggested preparation amount
+  - [x] Test: Calendar icon displays with warning
+  - [ ] Task: Conductor - User Manual Verification 'Phase 4: Insight Sections - Trends & Seasonal' (Protocol in workflow.md)
 
 ## Phase 5: Suggestion Interaction Model [ ]
 
