@@ -63,16 +63,21 @@
   - [x] Test: Display sparkline chart with 3-6 months
   - [x] Test: Show enhanced metrics (percentage change, confidence)
   - [x] Test: Color coding matches trend direction
+- [ ] Task: Implement seasonal pattern alerts section
+  - [ ] Write failing tests for seasonal display
+  - [ ] Test: Show seasonal patterns with 3-month rolling average
+  - [ ] Test: Display high/low/typical spending amounts
+  - [ ] Test: Color coding for seasonal anomalies
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
 ## Phase 4: Insight Sections - Trends & Seasonal [~]
 
-- [~] Task: Implement spending trend insights section
-  - [ ] Write failing tests for trend display
-  - [ ] Test: Show trend direction (increasing/decreasing/stable)
-  - [ ] Test: Display sparkline chart with 3-6 months
-  - [ ] Test: Show enhanced metrics (percentage change, confidence)
-  - [ ] Test: Color coding matches trend direction
+- [x] Task: Implement spending trend insights section [69b8231]
+  - [x] Write failing tests for trend display
+  - [x] Test: Show trend direction (increasing/decreasing/stable)
+  - [x] Test: Display sparkline chart with 3-6 months
+  - [x] Test: Show enhanced metrics (percentage change, confidence)
+  - [x] Test: Color coding matches trend direction
 - [ ] Task: Create TrendSparkline mini-component for trend visualization
   - [ ] Write failing tests for sparkline rendering
   - [ ] Test: Renders line chart correctly
