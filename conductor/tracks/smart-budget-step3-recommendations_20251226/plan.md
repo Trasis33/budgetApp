@@ -51,7 +51,7 @@
   - [x] Test: Show underutilized categories with <70% budget used
   - [x] Test: Display unused amounts correctly
   - [x] Test: Color coding is green/emerald for opportunity
-- [ ] Task: Add helper function to categorize budget health (overspending/healthy/underutilized)
+- [x] Task: Add helper function to categorize budget health (overspending/healthy/underutilized) [8f99bbc]
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
 ## Phase 4: Insight Sections - Trends & Seasonal [ ]
