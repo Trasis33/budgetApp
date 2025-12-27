@@ -41,11 +41,11 @@
   - [x] Test: Show overspending categories with >20% variance
   - [x] Test: Display reduction amounts with confidence scores
   - [x] Test: Color coding is red/amber for urgency
-- [ ] Task: Implement overspending suggestion apply button
-  - [ ] Write failing test for apply action
-  - [ ] Test: Clicking apply updates budget amount
-  - [ ] Test: Apply button disables after clicking
-  - [ ] Test: Button shows checkmark when applied
+- [x] Task: Implement overspending suggestion apply button [056358d]
+  - [x] Write failing test for apply action
+  - [x] Test: Clicking apply updates budget amount
+  - [x] Test: Apply button disables after clicking
+  - [x] Test: Button shows checkmark when applied
 - [ ] Task: Implement underutilized budget alerts section
   - [ ] Write failing tests for underutilized display
   - [ ] Test: Show underutilized categories with <70% budget used
