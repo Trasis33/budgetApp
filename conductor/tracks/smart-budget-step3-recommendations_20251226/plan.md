@@ -46,11 +46,11 @@
   - [x] Test: Clicking apply updates budget amount
   - [x] Test: Apply button disables after clicking
   - [x] Test: Button shows checkmark when applied
-- [ ] Task: Implement underutilized budget alerts section
-  - [ ] Write failing tests for underutilized display
-  - [ ] Test: Show underutilized categories with <70% budget used
-  - [ ] Test: Display unused amounts correctly
-  - [ ] Test: Color coding is green/emerald for opportunity
+- [x] Task: Implement underutilized budget alerts section [6a8eff6]
+  - [x] Write failing tests for underutilized display
+  - [x] Test: Show underutilized categories with <70% budget used
+  - [x] Test: Display unused amounts correctly
+  - [x] Test: Color coding is green/emerald for opportunity
 - [ ] Task: Add helper function to categorize budget health (overspending/healthy/underutilized)
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
