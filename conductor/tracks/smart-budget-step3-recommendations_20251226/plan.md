@@ -34,7 +34,7 @@
   - [x] Test: Button text is correct when wizard has Step 3 capability
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Step 3 Component - Core Layout' (Protocol in workflow.md)
 
-## Phase 3: Insight Sections - Overspending & Underutilized [~]
+## Phase 3: Insight Sections - Overspending & Underutilized [checkpoint: 552fc68]
 
 - [x] Task: Implement overspending alerts section [0d7dd8c]
   - [x] Write failing tests for overspending display
@@ -57,6 +57,12 @@
   - [x] Fixed apply button infinite recalculation bug with state tracking
   - [x] Added suggestedAmount field to track original suggestion values
   - [x] Updated tests to expect empty state instead of mock data
+- [x] Task: Add trend insights tests [610dfa8]
+  - [x] Write failing tests for trend display
+  - [x] Test: Show trend direction (increasing/decreasing/stable)
+  - [x] Test: Display sparkline chart with 3-6 months
+  - [x] Test: Show enhanced metrics (percentage change, confidence)
+  - [x] Test: Color coding matches trend direction
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
 ## Phase 4: Insight Sections - Trends & Seasonal [~]
