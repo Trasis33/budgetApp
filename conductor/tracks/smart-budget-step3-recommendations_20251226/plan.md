@@ -70,7 +70,7 @@
   - [ ] Test: Color coding for seasonal anomalies
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
-## Phase 4: Insight Sections - Trends & Seasonal [~]
+## Phase 4: Insight Sections - Trends & Seasonal [checkpoint: 1536ef2]
 
 - [x] Task: Implement spending trend insights section [69b8231]
   - [x] Write failing tests for trend display
