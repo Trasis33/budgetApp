@@ -59,9 +59,9 @@
   - [x] Updated tests to expect empty state instead of mock data
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Insight Sections - Overspending & Underutilized' (Protocol in workflow.md)
 
-## Phase 4: Insight Sections - Trends & Seasonal [ ]
+## Phase 4: Insight Sections - Trends & Seasonal [~]
 
-- [ ] Task: Implement spending trend insights section
+- [~] Task: Implement spending trend insights section
   - [ ] Write failing tests for trend display
   - [ ] Test: Show trend direction (increasing/decreasing/stable)
   - [ ] Test: Display sparkline chart with 3-6 months
