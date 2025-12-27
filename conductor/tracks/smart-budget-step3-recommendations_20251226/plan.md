@@ -34,13 +34,13 @@
   - [x] Test: Button text is correct when wizard has Step 3 capability
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Step 3 Component - Core Layout' (Protocol in workflow.md)
 
-## Phase 3: Insight Sections - Overspending & Underutilized [ ]
+## Phase 3: Insight Sections - Overspending & Underutilized [~]
 
-- [ ] Task: Implement overspending alerts section
-  - [ ] Write failing tests for overspending display
-  - [ ] Test: Show overspending categories with >20% variance
-  - [ ] Test: Display reduction amounts with confidence scores
-  - [ ] Test: Color coding is red/amber for urgency
+- [x] Task: Implement overspending alerts section [0d7dd8c]
+  - [x] Write failing tests for overspending display
+  - [x] Test: Show overspending categories with >20% variance
+  - [x] Test: Display reduction amounts with confidence scores
+  - [x] Test: Color coding is red/amber for urgency
 - [ ] Task: Implement overspending suggestion apply button
   - [ ] Write failing test for apply action
   - [ ] Test: Clicking apply updates budget amount
