@@ -30,6 +30,8 @@ export function Step3Recommendations({
   onBack,
   onSave
 }: Step3Props) {
+  const [appliedCategories, setAppliedCategories] = React.useState<Set<number>>(new Set());
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
   };
@@ -63,8 +65,9 @@ export function Step3Recommendations({
 
   const applySuggestion = (categoryId: number, suggestedAmount: number) => {
     const budget = state.fixedExpenses[categoryId];
-    if (budget) {
+    if (budget && !appliedCategories.has(categoryId)) {
       updateFixed(categoryId, suggestedAmount);
+      setAppliedCategories(prev => new Set(prev).add(categoryId));
     }
   };
 
@@ -127,7 +130,7 @@ export function Step3Recommendations({
                       +{variance.overagePercentage}% over budget
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                     <div className="text-sm text-slate-600">
                       <span className="font-medium">Reduce by: </span>
                       <span className="text-slate-900 font-semibold">{formatCurrency(variance.suggestedReduction)}</span>
@@ -135,13 +138,19 @@ export function Step3Recommendations({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => applySuggestion(variance.categoryId, Math.round(state.fixedExpenses[variance.categoryId] * 0.8))}
+                        disabled={appliedCategories.has(variance.categoryId)}
                         className={cn(
                           'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                          variance.overagePercentage >= 30 ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-600 text-white hover:bg-amber-700'
+                          variance.overagePercentage >= 30 ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-600 text-white hover:bg-amber-700',
+                          appliedCategories.has(variance.categoryId) && 'opacity-50 cursor-not-allowed'
                         )}
                       >
-                        <Check className="h-4 w-4" />
-                        Apply
+                        {appliedCategories.has(variance.categoryId) ? (
+                          <Check className="h-4 w-4" data-testid="check-icon" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                        {appliedCategories.has(variance.categoryId) ? 'Applied' : 'Apply'}
                       </button>
                       <span className="text-xs text-slate-500">
                         {variance.confidenceScore}% confidence
