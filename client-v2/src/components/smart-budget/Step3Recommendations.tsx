@@ -10,6 +10,7 @@ interface BudgetVariance {
   categoryName: string;
   overagePercentage: number;
   suggestedReduction: number;
+  suggestedAmount: number;
   confidenceScore: number;
   categoryColor: string;
 }
@@ -39,59 +40,18 @@ export function Step3Recommendations({
   onSave
 }: Step3Props) {
   const [appliedCategories, setAppliedCategories] = React.useState<Set<number>>(new Set());
+  const [appliedAmounts, setAppliedAmounts] = React.useState<Record<number, number>>({});
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
   };
 
   const getOverspendingCategories = (): BudgetVariance[] => {
-    const categoriesById = new Map(categories.map(c => [c.id, c]));
-    const overspending: BudgetVariance[] = [];
-
-    for (const [catId, amount] of Object.entries(state.fixedExpenses)) {
-      const id = parseInt(catId, 10);
-      const category = categoriesById.get(id);
-      if (!category) continue;
-
-      const overagePercentage = 25;
-      if (overagePercentage > 20) {
-        overspending.push({
-          categoryId: id,
-          categoryName: category.name,
-          overagePercentage,
-          suggestedReduction: Math.round(amount * 0.2),
-          confidenceScore: 80,
-          categoryColor: category.color || 'slate'
-        });
-      }
-    }
-
-    return overspending;
+    return [];
   };
 
   const getUnderutilizedCategories = (): UnderutilizedBudget[] => {
-    const categoriesById = new Map(categories.map(c => [c.id, c]));
-    const underutilized: UnderutilizedBudget[] = [];
-
-    for (const [catId, amount] of Object.entries(state.fixedExpenses)) {
-      const id = parseInt(catId, 10);
-      const category = categoriesById.get(id);
-      if (!category) continue;
-
-      const usagePercentage = 50;
-      if (usagePercentage < 70) {
-        const unusedAmount = amount * (1 - usagePercentage / 100);
-        underutilized.push({
-          categoryId: id,
-          categoryName: category.name,
-          unusedAmount: Math.round(unusedAmount),
-          usagePercentage,
-          categoryColor: category.color || 'slate'
-        });
-      }
-    }
-
-    return underutilized;
+    return [];
   };
 
   const overspendingCategories = getOverspendingCategories();
@@ -99,7 +59,8 @@ export function Step3Recommendations({
 
   const applySuggestion = (categoryId: number, suggestedAmount: number) => {
     const budget = state.fixedExpenses[categoryId];
-    if (budget && !appliedCategories.has(categoryId)) {
+    if (budget && !appliedCategories.has(categoryId) && !appliedAmounts[categoryId]) {
+      setAppliedAmounts(prev => ({ ...prev, [categoryId]: suggestedAmount }));
       updateFixed(categoryId, suggestedAmount);
       setAppliedCategories(prev => new Set(prev).add(categoryId));
     }
