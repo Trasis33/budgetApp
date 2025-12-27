@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { WizardState } from './types';
-import { Category } from '../../types';
 import { cn } from '@/lib/utils';
+import { TrendSparkline } from './TrendSparkline';
 
 interface BudgetVariance {
   categoryId: number;
@@ -23,9 +23,17 @@ interface UnderutilizedBudget {
   categoryColor: string;
 }
 
+interface TrendingBudget {
+  categoryId: number;
+  categoryName: string;
+  trend: 'increasing' | 'decreasing' | 'stable';
+  percentageChange: number;
+  monthlyData: { month: string; value: number }[];
+  categoryColor: string;
+}
+
 interface Step3Props {
   state: WizardState;
-  categories: Category[];
   updateFixed: (catId: number, val: number) => void;
   updateVariable: (catId: number, val: number) => void;
   onBack: () => void;
@@ -34,7 +42,6 @@ interface Step3Props {
 
 export function Step3Recommendations({
   state,
-  categories,
   updateFixed,
   onBack,
   onSave
@@ -54,8 +61,13 @@ export function Step3Recommendations({
     return [];
   };
 
+  const getTrendingCategories = (): TrendingBudget[] => {
+    return [];
+  };
+
   const overspendingCategories = getOverspendingCategories();
   const underutilizedCategories = getUnderutilizedCategories();
+  const trendingCategories = getTrendingCategories();
 
   const applySuggestion = (categoryId: number, suggestedAmount: number) => {
     const budget = state.fixedExpenses[categoryId];
@@ -188,6 +200,67 @@ export function Step3Recommendations({
                   <div className="text-sm text-slate-600">
                     <span className="font-medium">Unused: </span>
                     <span className="text-slate-900 font-semibold">{formatCurrency(underutilized.unusedAmount)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {trendingCategories.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-600 mb-3 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Spending Trends
+            </h3>
+            <div className="space-y-3">
+              {trendingCategories.map((trend) => (
+                <div
+                  key={trend.categoryId}
+                  data-testid={`trend-card-${trend.categoryId}`}
+                  className={cn(
+                    'p-4 rounded-xl border-l-4 shadow-sm',
+                    trend.trend === 'increasing' && 'bg-rose-50 border-rose-200',
+                    trend.trend === 'decreasing' && 'bg-emerald-50 border-emerald-200',
+                    trend.trend === 'stable' && 'bg-indigo-50 border-indigo-200'
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+                        style={{ backgroundColor: `var(--theme-${trend.categoryColor})` }}
+                      >
+                        {trend.categoryName.charAt(0)}
+                      </div>
+                      <span className="font-semibold text-slate-900">{trend.categoryName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          'text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1',
+                          trend.trend === 'increasing' && 'bg-rose-100 text-rose-700',
+                          trend.trend === 'decreasing' && 'bg-emerald-100 text-emerald-700',
+                          trend.trend === 'stable' && 'bg-indigo-100 text-indigo-700'
+                        )}
+                      >
+                        {trend.trend === 'increasing' && <TrendingUp className="h-3 w-3" />}
+                        {trend.trend === 'decreasing' && <TrendingDown className="h-3 w-3" />}
+                        {trend.trend === 'stable' && <Minus className="h-3 w-3" />}
+                        {Math.abs(trend.percentageChange)}%
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        confidence: 85%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-[60px] w-full">
+                    <TrendSparkline
+                      data={trend.monthlyData}
+                      trend={trend.trend}
+                      height={60}
+                      width={400}
+                    />
                   </div>
                 </div>
               ))}
