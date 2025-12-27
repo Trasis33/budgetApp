@@ -77,18 +77,18 @@
   - [x] Test: Show trend direction (increasing/decreasing/stable)
   - [x] Test: Display sparkline chart with 3-6 months
   - [x] Test: Show enhanced metrics (percentage change, confidence)
-  - [x] Test: Color coding matches trend direction
-- [ ] Task: Create TrendSparkline mini-component for trend visualization
-  - [ ] Write failing tests for sparkline rendering
-  - [ ] Test: Renders line chart correctly
-  - [ ] Test: Handles empty data gracefully
-  - [ ] Test: Displays correct colors per trend direction
-- [ ] Task: Implement seasonal pattern alerts section
-  - [ ] Write failing tests for seasonal display
-  - [ ] Test: Show categories with strong seasonal patterns
-  - [ ] Test: Alert for upcoming seasonal spike in 1-2 months
-  - [ ] Test: Display suggested preparation amount
-  - [ ] Test: Calendar icon displays with warning
+   - [x] Test: Color coding matches trend direction
+   - [x] Task: Create TrendSparkline mini-component for trend visualization [69b8231]
+   - [x] Write failing tests for sparkline rendering
+   - [x] Test: Renders line chart correctly
+   - [x] Test: Handles empty data gracefully
+   - [x] Test: Displays correct colors per trend direction
+   - [~] Task: Implement seasonal pattern alerts section
+   - [ ] Write failing tests for seasonal display
+   - [ ] Test: Show categories with strong seasonal patterns
+   - [ ] Test: Alert for upcoming seasonal spike in 1-2 months
+   - [ ] Test: Display suggested preparation amount
+   - [ ] Test: Calendar icon displays with warning
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Insight Sections - Trends & Seasonal' (Protocol in workflow.md)
 
 ## Phase 5: Suggestion Interaction Model [ ]
