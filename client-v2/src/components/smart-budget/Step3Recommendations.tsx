@@ -69,7 +69,6 @@ export function Step3Recommendations({
   mockSeasonal
 }: Step3Props) {
   const [appliedCategories, setAppliedCategories] = React.useState<Set<number>>(new Set());
-  const [appliedAmounts, setAppliedAmounts] = React.useState<Record<number, number>>({});
   const debounceTimeoutsRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const [showConfirmation, setShowConfirmation] = React.useState(false);
   const [optimizationData, setOptimizationData] = React.useState<AnalysisResponse | null>(null);
@@ -136,14 +135,38 @@ export function Step3Recommendations({
     }
 
     const filtered = optimizationData.budgetVariances.filter(v => {
-      const matches = v.overagePercentage > 20 && v.budgetAmount > 0;
+      const matches = v.overagePercentage >= 20 && v.budgetAmount > 0 && v.actualAmount > 0;
       if (!matches) {
-        console.log(`[Step3] Skipping ${v.name}: overage=${v.overagePercentage}%, budget=${v.budgetAmount}`);
+        console.log(`[Step3] Skipping ${v.name}: overage=${v.overagePercentage}%, budget=${v.budgetAmount}, actual=${v.actualAmount}`);
       }
       return matches;
     });
 
-    const mapped = filtered.map(v => {
+    const groupedByCategory = new Map<string, { budgetAmount: number; actualAmount: number; overagePercentage: number; suggestedReduction: number; name: string }>();
+
+    filtered.forEach(v => {
+      const normalizedName = v.name.trim().toLowerCase();
+      const existing = groupedByCategory.get(normalizedName);
+
+      if (existing) {
+        existing.budgetAmount += v.budgetAmount;
+        existing.actualAmount += v.actualAmount;
+        existing.overagePercentage = Math.max(existing.overagePercentage, v.overagePercentage);
+        existing.suggestedReduction += v.suggestedReduction;
+      } else {
+        groupedByCategory.set(normalizedName, {
+          name: v.name,
+          budgetAmount: v.budgetAmount,
+          actualAmount: v.actualAmount,
+          overagePercentage: v.overagePercentage,
+          suggestedReduction: v.suggestedReduction
+        });
+      }
+    });
+
+    const aggregated = Array.from(groupedByCategory.values());
+
+    const mapped = aggregated.map(v => {
       const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
 
       if (!category) {
@@ -152,16 +175,20 @@ export function Step3Recommendations({
         console.log(`[Step3] Matched category "${v.name}" to ID ${category.id}`);
       }
 
+      const suggestedAmount = Math.max(0, v.budgetAmount - v.suggestedReduction);
+
       return {
         categoryId: category?.id || 0,
         categoryName: v.name,
         overagePercentage: v.overagePercentage,
         suggestedReduction: v.suggestedReduction,
-        suggestedAmount: v.budgetAmount - v.suggestedReduction,
+        suggestedAmount,
         confidenceScore: 85,
         categoryColor: category?.color || 'amber'
       };
     });
+
+    console.log('[Step3] Overspending categories after aggregation:', mapped.length, 'unique categories');
 
     return mapped;
   };
@@ -181,7 +208,27 @@ export function Step3Recommendations({
       return matches;
     });
 
-    const mapped = filtered.map(v => {
+    const groupedByCategory = new Map<string, { budgetAmount: number; unusedAmount: number; name: string }>();
+
+    filtered.forEach(v => {
+      const normalizedName = v.name.trim().toLowerCase();
+      const existing = groupedByCategory.get(normalizedName);
+
+      if (existing) {
+        existing.budgetAmount += v.budgetAmount;
+        existing.unusedAmount += v.unusedAmount;
+      } else {
+        groupedByCategory.set(normalizedName, {
+          name: v.name,
+          budgetAmount: v.budgetAmount,
+          unusedAmount: v.unusedAmount
+        });
+      }
+    });
+
+    const aggregated = Array.from(groupedByCategory.values());
+
+    const mapped = aggregated.map(v => {
       const usagePercentage = ((v.budgetAmount - v.unusedAmount) / v.budgetAmount) * 100;
       const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
 
@@ -199,6 +246,8 @@ export function Step3Recommendations({
         categoryColor: category?.color || 'teal'
       };
     });
+
+    console.log('[Step3] Underutilized categories after aggregation:', mapped.length, 'unique categories');
 
     return mapped;
   };
@@ -296,7 +345,6 @@ export function Step3Recommendations({
     }
 
     debounceTimeoutsRef.current[categoryId] = setTimeout(() => {
-      setAppliedAmounts(prev => ({ ...prev, [categoryId]: suggestedAmount }));
       if (isFixed) {
         updateFixed(categoryId, suggestedAmount);
       } else {
@@ -316,7 +364,6 @@ export function Step3Recommendations({
           }
 
           debounceTimeoutsRef.current[variance.categoryId] = setTimeout(() => {
-            setAppliedAmounts(prev => ({ ...prev, [variance.categoryId]: variance.suggestedAmount }));
             updateFixed(variance.categoryId, variance.suggestedAmount);
             setAppliedCategories(prev => new Set(prev).add(variance.categoryId));
           }, 300);
@@ -368,7 +415,7 @@ export function Step3Recommendations({
             <div className="space-y-3">
               {overspendingCategories.map((variance) => (
                 <div
-                  key={variance.categoryId}
+                  key={`overspending-${variance.categoryId}-${variance.categoryName}`}
                   data-testid={`overspending-${variance.categoryId}`}
                   className={cn(
                     'p-4 rounded-xl border-l-4 shadow-sm',
@@ -434,7 +481,7 @@ export function Step3Recommendations({
             <div className="space-y-3">
               {underutilizedCategories.map((underutilized) => (
                 <div
-                  key={underutilized.categoryId}
+                  key={`underutilized-${underutilized.categoryId}-${underutilized.categoryName}`}
                   data-testid={`underutilized-${underutilized.categoryId}`}
                   className="p-4 rounded-xl border-l-4 shadow-sm bg-emerald-50 border-emerald-200"
                 >
@@ -471,7 +518,7 @@ export function Step3Recommendations({
             <div className="space-y-3">
               {trendingCategories.map((trend) => (
                 <div
-                  key={trend.categoryId}
+                  key={`trend-${trend.categoryId}-${trend.categoryName}`}
                   data-testid={`trend-card-${trend.categoryId}`}
                   className={cn(
                     'p-4 rounded-xl border-l-4 shadow-sm',
@@ -532,7 +579,7 @@ export function Step3Recommendations({
             <div className="space-y-3">
               {seasonalCategories.map((seasonal) => (
                 <div
-                  key={seasonal.categoryId}
+                  key={`seasonal-${seasonal.categoryId}-${seasonal.categoryName}`}
                   data-testid={`seasonal-${seasonal.categoryId}`}
                   className={cn(
                     'p-4 rounded-xl border-l-4 shadow-sm',
