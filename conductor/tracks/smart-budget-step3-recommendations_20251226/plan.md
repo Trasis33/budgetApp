@@ -111,12 +111,12 @@
 
 ## Phase 5: Suggestion Interaction Model [ ]
 
-- [~] Task: Implement individual "Apply" button functionality
-  - [ ] Write failing tests for apply mechanism
-  - [ ] Test: Applied suggestion updates fixedExpenses or variableAllocations
-  - [ ] Test: Applied amount replaces existing amount entirely
-  - [ ] Test: Suggestions persist in appliedSuggestions state
-  - [ ] Test: Applied button is disabled and shows checkmark
+- [x] Task: Implement individual "Apply" button functionality [0cc1ff0]
+  - [x] Write failing tests for apply mechanism
+  - [x] Test: Applied suggestion updates fixedExpenses or variableAllocations
+  - [x] Test: Applied amount replaces existing amount entirely
+  - [x] Test: Suggestions persist in appliedSuggestions state
+  - [x] Test: Applied button is disabled and shows checkmark
 - [ ] Task: Implement "Apply All" bulk functionality
   - [ ] Write failing test for bulk apply
   - [ ] Test: Apply all non-dismissed suggestions
