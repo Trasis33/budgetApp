@@ -122,8 +122,8 @@
   - [x] Test: Apply all non-dismissed suggestions
   - [x] Test: Updates all relevant budget amounts
   - [x] Test: Mark all as applied visually
-- [ ] Task: Add state tracking for applied suggestions (Record<number, number>)
-- [ ] Task: Debounce apply operations to prevent rapid successive updates
+- [x] Task: Add state tracking for applied suggestions (Record<number, number>) [b4eaee8]
+- [x] Task: Debounce apply operations to prevent rapid successive updates [b4eaee8]
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Suggestion Interaction Model' (Protocol in workflow.md)
 
 ## Phase 6: Budget Summary Panel [ ]
