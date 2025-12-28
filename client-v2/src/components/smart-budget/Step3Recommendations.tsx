@@ -94,16 +94,28 @@ export function Step3Recommendations({
     return [];
   };
 
-  const overspendingCategories = getOverspendingCategories();
-  const underutilizedCategories = getUnderutilizedCategories();
-  const trendingCategories = getTrendingCategories();
-  const seasonalCategories = getSeasonalCategories();
+  const overspendingCategories = React.useMemo(() => getOverspendingCategories(), [mockOverspending]);
+  const underutilizedCategories = React.useMemo(() => getUnderutilizedCategories(), [mockUnderutilized]);
+  const trendingCategories = React.useMemo(() => getTrendingCategories(), [mockTrending]);
+  const seasonalCategories = React.useMemo(() => getSeasonalCategories(), [mockSeasonal]);
 
-  const totalFixed = Object.values(state.fixedExpenses).reduce((sum, amount) => sum + amount, 0);
-  const totalVariable = Object.values(state.variableAllocations).reduce((sum, amount) => sum + amount, 0);
-  const unallocated = state.income - totalFixed - totalVariable;
+  const totalFixed = React.useMemo(
+    () => Object.values(state.fixedExpenses).reduce((sum, amount) => sum + amount, 0),
+    [state.fixedExpenses]
+  );
+  const totalVariable = React.useMemo(
+    () => Object.values(state.variableAllocations).reduce((sum, amount) => sum + amount, 0),
+    [state.variableAllocations]
+  );
+  const unallocated = React.useMemo(
+    () => state.income - totalFixed - totalVariable,
+    [state.income, totalFixed, totalVariable]
+  );
   const isOverallocated = unallocated < 0;
-  const savingsRate = state.income > 0 ? ((state.income - totalFixed - totalVariable) / state.income) * 100 : 0;
+  const savingsRate = React.useMemo(
+    () => state.income > 0 ? ((state.income - totalFixed - totalVariable) / state.income) * 100 : 0,
+    [state.income, totalFixed, totalVariable]
+  );
 
   const handleSave = () => {
     if (isOverallocated) {
@@ -458,6 +470,7 @@ export function Step3Recommendations({
       <div className="flex gap-3 pt-4 border-t border-slate-200">
         <button
           onClick={handleSave}
+          aria-label={isOverallocated ? "Cannot save: Budget is over-allocated" : "Save budget plan"}
           className={cn(
             'flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium',
             'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors',
