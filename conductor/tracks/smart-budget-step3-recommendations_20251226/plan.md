@@ -126,19 +126,19 @@
 - [x] Task: Debounce apply operations to prevent rapid successive updates [b4eaee8]
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Suggestion Interaction Model' (Protocol in workflow.md)
 
-## Phase 6: Budget Summary Panel [~]
+## Phase 6: Budget Summary Panel [checkpoint: b394093]
 
-- [~] Task: Implement budget totals display (Income, Fixed, Variable, Unallocated)
-  - [ ] Write failing tests for totals calculation
-  - [ ] Test: Total income displays correctly
-  - [ ] Test: Fixed expenses total calculates correctly
-  - [ ] Test: Variable budgets total calculates correctly
-  - [ ] Test: Unallocated amount = income - fixed - variable
-- [ ] Task: Add color coding for unallocated amount status
-  - [ ] Write failing test for status colors
-  - [ ] Test: Green color when unallocated >= 0
-  - [ ] Test: Red color when unallocated < 0 (over-allocated)
-- [ ] Task: Implement real-time summary updates after suggestion applies
+- [x] Task: Implement budget totals display (Income, Fixed, Variable, Unallocated) [b394093]
+  - [x] Write failing tests for totals calculation
+  - [x] Test: Total income displays correctly
+  - [x] Test: Fixed expenses total calculates correctly
+  - [x] Test: Variable budgets total calculates correctly
+  - [x] Test: Unallocated amount = income - fixed - variable
+- [x] Task: Add color coding for unallocated amount status [b394093]
+  - [x] Write failing test for status colors
+  - [x] Test: Green color when unallocated >= 0
+  - [x] Test: Red color when unallocated < 0 (over-allocated)
+- [x] Task: Implement real-time summary updates after suggestion applies [b394093]
 - [ ] Task: Conductor - User Manual Verification 'Phase 6: Budget Summary Panel' (Protocol in workflow.md)
 
 ## Phase 7: Save Flow & Confirmation Screen [ ]
