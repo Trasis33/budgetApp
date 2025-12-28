@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
+import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { WizardState } from './types';
 import { cn } from '@/lib/utils';
 import { TrendSparkline } from './TrendSparkline';
@@ -47,34 +47,48 @@ interface Step3Props {
   updateVariable: (catId: number, val: number) => void;
   onBack: () => void;
   onSave: () => void;
+  mockOverspending?: BudgetVariance[];
+  mockUnderutilized?: UnderutilizedBudget[];
+  mockTrending?: TrendingBudget[];
+  mockSeasonal?: SeasonalPattern[];
 }
 
 export function Step3Recommendations({
   state,
   updateFixed,
+  updateVariable,
   onBack,
-  onSave
+  onSave,
+  mockOverspending,
+  mockUnderutilized,
+  mockTrending,
+  mockSeasonal
 }: Step3Props) {
   const [appliedCategories, setAppliedCategories] = React.useState<Set<number>>(new Set());
   const [appliedAmounts, setAppliedAmounts] = React.useState<Record<number, number>>({});
+  const debounceTimeoutsRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
   };
 
   const getOverspendingCategories = (): BudgetVariance[] => {
+    if (mockOverspending) return mockOverspending;
     return [];
   };
 
   const getUnderutilizedCategories = (): UnderutilizedBudget[] => {
+    if (mockUnderutilized) return mockUnderutilized;
     return [];
   };
 
   const getTrendingCategories = (): TrendingBudget[] => {
+    if (mockTrending) return mockTrending;
     return [];
   };
 
   const getSeasonalCategories = (): SeasonalPattern[] => {
+    if (mockSeasonal) return mockSeasonal;
     return [];
   };
 
@@ -83,13 +97,29 @@ export function Step3Recommendations({
   const trendingCategories = getTrendingCategories();
   const seasonalCategories = getSeasonalCategories();
 
-  const applySuggestion = (categoryId: number, suggestedAmount: number) => {
-    const budget = state.fixedExpenses[categoryId];
-    if (budget && !appliedCategories.has(categoryId) && !appliedAmounts[categoryId]) {
-      setAppliedAmounts(prev => ({ ...prev, [categoryId]: suggestedAmount }));
-      updateFixed(categoryId, suggestedAmount);
-      setAppliedCategories(prev => new Set(prev).add(categoryId));
+  const applySuggestion = (categoryId: number, suggestedAmount: number, isFixed: boolean = true) => {
+    if (appliedCategories.has(categoryId) || state.appliedSuggestions[categoryId]) {
+      return;
     }
+
+    const budget = isFixed ? state.fixedExpenses[categoryId] : state.variableAllocations[categoryId];
+    if (!budget) {
+      return;
+    }
+
+    if (debounceTimeoutsRef.current[categoryId]) {
+      clearTimeout(debounceTimeoutsRef.current[categoryId]);
+    }
+
+    debounceTimeoutsRef.current[categoryId] = setTimeout(() => {
+      setAppliedAmounts(prev => ({ ...prev, [categoryId]: suggestedAmount }));
+      if (isFixed) {
+        updateFixed(categoryId, suggestedAmount);
+      } else {
+        updateVariable(categoryId, suggestedAmount);
+      }
+      setAppliedCategories(prev => new Set(prev).add(categoryId));
+    }, 300);
   };
 
   return (
@@ -159,19 +189,19 @@ export function Step3Recommendations({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => applySuggestion(variance.categoryId, Math.round(state.fixedExpenses[variance.categoryId] * 0.8))}
-                        disabled={appliedCategories.has(variance.categoryId)}
+                        disabled={appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]}
                         className={cn(
                           'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                           variance.overagePercentage >= 30 ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-600 text-white hover:bg-amber-700',
-                          appliedCategories.has(variance.categoryId) && 'opacity-50 cursor-not-allowed'
+                          (appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]) && 'opacity-50 cursor-not-allowed'
                         )}
                       >
-                        {appliedCategories.has(variance.categoryId) ? (
+                        {(appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]) ? (
                           <Check className="h-4 w-4" data-testid="check-icon" />
                         ) : (
                           <Check className="h-4 w-4" />
                         )}
-                        {appliedCategories.has(variance.categoryId) ? 'Applied' : 'Apply'}
+                        {(appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]) ? 'Applied' : 'Apply'}
                       </button>
                       <span className="text-xs text-slate-500">
                         {variance.confidenceScore}% confidence

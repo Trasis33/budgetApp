@@ -111,7 +111,7 @@
 
 ## Phase 5: Suggestion Interaction Model [ ]
 
-- [ ] Task: Implement individual "Apply" button functionality
+- [~] Task: Implement individual "Apply" button functionality
   - [ ] Write failing tests for apply mechanism
   - [ ] Test: Applied suggestion updates fixedExpenses or variableAllocations
   - [ ] Test: Applied amount replaces existing amount entirely

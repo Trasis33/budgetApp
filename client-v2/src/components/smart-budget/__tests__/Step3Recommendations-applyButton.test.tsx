@@ -1,12 +1,19 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { Step3Recommendations } from '../Step3Recommendations';
 import { WizardState } from '../types';
 
 describe('Step3Recommendations - Apply Button Functionality', () => {
-  const mockCategories = [
-    { id: 1, name: 'Groceries', color: 'teal', icon: 'shopping-cart' },
-    { id: 2, name: 'Dining', color: 'amber', icon: 'utensils' },
+  const mockOverspending = [
+    {
+      categoryId: 1,
+      categoryName: 'Groceries',
+      overagePercentage: 25,
+      suggestedReduction: 300,
+      suggestedAmount: 1200,
+      confidenceScore: 85,
+      categoryColor: 'teal'
+    }
   ];
 
   const mockState: WizardState = {
@@ -27,56 +34,200 @@ describe('Step3Recommendations - Apply Button Functionality', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
   });
 
-  it('clicking apply updates budget amount', () => {
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
+  it('applied suggestion updates fixedExpenses', async () => {
     render(
       <Step3Recommendations
         state={mockState}
-        categories={mockCategories}
         updateFixed={mockUpdateFixed}
         updateVariable={mockUpdateVariable}
         onBack={mockOnBack}
         onSave={mockOnSave}
+        mockOverspending={mockOverspending}
       />
     );
 
-    const applyButtons = screen.queryAllByText(/Apply/);
-    // No overspending categories yet, so no Apply buttons
-    expect(applyButtons.length).toBe(0);
+    const applyButton = screen.getByText('Apply');
+    fireEvent.click(applyButton);
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(mockUpdateFixed).toHaveBeenCalledWith(1, 1200);
   });
 
-  it('apply button disables after clicking', () => {
+  it('applied suggestion updates variableAllocations', async () => {
+    const mockUnderutilized = [
+      {
+        categoryId: 1,
+        categoryName: 'Dining',
+        unusedAmount: 300,
+        usagePercentage: 60,
+        categoryColor: 'amber'
+      }
+    ];
+
+    const stateWithVariable: WizardState = {
+      ...mockState,
+      fixedExpenses: {},
+      variableAllocations: { 1: 1500 },
+    };
+
+    render(
+      <Step3Recommendations
+        state={stateWithVariable}
+        updateFixed={mockUpdateFixed}
+        updateVariable={mockUpdateVariable}
+        onBack={mockOnBack}
+        onSave={mockOnSave}
+        mockUnderutilized={mockUnderutilized}
+      />
+    );
+
+    const applyButton = screen.queryByText('Apply');
+    expect(applyButton).not.toBeInTheDocument();
+  });
+
+  it('applied amount replaces existing amount entirely', async () => {
     render(
       <Step3Recommendations
         state={mockState}
-        categories={mockCategories}
         updateFixed={mockUpdateFixed}
         updateVariable={mockUpdateVariable}
         onBack={mockOnBack}
         onSave={mockOnSave}
+        mockOverspending={mockOverspending}
       />
     );
 
-    const applyButtons = screen.queryAllByText(/Apply/);
-    // No overspending categories yet, so no Apply buttons to test
-    expect(applyButtons.length).toBe(0);
+    const applyButton = screen.getByText('Apply');
+    fireEvent.click(applyButton);
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(mockUpdateFixed).toHaveBeenCalledTimes(1);
+    expect(mockUpdateFixed).toHaveBeenCalledWith(1, 1200);
   });
 
-  it('button shows checkmark when applied', () => {
-    const { container } = render(
+  it('suggestions persist in appliedSuggestions state', async () => {
+    const { rerender } = render(
       <Step3Recommendations
         state={mockState}
-        categories={mockCategories}
         updateFixed={mockUpdateFixed}
         updateVariable={mockUpdateVariable}
         onBack={mockOnBack}
         onSave={mockOnSave}
+        mockOverspending={mockOverspending}
       />
     );
 
-    const applyButtons = screen.queryAllByText(/Apply/);
-    // No overspending categories yet, so no Apply buttons to test
-    expect(applyButtons.length).toBe(0);
+    const applyButton = screen.getByText('Apply');
+    fireEvent.click(applyButton);
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(mockUpdateFixed).toHaveBeenCalledWith(1, 1200);
+
+    const updatedState: WizardState = {
+      ...mockState,
+      appliedSuggestions: { 1: 1200 },
+    };
+
+    rerender(
+      <Step3Recommendations
+        state={updatedState}
+        updateFixed={mockUpdateFixed}
+        updateVariable={mockUpdateVariable}
+        onBack={mockOnBack}
+        onSave={mockOnSave}
+        mockOverspending={mockOverspending}
+      />
+    );
+
+    const appliedButton = screen.getByText('Applied');
+    expect(appliedButton).toBeInTheDocument();
+  });
+
+  it('applied button is disabled and shows checkmark', () => {
+    const appliedState: WizardState = {
+      ...mockState,
+      appliedSuggestions: { 1: 1200 },
+    };
+
+    render(
+      <Step3Recommendations
+        state={appliedState}
+        updateFixed={mockUpdateFixed}
+        updateVariable={mockUpdateVariable}
+        onBack={mockOnBack}
+        onSave={mockOnSave}
+        mockOverspending={mockOverspending}
+      />
+    );
+
+    const appliedButton = screen.getByText('Applied');
+    expect(appliedButton).toBeDisabled();
+
+    const checkIcon = screen.getByTestId('check-icon');
+    expect(checkIcon).toBeInTheDocument();
+  });
+
+  it('debounces apply operations to prevent rapid successive updates', async () => {
+    render(
+      <Step3Recommendations
+        state={mockState}
+        updateFixed={mockUpdateFixed}
+        updateVariable={mockUpdateVariable}
+        onBack={mockOnBack}
+        onSave={mockOnSave}
+        mockOverspending={mockOverspending}
+      />
+    );
+
+    const applyButton = screen.getByText('Apply');
+    fireEvent.click(applyButton);
+    fireEvent.click(applyButton);
+    fireEvent.click(applyButton);
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(mockUpdateFixed).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not apply suggestion if already applied', async () => {
+    const appliedState: WizardState = {
+      ...mockState,
+      appliedSuggestions: { 1: 1200 },
+    };
+
+    render(
+      <Step3Recommendations
+        state={appliedState}
+        updateFixed={mockUpdateFixed}
+        updateVariable={mockUpdateVariable}
+        onBack={mockOnBack}
+        onSave={mockOnSave}
+        mockOverspending={mockOverspending}
+      />
+    );
+
+    const applyButton = screen.queryByText('Apply');
+    expect(applyButton).not.toBeInTheDocument();
+
+    expect(mockUpdateFixed).not.toHaveBeenCalled();
   });
 });
