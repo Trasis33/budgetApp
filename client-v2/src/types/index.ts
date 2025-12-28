@@ -62,6 +62,12 @@ export interface Category {
   color?: string;
   is_fixed?: boolean;
   spending_role?: 'need' | 'want' | 'save';
+  /** Weight for intelligent budget allocation (0.0 - 1.0, default 0.5) */
+  budget_weight?: number;
+  /** Optional minimum percentage constraint for budget allocation */
+  budget_min_pct?: number;
+  /** Optional maximum percentage constraint for budget allocation */
+  budget_max_pct?: number;
 }
 
 export interface Budget {

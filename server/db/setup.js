@@ -45,18 +45,22 @@ const setupDatabase = async () => {
         table.timestamps(true, true);
       });
 
-      // Seed categories
+      // Seed categories with budget weights for intelligent allocation
+      // Weights: 0.0-1.0 scale where higher = greater priority within bucket
       const categories = [
-        { name: 'Groceries', icon: 'shopping-cart' },
-        { name: 'Kids Clothes', icon: 'tshirt' },
-        { name: 'Mortgage', icon: 'home' },
-        { name: 'Utilities', icon: 'bolt' },
-        { name: 'Transportation', icon: 'car' },
-        { name: 'Dining Out', icon: 'utensils' },
-        { name: 'Entertainment', icon: 'film' },
-        { name: 'Healthcare', icon: 'heart' },
-        { name: 'Household Items', icon: 'box' },
-        { name: 'Miscellaneous', icon: 'box' }
+        { name: 'Groceries', icon: 'shopping-cart', is_fixed: false, spending_role: 'need', budget_weight: 0.80 },
+        { name: 'Kids Clothes', icon: 'tshirt', is_fixed: false, spending_role: 'want', budget_weight: 0.55 },
+        { name: 'Mortgage', icon: 'home', is_fixed: true, spending_role: 'need', budget_weight: 0.90 },
+        { name: 'Utilities', icon: 'bolt', is_fixed: true, spending_role: 'need', budget_weight: 0.70 },
+        { name: 'Transportation', icon: 'car', is_fixed: false, spending_role: 'need', budget_weight: 0.60 },
+        { name: 'Dining Out', icon: 'utensils', is_fixed: false, spending_role: 'want', budget_weight: 0.50, budget_max_pct: 0.20 },
+        { name: 'Entertainment', icon: 'film', is_fixed: false, spending_role: 'want', budget_weight: 0.40, budget_max_pct: 0.12 },
+        { name: 'Healthcare', icon: 'heart', is_fixed: false, spending_role: 'need', budget_weight: 0.75 },
+        { name: 'Household Items', icon: 'box', is_fixed: false, spending_role: 'want', budget_weight: 0.45 },
+        { name: 'Subscriptions and Apps', icon: 'box', is_fixed: false, spending_role: 'want', budget_weight: 0.20, budget_max_pct: 0.05 },
+        { name: 'Streaming and Apps', icon: 'box', is_fixed: false, spending_role: 'want', budget_weight: 0.15, budget_max_pct: 0.05 },
+        { name: 'Miscellaneous', icon: 'box', is_fixed: false, spending_role: 'want', budget_weight: 0.30 },
+        { name: 'Savings', icon: 'box', is_fixed: false, spending_role: 'save', budget_weight: 0.90, budget_min_pct: 0.10 }
       ];
       await db('categories').insert(categories);
       console.log('Categories seeded successfully');

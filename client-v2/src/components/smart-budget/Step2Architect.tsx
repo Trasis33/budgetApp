@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { getIconByName } from '@/lib/categoryIcons';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getCategoryIconStyle } from '@/lib/iconUtils';
+import { calculateWeightedAllocations, getCategoryWeight } from '@/lib/budgetAllocation';
 
 interface Step2Props {
   state: WizardState;
@@ -94,8 +95,9 @@ export function Step2Architect({
   const needsActualPercent = state.income > 0 ? (needsTotal / state.income) * 100 : 0;
 
   // Initial Allocation Logic based on spending_role (need/want/save)
-  // This distributes budgets across ALL variable categories proportionally,
-  // rather than only filling unassigned ones.
+  // Uses weighted allocation to distribute budgets based on category importance,
+  // not equal splits. This ensures discretionary categories don't receive the same
+  // allocation as essential categories.
   useEffect(() => {
       // Once the user has manually adjusted variable categories, we stop
       // auto-rebalancing and leave their choices untouched.
@@ -129,25 +131,25 @@ export function Step2Architect({
 
       const newAllocations: Record<number, number> = {};
 
-      // Distribute each bucket evenly among its categories
+      // Use weighted allocation for each bucket based on category importance
       if (variableNeedCats.length > 0 && variableNeedsBudget > 0) {
-        const perCat = variableNeedsBudget / variableNeedCats.length;
-        variableNeedCats.forEach((c) => {
-          newAllocations[c.id] = Math.round(perCat);
+        const needAllocations = calculateWeightedAllocations(variableNeedCats, variableNeedsBudget);
+        needAllocations.forEach(a => {
+          newAllocations[a.categoryId] = a.allocatedAmount;
         });
       }
 
       if (variableWantCats.length > 0 && wantsBudget > 0) {
-        const perCat = wantsBudget / variableWantCats.length;
-        variableWantCats.forEach((c) => {
-          newAllocations[c.id] = Math.round(perCat);
+        const wantAllocations = calculateWeightedAllocations(variableWantCats, wantsBudget);
+        wantAllocations.forEach(a => {
+          newAllocations[a.categoryId] = a.allocatedAmount;
         });
       }
 
       if (variableSaveCats.length > 0 && savingsBudget > 0) {
-        const perCat = savingsBudget / variableSaveCats.length;
-        variableSaveCats.forEach((c) => {
-          newAllocations[c.id] = Math.round(perCat);
+        const saveAllocations = calculateWeightedAllocations(variableSaveCats, savingsBudget);
+        saveAllocations.forEach(a => {
+          newAllocations[a.categoryId] = a.allocatedAmount;
         });
       }
 

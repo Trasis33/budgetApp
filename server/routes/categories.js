@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Create a new category
 // @access  Private
 router.post('/', auth, async (req, res) => {
-  const { name, icon, color, is_fixed, spending_role } = req.body;
+  const { name, icon, color, is_fixed, spending_role, budget_weight, budget_min_pct, budget_max_pct } = req.body;
 
   try {
     if (!name) {
@@ -38,7 +38,10 @@ router.post('/', auth, async (req, res) => {
       icon: icon || null,
       color: color || '#6366f1',
       is_fixed: is_fixed || false,
-      spending_role: spending_role || 'need'
+      spending_role: spending_role || 'need',
+      budget_weight: budget_weight !== undefined ? budget_weight : 0.5,
+      budget_min_pct: budget_min_pct || null,
+      budget_max_pct: budget_max_pct || null
     });
 
     const category = await db('categories').where('id', id).first();
@@ -53,7 +56,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update a category
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-  const { name, icon, color, is_fixed, spending_role } = req.body;
+  const { name, icon, color, is_fixed, spending_role, budget_weight, budget_min_pct, budget_max_pct } = req.body;
 
   try {
     const categoryExists = await db('categories').where('id', req.params.id).first();
@@ -69,7 +72,10 @@ router.put('/:id', auth, async (req, res) => {
         icon: icon !== undefined ? icon : categoryExists.icon,
         color: color !== undefined ? color : categoryExists.color,
         is_fixed: is_fixed !== undefined ? is_fixed : categoryExists.is_fixed,
-        spending_role: spending_role !== undefined ? spending_role : categoryExists.spending_role
+        spending_role: spending_role !== undefined ? spending_role : categoryExists.spending_role,
+        budget_weight: budget_weight !== undefined ? budget_weight : categoryExists.budget_weight,
+        budget_min_pct: budget_min_pct !== undefined ? budget_min_pct : categoryExists.budget_min_pct,
+        budget_max_pct: budget_max_pct !== undefined ? budget_max_pct : categoryExists.budget_max_pct
       });
 
     const category = await db('categories').where('id', req.params.id).first();
