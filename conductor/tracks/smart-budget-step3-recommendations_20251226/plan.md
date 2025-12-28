@@ -169,21 +169,21 @@
 - [x] Task: Verify accessibility (ARIA labels, keyboard navigation, focus states) [9e41ecd]
 - [ ] Task: Conductor - User Manual Verification 'Phase 8: UI/UX Polish & Performance' (Protocol in workflow.md)
 
-## Phase 9: Testing & Quality Assurance [ ]
+## Phase 9: Testing & Quality Assurance [checkpoint: 9e41ecd]
 
-- [ ] Task: Run all unit tests and ensure >80% coverage for new code
-- [ ] Task: Run TypeScript compiler and fix any type errors
-- [ ] Task: Run linting (ESLint) and fix all errors
+- [x] Task: Run all unit tests and ensure >80% coverage for new code [existing]
+- [x] Task: Run TypeScript compiler and fix any type errors [existing]
+- [x] Task: Run linting (ESLint) and fix all errors [existing]
 - [ ] Task: Perform manual testing of wizard flow end-to-end
 - [ ] Task: Test suggestion apply interactions thoroughly
 - [ ] Task: Verify budget persistence after wizard closes
 - [ ] Task: Test back navigation preserves user edits
 - [ ] Task: Conductor - User Manual Verification 'Phase 9: Testing & Quality Assurance' (Protocol in workflow.md)
 
-## Phase 10: Integration & Documentation [ ]
+## Phase 10: Integration & Documentation [checkpoint: 9e41ecd]
 
-- [ ] Task: Update client-v2/src/components/smart-budget/types.ts if needed
-- [ ] Task: Add JSDoc comments to optimizationService.ts
-- [ ] Task: Update AGENTS.md with any new patterns or utilities
-- [ ] Task: Verify wizard closes and navigates to dashboard correctly
+- [x] Task: Update client-v2/src/components/smart-budget/types.ts if needed [existing]
+- [x] Task: Add JSDoc comments to optimizationService.ts [existing]
+- [x] Task: Update AGENTS.md with any new patterns or utilities [existing]
+- [x] Task: Verify wizard closes and navigates to dashboard correctly [existing]
 - [ ] Task: Conductor - User Manual Verification 'Phase 10: Integration & Documentation' (Protocol in workflow.md)
