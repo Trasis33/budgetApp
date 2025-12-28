@@ -6,6 +6,7 @@ import { WizardState } from './types';
 import { cn } from '@/lib/utils';
 import { TrendSparkline } from './TrendSparkline';
 import { optimizationService, AnalysisResponse } from '@/api/services/optimizationService';
+import { getLatestVariancePerCategorySafe } from '@/lib/budgetAggregation';
 
 interface BudgetVariance {
   categoryId: number;
@@ -134,7 +135,14 @@ export function Step3Recommendations({
       return [];
     }
 
-    const filtered = optimizationData.budgetVariances.filter(v => {
+    // FIX: Use latest variance per category instead of summing across months
+    // This prevents meaningless cumulative totals (e.g., 3 months of 5000 = 15000)
+    const latestVariances = getLatestVariancePerCategorySafe(
+      optimizationData.budgetVariances
+    );
+
+    // Filter for overspending - 20% threshold
+    const overspending = latestVariances.filter(v => {
       const matches = v.overagePercentage >= 20 && v.budgetAmount > 0 && v.actualAmount > 0;
       if (!matches) {
         console.log(`[Step3] Skipping ${v.name}: overage=${v.overagePercentage}%, budget=${v.budgetAmount}, actual=${v.actualAmount}`);
@@ -142,31 +150,7 @@ export function Step3Recommendations({
       return matches;
     });
 
-    const groupedByCategory = new Map<string, { budgetAmount: number; actualAmount: number; overagePercentage: number; suggestedReduction: number; name: string }>();
-
-    filtered.forEach(v => {
-      const normalizedName = v.name.trim().toLowerCase();
-      const existing = groupedByCategory.get(normalizedName);
-
-      if (existing) {
-        existing.budgetAmount += v.budgetAmount;
-        existing.actualAmount += v.actualAmount;
-        existing.overagePercentage = Math.max(existing.overagePercentage, v.overagePercentage);
-        existing.suggestedReduction += v.suggestedReduction;
-      } else {
-        groupedByCategory.set(normalizedName, {
-          name: v.name,
-          budgetAmount: v.budgetAmount,
-          actualAmount: v.actualAmount,
-          overagePercentage: v.overagePercentage,
-          suggestedReduction: v.suggestedReduction
-        });
-      }
-    });
-
-    const aggregated = Array.from(groupedByCategory.values());
-
-    const mapped = aggregated.map(v => {
+    const mapped = overspending.map(v => {
       const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
 
       if (!category) {
@@ -200,35 +184,17 @@ export function Step3Recommendations({
       return [];
     }
 
-    const filtered = optimizationData.budgetVariances.filter(v => {
-      const matches = v.unusedAmount > 0 && v.budgetAmount > 0;
-      if (!matches) {
-        console.log(`[Step3] Skipping ${v.name}: unused=${v.unusedAmount}, budget=${v.budgetAmount}`);
-      }
-      return matches;
-    });
+    // FIX: Use latest variance per category instead of summing across months
+    const latestVariances = getLatestVariancePerCategorySafe(
+      optimizationData.budgetVariances
+    );
 
-    const groupedByCategory = new Map<string, { budgetAmount: number; unusedAmount: number; name: string }>();
+    // Filter for underutilized - has unused amount
+    const underutilized = latestVariances.filter(v =>
+      v.unusedAmount > 0 && v.budgetAmount > 0
+    );
 
-    filtered.forEach(v => {
-      const normalizedName = v.name.trim().toLowerCase();
-      const existing = groupedByCategory.get(normalizedName);
-
-      if (existing) {
-        existing.budgetAmount += v.budgetAmount;
-        existing.unusedAmount += v.unusedAmount;
-      } else {
-        groupedByCategory.set(normalizedName, {
-          name: v.name,
-          budgetAmount: v.budgetAmount,
-          unusedAmount: v.unusedAmount
-        });
-      }
-    });
-
-    const aggregated = Array.from(groupedByCategory.values());
-
-    const mapped = aggregated.map(v => {
+    const mapped = underutilized.map(v => {
       const usagePercentage = ((v.budgetAmount - v.unusedAmount) / v.budgetAmount) * 100;
       const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
 

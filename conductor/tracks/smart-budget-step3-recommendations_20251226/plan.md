@@ -57,6 +57,14 @@
   - [x] Fixed apply button infinite recalculation bug with state tracking
   - [x] Added suggestedAmount field to track original suggestion values
   - [x] Updated tests to expect empty state instead of mock data
+- [x] Task: Fix data issues with duplicate categories and negative values [f9ba47e]
+  - [x] Changed filtering from > 20 to >= 20 for overage threshold
+  - [x] Added duplicate category aggregation for overspending categories
+  - [x] Added duplicate category aggregation for underutilized categories
+  - [x] Fixed negative suggestedAmount calculation with Math.max(0, ...)
+  - [x] Fixed React key conflicts using categoryId + categoryName combo
+  - [x] Added actualAmount > 0 requirement to filter
+  - [x] Improved console logging for debugging
 - [x] Task: Add trend insights tests [610dfa8]
   - [x] Write failing tests for trend display
   - [x] Test: Show trend direction (increasing/decreasing/stable)
