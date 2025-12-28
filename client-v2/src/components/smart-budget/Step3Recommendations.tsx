@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus, Home, PieChart, PiggyBank, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { WizardState } from './types';
 import { cn } from '@/lib/utils';
 import { TrendSparkline } from './TrendSparkline';
+import { optimizationService, AnalysisResponse } from '@/api/services/optimizationService';
 
 interface BudgetVariance {
   categoryId: number;
@@ -48,6 +49,7 @@ interface Step3Props {
   updateVariable: (catId: number, val: number) => void;
   onBack: () => void;
   onSave: () => void;
+  categories?: { id: number; name: string; color: string; icon?: string }[];
   mockOverspending?: BudgetVariance[];
   mockUnderutilized?: UnderutilizedBudget[];
   mockTrending?: TrendingBudget[];
@@ -60,6 +62,7 @@ export function Step3Recommendations({
   updateVariable,
   onBack,
   onSave,
+  categories = [],
   mockOverspending,
   mockUnderutilized,
   mockTrending,
@@ -69,24 +72,109 @@ export function Step3Recommendations({
   const [appliedAmounts, setAppliedAmounts] = React.useState<Record<number, number>>({});
   const debounceTimeoutsRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const [showConfirmation, setShowConfirmation] = React.useState(false);
+  const [optimizationData, setOptimizationData] = React.useState<AnalysisResponse | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const isMounted = React.useRef(true);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
   };
 
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const loadOptimizationData = async () => {
+      if (mockOverspending || mockUnderutilized || mockTrending || mockSeasonal) {
+        return;
+      }
+
+      if (!isMounted.current) return;
+
+      setIsLoading(true);
+      try {
+        const data = await optimizationService.getAnalysis();
+        if (isMounted.current) {
+          setOptimizationData(data);
+        }
+      } catch (error) {
+        console.error('Failed to load optimization data:', error);
+        if (isMounted.current) {
+          toast.error('Failed to load budget recommendations');
+        }
+      } finally {
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadOptimizationData();
+  }, [mockOverspending, mockUnderutilized, mockTrending, mockSeasonal]);
+
   const getOverspendingCategories = (): BudgetVariance[] => {
     if (mockOverspending) return mockOverspending;
-    return [];
+    if (!optimizationData?.budgetVariances) return [];
+
+    return optimizationData.budgetVariances
+      .filter(v => v.overagePercentage > 20)
+      .map(v => {
+        const category = categories.find(c => c.name === v.name);
+        return {
+          categoryId: category?.id || 0,
+          categoryName: v.name,
+          overagePercentage: v.overagePercentage,
+          suggestedReduction: v.suggestedReduction,
+          suggestedAmount: v.budgetAmount - v.suggestedReduction,
+          confidenceScore: 85,
+          categoryColor: category?.color || 'amber'
+        };
+      });
   };
 
   const getUnderutilizedCategories = (): UnderutilizedBudget[] => {
     if (mockUnderutilized) return mockUnderutilized;
-    return [];
+    if (!optimizationData?.budgetVariances) return [];
+
+    return optimizationData.budgetVariances
+      .filter(v => v.unusedAmount > 0 && v.budgetAmount > 0)
+      .map(v => {
+        const usagePercentage = ((v.budgetAmount - v.unusedAmount) / v.budgetAmount) * 100;
+        const cat = categories.find(c => c.name === v.name);
+        return {
+          categoryId: cat?.id || 0,
+          categoryName: v.name,
+          unusedAmount: v.unusedAmount,
+          usagePercentage: Math.round(usagePercentage),
+          categoryColor: cat?.color || 'teal'
+        };
+      });
   };
 
   const getTrendingCategories = (): TrendingBudget[] => {
     if (mockTrending) return mockTrending;
-    return [];
+    if (!optimizationData?.patterns) return [];
+
+    return Object.entries(optimizationData.patterns)
+      .map(([categoryName, pattern]) => {
+        const cat = categories.find(c => c.name === categoryName);
+        return {
+          categoryId: cat?.id || 0,
+          categoryName,
+          trend: pattern.trend,
+          percentageChange: pattern.enhancedTrend.percentageChange,
+          monthlyData: pattern.data.map(d => ({
+            month: d.month.substring(0, 7),
+            value: d.amount
+          })),
+          categoryColor: cat?.color || 'indigo'
+        };
+      })
+      .filter(t => t.monthlyData.length >= 3);
   };
 
   const getSeasonalCategories = (): SeasonalPattern[] => {
@@ -474,12 +562,12 @@ export function Step3Recommendations({
           className={cn(
             'flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium',
             'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors',
-            isOverallocated && 'opacity-50 cursor-not-allowed'
+            (isOverallocated || isLoading) && 'opacity-50 cursor-not-allowed'
           )}
-          disabled={isOverallocated}
+          disabled={isOverallocated || isLoading}
         >
           <Check className="h-4 w-4" />
-          Save Budget Plan
+          {isLoading ? 'Saving...' : 'Save Budget Plan'}
         </button>
       </div>
 

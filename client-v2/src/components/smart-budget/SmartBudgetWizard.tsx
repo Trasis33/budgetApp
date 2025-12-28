@@ -182,11 +182,13 @@ export function SmartBudgetWizard({
 
     if (Object.keys(billDefaults).length === 0) return;
 
+    // Merge bill defaults with seeded values. Seeded values (from previous months or user edits)
+    // take precedence over bill defaults to preserve user intent. Bill defaults only fill in gaps.
     setState((prev) => ({
       ...prev,
       fixedExpenses: {
-        ...prev.fixedExpenses,
-        ...billDefaults,
+        ...billDefaults,        // Bill defaults come FIRST (fill gaps)
+        ...prev.fixedExpenses,  // Seeded/user values take precedence
       },
     }));
   }, [isOpen, recurringTemplates]);
@@ -195,16 +197,10 @@ export function SmartBudgetWizard({
     try {
       const promises = [];
 
-      const billCategoryIds = new Set(
-        recurringTemplates
-          .filter((t) => t.bill_managed)
-          .map((t) => t.category_id)
-      );
-      
-      // Save Fixed Expenses (skip bill-managed categories; those are handled as recurring bills)
+      // Save Fixed Expenses (all fixed categories, including bill-managed ones)
       for (const [catIdStr, amount] of Object.entries(state.fixedExpenses)) {
         const catId = parseInt(catIdStr, 10);
-        if (amount > 0 && !billCategoryIds.has(catId)) {
+        if (amount > 0) {
           promises.push(budgetService.createOrUpdateBudget({
             category_id: catId,
             amount,

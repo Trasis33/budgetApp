@@ -3,6 +3,18 @@ import { render, screen } from '@testing-library/react';
 import { Step3Recommendations } from '../Step3Recommendations';
 
 describe('Step3Recommendations - Overspending Display', () => {
+  const mockOverspending = [
+    {
+      categoryId: 1,
+      categoryName: 'Groceries',
+      overagePercentage: 25,
+      suggestedReduction: 300,
+      suggestedAmount: 1200,
+      confidenceScore: 85,
+      categoryColor: 'teal'
+    }
+  ];
+
   it('shows overspending categories with >20% variance', () => {
     const mockState = {
       step: 3,
@@ -27,6 +39,7 @@ describe('Step3Recommendations - Overspending Display', () => {
         updateVariable={jest.fn()}
         onBack={jest.fn()}
         onSave={jest.fn()}
+        mockOverspending={mockOverspending}
       />
     );
 
@@ -57,11 +70,12 @@ describe('Step3Recommendations - Overspending Display', () => {
         updateVariable={jest.fn()}
         onBack={jest.fn()}
         onSave={jest.fn()}
+        mockOverspending={mockOverspending}
       />
     );
 
     expect(screen.getByText(/Reduce by:/)).toBeInTheDocument();
-    expect(screen.getByText(/80% confidence/)).toBeInTheDocument();
+    expect(screen.getByText(/85%/)).toBeInTheDocument();
   });
 
   it('color coding is red/amber for urgency', () => {
@@ -88,6 +102,7 @@ describe('Step3Recommendations - Overspending Display', () => {
         updateVariable={jest.fn()}
         onBack={jest.fn()}
         onSave={jest.fn()}
+        mockOverspending={mockOverspending}
       />
     );
 

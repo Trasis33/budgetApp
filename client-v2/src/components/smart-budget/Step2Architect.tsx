@@ -393,7 +393,7 @@ export function Step2Architect({
                 <div className="text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2">
                   <span>
                     Fixed budgets to save:{' '}
-                    {fixedCats.filter(c => (localFixed[c.id] || 0) > 0 && !billCategoryIdSet.has(c.id)).length}
+                    {fixedCats.filter(c => (localFixed[c.id] || 0) > 0).length}
                   </span>
                   <span>
                     Variable budgets to save:{' '}
@@ -401,7 +401,7 @@ export function Step2Architect({
                   </span>
                   {hasUserEditedVariables && (
                     <span className="text-[11px] text-slate-400">
-                      Variable allocations are now manual; strategy wont auto-rebalance.
+                      Variable allocations are now manual; strategy won't auto-rebalance.
                     </span>
                   )}
                 </div>
