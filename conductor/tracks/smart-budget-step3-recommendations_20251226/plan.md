@@ -117,11 +117,11 @@
   - [x] Test: Applied amount replaces existing amount entirely
   - [x] Test: Suggestions persist in appliedSuggestions state
   - [x] Test: Applied button is disabled and shows checkmark
-- [~] Task: Implement "Apply All" bulk functionality
-  - [ ] Write failing test for bulk apply
-  - [ ] Test: Apply all non-dismissed suggestions
-  - [ ] Test: Updates all relevant budget amounts
-  - [ ] Test: Mark all as applied visually
+- [x] Task: Implement "Apply All" bulk functionality [b4eaee8]
+  - [x] Write failing test for bulk apply
+  - [x] Test: Apply all non-dismissed suggestions
+  - [x] Test: Updates all relevant budget amounts
+  - [x] Test: Mark all as applied visually
 - [ ] Task: Add state tracking for applied suggestions (Record<number, number>)
 - [ ] Task: Debounce apply operations to prevent rapid successive updates
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Suggestion Interaction Model' (Protocol in workflow.md)
