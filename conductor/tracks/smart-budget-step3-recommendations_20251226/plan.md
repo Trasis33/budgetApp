@@ -141,9 +141,9 @@
 - [x] Task: Implement real-time summary updates after suggestion applies [b394093]
 - [ ] Task: Conductor - User Manual Verification 'Phase 6: Budget Summary Panel' (Protocol in workflow.md)
 
-## Phase 7: Save Flow & Confirmation Screen [ ]
+## Phase 7: Save Flow & Confirmation Screen [~]
 
-- [ ] Task: Implement "Save Budget Plan" button functionality
+- [~] Task: Implement "Save Budget Plan" button functionality
   - [ ] Write failing tests for save operation
   - [ ] Test: Saves all budgets via budgetService
   - [ ] Test: Validates unallocated >= 0 before saving
@@ -151,7 +151,7 @@
 - [ ] Task: Create BudgetConfirmationSummary component
   - [ ] Write failing tests for confirmation display
   - [ ] Test: Shows Total Budget, Fixed, Variable, Savings Rate
-  - [ ] Test: Lists all categories with final amounts
+  - [ ] Test: Lists all categories with amounts
   - [ ] Test: Success animation plays on mount
 - [ ] Task: Add "View Dashboard" button to close wizard
   - [ ] Write failing test for navigation

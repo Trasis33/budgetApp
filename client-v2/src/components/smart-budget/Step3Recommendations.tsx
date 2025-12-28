@@ -1,6 +1,7 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus, Home, PieChart, PiggyBank, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
 import { WizardState } from './types';
 import { cn } from '@/lib/utils';
 import { TrendSparkline } from './TrendSparkline';
@@ -67,6 +68,7 @@ export function Step3Recommendations({
   const [appliedCategories, setAppliedCategories] = React.useState<Set<number>>(new Set());
   const [appliedAmounts, setAppliedAmounts] = React.useState<Record<number, number>>({});
   const debounceTimeoutsRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  const [showConfirmation, setShowConfirmation] = React.useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
@@ -101,6 +103,16 @@ export function Step3Recommendations({
   const totalVariable = Object.values(state.variableAllocations).reduce((sum, amount) => sum + amount, 0);
   const unallocated = state.income - totalFixed - totalVariable;
   const isOverallocated = unallocated < 0;
+  const savingsRate = state.income > 0 ? ((state.income - totalFixed - totalVariable) / state.income) * 100 : 0;
+
+  const handleSave = () => {
+    if (isOverallocated) {
+      toast.error('Cannot save: Budget is over budget. Please reduce expenses.');
+      return;
+    }
+
+    setShowConfirmation(true);
+  };
 
   const applySuggestion = (categoryId: number, suggestedAmount: number, isFixed: boolean = true) => {
     if (appliedCategories.has(categoryId) || state.appliedSuggestions[categoryId]) {
@@ -445,16 +457,95 @@ export function Step3Recommendations({
 
       <div className="flex gap-3 pt-4 border-t border-slate-200">
         <button
-          onClick={onSave}
+          onClick={handleSave}
           className={cn(
             'flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium',
-            'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors'
+            'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors',
+            isOverallocated && 'opacity-50 cursor-not-allowed'
           )}
+          disabled={isOverallocated}
         >
           <Check className="h-4 w-4" />
           Save Budget Plan
         </button>
       </div>
+
+      <AnimatePresence>
+        {showConfirmation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowConfirmation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', delay: 0.1 }}
+                className="flex justify-center mb-6"
+              >
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <Check className="h-8 w-8 text-emerald-600" />
+                </div>
+              </motion.div>
+
+              <h2 className="text-2xl font-semibold text-slate-900 text-center mb-2">
+                Budget Saved Successfully!
+              </h2>
+
+              <p className="text-slate-600 text-center mb-6">
+                Your budget plan has been applied and is ready to use.
+              </p>
+
+              <div className="bg-slate-50 rounded-xl p-4 space-y-3 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Total Budget</span>
+                  </div>
+                  <span className="font-semibold text-slate-900">{formatCurrency(state.income)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PieChart className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Fixed + Variable</span>
+                  </div>
+                  <span className="font-semibold text-slate-900">{formatCurrency(totalFixed + totalVariable)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PiggyBank className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm text-slate-600">Savings Rate</span>
+                  </div>
+                  <span className="font-semibold text-emerald-600">{savingsRate.toFixed(1)}%</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  onSave();
+                  setShowConfirmation(false);
+                }}
+                className={cn(
+                  'w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium',
+                  'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors'
+                )}
+              >
+                <Home className="h-4 w-4" />
+                View Dashboard
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
