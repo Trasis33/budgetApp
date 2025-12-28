@@ -117,7 +117,7 @@
   - [x] Test: Applied amount replaces existing amount entirely
   - [x] Test: Suggestions persist in appliedSuggestions state
   - [x] Test: Applied button is disabled and shows checkmark
-- [ ] Task: Implement "Apply All" bulk functionality
+- [~] Task: Implement "Apply All" bulk functionality
   - [ ] Write failing test for bulk apply
   - [ ] Test: Apply all non-dismissed suggestions
   - [ ] Test: Updates all relevant budget amounts

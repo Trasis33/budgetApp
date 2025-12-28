@@ -122,6 +122,25 @@ export function Step3Recommendations({
     }, 300);
   };
 
+  const applyAllSuggestions = () => {
+    overspendingCategories.forEach((variance) => {
+      if (!appliedCategories.has(variance.categoryId) && !state.appliedSuggestions[variance.categoryId]) {
+        const budget = state.fixedExpenses[variance.categoryId];
+        if (budget) {
+          if (debounceTimeoutsRef.current[variance.categoryId]) {
+            clearTimeout(debounceTimeoutsRef.current[variance.categoryId]);
+          }
+
+          debounceTimeoutsRef.current[variance.categoryId] = setTimeout(() => {
+            setAppliedAmounts(prev => ({ ...prev, [variance.categoryId]: variance.suggestedAmount }));
+            updateFixed(variance.categoryId, variance.suggestedAmount);
+            setAppliedCategories(prev => new Set(prev).add(variance.categoryId));
+          }, 300);
+        }
+      }
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -150,10 +169,18 @@ export function Step3Recommendations({
 
         {overspendingCategories.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Overspending Alerts
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-red-600 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Overspending Alerts
+              </h3>
+              <button
+                onClick={applyAllSuggestions}
+                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+              >
+                Apply All
+              </button>
+            </div>
             <div className="space-y-3">
               {overspendingCategories.map((variance) => (
                 <div

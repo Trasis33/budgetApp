@@ -230,4 +230,97 @@ describe('Step3Recommendations - Apply Button Functionality', () => {
 
     expect(mockUpdateFixed).not.toHaveBeenCalled();
   });
+
+  describe('Apply All Functionality', () => {
+    const multipleOverspending = [
+      {
+        categoryId: 1,
+        categoryName: 'Groceries',
+        overagePercentage: 25,
+        suggestedReduction: 300,
+        suggestedAmount: 1200,
+        confidenceScore: 85,
+        categoryColor: 'teal'
+      },
+      {
+        categoryId: 2,
+        categoryName: 'Dining',
+        overagePercentage: 30,
+        suggestedReduction: 240,
+        suggestedAmount: 640,
+        confidenceScore: 80,
+        categoryColor: 'amber'
+      }
+    ];
+
+    it('applies all non-dismissed suggestions', async () => {
+      render(
+        <Step3Recommendations
+          state={mockState}
+          updateFixed={mockUpdateFixed}
+          updateVariable={mockUpdateVariable}
+          onBack={mockOnBack}
+          onSave={mockOnSave}
+          mockOverspending={multipleOverspending}
+        />
+      );
+
+      const applyAllButton = screen.getByText('Apply All');
+      fireEvent.click(applyAllButton);
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(mockUpdateFixed).toHaveBeenCalledWith(1, 1200);
+      expect(mockUpdateFixed).toHaveBeenCalledWith(2, 640);
+    });
+
+    it('updates all relevant budget amounts', async () => {
+      render(
+        <Step3Recommendations
+          state={mockState}
+          updateFixed={mockUpdateFixed}
+          updateVariable={mockUpdateVariable}
+          onBack={mockOnBack}
+          onSave={mockOnSave}
+          mockOverspending={multipleOverspending}
+        />
+      );
+
+      const applyAllButton = screen.getByText('Apply All');
+      fireEvent.click(applyAllButton);
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(mockUpdateFixed).toHaveBeenCalledTimes(2);
+      expect(mockUpdateFixed).toHaveBeenCalledWith(1, 1200);
+      expect(mockUpdateFixed).toHaveBeenCalledWith(2, 640);
+    });
+
+    it('marks all as applied visually', async () => {
+      render(
+        <Step3Recommendations
+          state={mockState}
+          updateFixed={mockUpdateFixed}
+          updateVariable={mockUpdateVariable}
+          onBack={mockOnBack}
+          onSave={mockOnSave}
+          mockOverspending={multipleOverspending}
+        />
+      );
+
+      const applyAllButton = screen.getByText('Apply All');
+      fireEvent.click(applyAllButton);
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      const appliedButtons = screen.getAllByText('Applied');
+      expect(appliedButtons.length).toBe(2);
+    });
+  });
 });
