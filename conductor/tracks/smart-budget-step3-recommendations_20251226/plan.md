@@ -126,9 +126,9 @@
 - [x] Task: Debounce apply operations to prevent rapid successive updates [b4eaee8]
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Suggestion Interaction Model' (Protocol in workflow.md)
 
-## Phase 6: Budget Summary Panel [ ]
+## Phase 6: Budget Summary Panel [~]
 
-- [ ] Task: Implement budget totals display (Income, Fixed, Variable, Unallocated)
+- [~] Task: Implement budget totals display (Income, Fixed, Variable, Unallocated)
   - [ ] Write failing tests for totals calculation
   - [ ] Test: Total income displays correctly
   - [ ] Test: Fixed expenses total calculates correctly

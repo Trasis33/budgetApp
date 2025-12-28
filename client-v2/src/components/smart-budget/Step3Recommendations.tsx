@@ -97,6 +97,11 @@ export function Step3Recommendations({
   const trendingCategories = getTrendingCategories();
   const seasonalCategories = getSeasonalCategories();
 
+  const totalFixed = Object.values(state.fixedExpenses).reduce((sum, amount) => sum + amount, 0);
+  const totalVariable = Object.values(state.variableAllocations).reduce((sum, amount) => sum + amount, 0);
+  const unallocated = state.income - totalFixed - totalVariable;
+  const isOverallocated = unallocated < 0;
+
   const applySuggestion = (categoryId: number, suggestedAmount: number, isFixed: boolean = true) => {
     if (appliedCategories.has(categoryId) || state.appliedSuggestions[categoryId]) {
       return;
@@ -409,6 +414,33 @@ export function Step3Recommendations({
             No overspending detected. Great job staying on budget!
           </div>
         )}
+
+        <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900 mb-3">Budget Summary</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm text-slate-600">Total Income</div>
+              <div className="text-xl font-semibold text-slate-900">{formatCurrency(state.income)}</div>
+            </div>
+            <div>
+              <div className="text-sm text-slate-600">Fixed Expenses</div>
+              <div className="text-xl font-semibold text-slate-900">{formatCurrency(totalFixed)}</div>
+            </div>
+            <div>
+              <div className="text-sm text-slate-600">Variable Budgets</div>
+              <div className="text-xl font-semibold text-slate-900">{formatCurrency(totalVariable)}</div>
+            </div>
+            <div>
+              <div className="text-sm text-slate-600">Unallocated</div>
+              <div className={cn(
+                'text-xl font-semibold',
+                isOverallocated ? 'text-red-600' : 'text-emerald-600'
+              )}>
+                {formatCurrency(unallocated)}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-3 pt-4 border-t border-slate-200">
