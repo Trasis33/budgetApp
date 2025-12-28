@@ -90,21 +90,33 @@ export function Step3Recommendations({
   useEffect(() => {
     const loadOptimizationData = async () => {
       if (mockOverspending || mockUnderutilized || mockTrending || mockSeasonal) {
+        console.log('[Step3] Using mock data for testing');
         return;
       }
 
-      if (!isMounted.current) return;
-
+      console.log('[Step3] Fetching optimization data from API...');
       setIsLoading(true);
+
       try {
         const data = await optimizationService.getAnalysis();
-        if (isMounted.current) {
-          setOptimizationData(data);
+        console.log('[Step3] Optimization API response:', data);
+
+        if (!isMounted.current) {
+          console.warn('[Step3] Component unmounted, skipping state update');
+          return;
         }
+
+        setOptimizationData(data);
+
+        console.log('[Step3] Data loaded successfully:');
+        console.log('  - Budget variances:', data.budgetVariances?.length || 0);
+        console.log('  - Patterns:', Object.keys(data.patterns || {}).length);
+        console.log('  - Seasonal trends:', Object.keys(data.seasonalTrends || {}).length);
+
       } catch (error) {
-        console.error('Failed to load optimization data:', error);
+        console.error('[Step3] Failed to load optimization data:', error);
         if (isMounted.current) {
-          toast.error('Failed to load budget recommendations');
+          toast.error(`Failed to load recommendations: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       } finally {
         if (isMounted.current) {
@@ -118,41 +130,77 @@ export function Step3Recommendations({
 
   const getOverspendingCategories = (): BudgetVariance[] => {
     if (mockOverspending) return mockOverspending;
-    if (!optimizationData?.budgetVariances) return [];
+    if (!optimizationData?.budgetVariances) {
+      console.log('[Step3] No budget variances in optimization data');
+      return [];
+    }
 
-    return optimizationData.budgetVariances
-      .filter(v => v.overagePercentage > 20)
-      .map(v => {
-        const category = categories.find(c => c.name === v.name);
-        return {
-          categoryId: category?.id || 0,
-          categoryName: v.name,
-          overagePercentage: v.overagePercentage,
-          suggestedReduction: v.suggestedReduction,
-          suggestedAmount: v.budgetAmount - v.suggestedReduction,
-          confidenceScore: 85,
-          categoryColor: category?.color || 'amber'
-        };
-      });
+    const filtered = optimizationData.budgetVariances.filter(v => {
+      const matches = v.overagePercentage > 20 && v.budgetAmount > 0;
+      if (!matches) {
+        console.log(`[Step3] Skipping ${v.name}: overage=${v.overagePercentage}%, budget=${v.budgetAmount}`);
+      }
+      return matches;
+    });
+
+    const mapped = filtered.map(v => {
+      const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
+
+      if (!category) {
+        console.warn(`[Step3] Category not found: "${v.name}" - Available: ${categories.map(c => c.name).join(', ')}`);
+      } else {
+        console.log(`[Step3] Matched category "${v.name}" to ID ${category.id}`);
+      }
+
+      return {
+        categoryId: category?.id || 0,
+        categoryName: v.name,
+        overagePercentage: v.overagePercentage,
+        suggestedReduction: v.suggestedReduction,
+        suggestedAmount: v.budgetAmount - v.suggestedReduction,
+        confidenceScore: 85,
+        categoryColor: category?.color || 'amber'
+      };
+    });
+
+    return mapped;
   };
 
   const getUnderutilizedCategories = (): UnderutilizedBudget[] => {
     if (mockUnderutilized) return mockUnderutilized;
-    if (!optimizationData?.budgetVariances) return [];
+    if (!optimizationData?.budgetVariances) {
+      console.log('[Step3] No budget variances in optimization data');
+      return [];
+    }
 
-    return optimizationData.budgetVariances
-      .filter(v => v.unusedAmount > 0 && v.budgetAmount > 0)
-      .map(v => {
-        const usagePercentage = ((v.budgetAmount - v.unusedAmount) / v.budgetAmount) * 100;
-        const cat = categories.find(c => c.name === v.name);
-        return {
-          categoryId: cat?.id || 0,
-          categoryName: v.name,
-          unusedAmount: v.unusedAmount,
-          usagePercentage: Math.round(usagePercentage),
-          categoryColor: cat?.color || 'teal'
-        };
-      });
+    const filtered = optimizationData.budgetVariances.filter(v => {
+      const matches = v.unusedAmount > 0 && v.budgetAmount > 0;
+      if (!matches) {
+        console.log(`[Step3] Skipping ${v.name}: unused=${v.unusedAmount}, budget=${v.budgetAmount}`);
+      }
+      return matches;
+    });
+
+    const mapped = filtered.map(v => {
+      const usagePercentage = ((v.budgetAmount - v.unusedAmount) / v.budgetAmount) * 100;
+      const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
+
+      if (!category) {
+        console.warn(`[Step3] Category not found: "${v.name}" - Available: ${categories.map(c => c.name).join(', ')}`);
+      } else {
+        console.log(`[Step3] Matched underutilized category "${v.name}" to ID ${category.id}`);
+      }
+
+      return {
+        categoryId: category?.id || 0,
+        categoryName: v.name,
+        unusedAmount: v.unusedAmount,
+        usagePercentage: Math.round(usagePercentage),
+        categoryColor: category?.color || 'teal'
+      };
+    });
+
+    return mapped;
   };
 
   const getTrendingCategories = (): TrendingBudget[] => {
@@ -182,10 +230,29 @@ export function Step3Recommendations({
     return [];
   };
 
-  const overspendingCategories = React.useMemo(() => getOverspendingCategories(), [mockOverspending]);
-  const underutilizedCategories = React.useMemo(() => getUnderutilizedCategories(), [mockUnderutilized]);
-  const trendingCategories = React.useMemo(() => getTrendingCategories(), [mockTrending]);
-  const seasonalCategories = React.useMemo(() => getSeasonalCategories(), [mockSeasonal]);
+  const overspendingCategories = React.useMemo(() => {
+    const result = getOverspendingCategories();
+    console.log('[Step3] Overspending categories mapped:', result.length, result);
+    return result;
+  }, [mockOverspending, categories, state.fixedExpenses, optimizationData]);
+
+  const underutilizedCategories = React.useMemo(() => {
+    const result = getUnderutilizedCategories();
+    console.log('[Step3] Underutilized categories mapped:', result.length, result);
+    return result;
+  }, [mockUnderutilized, categories, state.variableAllocations, optimizationData]);
+
+  const trendingCategories = React.useMemo(() => {
+    const result = getTrendingCategories();
+    console.log('[Step3] Trending categories mapped:', result.length, result);
+    return result;
+  }, [mockTrending, categories, optimizationData]);
+
+  const seasonalCategories = React.useMemo(() => {
+    const result = getSeasonalCategories();
+    console.log('[Step3] Seasonal categories mapped:', result.length, result);
+    return result;
+  }, [mockSeasonal, optimizationData]);
 
   const totalFixed = React.useMemo(
     () => Object.values(state.fixedExpenses).reduce((sum, amount) => sum + amount, 0),
