@@ -58,7 +58,7 @@ export function calculateWeightedAllocations(
       minPct: cat.budget_min_pct,
       maxPct: cat.budget_max_pct,
       rawShare: share,
-      allocatedAmount: Math.round(bucketBudget * share),
+      allocatedAmount: Math.round((bucketBudget * share) / 10) * 10,
       percentOfBucket: share * 100,
       constraintApplied: null,
     };
@@ -119,10 +119,10 @@ export function calculateWeightedAllocations(
       // Redistribute to unlocked categories
       for (const alloc of allocations) {
         if (!lockedCategories.has(alloc.categoryId)) {
-          const share = unlockedWeight > 0 
-            ? alloc.weight / unlockedWeight 
+          const share = unlockedWeight > 0
+            ? alloc.weight / unlockedWeight
             : 1 / (allocations.length - lockedCategories.size);
-          alloc.allocatedAmount = Math.round(remainingBudget * share);
+          alloc.allocatedAmount = Math.round((remainingBudget * share) / 10) * 10;
           alloc.percentOfBucket = (alloc.allocatedAmount / bucketBudget) * 100;
         }
       }
