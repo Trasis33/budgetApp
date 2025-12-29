@@ -1,48 +1,75 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, AlertTriangle, TrendingUp, TrendingDown, Minus, Home, PieChart, PiggyBank, Wallet } from 'lucide-react';
+import { ArrowLeft, Check, AlertTriangle, Home, PieChart, PiggyBank, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { WizardState } from './types';
 import { cn } from '@/lib/utils';
-import { TrendSparkline } from './TrendSparkline';
 import { optimizationService, AnalysisResponse } from '@/api/services/optimizationService';
-import { getLatestVariancePerCategorySafe } from '@/lib/budgetAggregation';
+import { OverspendingCard } from './OverspendingCard';
+import { UnderspendingCard } from './UnderspendingCard';
+import { OnTrackSummary } from './OnTrackSummary';
+import { DataIntegrityBanner } from './DataIntegrityBanner';
 
-interface BudgetVariance {
+// Backend insight types (enriched with frontend data)
+interface OverspendingInsight {
+  type: 'overspending';
   categoryId: number;
   categoryName: string;
+  categoryColor: string;
+  budgetAmount: number;
+  actualAmount: number;
+  overageAmount: number;
   overagePercentage: number;
-  suggestedReduction: number;
-  suggestedAmount: number;
-  confidenceScore: number;
-  categoryColor: string;
+  isRecurringPattern: boolean;
+  averageMonthlySpend: number;
+  highestRecentSpend: number;
+  lowestRecentSpend: number;
+  realisticBudgetTarget: number;
+  suggestedSpendingReduction: number;
+  reductionDifficulty: 'easy' | 'moderate' | 'challenging';
+  tips: Array<{
+    id: string;
+    text: string;
+    potentialSavings?: number;
+    difficulty: 'easy' | 'moderate' | 'hard';
+  }>;
 }
 
-interface UnderutilizedBudget {
+interface UnderspendingInsight {
+  type: 'underspending';
   categoryId: number;
   categoryName: string;
+  categoryColor: string;
+  budgetAmount: number;
+  actualAmount: number;
   unusedAmount: number;
-  usagePercentage: number;
-  categoryColor: string;
+  utilizationPercentage: number;
+  recommendedAction: 'reallocate' | 'reduce_budget' | 'boost_savings';
+  suggestedNewBudget: number;
+  potentialReallocation: number;
+  isConsistentPattern: boolean;
+  averageUtilization: number;
 }
 
-interface TrendingBudget {
+interface OnTrackInsight {
+  type: 'on_track';
   categoryId: number;
   categoryName: string;
-  trend: 'increasing' | 'decreasing' | 'stable';
-  percentageChange: number;
-  monthlyData: { month: string; value: number }[];
   categoryColor: string;
+  budgetAmount: number;
+  actualAmount: number;
+  utilizationPercentage: number;
+  consecutiveOnTrackMonths: number;
+  trend: 'improving' | 'stable' | 'slightly_increasing';
+  message: string;
 }
 
-interface SeasonalPattern {
-  categoryId: number;
-  categoryName: string;
-  patternType: 'spike' | 'trough' | 'consistent';
-  upcomingSpikeMonth: string;
-  suggestedPreparation: number;
-  categoryColor: string;
+interface StructuredInsights {
+  overspending: Array<Omit<OverspendingInsight, 'categoryId' | 'categoryColor'>>;
+  underspending: Array<Omit<UnderspendingInsight, 'categoryId' | 'categoryColor'>>;
+  onTrack: Array<Omit<OnTrackInsight, 'categoryId' | 'categoryColor'>>;
 }
+
 
 interface Step3Props {
   state: WizardState;
@@ -51,10 +78,6 @@ interface Step3Props {
   onBack: () => void;
   onSave: () => void;
   categories?: { id: number; name: string; color: string; icon?: string }[];
-  mockOverspending?: BudgetVariance[];
-  mockUnderutilized?: UnderutilizedBudget[];
-  mockTrending?: TrendingBudget[];
-  mockSeasonal?: SeasonalPattern[];
 }
 
 export function Step3Recommendations({
@@ -63,24 +86,22 @@ export function Step3Recommendations({
   updateVariable,
   onBack,
   onSave,
-  categories = [],
-  mockOverspending,
-  mockUnderutilized,
-  mockTrending,
-  mockSeasonal
+  categories = []
 }: Step3Props) {
-  const [appliedCategories, setAppliedCategories] = React.useState<Set<number>>(new Set());
-  const debounceTimeoutsRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-  const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [optimizationData, setOptimizationData] = React.useState<AnalysisResponse | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const isMounted = React.useRef(true);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [optimizationData, setOptimizationData] = useState<(AnalysisResponse & { structuredInsights?: StructuredInsights }) | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const isMounted = useRef(true);
+  
+  const [overspendingInsights, setOverspendingInsights] = useState<OverspendingInsight[]>([]);
+  const [underspendingInsights, setUnderspendingInsights] = useState<UnderspendingInsight[]>([]);
+  const [onTrackInsights, setOnTrackInsights] = useState<OnTrackInsight[]>([]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -89,16 +110,19 @@ export function Step3Recommendations({
 
   useEffect(() => {
     const loadOptimizationData = async () => {
-      if (mockOverspending || mockUnderutilized || mockTrending || mockSeasonal) {
-        console.log('[Step3] Using mock data for testing');
-        return;
-      }
-
       console.log('[Step3] Fetching optimization data from API...');
       setIsLoading(true);
 
       try {
-        const data = await optimizationService.getAnalysis();
+        // Combine fixed and variable allocations into proposed budgets
+        const proposedBudgets: Record<number, number> = {
+          ...state.fixedExpenses,
+          ...state.variableAllocations
+        };
+        
+        console.log('[Step3] Sending proposed budgets from Step 2:', proposedBudgets);
+        
+        const data = await optimizationService.getAnalysis(proposedBudgets);
         console.log('[Step3] Optimization API response:', data);
 
         if (!isMounted.current) {
@@ -111,7 +135,6 @@ export function Step3Recommendations({
         console.log('[Step3] Data loaded successfully:');
         console.log('  - Budget variances:', data.budgetVariances?.length || 0);
         console.log('  - Patterns:', Object.keys(data.patterns || {}).length);
-        console.log('  - Seasonal trends:', Object.keys(data.seasonalTrends || {}).length);
 
       } catch (error) {
         console.error('[Step3] Failed to load optimization data:', error);
@@ -126,163 +149,70 @@ export function Step3Recommendations({
     };
 
     loadOptimizationData();
-  }, [mockOverspending, mockUnderutilized, mockTrending, mockSeasonal]);
+  }, [state.fixedExpenses, state.variableAllocations]);
 
-  const getOverspendingCategories = (): BudgetVariance[] => {
-    if (mockOverspending) return mockOverspending;
-    if (!optimizationData?.budgetVariances) {
-      console.log('[Step3] No budget variances in optimization data');
-      return [];
+  // Process recommendations from backend
+  useEffect(() => {
+    if (!optimizationData?.structuredInsights) {
+      console.log('[Step3] No structured insights from backend yet');
+      return;
     }
 
-    // FIX: Use latest variance per category instead of summing across months
-    // This prevents meaningless cumulative totals (e.g., 3 months of 5000 = 15000)
-    const latestVariances = getLatestVariancePerCategorySafe(
-      optimizationData.budgetVariances
-    );
+    const { overspending, underspending, onTrack } = optimizationData.structuredInsights;
 
-    // Filter for overspending - 20% threshold
-    const overspending = latestVariances.filter(v => {
-      const matches = v.overagePercentage >= 20 && v.budgetAmount > 0 && v.actualAmount > 0;
-      if (!matches) {
-        console.log(`[Step3] Skipping ${v.name}: overage=${v.overagePercentage}%, budget=${v.budgetAmount}, actual=${v.actualAmount}`);
-      }
-      return matches;
-    });
-
-    const mapped = overspending.map(v => {
-      const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
-
-      if (!category) {
-        console.warn(`[Step3] Category not found: "${v.name}" - Available: ${categories.map(c => c.name).join(', ')}`);
-      } else {
-        console.log(`[Step3] Matched category "${v.name}" to ID ${category.id}`);
-      }
-
-      const suggestedAmount = Math.max(0, v.budgetAmount - v.suggestedReduction);
-
+    // Map category names to IDs and add color information
+    const enrichedOverspending = overspending.map(insight => {
+      const category = categories.find(c => c.name.trim().toLowerCase() === insight.categoryName.trim().toLowerCase());
       return {
+        ...insight,
         categoryId: category?.id || 0,
-        categoryName: v.name,
-        overagePercentage: v.overagePercentage,
-        suggestedReduction: v.suggestedReduction,
-        suggestedAmount,
-        confidenceScore: 85,
         categoryColor: category?.color || 'amber'
       };
     });
 
-    console.log('[Step3] Overspending categories after aggregation:', mapped.length, 'unique categories');
-
-    return mapped;
-  };
-
-  const getUnderutilizedCategories = (): UnderutilizedBudget[] => {
-    if (mockUnderutilized) return mockUnderutilized;
-    if (!optimizationData?.budgetVariances) {
-      console.log('[Step3] No budget variances in optimization data');
-      return [];
-    }
-
-    // FIX: Use latest variance per category instead of summing across months
-    const latestVariances = getLatestVariancePerCategorySafe(
-      optimizationData.budgetVariances
-    );
-
-    // Filter for underutilized - has unused amount
-    const underutilized = latestVariances.filter(v =>
-      v.unusedAmount > 0 && v.budgetAmount > 0
-    );
-
-    const mapped = underutilized.map(v => {
-      const usagePercentage = ((v.budgetAmount - v.unusedAmount) / v.budgetAmount) * 100;
-      const category = categories.find(c => c.name.trim().toLowerCase() === v.name.trim().toLowerCase());
-
-      if (!category) {
-        console.warn(`[Step3] Category not found: "${v.name}" - Available: ${categories.map(c => c.name).join(', ')}`);
-      } else {
-        console.log(`[Step3] Matched underutilized category "${v.name}" to ID ${category.id}`);
-      }
-
+    const enrichedUnderspending = underspending.map(insight => {
+      const category = categories.find(c => c.name.trim().toLowerCase() === insight.categoryName.trim().toLowerCase());
       return {
+        ...insight,
         categoryId: category?.id || 0,
-        categoryName: v.name,
-        unusedAmount: v.unusedAmount,
-        usagePercentage: Math.round(usagePercentage),
         categoryColor: category?.color || 'teal'
       };
     });
 
-    console.log('[Step3] Underutilized categories after aggregation:', mapped.length, 'unique categories');
+    const enrichedOnTrack = onTrack.map(insight => {
+      const category = categories.find(c => c.name.trim().toLowerCase() === insight.categoryName.trim().toLowerCase());
+      return {
+        ...insight,
+        categoryId: category?.id || 0,
+        categoryColor: category?.color || 'emerald'
+      };
+    });
 
-    return mapped;
-  };
+    setOverspendingInsights(enrichedOverspending);
+    setUnderspendingInsights(enrichedUnderspending);
+    setOnTrackInsights(enrichedOnTrack);
 
-  const getTrendingCategories = (): TrendingBudget[] => {
-    if (mockTrending) return mockTrending;
-    if (!optimizationData?.patterns) return [];
+    console.log('[Step3] Backend recommendations loaded:', {
+      overspending: enrichedOverspending.length,
+      underspending: enrichedUnderspending.length,
+      onTrack: enrichedOnTrack.length
+    });
+  }, [optimizationData, categories]);
 
-    return Object.entries(optimizationData.patterns)
-      .map(([categoryName, pattern]) => {
-        const cat = categories.find(c => c.name === categoryName);
-        return {
-          categoryId: cat?.id || 0,
-          categoryName,
-          trend: pattern.trend,
-          percentageChange: pattern.enhancedTrend.percentageChange,
-          monthlyData: pattern.data.map(d => ({
-            month: d.month.substring(0, 7),
-            value: d.amount
-          })),
-          categoryColor: cat?.color || 'indigo'
-        };
-      })
-      .filter(t => t.monthlyData.length >= 3);
-  };
-
-  const getSeasonalCategories = (): SeasonalPattern[] => {
-    if (mockSeasonal) return mockSeasonal;
-    return [];
-  };
-
-  const overspendingCategories = React.useMemo(() => {
-    const result = getOverspendingCategories();
-    console.log('[Step3] Overspending categories mapped:', result.length, result);
-    return result;
-  }, [mockOverspending, categories, state.fixedExpenses, optimizationData]);
-
-  const underutilizedCategories = React.useMemo(() => {
-    const result = getUnderutilizedCategories();
-    console.log('[Step3] Underutilized categories mapped:', result.length, result);
-    return result;
-  }, [mockUnderutilized, categories, state.variableAllocations, optimizationData]);
-
-  const trendingCategories = React.useMemo(() => {
-    const result = getTrendingCategories();
-    console.log('[Step3] Trending categories mapped:', result.length, result);
-    return result;
-  }, [mockTrending, categories, optimizationData]);
-
-  const seasonalCategories = React.useMemo(() => {
-    const result = getSeasonalCategories();
-    console.log('[Step3] Seasonal categories mapped:', result.length, result);
-    return result;
-  }, [mockSeasonal, optimizationData]);
-
-  const totalFixed = React.useMemo(
+  const totalFixed = useMemo(
     () => Object.values(state.fixedExpenses).reduce((sum, amount) => sum + amount, 0),
     [state.fixedExpenses]
   );
-  const totalVariable = React.useMemo(
+  const totalVariable = useMemo(
     () => Object.values(state.variableAllocations).reduce((sum, amount) => sum + amount, 0),
     [state.variableAllocations]
   );
-  const unallocated = React.useMemo(
+  const unallocated = useMemo(
     () => state.income - totalFixed - totalVariable,
     [state.income, totalFixed, totalVariable]
   );
   const isOverallocated = unallocated < 0;
-  const savingsRate = React.useMemo(
+  const savingsRate = useMemo(
     () => state.income > 0 ? ((state.income - totalFixed - totalVariable) / state.income) * 100 : 0,
     [state.income, totalFixed, totalVariable]
   );
@@ -296,46 +226,37 @@ export function Step3Recommendations({
     setShowConfirmation(true);
   };
 
-  const applySuggestion = (categoryId: number, suggestedAmount: number, isFixed: boolean = true) => {
-    if (appliedCategories.has(categoryId) || state.appliedSuggestions[categoryId]) {
-      return;
+  const handleAdjustBudget = (categoryId: number, newAmount: number) => {
+    const isFixed = state.fixedExpenses[categoryId] !== undefined;
+    if (isFixed) {
+      updateFixed(categoryId, newAmount);
+    } else {
+      updateVariable(categoryId, newAmount);
     }
-
-    const budget = isFixed ? state.fixedExpenses[categoryId] : state.variableAllocations[categoryId];
-    if (!budget) {
-      return;
-    }
-
-    if (debounceTimeoutsRef.current[categoryId]) {
-      clearTimeout(debounceTimeoutsRef.current[categoryId]);
-    }
-
-    debounceTimeoutsRef.current[categoryId] = setTimeout(() => {
-      if (isFixed) {
-        updateFixed(categoryId, suggestedAmount);
-      } else {
-        updateVariable(categoryId, suggestedAmount);
-      }
-      setAppliedCategories(prev => new Set(prev).add(categoryId));
-    }, 300);
+    toast.success('Budget adjusted successfully');
   };
 
-  const applyAllSuggestions = () => {
-    overspendingCategories.forEach((variance) => {
-      if (!appliedCategories.has(variance.categoryId) && !state.appliedSuggestions[variance.categoryId]) {
-        const budget = state.fixedExpenses[variance.categoryId];
-        if (budget) {
-          if (debounceTimeoutsRef.current[variance.categoryId]) {
-            clearTimeout(debounceTimeoutsRef.current[variance.categoryId]);
-          }
-
-          debounceTimeoutsRef.current[variance.categoryId] = setTimeout(() => {
-            updateFixed(variance.categoryId, variance.suggestedAmount);
-            setAppliedCategories(prev => new Set(prev).add(variance.categoryId));
-          }, 300);
-        }
-      }
-    });
+  const handleReallocate = (fromCategoryId: number, toCategoryId: number, amount: number) => {
+    const fromIsFixed = state.fixedExpenses[fromCategoryId] !== undefined;
+    const toIsFixed = state.fixedExpenses[toCategoryId] !== undefined;
+    
+    if (fromIsFixed) {
+      const currentAmount = state.fixedExpenses[fromCategoryId];
+      updateFixed(fromCategoryId, currentAmount - amount);
+    } else {
+      const currentAmount = state.variableAllocations[fromCategoryId];
+      updateVariable(fromCategoryId, currentAmount - amount);
+    }
+    
+    if (toIsFixed) {
+      const currentAmount = state.fixedExpenses[toCategoryId];
+      updateFixed(toCategoryId, currentAmount + amount);
+    } else {
+      const currentAmount = state.variableAllocations[toCategoryId];
+      updateVariable(toCategoryId, currentAmount + amount);
+    }
+    
+    toast.success('Budget reallocated successfully');
   };
 
   return (
@@ -360,250 +281,66 @@ export function Step3Recommendations({
       </div>
 
       <div className="flex-1 overflow-auto">
-        <p className="text-slate-600 mb-4">
-          Review personalized insights based on your spending patterns.
-        </p>
+        <DataIntegrityBanner />
 
-        {overspendingCategories.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-red-600 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Overspending Alerts
-              </h3>
-              <button
-                onClick={applyAllSuggestions}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-              >
-                Apply All
-              </button>
-            </div>
-            <div className="space-y-3">
-              {overspendingCategories.map((variance) => (
-                <div
-                  key={`overspending-${variance.categoryId}-${variance.categoryName}`}
-                  data-testid={`overspending-${variance.categoryId}`}
-                  className={cn(
-                    'p-4 rounded-xl border-l-4 shadow-sm',
-                    variance.overagePercentage >= 30 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
-                        style={{ backgroundColor: `var(--theme-${variance.categoryColor})` }}
-                      >
-                        {variance.categoryName.charAt(0)}
-                      </div>
-                      <span className="font-semibold text-slate-900">{variance.categoryName}</span>
-                    </div>
-                    <span className={cn(
-                      'text-xs font-semibold px-2 py-1 rounded-full',
-                      variance.overagePercentage >= 30 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                    )}>
-                      +{variance.overagePercentage}% over budget
-                    </span>
-                  </div>
-                    <div className="flex items-center justify-between">
-                    <div className="text-sm text-slate-600">
-                      <span className="font-medium">Reduce by: </span>
-                      <span className="text-slate-900 font-semibold">{formatCurrency(variance.suggestedReduction)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => applySuggestion(variance.categoryId, Math.round(state.fixedExpenses[variance.categoryId] * 0.8))}
-                        disabled={appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]}
-                        className={cn(
-                          'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                          variance.overagePercentage >= 30 ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-600 text-white hover:bg-amber-700',
-                          (appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]) && 'opacity-50 cursor-not-allowed'
-                        )}
-                      >
-                        {(appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]) ? (
-                          <Check className="h-4 w-4" data-testid="check-icon" />
-                        ) : (
-                          <Check className="h-4 w-4" />
-                        )}
-                        {(appliedCategories.has(variance.categoryId) || !!state.appliedSuggestions[variance.categoryId]) ? 'Applied' : 'Apply'}
-                      </button>
-                      <span className="text-xs text-slate-500">
-                        {variance.confidenceScore}% confidence
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {isLoading && (
+          <div className="text-center py-8 text-slate-600">
+            Loading recommendations...
           </div>
         )}
 
-        {underutilizedCategories.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-emerald-600 mb-3 flex items-center gap-2">
-              <Check className="h-5 w-5" />
-              Underutilized Budgets
-            </h3>
-            <div className="space-y-3">
-              {underutilizedCategories.map((underutilized) => (
-                <div
-                  key={`underutilized-${underutilized.categoryId}-${underutilized.categoryName}`}
-                  data-testid={`underutilized-${underutilized.categoryId}`}
-                  className="p-4 rounded-xl border-l-4 shadow-sm bg-emerald-50 border-emerald-200"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
-                        style={{ backgroundColor: `var(--theme-${underutilized.categoryColor})` }}
-                      >
-                        {underutilized.categoryName.charAt(0)}
-                      </div>
-                      <span className="font-semibold text-slate-900">{underutilized.categoryName}</span>
-                    </div>
-                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                      {underutilized.usagePercentage}% used
-                    </span>
-                  </div>
-                  <div className="text-sm text-slate-600">
-                    <span className="font-medium">Unused: </span>
-                    <span className="text-slate-900 font-semibold">{formatCurrency(underutilized.unusedAmount)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {!isLoading && overspendingInsights.length === 0 && underspendingInsights.length === 0 && onTrackInsights.length === 0 && (
+          <div className="text-center py-8 text-slate-600">
+            No recommendations available yet. We need more spending data to provide insights.
           </div>
         )}
 
-        {trendingCategories.length > 0 && (
+        {overspendingInsights.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-indigo-600 mb-3 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Spending Trends
-            </h3>
-            <div className="space-y-3">
-              {trendingCategories.map((trend) => (
-                <div
-                  key={`trend-${trend.categoryId}-${trend.categoryName}`}
-                  data-testid={`trend-card-${trend.categoryId}`}
-                  className={cn(
-                    'p-4 rounded-xl border-l-4 shadow-sm',
-                    trend.trend === 'increasing' && 'bg-rose-50 border-rose-200',
-                    trend.trend === 'decreasing' && 'bg-emerald-50 border-emerald-200',
-                    trend.trend === 'stable' && 'bg-indigo-50 border-indigo-200'
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
-                        style={{ backgroundColor: `var(--theme-${trend.categoryColor})` }}
-                      >
-                        {trend.categoryName.charAt(0)}
-                      </div>
-                      <span className="font-semibold text-slate-900">{trend.categoryName}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1',
-                          trend.trend === 'increasing' && 'bg-rose-100 text-rose-700',
-                          trend.trend === 'decreasing' && 'bg-emerald-100 text-emerald-700',
-                          trend.trend === 'stable' && 'bg-indigo-100 text-indigo-700'
-                        )}
-                      >
-                        {trend.trend === 'increasing' && <TrendingUp className="h-3 w-3" />}
-                        {trend.trend === 'decreasing' && <TrendingDown className="h-3 w-3" />}
-                        {trend.trend === 'stable' && <Minus className="h-3 w-3" />}
-                        {Math.abs(trend.percentageChange)}%
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        confidence: 85%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-[60px] w-full">
-                    <TrendSparkline
-                      data={trend.monthlyData}
-                      trend={trend.trend}
-                      height={60}
-                      width={400}
-                    />
-                  </div>
-                 </div>
-               ))}
-             </div>
-           </div>
-         )}
-
-        {seasonalCategories.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-amber-600 mb-3 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-red-600 mb-4 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Seasonal Patterns
+              Attention Needed ({overspendingInsights.length} {overspendingInsights.length === 1 ? 'category' : 'categories'})
             </h3>
-            <div className="space-y-3">
-              {seasonalCategories.map((seasonal) => (
-                <div
-                  key={`seasonal-${seasonal.categoryId}-${seasonal.categoryName}`}
-                  data-testid={`seasonal-${seasonal.categoryId}`}
-                  className={cn(
-                    'p-4 rounded-xl border-l-4 shadow-sm',
-                    seasonal.patternType === 'spike' && 'bg-rose-50 border-rose-200',
-                    seasonal.patternType === 'trough' && 'bg-emerald-50 border-emerald-200',
-                    seasonal.patternType === 'consistent' && 'bg-indigo-50 border-indigo-200'
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
-                        style={{ backgroundColor: `var(--theme-${seasonal.categoryColor})` }}
-                      >
-                        {seasonal.categoryName.charAt(0)}
-                      </div>
-                      <span className="font-semibold text-slate-900">{seasonal.categoryName}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1',
-                          seasonal.patternType === 'spike' && 'bg-rose-100 text-rose-700',
-                          seasonal.patternType === 'trough' && 'bg-emerald-100 text-emerald-700',
-                          seasonal.patternType === 'consistent' && 'bg-indigo-100 text-indigo-700'
-                        )}
-                      >
-                        {seasonal.patternType === 'spike' && '⚡ Spike'}
-                        {seasonal.patternType === 'trough' && '📉 Consistent'}
-                        {seasonal.patternType === 'consistent' && '➡️ Average'}
-                      </span>
-                      {seasonal.upcomingSpikeMonth && (
-                        <span className="text-xs text-amber-600 flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          {seasonal.upcomingSpikeMonth}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-slate-600">
-                      <span className="font-medium">3-month average: </span>
-                      <span className="text-slate-900 font-semibold">{formatCurrency(seasonal.suggestedPreparation)}</span>
-                    </div>
-                    <div className="text-sm text-slate-600">
-                      <span className="font-medium">Typical range: </span>
-                      <span className="text-slate-900">{formatCurrency(seasonal.suggestedPreparation * 0.8)} - {formatCurrency(seasonal.suggestedPreparation * 1.2)}</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="space-y-4">
+              {overspendingInsights.map((insight) => (
+                <OverspendingCard
+                  key={insight.categoryId}
+                  insight={insight}
+                  onAdjustBudget={handleAdjustBudget}
+                  formatCurrency={formatCurrency}
+                />
               ))}
             </div>
           </div>
         )}
 
-        {overspendingCategories.length === 0 && (
-          <div className="text-slate-400 text-sm">
-            No overspending detected. Great job staying on budget!
+        {underspendingInsights.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-emerald-600 mb-4 flex items-center gap-2">
+              <Check className="h-5 w-5" />
+              Opportunities ({underspendingInsights.length} {underspendingInsights.length === 1 ? 'category' : 'categories'})
+            </h3>
+            <div className="space-y-4">
+              {underspendingInsights.map((insight) => (
+                <UnderspendingCard
+                  key={insight.categoryId}
+                  insight={insight}
+                  overspendingCategories={overspendingInsights}
+                  onAdjustBudget={handleAdjustBudget}
+                  onReallocate={handleReallocate}
+                  formatCurrency={formatCurrency}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {onTrackInsights.length > 0 && (
+          <div className="mb-6">
+            <OnTrackSummary
+              insights={onTrackInsights}
+              formatCurrency={formatCurrency}
+            />
           </div>
         )}
 

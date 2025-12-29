@@ -9,12 +9,36 @@ router.get('/analyze', async (req, res) => {
   try {
     const scopeContext = await resolveScopeContext(knex, req.user.id, req.query.scope);
     const optimizer = new BudgetOptimizer(scopeContext);
-    const analysis = await optimizer.analyzeSpendingPatterns();
     
-    // Store recommendations in database
+    // Parse proposed budgets from query params if provided (from Step 2)
+    let proposedBudgets = null;
+    if (req.query.proposedBudgets) {
+      try {
+        proposedBudgets = JSON.parse(req.query.proposedBudgets);
+        console.log('[/analyze] Received proposed budgets:', JSON.stringify(proposedBudgets));
+      } catch (parseError) {
+        console.error('[/analyze] Failed to parse proposedBudgets:', parseError);
+      }
+    } else {
+      console.log('[/analyze] No proposed budgets provided');
+    }
+    
+    const analysis = await optimizer.analyzeSpendingPatterns(proposedBudgets);
+    
+    // Store recommendations in database (legacy format)
     await storeRecommendations(req.user.id, scopeContext.scope, analysis.recommendations);
     
-    const payload = { ...analysis };
+    const payload = { 
+      patterns: analysis.patterns,
+      seasonalTrends: analysis.seasonalTrends,
+      budgetVariances: analysis.budgetVariances,
+      recommendations: analysis.recommendations,
+      structuredInsights: analysis.structuredInsights || {
+        overspending: [],
+        underspending: [],
+        onTrack: []
+      }
+    };
 
     res.json({
       scope: scopeContext.scope,

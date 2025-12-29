@@ -5,12 +5,52 @@
  * 
  * @class BudgetOptimizer
  * @created 2025-07-12
+ * @updated 2025-12-29 - Added enhanced recommendation logic with category-specific tips
  * @filepath /Users/fredriklanga/Documents/projects2024/budgetApp/server/utils/budgetOptimizer.js
  */
 // Budget Optimizer - Analysis Engine for Budget Optimization Tips
 // Created: 2025-07-12
 
 const knex = require('../db/database');
+
+// Category-specific spending tips database
+const CATEGORY_TIPS = {
+  'Groceries': [
+    { id: 'grocery_1', text: 'Plan meals for the week before shopping', potentialSavings: 800, difficulty: 'easy' },
+    { id: 'grocery_2', text: 'Buy store brands instead of name brands', potentialSavings: 500, difficulty: 'easy' },
+    { id: 'grocery_3', text: 'Shop with a list and stick to it', potentialSavings: 600, difficulty: 'moderate' },
+    { id: 'grocery_4', text: 'Buy in bulk for non-perishables', potentialSavings: 400, difficulty: 'easy' },
+    { id: 'grocery_5', text: 'Reduce food waste by using leftovers', potentialSavings: 700, difficulty: 'moderate' }
+  ],
+  'Dining Out': [
+    { id: 'dining_1', text: 'Pack lunch instead of eating out', potentialSavings: 1200, difficulty: 'moderate' },
+    { id: 'dining_2', text: 'Limit restaurant visits to once per week', potentialSavings: 1500, difficulty: 'moderate' },
+    { id: 'dining_3', text: 'Make coffee at home instead of cafes', potentialSavings: 800, difficulty: 'easy' },
+    { id: 'dining_4', text: 'Use happy hour specials and lunch menus', potentialSavings: 600, difficulty: 'easy' },
+    { id: 'dining_5', text: 'Cook at home more often', potentialSavings: 2000, difficulty: 'moderate' }
+  ],
+  'Entertainment': [
+    { id: 'ent_1', text: 'Audit streaming subscriptions and cancel unused ones', potentialSavings: 300, difficulty: 'easy' },
+    { id: 'ent_2', text: 'Look for free community events', potentialSavings: 500, difficulty: 'easy' },
+    { id: 'ent_3', text: 'Use library for books and movies', potentialSavings: 400, difficulty: 'easy' },
+    { id: 'ent_4', text: 'Host game nights instead of going out', potentialSavings: 600, difficulty: 'moderate' },
+    { id: 'ent_5', text: 'Take advantage of free museum days', potentialSavings: 300, difficulty: 'easy' }
+  ],
+  'Transportation': [
+    { id: 'trans_1', text: 'Carpool or use public transit when possible', potentialSavings: 1000, difficulty: 'moderate' },
+    { id: 'trans_2', text: 'Combine errands to reduce fuel costs', potentialSavings: 400, difficulty: 'easy' },
+    { id: 'trans_3', text: 'Use fuel price comparison apps', potentialSavings: 300, difficulty: 'easy' },
+    { id: 'trans_4', text: 'Keep up with vehicle maintenance to improve efficiency', potentialSavings: 500, difficulty: 'moderate' },
+    { id: 'trans_5', text: 'Walk or bike for short trips', potentialSavings: 600, difficulty: 'moderate' }
+  ],
+  'Default': [
+    { id: 'default_1', text: 'Track all spending in this category for a month', potentialSavings: null, difficulty: 'easy' },
+    { id: 'default_2', text: 'Set up spending alerts for this category', potentialSavings: null, difficulty: 'easy' },
+    { id: 'default_3', text: 'Review and eliminate unnecessary expenses', potentialSavings: null, difficulty: 'moderate' },
+    { id: 'default_4', text: 'Look for cheaper alternatives or better deals', potentialSavings: null, difficulty: 'moderate' },
+    { id: 'default_5', text: 'Consider if each purchase is a need or want', potentialSavings: null, difficulty: 'hard' }
+  ]
+};
 
 /**
  * Creates an instance of BudgetOptimizer.
@@ -52,21 +92,77 @@ class BudgetOptimizer {
  *   - recommendations: Array of optimization recommendations
  * @throws {Error} If database queries fail
  */
-  async analyzeSpendingPatterns() {
+  async analyzeSpendingPatterns(proposedBudgets = null) {
     try {
       const expenses = await this.getExpenseHistory(12); // 12 months
-      const budgets = await this.getBudgetHistory(12);
+      let budgets = await this.getBudgetHistory(12);
       const savingsGoals = await this.getSavingsGoals();
+      
+      // Fetch ALL categories with is_fixed flag for accurate detection
+      const allCategories = await knex('categories').select('id', 'name', 'is_fixed');
+      const categoryFixedMap = {};
+      allCategories.forEach(cat => {
+        categoryFixedMap[cat.name] = Boolean(cat.is_fixed);
+      });
+      console.log('[BudgetOptimizer] Category is_fixed map:', JSON.stringify(categoryFixedMap));
+      
+      // If proposed budgets provided (from Step 2), use them for the latest month
+      if (proposedBudgets && Object.keys(proposedBudgets).length > 0) {
+        console.log('[BudgetOptimizer] Using proposed budgets from Step 2:', JSON.stringify(proposedBudgets));
+        
+        // Get category names from database
+        const categories = await knex('categories')
+          .select('id', 'name', 'is_fixed')
+          .whereIn('id', Object.keys(proposedBudgets).map(id => parseInt(id)));
+        
+        console.log('[BudgetOptimizer] Found categories for proposed budgets:', categories.map(c => `${c.id}:${c.name}(fixed:${Boolean(c.is_fixed)})`).join(', '));
+        
+        const categoryMap = {};
+        categories.forEach(cat => {
+          categoryMap[cat.id] = cat;
+        });
+        
+        // Get current month
+        const currentDate = new Date();
+        const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        console.log('[BudgetOptimizer] Current month:', currentMonth);
+        
+        // Replace latest month budgets with proposed values
+        budgets = budgets.filter(b => b.month !== currentMonth);
+        
+        Object.entries(proposedBudgets).forEach(([categoryId, amount]) => {
+          const category = categoryMap[categoryId];
+          if (category) {
+            budgets.push({
+              category: category.name,
+              is_fixed: Boolean(category.is_fixed),
+              month: currentMonth,
+              budget_amount: amount
+            });
+            console.log(`[BudgetOptimizer] Added proposed budget: ${category.name} = ${amount} (is_fixed: ${Boolean(category.is_fixed)})`);
+          }
+        });
+      }
+      
+      // Ensure all budgets have correct is_fixed from master category list
+      budgets = budgets.map(b => ({
+        ...b,
+        is_fixed: categoryFixedMap[b.category] !== undefined ? categoryFixedMap[b.category] : Boolean(b.is_fixed)
+      }));
       
       const patterns = this.identifyPatterns(expenses);
       const seasonalTrends = this.detectSeasonalTrends(expenses);
       const budgetVariances = this.analyzeBudgetVariances(expenses, budgets);
       
+      const recommendationResult = this.generateRecommendations(patterns, budgetVariances, savingsGoals);
+      
       return {
         patterns,
         seasonalTrends,
         budgetVariances,
-        recommendations: this.generateRecommendations(patterns, budgetVariances, savingsGoals)
+        recommendations: recommendationResult.recommendations,
+        structuredInsights: recommendationResult.structuredInsights
       };
     } catch (error) {
       console.error('Error analyzing spending patterns:', error);
@@ -132,6 +228,7 @@ class BudgetOptimizer {
       const rows = await knex('budgets')
         .select(
           'categories.name as category',
+          'categories.is_fixed as is_fixed',
           knex.raw("printf('%04d-%02d', budgets.year, budgets.month) as month"),
           knex.raw('budgets.amount as budget_amount')
         )
@@ -191,47 +288,114 @@ class BudgetOptimizer {
   }
 
 /**
- * Generates specific optimization recommendations based on analysis results.
- * Creates recommendations for:
- * - Reducing overspending in categories
- * - Reallocating unused budget
- * - Preparing for seasonal spending spikes
- * - Staying on track with savings goals
+ * Generates enhanced recommendations with structured insights.
+ * Returns separate arrays for overspending, underspending, and on-track categories.
+ * Also includes legacy recommendations for backward compatibility.
  * 
  * @param {Object} patterns - Spending pattern trends by category
  * @param {Array<Object>} budgetVariances - Budget variance data
  * @param {Array<Object>} savingsGoals - Active savings goals
- * @returns {Array<Object>} Array of recommendation objects with type, title, description, impact_amount, and confidence_score
+ * @returns {Object} Object containing:
+ *   - recommendations: Legacy format recommendations
+ *   - structuredInsights: Enhanced insights (overspending, underspending, onTrack)
  */
   generateRecommendations(patterns, budgetVariances, savingsGoals) {
     const recommendations = [];
+    const overspendingInsights = [];
+    const underspendingInsights = [];
+    const onTrackInsights = [];
 
-    // 1. Identify overspending categories
-    const overspendingCategories = budgetVariances.filter(v => v.variance > 0.2);
-    overspendingCategories.forEach(category => {
-      recommendations.push({
-        type: 'reduction',
-        category: category.name,
-        title: `Reduce ${category.name} spending`,
-        description: `You're spending ${category.overagePercentage}% over budget in ${category.name}. Consider reducing by ${this.formatCurrency(category.suggestedReduction)}.`,
-        impact_amount: category.suggestedReduction,
-        confidence_score: 0.8
-      });
+    // Group variances by category (latest month only)
+    const latestVariances = {};
+    budgetVariances.forEach(v => {
+      if (!latestVariances[v.name] || v.month > latestVariances[v.name].month) {
+        latestVariances[v.name] = v;
+      }
     });
 
-    // 2. Suggest budget reallocation
-    const underutilizedCategories = budgetVariances.filter(v => v.variance < -0.3);
-    if (underutilizedCategories.length > 0 && overspendingCategories.length > 0) {
-      recommendations.push({
-        type: 'reallocation',
-        title: 'Reallocate unused budget',
-        description: `Move ${this.formatCurrency(underutilizedCategories[0].unusedAmount)} from ${underutilizedCategories[0].name} to ${overspendingCategories[0].name}`,
-        impact_amount: underutilizedCategories[0].unusedAmount,
-        confidence_score: 0.7
-      });
-    }
+    // Process each category with enhanced logic
+    Object.values(latestVariances).forEach(variance => {
+      const categoryPattern = patterns[variance.name];
+      const historicalData = categoryPattern?.data || [];
+      
+      // Ensure isFixed is a boolean (SQLite returns 0/1)
+      const isFixed = Boolean(variance.isFixed);
+      
+      console.log(`[generateRecommendations] Processing ${variance.name}: budget=${variance.budgetAmount}, actual=${variance.actualAmount}, isFixed=${isFixed} (raw: ${variance.isFixed})`);
+      
+      // Convert to format expected by recommendation methods
+      const formattedHistory = historicalData.map(d => ({
+        month: d.month,
+        amount: d.amount,
+        budget: variance.budgetAmount // Use current budget as historical budget
+      }));
 
-    // 3. Seasonal spending alerts
+      // Try overspending recommendation
+      const overspending = this.calculateOverspendingRecommendation(
+        variance.name,
+        variance.budgetAmount,
+        variance.actualAmount,
+        formattedHistory,
+        isFixed
+      );
+
+      if (overspending) {
+        overspendingInsights.push(overspending);
+        
+        // Add legacy format recommendation
+        recommendations.push({
+          type: 'reduction',
+          category: variance.name,
+          title: `Reduce ${variance.name} spending`,
+          description: `You're spending ${overspending.overagePercentage}% over budget. ${overspending.isRecurringPattern ? 'This is a recurring pattern.' : 'This appears to be an anomaly.'}`,
+          impact_amount: overspending.suggestedSpendingReduction,
+          confidence_score: 0.8,
+          enhanced: overspending
+        });
+        return;
+      }
+
+      // Try on-track recommendation
+      const onTrack = this.calculateOnTrackRecommendation(
+        variance.name,
+        variance.budgetAmount,
+        variance.actualAmount,
+        formattedHistory
+      );
+
+      if (onTrack) {
+        onTrackInsights.push(onTrack);
+        return;
+      }
+
+      // Try underspending recommendation
+      const underspending = this.calculateUnderspendingRecommendation(
+        variance.name,
+        variance.budgetAmount,
+        variance.actualAmount,
+        formattedHistory,
+        overspendingInsights.length > 0
+      );
+
+      if (underspending) {
+        underspendingInsights.push(underspending);
+        
+        // Add legacy format recommendation if significant
+        if (underspending.potentialReallocation > 500) {
+          recommendations.push({
+            type: 'reallocation',
+            category: variance.name,
+            title: 'Reallocate unused budget',
+            description: `You have ${this.formatCurrency(underspending.unusedAmount)} unused in ${variance.name}.`,
+            impact_amount: underspending.potentialReallocation,
+            confidence_score: 0.7,
+            enhanced: underspending
+          });
+        }
+      }
+    });
+
+    // Add seasonal spending alerts (keep existing logic)
     const seasonalSpikes = Object.entries(patterns).filter(([_, pattern]) => 
       pattern.trend === 'increasing' && 
       (pattern.enhancedTrend.category === 'strong' || pattern.enhancedTrend.category === 'very_strong')
@@ -248,7 +412,7 @@ class BudgetOptimizer {
       });
     });
 
-    // 4. Goal-based optimization
+    // Add goal-based optimization (keep existing logic)
     if (savingsGoals.length > 0) {
       savingsGoals.forEach(goal => {
         const plan = this.calculateGoalSavingsPlan(goal);
@@ -274,7 +438,14 @@ class BudgetOptimizer {
       });
     }
 
-    return recommendations;
+    return {
+      recommendations,
+      structuredInsights: {
+        overspending: overspendingInsights,
+        underspending: underspendingInsights,
+        onTrack: onTrackInsights
+      }
+    };
   }
 
 /**
@@ -475,23 +646,31 @@ class BudgetOptimizer {
   analyzeBudgetVariances(expenses, budgets) {
     const variances = [];
     
+    // Use a separator that won't appear in category names or months
+    const SEP = '|||';
+    
     // Group expenses by category and month
     const expensesByCategory = {};
     expenses.forEach(expense => {
-      const key = `${expense.category}-${expense.month}`;
+      const key = `${expense.category}${SEP}${expense.month}`;
       expensesByCategory[key] = expense.amount;
     });
 
-    // Group budgets by category and month
+    // Group budgets by category and month, and track is_fixed flag
     const budgetsByCategory = {};
+    const categoryIsFixed = {};
     budgets.forEach(budget => {
-      const key = `${budget.category}-${budget.month}`;
+      const key = `${budget.category}${SEP}${budget.month}`;
       budgetsByCategory[key] = budget.budget_amount;
+      categoryIsFixed[budget.category] = Boolean(budget.is_fixed);
     });
+
+    console.log('[analyzeBudgetVariances] Budget keys:', Object.keys(budgetsByCategory).slice(0, 5));
+    console.log('[analyzeBudgetVariances] isFixed map:', categoryIsFixed);
 
     // Calculate variances
     Object.keys(budgetsByCategory).forEach(key => {
-      const [category, month] = key.split('-');
+      const [category, month] = key.split(SEP);
       const rawBudget = Number(budgetsByCategory[key] || 0);
       const rawActual = Number(expensesByCategory[key] || 0);
       let variance = 0;
@@ -501,6 +680,8 @@ class BudgetOptimizer {
         variance = 1;
       }
       
+      const isFixed = categoryIsFixed[category] || false;
+      
       variances.push({
         name: category,
         month,
@@ -509,9 +690,12 @@ class BudgetOptimizer {
         variance,
         overagePercentage: Math.max(0, variance * 100),
         suggestedReduction: Math.max(0, rawActual - rawBudget),
-        unusedAmount: Math.max(0, rawBudget - rawActual)
+        unusedAmount: Math.max(0, rawBudget - rawActual),
+        isFixed
       });
     });
+
+    console.log('[analyzeBudgetVariances] Sample variances:', variances.slice(0, 3).map(v => `${v.name}: budget=${v.budgetAmount}, actual=${v.actualAmount}, isFixed=${v.isFixed}`));
 
     return variances;
   }
@@ -610,6 +794,240 @@ class BudgetOptimizer {
       style: 'currency',
       currency: 'SEK'
     }).format(amount);
+  }
+
+  /**
+   * Generates category-specific spending tips based on reduction target.
+   * Prioritizes tips by potential savings and difficulty.
+   * 
+   * @param {string} categoryName - Name of the category
+   * @param {number} reductionTarget - Target reduction amount
+   * @returns {Array<Object>} Array of up to 3 relevant tips
+   */
+  generateCategoryTips(categoryName, reductionTarget) {
+    const tips = CATEGORY_TIPS[categoryName] || CATEGORY_TIPS['Default'];
+    
+    // Sort tips by relevance (potential savings close to reduction target)
+    const sortedTips = [...tips].sort((a, b) => {
+      if (!a.potentialSavings && !b.potentialSavings) return 0;
+      if (!a.potentialSavings) return 1;
+      if (!b.potentialSavings) return -1;
+      
+      const aDiff = Math.abs(a.potentialSavings - reductionTarget);
+      const bDiff = Math.abs(b.potentialSavings - reductionTarget);
+      return aDiff - bDiff;
+    });
+    
+    // Return top 3 tips
+    return sortedTips.slice(0, 3);
+  }
+
+  /**
+   * Calculates enhanced overspending recommendations with historical context.
+   * Provides multiple budget adjustment options and actionable spending tips.
+   * 
+   * @param {string} categoryName - Category name
+   * @param {number} budgetAmount - Current budget amount
+   * @param {number} actualAmount - Actual spending amount
+   * @param {Array<Object>} historicalData - Historical spending data
+   * @param {boolean} isFixed - Whether this is a fixed expense (bill)
+   * @returns {Object|null} Overspending insight or null if not overspending
+   */
+  calculateOverspendingRecommendation(categoryName, budgetAmount, actualAmount, historicalData, isFixed = false) {
+    // Fixed expenses (bills) should NEVER show overspending recommendations
+    // Bills are exact amounts that can't be reduced through behavioral changes
+    if (isFixed) {
+      return null;
+    }
+    
+    const overageAmount = actualAmount - budgetAmount;
+    const overagePercentage = budgetAmount > 0 ? (overageAmount / budgetAmount) * 100 : 0;
+    
+    // Only flag as overspending if >10% over budget
+    if (overagePercentage < 10) {
+      return null;
+    }
+    
+    // Check if this is a recurring pattern (need at least 2 months of data)
+    const recentMonths = historicalData.slice(-3);
+    const overspentMonths = recentMonths.filter(m => m.amount > m.budget).length;
+    const isRecurringPattern = recentMonths.length >= 2 && overspentMonths >= 2;
+    
+    // Calculate statistics
+    const amounts = historicalData.length > 0 ? historicalData.map(h => h.amount) : [actualAmount];
+    const averageMonthlySpend = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const recentAmounts = amounts.slice(-3);
+    const highestRecentSpend = recentAmounts.length > 0 ? Math.max(...recentAmounts) : actualAmount;
+    const lowestRecentSpend = recentAmounts.length > 0 ? Math.min(...recentAmounts) : actualAmount;
+    
+    // Calculate realistic budget target - should always differ from current budget
+    let realisticBudgetTarget;
+    if (isRecurringPattern) {
+      // If recurring, suggest average + 10% buffer
+      realisticBudgetTarget = Math.round(averageMonthlySpend * 1.1);
+    } else {
+      // If anomaly, suggest a moderate increase (halfway between current and actual)
+      realisticBudgetTarget = Math.round((budgetAmount + actualAmount) / 2);
+    }
+    
+    // Ensure realisticBudgetTarget is different from budgetAmount
+    if (realisticBudgetTarget === budgetAmount) {
+      realisticBudgetTarget = Math.round(budgetAmount * 1.15);
+    }
+    
+    // Calculate suggested spending reduction
+    const suggestedSpendingReduction = Math.round(actualAmount - budgetAmount);
+    
+    // Determine difficulty
+    const varianceFromAverage = Math.abs(actualAmount - averageMonthlySpend) / averageMonthlySpend;
+    let reductionDifficulty;
+    if (varianceFromAverage < 0.15) {
+      reductionDifficulty = 'easy';
+    } else if (varianceFromAverage < 0.35) {
+      reductionDifficulty = 'moderate';
+    } else {
+      reductionDifficulty = 'challenging';
+    }
+    
+    // Generate tips only for flexible expenses (not fixed bills)
+    const tips = isFixed ? [] : this.generateCategoryTips(categoryName, suggestedSpendingReduction);
+    
+    return {
+      type: 'overspending',
+      categoryName,
+      budgetAmount,
+      actualAmount,
+      overageAmount,
+      overagePercentage: Math.round(overagePercentage),
+      isRecurringPattern,
+      averageMonthlySpend: Math.round(averageMonthlySpend),
+      highestRecentSpend: Math.round(highestRecentSpend),
+      lowestRecentSpend: Math.round(lowestRecentSpend),
+      realisticBudgetTarget,
+      suggestedSpendingReduction,
+      reductionDifficulty,
+      tips
+    };
+  }
+
+  /**
+   * Calculates underspending recommendations with reallocation suggestions.
+   * 
+   * @param {string} categoryName - Category name
+   * @param {number} budgetAmount - Current budget amount
+   * @param {number} actualAmount - Actual spending amount
+   * @param {Array<Object>} historicalData - Historical spending data
+   * @param {boolean} hasOverspending - Whether there are overspending categories
+   * @returns {Object|null} Underspending insight or null if not underspending
+   */
+  calculateUnderspendingRecommendation(categoryName, budgetAmount, actualAmount, historicalData, hasOverspending) {
+    const unusedAmount = budgetAmount - actualAmount;
+    const utilizationPercentage = budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0;
+    
+    // Only flag as underspending if <70% utilized
+    if (utilizationPercentage >= 70) {
+      return null;
+    }
+    
+    // Calculate average utilization over last 3 months
+    const recentMonths = historicalData.slice(-3);
+    const avgUtilization = recentMonths.length > 0
+      ? recentMonths.reduce((sum, m) => sum + (m.budget > 0 ? (m.amount / m.budget) * 100 : 0), 0) / recentMonths.length
+      : utilizationPercentage;
+    
+    const isConsistentPattern = recentMonths.length >= 3 && avgUtilization < 75;
+    
+    // Determine recommended action
+    let recommendedAction;
+    if (hasOverspending) {
+      recommendedAction = 'reallocate';
+    } else if (isConsistentPattern) {
+      recommendedAction = 'reduce_budget';
+    } else {
+      recommendedAction = 'boost_savings';
+    }
+    
+    // Calculate suggested new budget (average + 15% buffer)
+    const amounts = historicalData.map(h => h.amount);
+    const averageSpend = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const suggestedNewBudget = Math.round(averageSpend * 1.15);
+    
+    // Potential reallocation amount
+    const potentialReallocation = Math.round(budgetAmount - suggestedNewBudget);
+    
+    return {
+      type: 'underspending',
+      categoryName,
+      budgetAmount,
+      actualAmount,
+      unusedAmount: Math.round(unusedAmount),
+      utilizationPercentage: Math.round(utilizationPercentage),
+      recommendedAction,
+      suggestedNewBudget,
+      potentialReallocation,
+      isConsistentPattern,
+      averageUtilization: Math.round(avgUtilization)
+    };
+  }
+
+  /**
+   * Calculates on-track recommendations for categories within budget.
+   * 
+   * @param {string} categoryName - Category name
+   * @param {number} budgetAmount - Current budget amount
+   * @param {number} actualAmount - Actual spending amount
+   * @param {Array<Object>} historicalData - Historical spending data
+   * @returns {Object|null} On-track insight or null if not on track
+   */
+  calculateOnTrackRecommendation(categoryName, budgetAmount, actualAmount, historicalData) {
+    const utilizationPercentage = budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0;
+    
+    // On track if between 70-110% utilization
+    if (utilizationPercentage < 70 || utilizationPercentage > 110) {
+      return null;
+    }
+    
+    // Count consecutive on-track months
+    const recentMonths = historicalData.slice(-6).reverse();
+    let consecutiveOnTrackMonths = 0;
+    for (const month of recentMonths) {
+      const util = month.budget > 0 ? (month.amount / month.budget) * 100 : 0;
+      if (util >= 70 && util <= 110) {
+        consecutiveOnTrackMonths++;
+      } else {
+        break;
+      }
+    }
+    
+    // Calculate trend
+    const amounts = historicalData.slice(-3).map(h => h.amount);
+    let trend = 'stable';
+    if (amounts.length >= 2) {
+      const change = ((amounts[amounts.length - 1] - amounts[0]) / amounts[0]) * 100;
+      if (change < -5) trend = 'improving';
+      else if (change > 5) trend = 'slightly_increasing';
+    }
+    
+    // Generate message
+    let message;
+    if (consecutiveOnTrackMonths >= 3) {
+      message = `Great job! You've stayed on budget for ${consecutiveOnTrackMonths} months in a row.`;
+    } else if (trend === 'improving') {
+      message = `You're doing well and your spending is trending down.`;
+    } else {
+      message = `You're on track with your budget. Keep it up!`;
+    }
+    
+    return {
+      type: 'on_track',
+      categoryName,
+      budgetAmount,
+      actualAmount,
+      utilizationPercentage: Math.round(utilizationPercentage),
+      consecutiveOnTrackMonths,
+      trend,
+      message
+    };
   }
 }
 

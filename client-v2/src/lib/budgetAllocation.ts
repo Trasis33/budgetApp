@@ -18,6 +18,41 @@ interface AllocationState {
   allocatedAmount: number;
   percentOfBucket: number;
   constraintApplied: 'min' | 'max' | null;
+  isFixed?: boolean;
+}
+
+/**
+ * Helper function to determine if rounding should be applied to a category.
+ * Fixed expenses (is_fixed = true) should retain precise calculated values.
+ * Flexible expenses should be rounded to nearest 10 for cleaner budget numbers.
+ */
+function shouldRoundToTen(category: Category): boolean {
+  // Fixed expenses get precise values, flexible categories get rounded
+  return !category.is_fixed;
+}
+
+/**
+ * Apply rounding to a budget amount based on category type.
+ * Fixed expenses: no rounding (precise)
+ * Flexible expenses: round to nearest 10
+ */
+function roundBudgetAmount(amount: number, category: Category): number {
+  if (shouldRoundToTen(category)) {
+    return Math.round(amount / 10) * 10;
+  }
+  return amount;
+}
+
+/**
+ * Apply rounding to a budget amount based on isFixed flag.
+ * Fixed expenses: no rounding (precise)
+ * Flexible expenses: round to nearest 10
+ */
+function roundBudgetAmountByFlag(amount: number, isFixed: boolean | undefined): number {
+  if (!isFixed) {
+    return Math.round(amount / 10) * 10;
+  }
+  return amount;
 }
 
 /**
@@ -58,9 +93,10 @@ export function calculateWeightedAllocations(
       minPct: cat.budget_min_pct,
       maxPct: cat.budget_max_pct,
       rawShare: share,
-      allocatedAmount: Math.round((bucketBudget * share) / 10) * 10,
+      allocatedAmount: roundBudgetAmount(bucketBudget * share, cat),
       percentOfBucket: share * 100,
       constraintApplied: null,
+      isFixed: cat.is_fixed,
     };
   });
 
@@ -82,7 +118,7 @@ export function calculateWeightedAllocations(
       if (alloc.minPct !== undefined && alloc.minPct !== null) {
         const minAmount = bucketBudget * alloc.minPct;
         if (alloc.allocatedAmount < minAmount) {
-          alloc.allocatedAmount = Math.round(minAmount);
+          alloc.allocatedAmount = roundBudgetAmountByFlag(minAmount, alloc.isFixed);
           alloc.constraintApplied = 'min';
           lockedCategories.add(alloc.categoryId);
           needsRebalance = true;
@@ -95,7 +131,7 @@ export function calculateWeightedAllocations(
       if (alloc.maxPct !== undefined && alloc.maxPct !== null) {
         const maxAmount = bucketBudget * alloc.maxPct;
         if (alloc.allocatedAmount > maxAmount) {
-          alloc.allocatedAmount = Math.round(maxAmount);
+          alloc.allocatedAmount = roundBudgetAmountByFlag(maxAmount, alloc.isFixed);
           alloc.constraintApplied = 'max';
           lockedCategories.add(alloc.categoryId);
           needsRebalance = true;
@@ -122,7 +158,7 @@ export function calculateWeightedAllocations(
           const share = unlockedWeight > 0
             ? alloc.weight / unlockedWeight
             : 1 / (allocations.length - lockedCategories.size);
-          alloc.allocatedAmount = Math.round((remainingBudget * share) / 10) * 10;
+          alloc.allocatedAmount = roundBudgetAmountByFlag(remainingBudget * share, alloc.isFixed);
           alloc.percentOfBucket = (alloc.allocatedAmount / bucketBudget) * 100;
         }
       }

@@ -66,8 +66,14 @@ if (token) {
 }
 
 export const optimizationService = {
-  async getAnalysis(): Promise<AnalysisResponse> {
-    const response = await apiClient.get<AnalysisResponse>('/optimization/analyze');
+  async getAnalysis(proposedBudgets?: Record<number, number>): Promise<AnalysisResponse> {
+    const params: Record<string, string> = {};
+    
+    if (proposedBudgets && Object.keys(proposedBudgets).length > 0) {
+      params.proposedBudgets = JSON.stringify(proposedBudgets);
+    }
+    
+    const response = await apiClient.get<AnalysisResponse>('/optimization/analyze', { params });
     return response.data;
   },
 };
