@@ -76,6 +76,7 @@ export interface Budget {
   category_name: string;
   category_icon?: string;
   category_color?: string;
+  category_is_fixed?: boolean;
   amount: number;
   month: number;
   year: number;
@@ -90,6 +91,7 @@ export interface BudgetWithSpending extends Budget {
   progress: number;
   status: BudgetStatus;
   expenseCount: number;
+  category_is_fixed?: boolean;
 }
 
 export type BudgetStatus = 'success' | 'warning' | 'danger';

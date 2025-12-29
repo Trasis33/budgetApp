@@ -24,7 +24,8 @@ router.get('/', auth, async (req, res) => {
         'budgets.amount',
         'categories.name as category_name',
         'categories.icon as category_icon',
-        'categories.color as category_color'
+        'categories.color as category_color',
+        'categories.is_fixed as category_is_fixed'
       )
       .where('budgets.month', month)
       .andWhere('budgets.year', year);

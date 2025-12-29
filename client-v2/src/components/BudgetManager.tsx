@@ -260,28 +260,39 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     }
   };
 
-  const getStatusInfo = (progress: number) => {
-    if (progress >= 100) return { 
-      variant: 'secondary' as const, 
-      label: 'Complete', 
-      fill: 'bg-muted-foreground',
-      icon: CheckCircle2
-    };
-    if (progress >= 90) return { 
-      variant: 'destructive' as const, 
-      label: 'Critical', 
+  const getStatusInfo = (progress: number, isFixed?: boolean) => {
+    if (progress >= 100) {
+      if (isFixed && progress === 100) {
+        return {
+          variant: 'secondary' as const,
+          label: 'Complete',
+          fill: 'bg-muted-foreground',
+          icon: CheckCircle2
+        };
+      } else {
+        return {
+          variant: 'destructive' as const,
+          label: 'Over budget',
+          fill: 'bg-[var(--theme-coral)]',
+          icon: AlertTriangle
+        };
+      }
+    }
+    if (progress >= 90) return {
+      variant: 'destructive' as const,
+      label: 'Critical',
       fill: 'bg-[var(--theme-coral)]',
       icon: AlertTriangle
     };
-    if (progress >= 80) return { 
-      variant: 'outline' as const, 
-      label: 'Near limit', 
+    if (progress >= 80) return {
+      variant: 'outline' as const,
+      label: 'Near limit',
       fill: 'bg-[var(--theme-amber)]',
       icon: AlertTriangle
     };
-    return { 
-      variant: 'outline' as const, 
-      label: 'On track', 
+    return {
+      variant: 'outline' as const,
+      label: 'On track',
       fill: 'bg-[var(--theme-teal)]',
       icon: null
     };
@@ -719,7 +730,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                 ) : (
                   <div className="space-y-1">
                     {sortedBudgets.map((budget) => {
-                      const status = getStatusInfo(budget.progress);
+                      const status = getStatusInfo(budget.progress, budget.category_is_fixed);
                       const StatusIcon = status.icon;
                       const isExpanded = expandedCategory === budget.id;
                       const CategoryIcon = getIconByName(budget.category_icon);

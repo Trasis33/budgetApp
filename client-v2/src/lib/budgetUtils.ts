@@ -1,4 +1,4 @@
-import { Budget, BudgetWithSpending, BudgetMetrics, BudgetStats, BudgetStatus } from '../types/budget';
+import { Budget, BudgetWithSpending, BudgetMetrics, BudgetStats, BudgetStatus } from '../types';
 import { Expense } from '../types';
 import { BUDGET_STATUS_THRESHOLDS, STATUS_LABELS, CATEGORY_ICONS, STATUS_COLORS } from './constants';
 
@@ -61,7 +61,8 @@ export function transformBudgetWithSpending(
     remaining,
     progress,
     status,
-    expenseCount
+    expenseCount,
+    category_is_fixed: budget.category_is_fixed
   };
 }
 
@@ -163,3 +164,4 @@ export function calculateOverspendAmount(budgets: BudgetWithSpending[]): number 
     return sum + Math.min(0, budget.remaining);
   }, 0);
 }
+
