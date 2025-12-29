@@ -75,6 +75,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const [comments, setComments] = useState<Record<number, BudgetComment[]>>({});
   const [loadingComments, setLoadingComments] = useState<Record<number, boolean>>({});
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [showFixedBudgets, setShowFixedBudgets] = useState(true);
 
   // Add Budget Modal State
   const [isAddBudgetOpen, setAddBudgetOpen] = useState(false);
@@ -198,7 +199,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     if (isAtRiskA && !isAtRiskB) return -1;
     if (!isAtRiskA && isAtRiskB) return 1;
     return b.progress - a.progress;
-  });
+  }).filter(budget => showFixedBudgets || !budget.category_is_fixed);
 
   // Calculate per-user spending for expanded category
   const getUserSpending = useCallback((categoryName: string) => {
@@ -712,9 +713,22 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
           <section className="lg:col-span-7">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  All Categories ({sortedBudgets.length})
-                </CardTitle>
+                <div className="flex items-center gap-4">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    All Categories ({sortedBudgets.length})
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="show-fixed" className="text-xs text-muted-foreground cursor-pointer">
+                      Show fixed
+                    </Label>
+                    <Switch
+                      id="show-fixed"
+                      checked={showFixedBudgets}
+                      onCheckedChange={setShowFixedBudgets}
+                      className="h-4 w-7 data-[state=checked]:bg-[var(--theme-indigo)]"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <Separator className="mb-4" />
