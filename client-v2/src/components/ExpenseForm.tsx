@@ -44,6 +44,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   });
 
   const [saveAsRecurring, setSaveAsRecurring] = useState(false);
+  const [addAnotherCount, setAddAnotherCount] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -108,7 +109,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
     return payer?.name || 'Partner';
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (addAnother: boolean = false) => {
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -171,10 +172,32 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
       } else if (saveAsRecurring) {
         toast.success('✨ Expense tracked, but recurring template failed.', { duration: 4000 });
       } else {
-        toast.success('✨ Expense tracked!', { duration: 4000 });
+        if (addAnother) {
+          const newCount = addAnotherCount + 1;
+          setAddAnotherCount(newCount);
+          toast.success(`✨ Expense #${newCount} saved!`, { duration: 2000 });
+        } else {
+          toast.success('✨ Expense tracked!', { duration: 4000 });
+        }
       }
 
-      navigate('/dashboard');
+      if (addAnother) {
+        // Reset form for next entry
+        setFormData(prev => ({
+          ...prev,
+          amount: '',
+          description: ''
+        }));
+        // Reset recurring toggle
+        setSaveAsRecurring(false);
+        // Focus back to amount input
+        const amountInput = document.querySelector('input[type="number"]') as HTMLInputElement;
+        if (amountInput) {
+          amountInput.focus();
+        }
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       toast.error('Something went wrong. Please try again.');
     } finally {
@@ -483,19 +506,34 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
               </div>
             </div>
 
-            {/* Action Button */}
-            <button 
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="animate-spin">⌛</span>
-              ) : (
-                <Check className="h-6 w-6" />
-              )}
-              {loading ? 'Saving...' : 'Save Expense'}
-            </button>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button 
+                onClick={() => handleSubmit(false)}
+                disabled={loading}
+                className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="animate-spin">⌛</span>
+                ) : (
+                  <Check className="h-6 w-6" />
+                )}
+                {loading ? 'Saving...' : 'Save Expense'}
+              </button>
+              
+              <button 
+                onClick={() => handleSubmit(true)}
+                disabled={loading}
+                className="w-full py-3 bg-white text-slate-700 rounded-xl font-medium border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="animate-spin">⌛</span>
+                ) : (
+                  <Check className="h-5 w-5" />
+                )}
+                {loading ? 'Saving...' : 'Save and Add Another'}
+              </button>
+            </div>
           </div>
 
         </div>
