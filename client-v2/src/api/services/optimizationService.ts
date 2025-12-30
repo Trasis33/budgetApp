@@ -66,11 +66,15 @@ if (token) {
 }
 
 export const optimizationService = {
-  async getAnalysis(proposedBudgets?: Record<number, number>): Promise<AnalysisResponse> {
+  async getAnalysis(proposedBudgets?: Record<number, number>, scope?: string): Promise<AnalysisResponse> {
     const params: Record<string, string> = {};
     
     if (proposedBudgets && Object.keys(proposedBudgets).length > 0) {
       params.proposedBudgets = JSON.stringify(proposedBudgets);
+    }
+    
+    if (scope) {
+      params.scope = scope;
     }
     
     const response = await apiClient.get<AnalysisResponse>('/optimization/analyze', { params });

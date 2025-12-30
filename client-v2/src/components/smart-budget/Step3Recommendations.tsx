@@ -9,6 +9,7 @@ import { OverspendingCard } from './OverspendingCard';
 import { UnderspendingCard } from './UnderspendingCard';
 import { OnTrackSummary } from './OnTrackSummary';
 import { DataIntegrityBanner } from './DataIntegrityBanner';
+import { useScope } from '@/context/ScopeContext';
 
 // Backend insight types (enriched with frontend data)
 interface OverspendingInsight {
@@ -88,6 +89,7 @@ export function Step3Recommendations({
   onSave,
   categories = []
 }: Step3Props) {
+  const { currentScope } = useScope();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [optimizationData, setOptimizationData] = useState<(AnalysisResponse & { structuredInsights?: StructuredInsights }) | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -121,8 +123,9 @@ export function Step3Recommendations({
         };
         
         console.log('[Step3] Sending proposed budgets from Step 2:', proposedBudgets);
+        console.log('[Step3] Using scope:', currentScope);
         
-        const data = await optimizationService.getAnalysis(proposedBudgets);
+        const data = await optimizationService.getAnalysis(proposedBudgets, currentScope);
         console.log('[Step3] Optimization API response:', data);
 
         if (!isMounted.current) {
@@ -149,7 +152,7 @@ export function Step3Recommendations({
     };
 
     loadOptimizationData();
-  }, [state.fixedExpenses, state.variableAllocations]);
+  }, [state.fixedExpenses, state.variableAllocations, currentScope]);
 
   // Process recommendations from backend
   useEffect(() => {

@@ -841,9 +841,19 @@ class BudgetOptimizer {
     }
     
     const overageAmount = actualAmount - budgetAmount;
-    const overagePercentage = budgetAmount > 0 ? (overageAmount / budgetAmount) * 100 : 0;
     
-    // Only flag as overspending if >10% over budget
+    // Special case: if budget is 0 but there are expenses, that's definitely overspending
+    // We treat this as 100% over (or more accurately, infinite overspending)
+    let overagePercentage;
+    if (budgetAmount === 0 && actualAmount > 0) {
+      overagePercentage = 100; // Treat as 100% over budget
+    } else if (budgetAmount > 0) {
+      overagePercentage = (overageAmount / budgetAmount) * 100;
+    } else {
+      overagePercentage = 0; // Both are 0, no overspending
+    }
+    
+    // Only flag as overspending if >10% over budget (or budget is 0 with expenses)
     if (overagePercentage < 10) {
       return null;
     }
@@ -862,7 +872,10 @@ class BudgetOptimizer {
     
     // Calculate realistic budget target - should always differ from current budget
     let realisticBudgetTarget;
-    if (isRecurringPattern) {
+    if (budgetAmount === 0) {
+      // If budget is 0, suggest based on average spending with buffer
+      realisticBudgetTarget = Math.round(averageMonthlySpend * 1.1);
+    } else if (isRecurringPattern) {
       // If recurring, suggest average + 10% buffer
       realisticBudgetTarget = Math.round(averageMonthlySpend * 1.1);
     } else {
@@ -870,9 +883,9 @@ class BudgetOptimizer {
       realisticBudgetTarget = Math.round((budgetAmount + actualAmount) / 2);
     }
     
-    // Ensure realisticBudgetTarget is different from budgetAmount
-    if (realisticBudgetTarget === budgetAmount) {
-      realisticBudgetTarget = Math.round(budgetAmount * 1.15);
+    // Ensure realisticBudgetTarget is different from budgetAmount and reasonable
+    if (realisticBudgetTarget === budgetAmount || realisticBudgetTarget === 0) {
+      realisticBudgetTarget = Math.round(Math.max(actualAmount, averageMonthlySpend) * 1.1);
     }
     
     // Calculate suggested spending reduction
@@ -921,8 +934,25 @@ class BudgetOptimizer {
    * @returns {Object|null} Underspending insight or null if not underspending
    */
   calculateUnderspendingRecommendation(categoryName, budgetAmount, actualAmount, historicalData, hasOverspending) {
+    // If budget is 0, this is NOT underspending - it's either overspending (if expenses > 0) or nothing
+    // Underspending only makes sense when you have a budget and aren't using it
+    if (budgetAmount === 0) {
+      return null;
+    }
+    
+    // If actual spending exceeds budget, this is overspending, not underspending
+    if (actualAmount > budgetAmount) {
+      return null;
+    }
+    
+    // If actual spending is 0 and no historical data, we can't make a meaningful recommendation
+    // The user might just not have used this category yet this month
+    if (actualAmount === 0 && historicalData.length === 0) {
+      return null;
+    }
+    
     const unusedAmount = budgetAmount - actualAmount;
-    const utilizationPercentage = budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0;
+    const utilizationPercentage = (actualAmount / budgetAmount) * 100;
     
     // Only flag as underspending if <70% utilized
     if (utilizationPercentage >= 70) {
@@ -947,13 +977,41 @@ class BudgetOptimizer {
       recommendedAction = 'boost_savings';
     }
     
-    // Calculate suggested new budget (average + 15% buffer)
-    const amounts = historicalData.map(h => h.amount);
-    const averageSpend = amounts.reduce((a, b) => a + b, 0) / amounts.length;
-    const suggestedNewBudget = Math.round(averageSpend * 1.15);
+    // Calculate suggested new budget based on actual spending patterns
+    const historicalAmounts = historicalData.length > 0 ? historicalData.map(h => h.amount) : [];
+    const averageSpend = historicalAmounts.length > 0 
+      ? historicalAmounts.reduce((a, b) => a + b, 0) / historicalAmounts.length 
+      : actualAmount;
     
-    // Potential reallocation amount
+    // Use the higher of actual spending or historical average as the base
+    const baseAmount = Math.max(actualAmount, averageSpend);
+    
+    // If baseAmount is 0 (no spending this month AND no historical spending), skip
+    if (baseAmount === 0) {
+      return null;
+    }
+    
+    // Calculate suggested budget: base + 15% buffer
+    let suggestedNewBudget = Math.round(baseAmount * 1.15);
+    
+    // CRITICAL: suggestedNewBudget must be LESS than current budget for "reduce to" to make sense
+    if (suggestedNewBudget >= budgetAmount) {
+      // Try with smaller buffer
+      suggestedNewBudget = Math.round(baseAmount * 1.05);
+    }
+    
+    // If still >= budget, this category isn't really underspending enough to recommend
+    if (suggestedNewBudget >= budgetAmount) {
+      return null;
+    }
+    
+    // Potential reallocation amount (guaranteed positive now since suggestedNewBudget < budgetAmount)
     const potentialReallocation = Math.round(budgetAmount - suggestedNewBudget);
+    
+    // Don't show recommendations for tiny reallocation amounts (less than 100 kr)
+    if (potentialReallocation < 100) {
+      return null;
+    }
     
     return {
       type: 'underspending',
