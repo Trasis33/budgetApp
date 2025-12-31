@@ -29,6 +29,7 @@ import {
 import { RecurringTemplate, Category, User } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { getCategoryIconStyle } from '../lib/iconUtils';
+import { getCategoryColor } from '../lib/categoryColors';
 import { getIconByName } from '../lib/categoryIcons';
 import { Trash2, Edit2, Plus, Calendar, CreditCard, Info, Tag, Search, Filter, RefreshCw, CalendarClock, Loader2 } from 'lucide-react';
 import { recurringExpenseService } from '../api/services/recurringExpenseService';
@@ -223,7 +224,6 @@ export function RecurringExpenses() {
     }
   };
 
-  const getCategoryName = (id: number) => categories.find(c => c.id === id)?.name || 'Unknown';
   const getUserName = (id: number) => users.find(u => u.id === id)?.name || 'Unknown';
 
   const renderTemplateList = (type: 'bill' | 'subscription') => {
@@ -249,14 +249,13 @@ export function RecurringExpenses() {
           const category = categories.find(c => c.id === template.category_id);
           const CategoryIcon = getIconByName(category?.icon);
           const categoryColor = category?.color || 'var(--theme-indigo)';
-          const typeColor = type === 'bill' ? 'var(--theme-indigo)' : 'var(--theme-violet)';
           const accentColor = type === 'bill' ? 'text-indigo-600' : 'text-violet-600';
 
           return (
             <Card 
               key={template.id} 
               className={`shadow-sm hover:shadow-md transition-all border-t-4 gap-0 overflow-hidden ${!template.is_active ? 'opacity-60 grayscale' : ''}`}
-              style={{ borderTopColor: typeColor }}
+              style={{ borderTopColor: categoryColor }}
             >
               <CardHeader className="pb-3 pt-5 px-4 bg-card">
                 <div className="flex justify-between items-start">
@@ -273,18 +272,17 @@ export function RecurringExpenses() {
                     <div className="space-y-1">
                       <CardTitle className="text-base font-bold leading-tight text-foreground">{template.description}</CardTitle>
                       <div className="flex flex-wrap gap-1.5">
-                        <Badge variant="outline" className="text-[9px] h-4 font-normal py-0 border-muted-foreground/20">
-                          {category?.name || 'Unknown'}
-                        </Badge>
-                        {template.is_shared ? (
-                          <Badge variant="secondary" className="text-[9px] h-4 bg-theme-teal/10 text-theme-teal border-theme-teal/20 font-medium py-0">
-                            Shared
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-[9px] h-4 bg-theme-amber/10 text-theme-amber border-theme-amber/20 font-medium py-0">
-                            Personal
-                          </Badge>
-                        )}
+                        {category && (() => {
+                        const categoryColor = getCategoryColor({ color: category.color });
+                        return (
+                          <div 
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[9px] h-5 rounded-full border border-transparent transition-colors" 
+                            style={getCategoryIconStyle(categoryColor, false, 0.08)}
+                          >
+                            <span className="text-xs font-semibold">{category.name}</span>
+                          </div>
+                        );
+                      })()}
                       </div>
                     </div>
                   </div>
