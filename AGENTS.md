@@ -84,3 +84,146 @@ When working on multi-step features, maintain task lists in markdown files:
 - **Server**: Express 4.18+, Knex 2.4+, SQLite3, JWT, bcryptjs
 - **State**: React Context API for global state (AuthContext, ScopeContext)
 - **Services**: API services organized in `client-v2/src/api/services/` by domain (auth, budget, expense, etc.)
+
+## Important Utilities for DRY Principle Enforcement
+
+This section references the shared utilities in `client-v2/src/lib` that should be used throughout the application to avoid code duplication and maintain consistency.
+
+### Core Utilities
+
+#### `utils.ts` - General Utility Functions
+- **formatCurrency(amount)** - Format numbers as SEK currency (sv-SE locale)
+- **formatDate(dateString)** - Format dates to 'MMM DD, YYYY' format
+- **getMonthName(date)** - Get full month name with year
+- **calculateExpenseShare(expense, userId)** - Calculate user's share based on split type
+- **calculateBalance(expenses, user1Id, user2Id)** - Calculate balance between two users
+- **filterExpensesByMonth(expenses, year, month)** - Filter expenses for specific month
+- **calculateCategorySpending(expenses, category)** - Calculate total spending for a category
+- **getBudgetProgress(budget, spent)** - Calculate budget progress percentage
+- **cn(...classes)** - Utility for conditional CSS class names
+
+#### `budgetUtils.ts` - Budget-Specific Utilities
+- **getBudgetStatus(progress)** - Determine budget status (success/warning/danger)
+- **getStatusLabel(status)** - Get human-readable status label
+- **getStatusColor(status)** - Get color for budget status
+- **calculateBudgetMetrics(budgets)** - Calculate comprehensive budget metrics
+- **calculateBudgetStats(budgets)** - Calculate budget statistics
+- **transformBudgetWithSpending(budget, expenses)** - Transform budget with spending data
+- **getBudgetStatusMessage(progress)** - Get user-friendly budget status message
+- **getOverallBudgetMessage(overallProgress)** - Get overall budget message
+- **getCategoryIcon(categoryName)** - Get icon for category
+- **sortBudgetsBySpending(budgets)** - Sort budgets by spending amount
+- **sortBudgetsByProgress(budgets)** - Sort budgets by progress percentage
+- **sortBudgetsByName(budgets)** - Sort budgets alphabetically
+- **getBudgetsNeedingAttention(budgets)** - Filter budgets needing attention
+- **getBudgetsOnTrack(budgets)** - Filter on-track budgets
+- **calculateBudgetUtilization(budgets)** - Calculate overall budget utilization
+- **getTopSpendingCategories(budgets, limit)** - Get top spending categories
+- **isValidBudgetAmount(amount)** - Validate budget amount
+- **formatBudgetAmount(amount)** - Format amount as SEK currency
+- **formatPercentage(value)** - Format value as percentage
+- **calculateSavingsAmount(budgets)** - Calculate total savings amount
+- **calculateOverspendAmount(budgets)** - Calculate total overspend amount
+
+#### `budgetAllocation.ts` - Budget Allocation Logic
+- **calculateWeightedAllocations(categories, bucketBudget)** - Calculate weighted budget allocations with constraints
+- **getCategoryWeight(category)** - Get weight for category with fallbacks
+- **getCategoryConstraints(category)** - Get min/max constraints for category
+- **DEFAULT_CATEGORY_WEIGHTS** - Fallback weights for common categories
+- **roundBudgetAmount(amount, category)** - Apply rounding based on category type
+
+#### `recurringAnalytics.ts` - Recurring Expense Analytics
+- **computeRecurringSummary(templates, expenses, start, end)** - Calculate recurring expense summary
+- **RecurringSummary** interface - Type definition for recurring analytics
+
+### Configuration & Constants
+
+#### `constants.ts` - Application Constants
+- **COLORS** - CSS color variables mapping
+- **CHART_COLORS** - Chart-specific color palette
+- **STATUS_COLORS** - Status color mapping
+- **ICON_COLORS** - Icon color mapping
+- **ICON_BG_COLORS** - Icon background colors (20% opacity)
+- **BUDGET_STATUS_THRESHOLDS** - Status threshold values
+- **STATUS_LABELS** - Status label constants
+- **CATEGORY_ICONS** - Icon mapping for categories
+- **CATEGORY_DESCRIPTIONS** - Category descriptions as single source of truth
+- **ANIMATION_DURATIONS** - Animation timing constants
+- **SPACING** - Spacing scale using CSS variables
+- **BREAKPOINTS** - Responsive breakpoint definitions
+- **PROGRESS_SIZES** - Progress bar size configurations
+- **BADGE_SIZES** - Badge size configurations
+- **ICON_SIZES** - Icon size constants
+- **ICON_CONTAINER_SIZES** - Icon container size constants
+
+#### `categoryColors.ts` - Category Color Configuration
+- Centralized color assignments for categories
+- Consistent color scheme across the application
+
+#### `categoryIcons.ts` - Category Icon Configuration
+- Icon mappings for all categories
+- Consistent iconography across components
+
+### Specialized Utilities
+
+#### `budgetAggregation.ts` - Budget Aggregation Logic
+- Functions for aggregating budget data across different dimensions
+- Time-based aggregation utilities
+
+#### `budgetSuggestions.ts` - Budget Recommendation Engine
+- Logic for generating budget suggestions
+- Smart recommendation algorithms
+
+#### `recommendationEngine.ts` - Advanced Recommendation Logic
+- Complex recommendation algorithms
+- ML-enhanced budget suggestions
+
+#### `iconUtils.ts` - Icon Helper Functions
+- Icon resolution utilities
+- Dynamic icon loading helpers
+
+### Usage Guidelines
+
+1. **Always import from these utilities** instead of reimplementing functionality
+2. **Check existing utilities** before creating new functions
+3. **Contribute back** to shared utilities when creating reusable logic
+4. **Maintain type safety** - All utilities are properly typed with TypeScript
+5. **Follow naming conventions** - Use clear, descriptive function names
+6. **Document new utilities** - Add JSDoc comments for all public functions
+
+### Examples
+
+#### ✅ Correct Usage
+```typescript
+import { formatCurrency, calculateCategorySpending } from '@/lib/utils';
+import { getBudgetStatus, formatBudgetAmount } from '@/lib/budgetUtils';
+import { COLORS, STATUS_COLORS } from '@/lib/constants';
+
+// Use shared utilities
+const amount = formatCurrency(1234.56);
+const status = getBudgetStatus(progress);
+```
+
+#### ❌ Incorrect Usage
+```typescript
+// Don't reimplement existing utilities
+const formatCurrency = (amount: number) => {
+  return `SEK ${amount.toFixed(2)}`; // This already exists!
+};
+```
+
+### Testing
+
+All utilities have corresponding test files in `__tests__/` directories:
+- `budgetAggregation.test.ts`
+- `budgetAllocation.test.ts`
+- Add tests for new utilities to ensure reliability
+
+### Remember
+
+Using these shared utilities ensures:
+- **Consistency** across the application
+- **Maintainability** - single source of truth
+- **Type safety** - TypeScript interfaces included
+- **Performance** - optimized implementations
+- **DRY principle** - Don't Repeat Yourself

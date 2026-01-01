@@ -11,7 +11,7 @@ router.get('/monthly/:year/:month', auth, async (req, res) => {
   const { year, month } = req.params;
   
   try {
-    await generateRecurringExpenses(year, month);
+/*     await generateRecurringExpenses(year, month); */
 
     // Get all users for reference
     const users = await db('users').select('id', 'name');
@@ -159,7 +159,7 @@ router.get('/settle', auth, async (req, res) => {
   }
 
   try {
-    await generateRecurringExpenses(year, month);
+    /* await generateRecurringExpenses(year, month); */
 
     // Get current user and partner
     const currentUser = await db('users').where('id', req.user.id).first();
