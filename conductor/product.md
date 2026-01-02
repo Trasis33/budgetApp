@@ -10,11 +10,12 @@ The Couples Budget App is a specialized financial tool designed for couples who 
 - **Needs:** A system to fairly split costs (often based on income), track shared vs. personal spending, and simplify the monthly "settling up" process.
 
 ## Core Goals
-1.  **Fair Bill Splitting:** Automate calculations for splitting bills based on custom ratios (e.g., 50/50, income-based) or specific assignments.
-2.  **Spending Insights:** Provide clear visualizations of spending habits to help couples identify trends and save money together.
-3.  **Stress-Free Reconciliation:** Streamline the monthly "settling up" process to reduce financial friction and confusion.
-4.  **Joint Budgeting:** Enable couples to track their progress towards shared financial goals through joint budgeting features.
-5.  **Holistic Financial View:** Allow tracking of both shared and personal expenses (like individual subscriptions) to calculate total disposable income for the next month.
+1.  **End-Of-Month Workflow:** Most important feature. Focus on the specific needs of couples during their monthly financial reconciliation sessions.
+2.  **Fair Bill Splitting:** Automate calculations for splitting bills based on custom ratios (e.g., 50/50, income-based) or specific assignments.
+3.  **Spending Insights:** Provide clear visualizations of spending habits to help couples identify trends and save money together.
+4.  **Stress-Free Reconciliation:** Streamline the monthly "settling up" process to reduce financial friction and confusion.
+5.  **Joint Budgeting:** Enable couples to track their progress towards shared financial goals through joint budgeting features.
+6.  **Holistic Financial View:** Allow tracking of both shared and personal expenses (like individual subscriptions) to calculate total disposable income for the next month.
 
 ## Key Features
 -   **Quick & Easy Expense Entry:** Optimized for desktop use, allowing for rapid entry and editing of household bills and recurring costs during monthly sit-down sessions.

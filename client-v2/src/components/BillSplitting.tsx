@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Expense, User } from '../types';
 import { formatCurrency, calculateBalance, calculateExpenseShare, filterExpensesByMonth } from '../lib/utils';
-import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign, CalendarClock, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign, CalendarClock, CheckCircle2, Loader2, RefreshCw, Calendar } from 'lucide-react';
 import { expenseService } from '../api/services/expenseService';
 import { analyticsService } from '../api/services/analyticsService';
 import { authService } from '../api/services/authService';
@@ -26,8 +27,8 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
   const [pendingTemplatesCount, setPendingTemplatesCount] = useState(0);
 
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
 
   const loadData = async () => {
     try {
@@ -44,7 +45,7 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
       setSettlement(settlementData?.settlement || null);
 
       // Check for pending templates for this month
-      const monthlyExpenses = filterExpensesByMonth(expensesData || [], currentYear, currentMonth);
+      const monthlyExpenses = filterExpensesByMonth(expensesData || [], selectedYear, selectedMonth);
       const generatedTemplateIds = new Set(
         monthlyExpenses
           .filter(e => e.recurring_expense_id)
@@ -67,14 +68,14 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedYear, selectedMonth]);
 
   const handleGenerateRecurring = async () => {
     try {
       setIsGenerating(true);
       const result = await recurringExpenseService.generate({
-        year: currentYear,
-        month: currentMonth + 1 // API uses 1-indexed months
+        year: selectedYear,
+        month: selectedMonth + 1 // API uses 1-indexed months
       });
       
       if (result.generatedCount > 0) {
@@ -101,9 +102,20 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
     );
   }
 
-  const monthlyExpenses = filterExpensesByMonth(expenses, now.getFullYear(), now.getMonth());
+  const monthlyExpenses = filterExpensesByMonth(expenses, selectedYear, selectedMonth);
   const currentUser = users.find(u => u.id === user?.id);
   const partnerUser = users.find(u => u.id !== user?.id);
+
+  // Get available years for dropdown
+  const availableYears = Array.from(new Set(
+    expenses.map(exp => new Date(exp.date).getFullYear())
+  )).sort((a, b) => b - a);
+
+  // Get month name for display
+  const monthName = new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  });
 
   // Early return if we don't have the required data
   if (!currentUser || !partnerUser || users.length === 0) {
@@ -212,7 +224,43 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Settlement Summary</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Settlement Summary</CardTitle>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={selectedMonth.toString()}
+                  onValueChange={(val: string) => setSelectedMonth(parseInt(val))}
+                >
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {new Date(2024, i).toLocaleDateString('en-US', { month: 'short' })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(val: string) => setSelectedYear(parseInt(val))}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -313,7 +361,7 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
             <CardContent>
               <div>{formatCurrency(user1Paid + user2Paid)}</div>
               <p className="text-muted-foreground mt-1">
-                This month
+                {monthName}
               </p>
             </CardContent>
           </Card>
@@ -379,7 +427,7 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
                 })}
               {sharedExpenses.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
-                  No shared expenses this month
+                  No shared expenses for {monthName}
                 </p>
               )}
             </div>

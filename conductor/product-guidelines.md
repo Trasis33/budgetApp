@@ -4,7 +4,7 @@
 The Couples Budget App follows a "Professional & Secure" tone, emphasizing reliability and financial trust. The visual aesthetic is "Modern & Clean," leveraging the shadcn/ui design system for a refined, contemporary look. While maintaining a clean interface, the design accommodates high data density for advanced users during focused financial review sessions.
 
 ## Visual Identity
-- **Style:** Modern and clean with ample white space and high-quality typography.
+- **Style:** Modern and clean with a focus on clarity and high-quality typography.
 - **Data Density:** Surfaces complex data and dense tables where necessary (e.g., end-of-month reconciliation), ensuring all critical information is visible without overwhelming the user.
 - **Color Palette (oklch):**
     - `Amber`: `oklch(.646 .222 41.116)`
@@ -17,7 +17,7 @@ The Couples Budget App follows a "Professional & Secure" tone, emphasizing relia
     - `Cyan`: `oklch(.7 .16 200)`
     - `Periwinkle`: `oklch(.78 .16 260)`
     - `Mint`: `oklch(.82 .12 140)`
-    - *Usage:* These vibrant theme colors are used for category identification, chart series, and accent elements, balanced against professional neutrals (grays/whites) to maintain a secure and trustworthy feel.
+    - *Usage:* These vibrant theme colors are used for category identification, chart series, and accent elements, balanced against professional neutrals (grays/ off-whites) to maintain a secure and trustworthy feel.
 
 ## User Interface Principles
 - **Progressive Disclosure:** Complexity is managed by showing essential information first. Advanced options, detailed breakdowns, and dense data views are revealed only when requested or in specific workflows.
@@ -25,6 +25,7 @@ The Couples Budget App follows a "Professional & Secure" tone, emphasizing relia
 - **Consistency:** Use standardized shadcn/ui components to ensure a predictable and professional experience across the entire application.
 
 ## Interaction & Communication
+- **Language:** The language of the app is in Swedish.
 - **Tone of Voice:** Direct, professional, and reassuring. Avoid overly casual language to maintain the sense of financial responsibility.
 - **Feedback Loop:** Provide immediate and clear feedback for all user actions.
 - **Notifications & Alerts:**
