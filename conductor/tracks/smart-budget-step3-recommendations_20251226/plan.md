@@ -27,11 +27,23 @@
   - [x] Shows for all users (data availability checked on page load)
 - [ ] Task: Write tests for BudgetInsightsPage (deferred - complex mocking required)
 
-## PIVOT PHASE C: Cleanup & Documentation [ ]
+## PIVOT PHASE C: Cleanup & Documentation [x]
 
 - [x] Task: Remove Step3Recommendations from wizard imports (already done in Phase A)
-- [~] Task: Update any documentation referencing 3-step wizard
-- [ ] Task: Manual verification of new flow
+- [x] Task: Update any documentation referencing 3-step wizard
+- [x] Task: Manual verification of new flow
+
+**Manual Verification Steps (for user):**
+1. Start backend server: `npm run dev:server` from project root
+2. Start frontend: `npm run dev:win` from client-v2/
+3. Navigate to http://localhost:3001/dashboard
+4. Verify "Insights" button appears in Quick Actions grid
+5. Click "Insights" to navigate to /insights page
+6. Verify page shows "Budget Insights" header and "Back to Dashboard" button
+7. Open Smart Budget Wizard from Budget Manager
+8. Verify wizard has only 2 steps (Step 1: Strategy, Step 2: Architect)
+9. Verify Step 2 button says "Apply Budget" (not "Review Suggestions")
+10. Complete wizard and verify budget saves directly without Step 3
 
 ---
 
