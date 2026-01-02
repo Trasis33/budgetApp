@@ -71,6 +71,7 @@
       },
       "scripts": {
             "dev": "BROWSER='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' vite --port 3001",
+            "dev:win": "vite --port 3001",
             "build": "vite build",
             "preview": "vite preview --port 3001",
             "test": "jest",

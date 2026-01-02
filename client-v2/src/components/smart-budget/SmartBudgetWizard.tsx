@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dia
 import { Category, BudgetWithSpending, Budget, RecurringTemplate } from '../../types';
 import { Step1Strategy } from './Step1Strategy';
 import { Step2Architect } from './Step2Architect';
-import { Step3Recommendations } from './Step3Recommendations';
+// Step3Recommendations removed - recommendations moved to standalone Budget Insights page
 import { WizardState } from './types';
 import { budgetService } from '../../api/services/budgetService';
 import { recurringExpenseService } from '../../api/services/recurringExpenseService';
@@ -31,9 +31,9 @@ export function SmartBudgetWizard({
   year
 }: SmartBudgetWizardProps) {
   const { summary, refresh } = useScope();
-  
+
   const [state, setState] = useState<WizardState>({
-    step:1,
+    step: 1,
     income: 45000, // Default start value (will be updated from couple data)
     userIncome: 0,
     partnerIncome: 0,
@@ -51,7 +51,7 @@ export function SmartBudgetWizard({
       const userIncome = summary.couple.user?.monthly_net_income || 0;
       const partnerIncome = summary.couple.partner?.monthly_net_income || 0;
       const combined = userIncome + partnerIncome;
-      
+
       setState(prev => ({
         ...prev,
         userIncome,
@@ -245,66 +245,46 @@ export function SmartBudgetWizard({
           A wizard to help you set up your monthly budget based on income and strategies.
         </DialogDescription>
         <div className="h-full flex flex-col min-h-0">
-            <AnimatePresence mode="wait">
-                {state.step === 1 ? (
-                    <Step1Strategy
-                        key="step1"
-                        income={state.income}
-                        userIncome={state.userIncome}
-                        partnerIncome={state.partnerIncome}
-                        setUserIncome={(val) => updateState({ userIncome: val, income: val + state.partnerIncome })}
-                        setPartnerIncome={(val) => updateState({ partnerIncome: val, income: state.userIncome + val })}
-                        userName={summary?.couple?.user?.name || 'You'}
-                        partnerName={summary?.couple?.partner?.name || 'Partner'}
-                        hasPartner={summary?.couple?.connected || false}
-                        selectedStrategy={state.selectedStrategy}
-                        setStrategy={(val) => updateState({ selectedStrategy: val })}
-                        onNext={() => updateState({ step: 2 })}
-                        onCancel={onClose}
-                    />
-                ) : state.step === 2 ? (
-                    <Step2Architect
-                        key="step2"
-                        state={state}
-                        categories={categories}
-                        billCategoryIds={recurringTemplates.filter(t => t.bill_managed).map(t => t.category_id)}
-                        updateFixed={(catId, val) => {
-                            setState(prev => ({
-                                ...prev,
-                                fixedExpenses: { ...prev.fixedExpenses, [catId]: val }
-                            }));
-                        }}
-                        updateVariable={(catId, val) => {
-                            setState(prev => ({
-                                ...prev,
-                                variableAllocations: { ...prev.variableAllocations, [catId]: val }
-                            }));
-                        }}
-                        onBack={() => updateState({ step: 1 })}
-                        onSave={() => updateState({ step: 3 })}
-                    />
-                ) : (
-                    <Step3Recommendations
-                        key="step3"
-                        state={state}
-                        categories={categories}
-                        updateFixed={(catId, val) => {
-                            setState(prev => ({
-                                ...prev,
-                                fixedExpenses: { ...prev.fixedExpenses, [catId]: val }
-                            }));
-                        }}
-                        updateVariable={(catId, val) => {
-                            setState(prev => ({
-                                ...prev,
-                                variableAllocations: { ...prev.variableAllocations, [catId]: val }
-                            }));
-                        }}
-                        onBack={() => updateState({ step: 2 })}
-                        onSave={handleSave}
-                    />
-                )}
-            </AnimatePresence>
+          <AnimatePresence mode="wait">
+            {state.step === 1 ? (
+              <Step1Strategy
+                key="step1"
+                income={state.income}
+                userIncome={state.userIncome}
+                partnerIncome={state.partnerIncome}
+                setUserIncome={(val) => updateState({ userIncome: val, income: val + state.partnerIncome })}
+                setPartnerIncome={(val) => updateState({ partnerIncome: val, income: state.userIncome + val })}
+                userName={summary?.couple?.user?.name || 'You'}
+                partnerName={summary?.couple?.partner?.name || 'Partner'}
+                hasPartner={summary?.couple?.connected || false}
+                selectedStrategy={state.selectedStrategy}
+                setStrategy={(val) => updateState({ selectedStrategy: val })}
+                onNext={() => updateState({ step: 2 })}
+                onCancel={onClose}
+              />
+            ) : (
+              <Step2Architect
+                key="step2"
+                state={state}
+                categories={categories}
+                billCategoryIds={recurringTemplates.filter(t => t.bill_managed).map(t => t.category_id)}
+                updateFixed={(catId, val) => {
+                  setState(prev => ({
+                    ...prev,
+                    fixedExpenses: { ...prev.fixedExpenses, [catId]: val }
+                  }));
+                }}
+                updateVariable={(catId, val) => {
+                  setState(prev => ({
+                    ...prev,
+                    variableAllocations: { ...prev.variableAllocations, [catId]: val }
+                  }));
+                }}
+                onBack={() => updateState({ step: 1 })}
+                onSave={handleSave}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>

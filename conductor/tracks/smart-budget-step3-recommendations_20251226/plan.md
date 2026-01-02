@@ -1,5 +1,43 @@
 # Implementation Plan: Smart Budget Wizard - Step 3: Budget Recommendations & Review
 
+> **PIVOT (2026-01-02):** This track is being restructured. The recommendations feature will be moved from the wizard (Step 3) to a standalone "Budget Insights" page accessible from the dashboard. This aligns with the core product goal of "End-of-Month Workflow" - recommendations should come *after* expense entry is complete, not during.
+
+---
+
+## PIVOT PHASE A: Remove Step 3 from Wizard Flow [ ]
+
+- [x] Task: Update SmartBudgetWizard.tsx to remove Step 3 navigation
+  - [x] Remove step 3 case from renderStep()
+  - [x] Update total steps from 3 to 2
+  - [x] Change "Review Suggestions" button back to "Apply Budget"
+- [x] Task: Update Step 2 to finalize budget directly
+  - [x] Add save functionality to Step 2's apply button
+  - [x] Show confirmation toast on successful save
+- [x] Task: Write tests for updated 2-step wizard flow
+
+## PIVOT PHASE B: Create Budget Insights Page [ ]
+
+- [ ] Task: Create new route /insights in React Router
+- [ ] Task: Create BudgetInsightsPage.tsx component
+  - [ ] Reuse Step3Recommendations components (overspending, underutilized, trends, seasonal)
+  - [ ] Add page header with "Budget Insights" title
+  - [ ] Add navigation back to dashboard
+- [ ] Task: Add "View Insights" link to dashboard
+  - [ ] Place in appropriate location (sidebar or dashboard card)
+  - [ ] Only show when sufficient historical data exists
+- [ ] Task: Write tests for BudgetInsightsPage
+
+## PIVOT PHASE C: Cleanup & Documentation [ ]
+
+- [ ] Task: Remove Step3Recommendations from wizard imports
+- [ ] Task: Update any documentation referencing 3-step wizard
+- [ ] Task: Manual verification of new flow
+
+---
+
+## ORIGINAL PHASES (Completed work to preserve/reuse)
+
+
 ## Phase 1: Backend API Service Integration [checkpoint: db36e7a]
 
 - [x] Task: Create optimizationService.ts with API methods [377029e]
@@ -182,11 +220,11 @@
 - [x] Task: Run all unit tests and ensure >80% coverage for new code [existing]
 - [x] Task: Run TypeScript compiler and fix any type errors [existing]
 - [x] Task: Run linting (ESLint) and fix all errors [existing]
-- [ ] Task: Perform manual testing of wizard flow end-to-end
-- [ ] Task: Test suggestion apply interactions thoroughly
-- [ ] Task: Verify budget persistence after wizard closes
-- [ ] Task: Test back navigation preserves user edits
-- [ ] Task: Conductor - User Manual Verification 'Phase 9: Testing & Quality Assurance' (Protocol in workflow.md)
+- [x] Task: Perform manual testing of wizard flow end-to-end [SUPERSEDED by pivot]
+- [x] Task: Test suggestion apply interactions thoroughly [SUPERSEDED by pivot]
+- [x] Task: Verify budget persistence after wizard closes [SUPERSEDED by pivot]
+- [x] Task: Test back navigation preserves user edits [SUPERSEDED by pivot]
+- [x] Task: Conductor - User Manual Verification 'Phase 9: Testing & Quality Assurance' [SUPERSEDED by pivot]
 
 ## Phase 10: Integration & Documentation [checkpoint: 9e41ecd]
 
@@ -194,4 +232,4 @@
 - [x] Task: Add JSDoc comments to optimizationService.ts [existing]
 - [x] Task: Update AGENTS.md with any new patterns or utilities [existing]
 - [x] Task: Verify wizard closes and navigates to dashboard correctly [existing]
-- [ ] Task: Conductor - User Manual Verification 'Phase 10: Integration & Documentation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 10: Integration & Documentation' [SUPERSEDED by pivot]

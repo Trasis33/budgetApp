@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
-import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
+export default defineConfig(async () => {
+  const tailwindcss = (await import('@tailwindcss/vite')).default;
+  return {
+    plugins: [react(), tailwindcss()],
+    resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
     alias: {
       'vaul@1.1.2': 'vaul',
@@ -49,11 +50,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  build: {
+    build: {
     target: 'esnext',
     outDir: 'build',
   },
-  server: {
+    server: {
     port: 3001,
     open: true,
     proxy: {
@@ -62,5 +63,6 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-  },
+    },
+  };
 });
