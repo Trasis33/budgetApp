@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Expense, Budget, Category } from '../types';
 import { formatCurrency, formatDate, filterExpensesByMonth, calculateCategorySpending, getBudgetProgress } from '../lib/utils';
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt, ArrowRight, Users, User, Heart, Settings } from 'lucide-react';
+import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Receipt, ArrowRight, Users, User, Heart, Settings, Lightbulb } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { RecurringTemplatesDialog } from './RecurringTemplatesDialog';
@@ -102,14 +102,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
       </div>
     );
   }
-  
+
   const monthlyExpenses = filterExpensesByMonth(expenses, currentYear, currentMonth);
-  
+
   // Separate variable (budgeted) vs fixed (recurring) expenses
   const budgetedCategoryIds = new Set(budgets.map(b => b.category_id));
   const variableExpenses = monthlyExpenses.filter(exp => budgetedCategoryIds.has(exp.category_id));
   const fixedExpenses = monthlyExpenses.filter(exp => exp.recurring_expense_id != null);
-  
+
   const variableSpent = variableExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const fixedSpent = fixedExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
@@ -132,7 +132,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     .filter(exp => exp.recurring_expense_id == null)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
-  
+
   const recentFixedExpenses = [...fixedExpenses]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
@@ -190,13 +190,13 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     if (expense.category_color) {
       return getCategoryColor({ color: expense.category_color });
     }
-    
+
     // Fallback: find the matching budget to get the category color
     const matchingBudget = budgets.find(b => b.category_id === expense.category_id);
     if (matchingBudget?.category_color) {
       return getCategoryColor({ color: matchingBudget.category_color });
     }
-    
+
     // Final fallback: use default color
     return getCategoryColor({});
   };
@@ -208,21 +208,21 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
       {/* Scope Selector */}
       <div className="flex items-center justify-between mb-6">
         <div className="scope-selector w-fit">
-          <div 
+          <div
             className={`scope-option ${currentScope === 'ours' ? 'active' : ''}`}
             onClick={() => setScope('ours')}
           >
             <Users className="w-4 h-4" />
             Shared
           </div>
-          <div 
+          <div
             className={`scope-option ${currentScope === 'mine' ? 'active' : ''}`}
             onClick={() => setScope('mine')}
           >
             <User className="w-4 h-4" />
             Personal
           </div>
-          <div 
+          <div
             className={`scope-option ${currentScope === 'partner' ? 'active' : ''}`}
             onClick={() => setScope('partner')}
           >
@@ -233,13 +233,13 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         <div className="flex items-center gap-3">
           {isPartnerConnected && (
             <div className="flex items-center gap-2">
-              <div 
+              <div
                 className={`partner-avatar ${user?.color ? '' : 'partner-avatar-primary'}`}
                 style={getPartnerAvatarStyle(true)}
               >
                 {getPartnerInitial(user?.name)}
               </div>
-              <div 
+              <div
                 className={`partner-avatar ${summary?.couple?.partner?.color ? '' : 'partner-avatar-secondary'}`}
                 style={getPartnerAvatarStyle(false)}
               >
@@ -264,7 +264,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 💕 Ready to team up?
               </h2>
               <p className="text-gray-600 mb-4">
-                CouplesFlow works best when you and your partner track money together. 
+                CouplesFlow works best when you and your partner track money together.
                 Invite them to start managing expenses as a team!
               </p>
               <div className="space-y-3">
@@ -315,9 +315,9 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <Button 
-                type="button" 
-                onClick={() => navigate('/add-expense')} 
+              <Button
+                type="button"
+                onClick={() => navigate('/add-expense')}
                 className="gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
@@ -349,7 +349,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               Ready to track your first expense?
             </h3>
             <p className="text-gray-600 mb-6">
-              Let's start with something simple – maybe coffee, groceries, or a gas fill-up. 
+              Let's start with something simple – maybe coffee, groceries, or a gas fill-up.
               Every expense you track helps you see the full picture.
             </p>
             <div className="space-y-3">
@@ -446,7 +446,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           {/* Main Content Grid - 2x2 layout */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Row 1: Recent Variable Expenses + Budget Performance */}
-            
+
             {/* Recent Variable Expenses */}
             <Card>
               <CardHeader>
@@ -470,20 +470,20 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                     const IconComponent = getIconByName(expense.category_icon);
                     const categoryColor = getExpenseCategoryColor(expense, budgets);
                     const isCurrentUser = expense.paid_by_user_id === user?.id;
-                    
+
                     return (
                       <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             {isPartnerConnected && (
-                              <div 
+                              <div
                                 className={`partner-avatar text-xs ${(isCurrentUser ? user?.color : summary?.couple?.partner?.color) ? '' : getPartnerAvatarClass(isCurrentUser)}`}
                                 style={getPartnerAvatarStyle(isCurrentUser)}
                               >
                                 {getPartnerInitial(isCurrentUser ? user?.name : summary?.couple?.partner?.name)}
                               </div>
                             )}
-                            <div 
+                            <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                               style={getCategoryIconStyle(categoryColor, false, 0.25)}
                             >
@@ -550,7 +550,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                       <div key={budget.id} className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div 
+                            <div
                               className="w-6 h-6 rounded flex items-center justify-center"
                               style={getCategoryIconStyle(categoryColor, false, 0.35)}
                             >
@@ -563,9 +563,9 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                           </span>
                         </div>
                         <div className={`${styles.progressBar} ${styles.progressBarSm}`}>
-                          <div 
-                            className={`${styles.progressFill} ${getProgressColorClass(progress)}`} 
-                            style={{ 
+                          <div
+                            className={`${styles.progressFill} ${getProgressColorClass(progress)}`}
+                            style={{
                               width: `${Math.min(progress, 100)}%`,
                               ...(budget.category_color ? { backgroundColor: budget.category_color } : {})
                             }}
@@ -590,7 +590,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             </Card>
 
             {/* Row 2: Fixed Expenses + Recurring Bills Card */}
-            
+
             {/* Fixed Expenses */}
             <Card>
               <CardHeader>
@@ -607,20 +607,20 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                     const IconComponent = getIconByName(expense.category_icon);
                     const categoryColor = getExpenseCategoryColor(expense, budgets);
                     const isCurrentUser = expense.paid_by_user_id === user?.id;
-                    
+
                     return (
                       <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             {isPartnerConnected && (
-                              <div 
+                              <div
                                 className={`partner-avatar text-xs ${(isCurrentUser ? user?.color : summary?.couple?.partner?.color) ? '' : getPartnerAvatarClass(isCurrentUser)}`}
                                 style={getPartnerAvatarStyle(isCurrentUser)}
                               >
                                 {getPartnerInitial(isCurrentUser ? user?.name : summary?.couple?.partner?.name)}
                               </div>
                             )}
-                            <div 
+                            <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                               style={getCategoryIconStyle(categoryColor, false, 0.25)}
                             >
@@ -682,10 +682,14 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <button className="btn-ghost justify-center" onClick={() => navigate('/analytics')}>
                   <TrendingUp className="w-4 h-4" />
                   Analytics
+                </button>
+                <button className="btn-ghost justify-center" onClick={() => navigate('/insights')}>
+                  <Lightbulb className="w-4 h-4" />
+                  Insights
                 </button>
                 <button className="btn-ghost justify-center" onClick={() => navigate('/settlement')}>
                   <DollarSign className="w-4 h-4" />
@@ -704,7 +708,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           </Card>
         </>
       )}
-      
+
       {/* Partner Invitation Modal */}
       <PartnerInviteModal
         open={inviteModalOpen}

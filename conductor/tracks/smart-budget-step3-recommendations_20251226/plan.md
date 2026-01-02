@@ -17,20 +17,20 @@
 
 ## PIVOT PHASE B: Create Budget Insights Page [ ]
 
-- [ ] Task: Create new route /insights in React Router
-- [ ] Task: Create BudgetInsightsPage.tsx component
-  - [ ] Reuse Step3Recommendations components (overspending, underutilized, trends, seasonal)
-  - [ ] Add page header with "Budget Insights" title
-  - [ ] Add navigation back to dashboard
-- [ ] Task: Add "View Insights" link to dashboard
-  - [ ] Place in appropriate location (sidebar or dashboard card)
-  - [ ] Only show when sufficient historical data exists
-- [ ] Task: Write tests for BudgetInsightsPage
+- [x] Task: Create new route /insights in React Router
+- [x] Task: Create BudgetInsightsPage.tsx component
+  - [x] Reuse Step3Recommendations components (overspending, underutilized, trends, seasonal)
+  - [x] Add page header with "Budget Insights" title
+  - [x] Add navigation back to dashboard
+- [x] Task: Add "View Insights" link to dashboard
+  - [x] Place in appropriate location (Quick Actions grid)
+  - [x] Shows for all users (data availability checked on page load)
+- [ ] Task: Write tests for BudgetInsightsPage (deferred - complex mocking required)
 
 ## PIVOT PHASE C: Cleanup & Documentation [ ]
 
-- [ ] Task: Remove Step3Recommendations from wizard imports
-- [ ] Task: Update any documentation referencing 3-step wizard
+- [x] Task: Remove Step3Recommendations from wizard imports (already done in Phase A)
+- [~] Task: Update any documentation referencing 3-step wizard
 - [ ] Task: Manual verification of new flow
 
 ---

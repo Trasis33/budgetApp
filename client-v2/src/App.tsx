@@ -15,6 +15,7 @@ import { BillsDesignOne } from './components/mockups/BillsDesignOne';
 import { BillsDesignTwo } from './components/mockups/BillsDesignTwo';
 import { BudgetManagerDesignThree } from './components/mockups/BudgetManagerDesignThree';
 import { Settings } from './components/Settings';
+import { BudgetInsightsPage } from './components/BudgetInsightsPage';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -44,6 +45,7 @@ const MainApp = () => {
             <Route path="/split" element={<BillSplitting onNavigate={setCurrentView} />} />
             <Route path="/statement" element={<MonthlyStatement onNavigate={setCurrentView} />} />
             <Route path="/settings" element={<Settings onNavigate={setCurrentView} />} />
+            <Route path="/insights" element={<BudgetInsightsPage onNavigate={setCurrentView} />} />
             <Route path="/bills-design-one" element={<BillsDesignOne />} />
             <Route path="/bills-design-two" element={<BillsDesignTwo />} />
             <Route path="/budget-design-three" element={<BudgetManagerDesignThree />} />
