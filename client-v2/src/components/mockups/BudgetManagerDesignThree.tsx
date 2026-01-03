@@ -27,7 +27,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
-import { getCategoryIcon } from '../../lib/budgetUtils';
+import { getIconByName } from '../../lib/categoryIcons';
 import { useBudgetData, useBudgetCalculations } from '../../hooks';
 import { useSettlement } from '../../hooks/useSettlement';
 import { useScope } from '../../context/ScopeContext';
@@ -606,7 +606,8 @@ export function BudgetManagerDesignThree({ onNavigate: _onNavigate }: BudgetMana
                       const status = getStatusInfo(budget.progress);
                       const StatusIcon = status.icon;
                       const isExpanded = expandedCategory === budget.id;
-                      const { icon: CategoryIcon, color: categoryColor } = getCategoryIcon(budget.category_name);
+                      const CategoryIcon = getIconByName(budget.category_icon);
+                      const categoryColor = budget.category_color || 'var(--theme-teal)';
                       const { userSpent, partnerSpent } = getUserSpending(budget.category_name);
                       const transactions = getCategoryTransactions(budget.category_name);
                       const budgetComments = comments[budget.id] || [];

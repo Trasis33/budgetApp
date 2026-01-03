@@ -20,7 +20,7 @@ import { useDate } from '../context/DateContext';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
-import styles from '../styles/budget/budget-metrics.module.css';
+
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -145,28 +145,11 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     spent: calculateCategorySpending(monthlyExpenses, budget.category_name)
   })).filter(b => b.spent > 0);
 
-  // Helper functions for consistent styling
-  const getProgressColorClass = (progress?: number) => {
-    const progressValue = progress ?? budgetProgress;
-    if (progressValue > 100) return styles.progressFillDanger;
-    if (progressValue >= 80) return styles.progressFillWarning;
-    return styles.progressFillSuccess;
-  };
-
+  // Helper function for budget progress text color
   const getProgressTextColor = (progress: number) => {
     if (progress > 100) return 'text-red-500'; // Above budget - red/coral
     if (progress === 100) return 'text-amber-500'; // At budget - amber/yellow
     return 'text-emerald-600'; // Under budget - mint/emerald color
-  };
-
-  const getIconColorClass = (index: number) => {
-    const colorClasses = [
-      styles.iconTeal,
-      styles.iconCoral,
-      styles.iconAmber,
-      styles.iconIndigo,
-    ];
-    return colorClasses[index % colorClasses.length];
   };
 
   const getPartnerInitial = (name?: string) => {
@@ -368,82 +351,95 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
         </div>
       ) : (
         <>
-          {/* Metrics Grid using BudgetManager styling */}
-          <div className={`${styles.metricsGrid} mb-6`}>
+          {/* Metrics Grid using shadcn Card styling */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Budget Status - Variable spending vs budget */}
-            <div className={styles.metricCard}>
-              <div className={styles.metricContent}>
-                <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>Budget Status</div>
-                  <div className={styles.metricValue}>{formatCurrency(variableSpent)}</div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    of {formatCurrency(totalBudget)} budgeted
+            <Card className="">
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Budget Status</p>
+                    <p className="text-2xl font-bold mt-1">{formatCurrency(variableSpent)}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      of {formatCurrency(totalBudget)} budgeted
+                    </p>
+                    <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all ${
+                          budgetProgress > 100 ? 'bg-red-500' : budgetProgress >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`} 
+                        style={{ width: `${Math.min(budgetProgress, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className={`${styles.progressBar} ${styles.progressBarSm} mt-2`}>
-                    <div className={`${styles.progressFill} ${getProgressColorClass()}`} style={{ width: `${Math.min(budgetProgress, 100)}%` }}></div>
+                  <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                    <DollarSign className="w-5 h-5" />
                   </div>
                 </div>
-                <div className={`${styles.metricIcon} ${getIconColorClass(0)}`}>
-                  <DollarSign className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Fixed Costs */}
-            <div className={styles.metricCard}>
-              <div className={styles.metricContent}>
-                <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>Fixed Costs</div>
-                  <div className={styles.metricValue}>{formatCurrency(fixedSpent)}</div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    {fixedExpenses.length} recurring expense{fixedExpenses.length !== 1 ? 's' : ''}
+            <Card className="">
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Fixed Costs</p>
+                    <p className="text-2xl font-bold mt-1">{formatCurrency(fixedSpent)}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {fixedExpenses.length} recurring expense{fixedExpenses.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                    <Receipt className="w-5 h-5" />
                   </div>
                 </div>
-                <div className={`${styles.metricIcon} ${getIconColorClass(1)}`}>
-                  <Receipt className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Spending Trend */}
-            <div className={styles.metricCard}>
-              <div className={styles.metricContent}>
-                <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>Trend</div>
-                  <div className={`${styles.metricValue} ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
-                    {spendingChange <= 0 ? '' : '+'}{spendingChange.toFixed(1)}%
+            <Card className="">
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Trend</p>
+                    <p className={`text-2xl font-bold mt-1 ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                      {spendingChange <= 0 ? '' : '+'}{spendingChange.toFixed(1)}%
+                    </p>
+                    <p className={`text-sm mt-1 ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                      {spendingChange <= 0 ? 'Under last month' : 'Over last month'}
+                    </p>
                   </div>
-                  <div className={`text-sm ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'} mt-1`}>
-                    {spendingChange <= 0 ? 'Under last month' : 'Over last month'}
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    {spendingChange > 0 ? (
+                      <TrendingUp className="w-5 h-5" />
+                    ) : (
+                      <TrendingDown className="w-5 h-5" />
+                    )}
                   </div>
                 </div>
-                <div className={`${styles.metricIcon} ${getIconColorClass(2)}`}>
-                  {spendingChange > 0 ? (
-                    <TrendingUp className="w-5 h-5" />
-                  ) : (
-                    <TrendingDown className="w-5 h-5" />
-                  )}
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Avg per Day */}
-            <div className={styles.metricCard}>
-              <div className={styles.metricContent}>
-                <div className={styles.metricInfo}>
-                  <div className={styles.metricLabel}>Avg per Day</div>
-                  <div className={styles.metricValue}>
-                    {formatCurrency(variableSpent / Math.max(1, now.getDate()))}
+            <Card className="">
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Avg per Day</p>
+                    <p className="text-2xl font-bold mt-1">
+                      {formatCurrency(variableSpent / Math.max(1, now.getDate()))}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Based on {now.getDate()} days
+                    </p>
                   </div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Based on {now.getDate()} days
+                  <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <TrendingUp className="w-5 h-5" />
                   </div>
                 </div>
-                <div className={`${styles.metricIcon} ${getIconColorClass(3)}`}>
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Main Content Grid - 2x2 layout */}
@@ -565,14 +561,16 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             {formatCurrency(budget.spent || 0)} / {formatCurrency(budget.amount || 0)}
                           </span>
                         </div>
-                        <div className={`${styles.progressBar} ${styles.progressBarSm}`}>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div 
-                            className={`${styles.progressFill} ${getProgressColorClass(progress)}`} 
+                            className={`h-full rounded-full transition-all ${
+                              progress > 100 ? 'bg-red-500' : progress >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`} 
                             style={{ 
                               width: `${Math.min(progress, 100)}%`,
                               ...(budget.category_color ? { backgroundColor: budget.category_color } : {})
                             }}
-                          ></div>
+                          />
                         </div>
                       </div>
                     );
