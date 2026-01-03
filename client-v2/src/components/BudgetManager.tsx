@@ -50,6 +50,16 @@ import {
   DialogDescription,
   DialogFooter
 } from './ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
@@ -963,12 +973,11 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     )}
                                     
                                     <div className="flex gap-2">
-                                      <input
-                                        type="text"
+                                      <Input
                                         placeholder="Add a comment..."
                                         value={commentInputs[budget.id] || ''}
                                         onChange={(e) => setCommentInputs(prev => ({ ...prev, [budget.id]: e.target.value }))}
-                                        className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="flex-1"
                                         onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(budget.id); }}
                                       />
                                       <Button 
@@ -1210,32 +1219,23 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-semibold mb-2">Delete Budget?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open: boolean) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Budget?</AlertDialogTitle>
+            <AlertDialogDescription>
               This will remove the budget but won't affect any existing expenses. You can always create a new budget later.
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => handleDeleteBudget(deleteConfirm)}
-                className="flex-1"
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteConfirm && handleDeleteBudget(deleteConfirm)} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

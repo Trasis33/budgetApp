@@ -233,9 +233,9 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </div>
             </div>
           )}
-          <button className="btn-ghost">
+          <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-900">
             <Settings className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
       {/* Partner Invitation Banner for Unpaired Users */}
@@ -684,22 +684,22 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button className="btn-ghost justify-center" onClick={() => navigate('/analytics')}>
+                <Button variant="ghost" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/analytics')}>
                   <TrendingUp className="w-4 h-4" />
                   Analytics
-                </button>
-                <button className="btn-ghost justify-center" onClick={() => navigate('/settlement')}>
+                </Button>
+                <Button variant="ghost" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/settlement')}>
                   <DollarSign className="w-4 h-4" />
                   Settlement
-                </button>
-                <button className="btn-ghost justify-center" onClick={() => navigate('/tips')}>
+                </Button>
+                <Button variant="ghost" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/tips')}>
                   <Heart className="w-4 h-4" />
                   Tips
-                </button>
-                <button className="btn-ghost justify-center" onClick={() => navigate('/share')}>
+                </Button>
+                <Button variant="ghost" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/share')}>
                   <Users className="w-4 h-4" />
                   Share
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>

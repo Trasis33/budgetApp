@@ -249,14 +249,16 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                 {/* Quick Presets (Additive) */}
                 <div className="flex justify-center gap-2 mt-4">
                   {[100, 200, 500].map((val) => (
-                    <button
+                    <Button
                       key={val}
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleQuickAdd(val)}
-                      className="px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                      className="rounded-full h-7 px-3 text-xs font-medium text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-100"
                     >
                       +{val}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -364,10 +366,11 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                     {/* Payer Row */}
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-slate-600">Paid by</span>
-                      <button 
+                      <Button 
                         type="button"
+                        variant="outline"
                         onClick={togglePayer}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                        className="flex items-center gap-2 h-auto py-1.5 px-3 bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-900 font-normal"
                       >
                         <div 
                           className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
@@ -385,55 +388,59 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         </div>
                         <span className="text-sm font-medium text-slate-700">{getPayerName()}</span>
                         <ChevronDown className="h-3 w-3 text-slate-400" />
-                      </button>
+                      </Button>
                     </div>
 
                     {/* Split Type Selection */}
                     <div className="grid grid-cols-2 gap-2">
-                      <button 
+                      <Button 
                         type="button"
+                        variant={formData.split_type === '50/50' ? 'default' : 'outline'}
                         onClick={() => setFormData({ ...formData, split_type: '50/50' })}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border transition-all ${
+                        className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === '50/50' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
                         }`}
                       >
                         50/50 Split
-                      </button>
-                      <button 
+                      </Button>
+                      <Button 
                         type="button"
+                        variant={formData.split_type === 'personal' ? 'default' : 'outline'}
                         onClick={() => setFormData({ ...formData, split_type: 'personal' })}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border transition-all ${
+                        className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === 'personal' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
                         }`}
                       >
                         Personal
-                      </button>
-                      <button 
+                      </Button>
+                      <Button 
                         type="button"
+                        variant={formData.split_type === 'bill' ? 'default' : 'outline'}
                         onClick={() => setFormData({ ...formData, split_type: 'bill' })}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border transition-all ${
+                        className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === 'bill' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
                         }`}
                       >
                         Partner Bill
-                      </button>
-                      <button 
+                      </Button>
+                      <Button 
                         type="button"
+                        variant={formData.split_type === 'custom' ? 'default' : 'outline'}
                         onClick={() => setFormData({ ...formData, split_type: 'custom' })}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border transition-all ${
+                        className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === 'custom' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
                         }`}
                       >
                         Custom
-                      </button>
+                      </Button>
                     </div>
 
                     {/* Custom Split Slider */}
@@ -508,10 +515,10 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <button 
+              <Button 
                 onClick={() => handleSubmit(false)}
                 disabled={loading}
-                className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all gap-2 rounded-xl"
               >
                 {loading ? (
                   <span className="animate-spin">⌛</span>
@@ -519,12 +526,13 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                   <Check className="h-6 w-6" />
                 )}
                 {loading ? 'Saving...' : 'Save Expense'}
-              </button>
+              </Button>
               
-              <button 
+              <Button 
+                variant="outline"
                 onClick={() => handleSubmit(true)}
                 disabled={loading}
-                className="w-full py-3 bg-white text-slate-700 rounded-xl font-medium border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full h-12 text-base bg-white text-slate-700 hover:text-slate-900 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl gap-2 font-medium"
               >
                 {loading ? (
                   <span className="animate-spin">⌛</span>
@@ -532,7 +540,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                   <Check className="h-5 w-5" />
                 )}
                 {loading ? 'Saving...' : 'Save and Add Another'}
-              </button>
+              </Button>
             </div>
           </div>
 
