@@ -681,7 +681,11 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <Button variant="ghost" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/insights')}>
+                  <TrendingUp className="w-4 h-4" />
+                  Insights
+                </Button>
                 <Button variant="ghost" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/analytics')}>
                   <TrendingUp className="w-4 h-4" />
                   Analytics
