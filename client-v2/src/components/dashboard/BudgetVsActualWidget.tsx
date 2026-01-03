@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle, Info, Settings } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 import { Expense, Category } from '../../types';
 import { useNavigate } from 'react-router-dom';
+import { useDate } from '../../context/DateContext';
 
 interface SpendingRoleData {
   role: 'need' | 'want' | 'save';
@@ -37,6 +38,7 @@ export function BudgetVsActualWidget({
   strategy = { needs: 0.5, wants: 0.3, saves: 0.2 }
 }: BudgetVsActualWidgetProps) {
   const navigate = useNavigate();
+  const { formattedDate } = useDate();
 
   // Build a map of category_id -> spending_role
   const categoryRoleMap = useMemo(() => {
@@ -174,7 +176,7 @@ export function BudgetVsActualWidget({
           <div>
             <CardTitle className="text-lg">Budget vs Actual</CardTitle>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              {formattedDate}
             </p>
           </div>
           {getStatusBadge()}

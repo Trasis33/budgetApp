@@ -33,7 +33,9 @@ import { Slider } from './ui/slider';
 import { useAuth } from '../context/AuthContext';
 import { useExpensePreferences } from '../hooks';
 import { useScope } from '../context/ScopeContext';
+import { useDate } from '../context/DateContext';
 import ScopeSelector from './ScopeSelector';
+import DateSelector from './DateSelector';
 import styles from '@/styles/expense-table.module.css';
 
 interface ExpenseListProps {
@@ -60,13 +62,9 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const [generatingBills, setGeneratingBills] = useState(false);
   const splitPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const { filterMonth, filterYear, setFilterMonth, setFilterYear, goToCurrentMonth } = useDate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [filterYear, setFilterYear] = useState(currentYear.toString());
-  const [filterMonth, setFilterMonth] = useState(currentMonth.toString());
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
@@ -262,14 +260,14 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
   const hasPartner = users.some(u => u.id !== authUser?.id);
 
   const handleGenerateBills = async () => {
-    const selectedYear = filterYear === 'all' ? currentYear : parseInt(filterYear);
-    const selectedMonth = filterMonth === 'all' ? currentMonth + 1 : parseInt(filterMonth) + 1;
+    const yearForGenerate = parseInt(filterYear);
+    const monthForGenerate = parseInt(filterMonth) + 1;
 
     setGeneratingBills(true);
     try {
       const result = await recurringExpenseService.generate({
-        year: selectedYear,
-        month: selectedMonth
+        year: yearForGenerate,
+        month: monthForGenerate
       });
 
       if (result.generatedCount > 0) {
@@ -642,7 +640,10 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                   />
                 </div>
 
-                <div className={styles.filterGroup}>
+                <div>
+                  <DateSelector />
+                </div>
+                {/* <div className={styles.filterGroup}>
                   <Select value={filterYear} onValueChange={setFilterYear}>
                     <SelectTrigger className="w-[120px] border-0 bg-transparent focus:ring-0">
                       <SelectValue placeholder="Year" />
@@ -683,7 +684,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>
@@ -900,8 +901,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                   onClick={() => {
                     setSearchTerm('');
                     setFilterCategory('all');
-                    setFilterMonth(currentMonth.toString());
-                    setFilterYear(currentYear.toString());
+                    goToCurrentMonth();
                   }}
                 >
                   Clear all filters

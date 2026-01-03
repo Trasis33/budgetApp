@@ -30,6 +30,8 @@ import { formatCurrency } from '../lib/utils';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
 import { useSettlement } from '../hooks/useSettlement';
 import { useScope } from '../context/ScopeContext';
+import { useDate } from '../context/DateContext';
+import DateSelector from './DateSelector';
 import { budgetCommentService, BudgetComment } from '../api/services/budgetCommentService';
 import { budgetService } from '../api/services/budgetService';
 import { getIconByName } from '../lib/categoryIcons';
@@ -65,8 +67,7 @@ interface BudgetManagerProps {
 export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const navigate = useNavigate();
   const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1-indexed
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const { selectedMonth, selectedYear, goToPreviousMonth, goToNextMonth } = useDate();
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [showMobileSummary, setShowMobileSummary] = useState(false);
@@ -243,23 +244,8 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     }
   }, [expandedCategory, loadComments]);
 
-  const handlePrevMonth = () => {
-    if (selectedMonth === 1) {
-      setSelectedMonth(12);
-      setSelectedYear(selectedYear - 1);
-    } else {
-      setSelectedMonth(selectedMonth - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (selectedMonth === 12) {
-      setSelectedMonth(1);
-      setSelectedYear(selectedYear + 1);
-    } else {
-      setSelectedMonth(selectedMonth + 1);
-    }
-  };
+  const handlePrevMonth = goToPreviousMonth;
+  const handleNextMonth = goToNextMonth;
 
   const getStatusInfo = (progress: number, isFixed?: boolean) => {
     if (progress >= 100) {
@@ -418,7 +404,8 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
               <h1 className="text-xl font-medium text-foreground">Budget Manager</h1>
               
               <div className="flex items-center gap-1 text-sm">
-                <button 
+              <DateSelector variant='compact' />
+                {/* <button 
                   onClick={handlePrevMonth}
                   className="p-1 hover:bg-accent rounded transition-colors"
                   aria-label="Previous month"
@@ -434,7 +421,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                   aria-label="Next month"
                 >
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
+                </button> */}
               </div>
             </div>
 

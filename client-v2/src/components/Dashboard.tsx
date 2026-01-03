@@ -16,6 +16,7 @@ import { categoryService } from '../api/services/categoryService';
 import { useRecurringSummary, useRecurringGeneration } from '../hooks';
 import { toast } from 'sonner';
 import { useScope } from '../context/ScopeContext';
+import { useDate } from '../context/DateContext';
 import { getIconByName } from '../lib/categoryIcons';
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
@@ -41,9 +42,11 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
 
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const { selectedMonth, selectedYear, formattedDate } = useDate();
+  // Convert 1-indexed month from context to 0-indexed for filtering
+  const currentMonth = selectedMonth - 1;
+  const currentYear = selectedYear;
+  const now = new Date(); // For day-of-month calculations
 
   // Recurring expenses
   const monthStart = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
@@ -72,7 +75,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             await refreshExpensesData();
           })(),
           (async () => {
-            const budgetsData = await budgetService.getBudgets(new Date().getMonth() + 1, new Date().getFullYear());
+            const budgetsData = await budgetService.getBudgets(selectedMonth, selectedYear);
             setBudgets(budgetsData);
           })(),
           (async () => {
@@ -90,7 +93,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     if (!scopeLoading) {
       loadData();
     }
-  }, [currentScope, scopeLoading, refreshExpensesData]);
+  }, [currentScope, scopeLoading, refreshExpensesData, selectedMonth, selectedYear]);
 
   if (loading || scopeLoading) {
     return (
@@ -295,7 +298,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                 👋 Hey{isPartnerConnected ? ` ${user?.name} & ${summary?.couple?.partner?.name}` : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
               </h2>
               <p className="text-gray-600 mb-3">
-                This {now.toLocaleDateString('en-US', { month: 'long' })} you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
+                This {formattedDate.split(' ')[0]} you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
               </p>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
