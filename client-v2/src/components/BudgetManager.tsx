@@ -30,6 +30,8 @@ import { formatCurrency } from '../lib/utils';
 import { useBudgetData, useBudgetCalculations } from '../hooks';
 import { useSettlement } from '../hooks/useSettlement';
 import { useScope } from '../context/ScopeContext';
+import { useDate } from '../context/DateContext';
+import DateSelector from './DateSelector';
 import { budgetCommentService, BudgetComment } from '../api/services/budgetCommentService';
 import { budgetService } from '../api/services/budgetService';
 import { getIconByName } from '../lib/categoryIcons';
@@ -48,6 +50,16 @@ import {
   DialogDescription,
   DialogFooter
 } from './ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences, BudgetSuggestions } from '../lib/budgetSuggestions';
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
@@ -65,8 +77,7 @@ interface BudgetManagerProps {
 export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const navigate = useNavigate();
   const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1-indexed
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const { selectedMonth, selectedYear, goToPreviousMonth, goToNextMonth } = useDate();
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [showMobileSummary, setShowMobileSummary] = useState(false);
@@ -243,23 +254,8 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     }
   }, [expandedCategory, loadComments]);
 
-  const handlePrevMonth = () => {
-    if (selectedMonth === 1) {
-      setSelectedMonth(12);
-      setSelectedYear(selectedYear - 1);
-    } else {
-      setSelectedMonth(selectedMonth - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (selectedMonth === 12) {
-      setSelectedMonth(1);
-      setSelectedYear(selectedYear + 1);
-    } else {
-      setSelectedMonth(selectedMonth + 1);
-    }
-  };
+  const handlePrevMonth = goToPreviousMonth;
+  const handleNextMonth = goToNextMonth;
 
   const getStatusInfo = (progress: number, isFixed?: boolean) => {
     if (progress >= 100) {
@@ -418,7 +414,8 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
               <h1 className="text-xl font-medium text-foreground">Budget Manager</h1>
               
               <div className="flex items-center gap-1 text-sm">
-                <button 
+              <DateSelector variant='compact' />
+                {/* <button 
                   onClick={handlePrevMonth}
                   className="p-1 hover:bg-accent rounded transition-colors"
                   aria-label="Previous month"
@@ -434,7 +431,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                   aria-label="Next month"
                 >
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -976,12 +973,11 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     )}
                                     
                                     <div className="flex gap-2">
-                                      <input
-                                        type="text"
+                                      <Input
                                         placeholder="Add a comment..."
                                         value={commentInputs[budget.id] || ''}
                                         onChange={(e) => setCommentInputs(prev => ({ ...prev, [budget.id]: e.target.value }))}
-                                        className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="flex-1"
                                         onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(budget.id); }}
                                       />
                                       <Button 
@@ -1223,32 +1219,23 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-semibold mb-2">Delete Budget?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open: boolean) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Budget?</AlertDialogTitle>
+            <AlertDialogDescription>
               This will remove the budget but won't affect any existing expenses. You can always create a new budget later.
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => handleDeleteBudget(deleteConfirm)}
-                className="flex-1"
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteConfirm && handleDeleteBudget(deleteConfirm)} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

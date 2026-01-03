@@ -22,6 +22,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 import { useAuth } from './context/AuthContext';
 import { ScopeProvider } from './context/ScopeContext';
+import { DateProvider } from './context/DateContext';
 
 const MainApp = () => {
   const { logout } = useAuth();
@@ -29,7 +30,8 @@ const MainApp = () => {
 
   return (
     <ScopeProvider>
-      <div className="min-h-screen bg-background">
+      <DateProvider>
+        <div className="min-h-screen bg-background">
         <Navigation currentView={currentView} onNavigate={setCurrentView} onLogout={logout} />
         <main className="mx-auto max-w-7xl p-4">
           <Routes>
@@ -53,6 +55,7 @@ const MainApp = () => {
         </main>
         <Toaster />
       </div>
+      </DateProvider>
     </ScopeProvider>
   );
 };

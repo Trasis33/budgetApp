@@ -161,3 +161,6 @@ export type CategoryType = typeof CATEGORIES[number];
 
 // Export settings types
 export * from './settings';
+
+// Export date types
+export * from './date';
