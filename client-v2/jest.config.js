@@ -1,23 +1,26 @@
-export default {
+module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
+    '^@/api/config$': '<rootDir>/src/api/__mocks__/config.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: {
-        jsx: 'react',
+        jsx: 'react-jsx',
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
-        module: 'esnext',
+        module: 'commonjs',
         moduleResolution: 'node',
+        target: 'ES2019',
         strict: true,
         skipLibCheck: true,
         forceConsistentCasingInFileNames: true,
         resolveJsonModule: true,
+        isolatedModules: true,
       },
     }],
   },

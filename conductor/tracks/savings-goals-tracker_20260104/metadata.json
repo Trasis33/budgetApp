@@ -1,0 +1,8 @@
+{
+  "track_id": "savings-goals-tracker_20260104",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-04T12:00:00Z",
+  "updated_at": "2026-01-04T12:00:00Z",
+  "description": "Savings Goals Tracker - Frontend UI for managing savings goals with progress visualization, contribution tracking, and BillSplitting integration"
+}
