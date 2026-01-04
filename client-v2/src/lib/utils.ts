@@ -1,4 +1,6 @@
 import { Expense, Budget } from '../types';
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('sv-SE', {
@@ -71,6 +73,6 @@ export function getBudgetProgress(budget: Budget, spent: number): number {
   return Math.min((spent / budget.amount) * 100, 100);
 }
 
-export function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ');
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
