@@ -19,10 +19,10 @@
 
 ## Phase 2: Navigation & Routing [ ]
 
-- [ ] Task: Add Savings route to React Router configuration
-  - [ ] Write failing test for route existence
-  - [ ] Add /savings route
-  - [ ] Add /savings/:goalId route for detail page
+- [x] Task: Add Savings route to React Router configuration f56bdaa
+  - [x] Write failing test for route existence
+  - [x] Add /savings route
+  - [x] Add /savings/:goalId route for detail page
 - [ ] Task: Add Savings to main navigation
   - [ ] Write failing test for nav item presence
   - [ ] Add "Savings" nav item with appropriate icon (PiggyBank from lucide-react)
