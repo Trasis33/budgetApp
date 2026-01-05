@@ -136,6 +136,9 @@ export interface SavingsGoal {
   target_date?: string;
   is_pinned: boolean;
   color_index: number;
+  category_id?: number;
+  category_name?: string;
+  created_at?: string;
 }
 
 export interface Settlement {
