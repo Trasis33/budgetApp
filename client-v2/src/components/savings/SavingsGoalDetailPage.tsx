@@ -4,8 +4,19 @@ import { savingsService, Contribution } from '@/api/services/savingsService';
 import { SavingsGoal } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Plus, PiggyBank } from 'lucide-react';
+import { ArrowLeft, Plus, PiggyBank, Trash2 } from 'lucide-react';
 import { DualProgressRings } from './DualProgressRings';
+import { AddContributionForm } from './AddContributionForm';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -42,6 +53,9 @@ export function SavingsGoalDetailPage() {
   const [goal, setGoal] = useState<SavingsGoal | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [contributionToDelete, setContributionToDelete] = useState<Contribution | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!goalId) return;
@@ -69,6 +83,37 @@ export function SavingsGoalDetailPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleAddContribution = async (data: { amount: number; date: string; note: string }) => {
+    if (!goal) return;
+
+    try {
+      await savingsService.addContribution(goal.id, data);
+      toast.success('Contribution added successfully');
+      setIsAddModalOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Failed to add contribution:', error);
+      toast.error('Failed to add contribution');
+    }
+  };
+
+  const handleDeleteContribution = async () => {
+    if (!contributionToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await savingsService.deleteContribution(contributionToDelete.id);
+      toast.success('Contribution deleted');
+      setContributionToDelete(null);
+      fetchData();
+    } catch (error) {
+      console.error('Failed to delete contribution:', error);
+      toast.error('Failed to delete contribution');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const goalCalculations = useMemo(() => {
     if (!goal) return null;
@@ -184,7 +229,7 @@ export function SavingsGoalDetailPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Contribution History</h2>
-              <Button size="sm" className="gap-2">
+              <Button size="sm" className="gap-2" onClick={() => setIsAddModalOpen(true)}>
                 <Plus className="h-4 w-4" />
                 Add Contribution
               </Button>
@@ -205,6 +250,14 @@ export function SavingsGoalDetailPage() {
                         <p className="text-sm text-muted-foreground">{formatDate(c.date)}</p>
                         {c.note && <p className="text-xs text-muted-foreground mt-1 italic">"{c.note}"</p>}
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setContributionToDelete(c)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -237,6 +290,31 @@ export function SavingsGoalDetailPage() {
           </div>
         </div>
       </div>
+
+      <AddContributionForm
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddContribution}
+        goalName={goal.name}
+      />
+
+      <AlertDialog open={!!contributionToDelete} onOpenChange={() => setContributionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Contribution</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this contribution of {contributionToDelete && formatCurrency(contributionToDelete.amount)}?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setContributionToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteContribution} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
