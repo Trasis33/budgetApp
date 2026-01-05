@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useScope } from '../context/ScopeContext';
 import { savingsService } from '../api/services/savingsService';
 import { Button } from './ui/button';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 import type { SavingsGoal } from '../types';
 
 export function SavingsGoalsPage() {
+  const navigate = useNavigate();
   const { currentScope, setScope, isPartnerConnected } = useScope();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,7 +167,8 @@ export function SavingsGoalsPage() {
           {goals.map((goal) => (
             <GoalCard 
               key={goal.id} 
-              goal={goal} 
+              goal={goal}
+              onClick={() => navigate(`/savings/${goal.id}`)}
               onEdit={handleOpenEditModal}
               onDelete={handleDeleteGoal}
               onPin={handlePinGoal}
