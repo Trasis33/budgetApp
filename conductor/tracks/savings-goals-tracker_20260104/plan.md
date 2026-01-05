@@ -49,14 +49,14 @@
 
 ## Phase 4: Goal Card Component with Dual Progress Rings [ ]
 
-- [ ] Task: Create DualProgressRings.tsx component
-  - [ ] Write failing tests for progress ring rendering
-  - [ ] Test: Amount ring shows correct percentage
-  - [ ] Test: Time ring shows correct percentage
-  - [ ] Test: Rings display different colors (amount vs time)
-  - [ ] Implement SVG-based circular progress indicators
-  - [ ] Add percentage labels in center
-- [ ] Task: Create GoalCard.tsx component
+- [x] Task: Create DualProgressRings.tsx component 4248c8c
+  - [x] Write failing tests for progress ring rendering
+  - [x] Test: Amount ring shows correct percentage
+  - [x] Test: Time ring shows correct percentage
+  - [x] Test: Rings display different colors (amount vs time)
+  - [x] Implement SVG-based circular progress indicators
+  - [x] Add percentage labels in center
+- [~] Task: Create GoalCard.tsx component
   - [ ] Write failing tests for card content
   - [ ] Test: Displays goal name and category
   - [ ] Test: Shows current/target amounts formatted as SEK
