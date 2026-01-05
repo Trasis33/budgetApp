@@ -81,22 +81,22 @@
   - [x] Implement route parameter extraction (:goalId)
   - [x] Fetch goal data and contributions on mount
   - [x] Implement loading state
-- [~] Task: Implement goal header section
-  - [ ] Write failing test for header content
-  - [ ] Display goal name and category
-  - [ ] Show larger dual progress rings
-  - [ ] Display current/target with percentage
-  - [ ] Show days remaining until target date
-  - [ ] Implement pace indicator (on track/behind/ahead)
-- [ ] Task: Implement contribution history list
-  - [ ] Write failing test for contributions display
-  - [ ] Test: Shows date, amount, note for each contribution
-  - [ ] Test: Sorted by date descending
-  - [ ] Implement list with delete button per item
-  - [ ] Add delete confirmation dialog
-- [ ] Task: Implement back navigation
-  - [ ] Write failing test for back button
-  - [ ] Add "Back to Savings Goals" link/button
+- [x] Task: Implement goal header section 570939f
+  - [x] Write failing test for header content
+  - [x] Display goal name and category
+  - [x] Show larger dual progress rings
+  - [x] Display current/target with percentage
+  - [x] Show days remaining until target date
+  - [x] Implement pace indicator (on track/behind/ahead)
+- [x] Task: Implement contribution history list 570939f
+  - [x] Write failing test for contributions display
+  - [x] Test: Shows date, amount, note for each contribution
+  - [x] Test: Sorted by date descending
+  - [x] Implement list with delete button per item
+  - [x] Add delete confirmation dialog
+- [x] Task: Implement back navigation 570939f
+  - [x] Write failing test for back button
+  - [x] Add "Back to Savings Goals" link/button
 - [ ] Task: Conductor - User Manual Verification 'Phase 6: Goal Detail Page' (Protocol in workflow.md)
 
 ## Phase 7: Contribution Management [ ]
