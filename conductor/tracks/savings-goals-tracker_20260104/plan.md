@@ -47,28 +47,9 @@
   - [x] Map goals to GoalCard components
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Savings Goals List Page' (Protocol in workflow.md) 46c8984
 
-## Phase 4: Goal Card Component with Dual Progress Rings [ ]
-
-- [x] Task: Create DualProgressRings.tsx component 4248c8c
-  - [x] Write failing tests for progress ring rendering
-  - [x] Test: Amount ring shows correct percentage
-  - [x] Test: Time ring shows correct percentage
-  - [x] Test: Rings display different colors (amount vs time)
-  - [x] Implement SVG-based circular progress indicators
-  - [x] Add percentage labels in center
-- [x] Task: Create GoalCard.tsx component 1d8bed9
-  - [x] Write failing tests for card content
-  - [x] Test: Displays goal name and category
-  - [x] Test: Shows current/target amounts formatted as SEK
-  - [x] Test: Shows target date
-  - [x] Test: Shows pin indicator when pinned
-  - [x] Implement card layout with DualProgressRings
-- [x] Task: Add card action buttons 44960b6
-  - [x] Write failing test for quick-add button presence
-  - [x] Write failing test for edit/delete menu
-  - [x] Implement "+" quick-add button
-  - [x] Implement dropdown menu with Edit, Pin/Unpin, Delete options
-- [~] Task: Conductor - User Manual Verification 'Phase 4: Goal Card Component with Dual Progress Rings' (Protocol in workflow.md)
+## Phase 4: Goal Card Component with Dual Progress Rings [checkpoint: 8c5f7ed]
+...
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Goal Card Component with Dual Progress Rings' (Protocol in workflow.md) 8c5f7ed
 
 ## Phase 5: Create/Edit Goal Modal [ ]
 
