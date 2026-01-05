@@ -76,12 +76,12 @@
 
 ## Phase 6: Goal Detail Page [ ]
 
-- [ ] Task: Create SavingsGoalDetailPage.tsx component
-  - [ ] Write failing test for page render with goal data
-  - [ ] Implement route parameter extraction (:goalId)
-  - [ ] Fetch goal data and contributions on mount
-  - [ ] Implement loading state
-- [ ] Task: Implement goal header section
+- [x] Task: Create SavingsGoalDetailPage.tsx component 0b74d66
+  - [x] Write failing test for page render with goal data
+  - [x] Implement route parameter extraction (:goalId)
+  - [x] Fetch goal data and contributions on mount
+  - [x] Implement loading state
+- [~] Task: Implement goal header section
   - [ ] Write failing test for header content
   - [ ] Display goal name and category
   - [ ] Show larger dual progress rings
