@@ -25,6 +25,7 @@ import { ScopeProvider } from './context/ScopeContext';
 import { DateProvider } from './context/DateContext';
 
 import { SavingsGoalsPage } from './components/SavingsGoalsPage';
+import { SavingsGoalDetailPage } from './components/savings/SavingsGoalDetailPage';
 
 const MainApp = () => {
   const { logout } = useAuth();
@@ -51,7 +52,7 @@ const MainApp = () => {
             <Route path="/settings" element={<Settings onNavigate={setCurrentView} />} />
             <Route path="/insights" element={<BudgetInsightsPage onNavigate={setCurrentView} />} />
             <Route path="/savings" element={<SavingsGoalsPage />} />
-            <Route path="/savings/:goalId" element={<div>Goal Details</div>} />
+            <Route path="/savings/:goalId" element={<SavingsGoalDetailPage />} />
             <Route path="/bills-design-one" element={<BillsDesignOne />} />
             <Route path="/bills-design-two" element={<BillsDesignTwo />} />
             <Route path="/budget-design-three" element={<BudgetManagerDesignThree />} />
