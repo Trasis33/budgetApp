@@ -21,7 +21,7 @@ export function getMonthName(date: Date): string {
   return date.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' });
 }
 
-export function calculateExpenseShare(expense: Expense, userId: string): number {
+export function calculateExpenseShare(expense: Expense, userId: number): number {
   if (expense.split_type === 'personal') {
     return expense.paid_by_user_id === userId ? (expense.amount || 0) : 0;
   }
@@ -38,7 +38,7 @@ export function calculateExpenseShare(expense: Expense, userId: string): number 
   }
 }
 
-export function calculateBalance(expenses: Expense[], user1Id: string, user2Id: string): number {
+export function calculateBalance(expenses: Expense[], user1Id: number, user2Id: number): number {
   let balance = 0;
 
   expenses.forEach(expense => {
