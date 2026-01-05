@@ -99,27 +99,27 @@
   - [x] Add "Back to Savings Goals" link/button
 - [ ] Task: Conductor - User Manual Verification 'Phase 6: Goal Detail Page' (Protocol in workflow.md)
 
-## Phase 7: Contribution Management [ ]
+## Phase 7: Contribution Management [x] [checkpoint: 6ccc361]
 
-- [ ] Task: Create AddContributionForm.tsx component
-  - [ ] Write failing tests for form fields
-  - [ ] Test: Amount field is required
-  - [ ] Test: Date defaults to today
-  - [ ] Test: Date cannot be in the future
-  - [ ] Test: Note field is optional
-  - [ ] Implement form with React Hook Form
-- [ ] Task: Implement contribution submission from detail page
-  - [ ] Write failing test for form submission
-  - [ ] Call savingsService.addContribution
-  - [ ] Update goal progress optimistically
-  - [ ] Show success/error toast
-  - [ ] Refresh contribution history
-- [ ] Task: Implement contribution deletion
-  - [ ] Write failing test for delete action
-  - [ ] Show confirmation dialog
-  - [ ] Call savingsService.deleteContribution
-  - [ ] Update goal progress
-  - [ ] Remove from history list
+- [x] Task: Create AddContributionForm.tsx component 6ccc361
+  - [x] Write failing tests for form fields
+  - [x] Test: Amount field is required
+  - [x] Test: Date defaults to today
+  - [x] Test: Date cannot be in the future
+  - [x] Test: Note field is optional
+  - [x] Implement form with React Hook Form
+- [x] Task: Implement contribution submission from detail page 6ccc361
+  - [x] Write failing test for form submission
+  - [x] Call savingsService.addContribution
+  - [x] Update goal progress optimistically
+  - [x] Show success/error toast
+  - [x] Refresh contribution history
+- [x] Task: Implement contribution deletion 6ccc361
+  - [x] Write failing test for delete action
+  - [x] Show confirmation dialog
+  - [x] Call savingsService.deleteContribution
+  - [x] Update goal progress
+  - [x] Remove from history list
 - [ ] Task: Conductor - User Manual Verification 'Phase 7: Contribution Management' (Protocol in workflow.md)
 
 ## Phase 8: Inline Quick Add Contribution [ ]
