@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useScope } from '../context/ScopeContext';
 import { savingsService } from '../api/services/savingsService';
 import { Button } from './ui/button';
-import { Plus, PiggyBank, Loader2 } from 'lucide-react';
+import { Plus, PiggyBank } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { Skeleton } from './ui/skeleton';
 import type { SavingsGoal } from '../types';
 
 export function SavingsGoalsPage() {
@@ -57,9 +58,29 @@ export function SavingsGoalsPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Loader2 className="h-8 w-8 animate-spin mb-4" />
-          <p>Loading goals...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-xl border border-border p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <div className="flex justify-center py-4">
+                <Skeleton className="h-32 w-32 rounded-full" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+              <div className="flex justify-between pt-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : goals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/50">

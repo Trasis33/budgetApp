@@ -37,4 +37,35 @@ describe('SavingsGoalsPage', () => {
     expect(screen.getByText(/Partner's/i)).toBeInTheDocument();
     expect(screen.getByText(/Ours/i)).toBeInTheDocument();
   });
+
+  it('shows loading state while fetching goals', () => {
+    render(
+      <MemoryRouter>
+        <ScopeProvider>
+          <SavingsGoalsPage />
+        </ScopeProvider>
+      </MemoryRouter>
+    );
+    
+    // Check for skeletons (usually have animate-pulse class)
+    const skeletons = document.querySelectorAll('.animate-pulse');
+    expect(skeletons.length).toBeGreaterThan(0);
+  });
+
+  it('shows empty state when no goals exist', async () => {
+    const { savingsService } = require('../api/services/savingsService');
+    savingsService.getGoals.mockResolvedValueOnce([]);
+
+    render(
+      <MemoryRouter>
+        <ScopeProvider>
+          <SavingsGoalsPage />
+        </ScopeProvider>
+      </MemoryRouter>
+    );
+    
+    expect(await screen.findByText(/No savings goals yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Create your first savings goal/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Create First Goal/i })).toBeInTheDocument();
+  });
 });
