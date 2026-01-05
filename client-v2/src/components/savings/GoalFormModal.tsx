@@ -110,7 +110,13 @@ export function GoalFormModal({ isOpen, onClose, onSubmit, goal }: GoalFormModal
             <Input
               id="target_date"
               type="date"
-              {...register('target_date', { required: 'Target date is required' })}
+              {...register('target_date', { 
+                required: 'Target date is required',
+                validate: (value) => {
+                  const today = new Date().toISOString().split('T')[0];
+                  return value > today || 'Target date must be in the future';
+                }
+              })}
             />
             {errors.target_date && (
               <p className="text-sm text-destructive">{errors.target_date.message}</p>
