@@ -1,17 +1,36 @@
 import React from 'react';
 import { SavingsGoal } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DualProgressRings } from './DualProgressRings';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
-import { Pin } from 'lucide-react';
+import { Pin, MoreVertical, Plus, Pencil, Trash2, PinOff } from 'lucide-react';
 
 interface GoalCardProps {
   goal: SavingsGoal;
   className?: string;
   onClick?: () => void;
+  onEdit?: (goal: SavingsGoal) => void;
+  onDelete?: (goal: SavingsGoal) => void;
+  onPin?: (goal: SavingsGoal) => void;
+  onAddContribution?: (goal: SavingsGoal) => void;
 }
 
-export function GoalCard({ goal, className, onClick }: GoalCardProps) {
+export function GoalCard({ 
+  goal, 
+  className, 
+  onClick,
+  onEdit,
+  onDelete,
+  onPin,
+  onAddContribution
+}: GoalCardProps) {
   // Calculate Amount Progress
   const amountProgress = goal.target_amount > 0 
     ? (goal.current_amount / goal.target_amount) * 100 
@@ -31,9 +50,11 @@ export function GoalCard({ goal, className, onClick }: GoalCardProps) {
     }
   }
 
-  // Fallback for time progress if created_at is missing but target_date exists
-  // If we don't know start, maybe we assume 0%? Or maybe we can't show it.
-  // For now, if created_at is missing, timeProgress stays 0.
+  // Handle action clicks with stopPropagation
+  const handleAction = (callback?: (goal: SavingsGoal) => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    callback?.(goal);
+  };
 
   return (
     <Card 
@@ -43,21 +64,74 @@ export function GoalCard({ goal, className, onClick }: GoalCardProps) {
       )}
       onClick={onClick}
     >
-      {/* Pin Indicator */}
-      {goal.is_pinned && (
-        <div className="absolute top-3 right-3 text-muted-foreground transform rotate-45">
-          <Pin className="h-4 w-4 fill-current" />
-        </div>
-      )}
+      {/* Top Actions & Pin */}
+      <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
+         {/* Pin Indicator */}
+         {goal.is_pinned && (
+           <Pin className="h-4 w-4 fill-current text-primary mr-2 rotate-45" />
+         )}
+
+         {/* Quick Add Button */}
+         <Button
+           variant="ghost"
+           size="icon"
+           className="h-8 w-8 rounded-full hover:bg-muted"
+           onClick={handleAction(onAddContribution)}
+           aria-label="Add contribution"
+         >
+           <Plus className="h-4 w-4" />
+         </Button>
+
+         {/* Menu */}
+         <DropdownMenu>
+           <DropdownMenuTrigger asChild>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="h-8 w-8 rounded-full hover:bg-muted"
+               aria-label="Goal actions"
+               onClick={(e) => e.stopPropagation()}
+             >
+               <MoreVertical className="h-4 w-4" />
+             </Button>
+           </DropdownMenuTrigger>
+           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+             <DropdownMenuItem onClick={handleAction(onEdit)}>
+               <Pencil className="mr-2 h-4 w-4" />
+               Edit
+             </DropdownMenuItem>
+             <DropdownMenuItem onClick={handleAction(onPin)}>
+               {goal.is_pinned ? (
+                 <>
+                   <PinOff className="mr-2 h-4 w-4" />
+                   Unpin
+                 </>
+               ) : (
+                 <>
+                   <Pin className="mr-2 h-4 w-4" />
+                   Pin
+                 </>
+               )}
+             </DropdownMenuItem>
+             <DropdownMenuItem 
+               onClick={handleAction(onDelete)}
+               className="text-destructive focus:text-destructive"
+             >
+               <Trash2 className="mr-2 h-4 w-4" />
+               Delete
+             </DropdownMenuItem>
+           </DropdownMenuContent>
+         </DropdownMenu>
+      </div>
 
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           {/* Main Info */}
           <div className="flex-1 space-y-1">
-            <h3 className="font-semibold leading-none tracking-tight truncate pr-6">
+            <h3 className="font-semibold leading-none tracking-tight truncate pr-24">
               {goal.name}
             </h3>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-sm text-muted-foreground truncate pr-16">
               {goal.category_name || 'General Savings'}
             </p>
           </div>

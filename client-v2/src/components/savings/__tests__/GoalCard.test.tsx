@@ -1,15 +1,26 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { GoalCard } from '../GoalCard';
 import { SavingsGoal } from '../../../types';
+import userEvent from '@testing-library/user-event';
 
-// Mock DualProgressRings to avoid SVG rendering issues and focus on Card content
+// Mock DualProgressRings
 jest.mock('../DualProgressRings', () => ({
   DualProgressRings: ({ amountProgress, timeProgress }: any) => (
     <div data-testid="dual-progress-rings">
       <span>Amount: {amountProgress}%</span>
       <span>Time: {timeProgress}%</span>
     </div>
+  ),
+}));
+
+// Mock DropdownMenu components to avoid Radix UI issues in test environment
+jest.mock('@/components/ui/dropdown-menu', () => ({
+  DropdownMenu: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onClick }: any) => (
+    <div role="menuitem" onClick={onClick}>{children}</div>
   ),
 }));
 
@@ -25,53 +36,80 @@ describe('GoalCard', () => {
     category_name: 'Transportation',
   };
 
+  const mockCallbacks = {
+    onEdit: jest.fn(),
+    onDelete: jest.fn(),
+    onPin: jest.fn(),
+    onAddContribution: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('renders goal name and category', () => {
-    render(<GoalCard goal={mockGoal} />);
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
     expect(screen.getByText('New Car')).toBeInTheDocument();
     expect(screen.getByText('Transportation')).toBeInTheDocument();
   });
 
   test('renders current and target amounts formatted', () => {
-    render(<GoalCard goal={mockGoal} />);
-    // Assuming formatCurrency (SEK) adds spaces/commas and kr or SEK
-    // Simple check for parts of the number
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
     expect(screen.getByText(/50\s?000/)).toBeInTheDocument();
     expect(screen.getByText(/200\s?000/)).toBeInTheDocument();
   });
 
   test('renders target date', () => {
-    render(<GoalCard goal={mockGoal} />);
-    // Adjust expected format based on utils/date format. Usually MMM DD, YYYY or YYYY-MM-DD
-    // Let's check for year at least
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
     expect(screen.getByText(/2026/)).toBeInTheDocument();
   });
 
   test('renders pin indicator when pinned', () => {
     const pinnedGoal = { ...mockGoal, is_pinned: true };
-    const { container } = render(<GoalCard goal={pinnedGoal} />);
-    // Look for pin icon or visual indicator. 
-    // Usually Lucide 'Pin' icon.
-    // We can check if an element with appropriate label/class exists
-    // Or just check that it renders without crash for now, and check class if we knew it.
-    // Let's assume we add an aria-label="Pinned" to the pin icon.
-    // Or look for svg.
+    const { container } = render(<GoalCard goal={pinnedGoal} {...mockCallbacks} />);
+    // Look for pin icon
     const pinIcon = container.querySelector('.lucide-pin');
     expect(pinIcon).toBeInTheDocument(); 
-    // Note: This relies on implementation detail that we use lucide-pin class or similar.
-    // Better: expect(screen.getByLabelText('Pinned')).toBeInTheDocument();
   });
 
   test('renders DualProgressRings with correct props', () => {
-    render(<GoalCard goal={mockGoal} />);
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
     const rings = screen.getByTestId('dual-progress-rings');
     expect(rings).toBeInTheDocument();
-    
-    // Amount progress: 50000 / 200000 = 25%
     expect(screen.getByText('Amount: 25%')).toBeInTheDocument();
+  });
+
+  test('renders quick-add button and calls callback', () => {
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    const addButton = screen.getByRole('button', { name: /add contribution/i });
+    expect(addButton).toBeInTheDocument();
     
-    // Time progress calculation depends on "today". 
-    // We should probably mock date, but if we don't, it's hard to test exact percentage.
-    // Let's just check it receives *some* number for time.
-    expect(screen.getByText(/Time: \d+/)).toBeInTheDocument();
+    fireEvent.click(addButton);
+    expect(mockCallbacks.onAddContribution).toHaveBeenCalled();
+  });
+
+  test('renders actions menu and calls callbacks', async () => {
+    const user = userEvent.setup();
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    
+    // Find menu trigger (usually "More options" or ellipsis icon)
+    // Assuming generic button or looking for lucide-more-vertical icon
+    // or we can look for role="button" with specific name if we add aria-label
+    // Let's assume we add aria-label="Goal actions"
+    const menuTrigger = screen.getByLabelText(/goal actions/i);
+    await user.click(menuTrigger);
+    
+    // Check menu items
+    const editItem = screen.getByText(/edit/i);
+    const deleteItem = screen.getByText(/delete/i);
+    const pinItem = screen.getByText(/pin/i);
+    
+    expect(editItem).toBeInTheDocument();
+    expect(deleteItem).toBeInTheDocument();
+    expect(pinItem).toBeInTheDocument();
+
+    // Click Edit
+    await user.click(editItem);
+    expect(mockCallbacks.onEdit).toHaveBeenCalled();
   });
 });
