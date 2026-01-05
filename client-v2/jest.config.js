@@ -3,12 +3,14 @@ module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
+    '\.module\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/api/config$': '<rootDir>/src/api/__mocks__/config.ts',
+    '^@/api/axios$': '<rootDir>/src/api/__mocks__/axios.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
+    '^.+\.(ts|tsx)$': ['ts-jest', {
       tsconfig: {
         jsx: 'react-jsx',
         esModuleInterop: true,
