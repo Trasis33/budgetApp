@@ -122,19 +122,19 @@
   - [x] Remove from history list
 - [ ] Task: Conductor - User Manual Verification 'Phase 7: Contribution Management' (Protocol in workflow.md)
 
-## Phase 8: Inline Quick Add Contribution [ ]
+## Phase 8: Inline Quick Add Contribution [x] [checkpoint: 922d511]
 
-- [ ] Task: Create QuickAddContribution.tsx popover component
-  - [ ] Write failing tests for popover behavior
-  - [ ] Test: Popover opens on "+" button click
-  - [ ] Test: Contains amount input field
-  - [ ] Test: Submit button adds contribution
-  - [ ] Test: Popover closes on success
-- [ ] Task: Integrate with GoalCard
-  - [ ] Write failing test for integration
-  - [ ] Wire up popover to card's "+" button
-  - [ ] Update card progress after contribution
-  - [ ] Show toast notification on success
+- [x] Task: Create QuickAddContribution.tsx popover component 922d511
+  - [x] Write failing tests for popover behavior
+  - [x] Test: Popover opens on "+" button click
+  - [x] Test: Contains amount input field
+  - [x] Test: Submit button adds contribution
+  - [x] Test: Popover closes on success
+- [x] Task: Integrate with GoalCard 922d511
+  - [x] Write failing test for integration
+  - [x] Wire up popover to card's "+" button
+  - [x] Update card progress after contribution
+  - [x] Show toast notification on success
 - [ ] Task: Conductor - User Manual Verification 'Phase 8: Inline Quick Add Contribution' (Protocol in workflow.md)
 
 ## Phase 9: Goal Management Actions [ ]
