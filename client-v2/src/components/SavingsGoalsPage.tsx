@@ -98,8 +98,12 @@ export function SavingsGoalsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Goal cards will go here */}
-          <p>Goal cards coming soon...</p>
+          {goals.map((goal) => (
+            <div key={goal.id} className="rounded-xl border border-border p-6 bg-card">
+              <h3 className="text-lg font-semibold">{goal.name}</h3>
+              <p className="text-sm text-muted-foreground">{goal.category}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>

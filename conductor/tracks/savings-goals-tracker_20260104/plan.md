@@ -41,7 +41,7 @@
   - [ ] Write failing test for empty state with CTA
   - [ ] Implement skeleton loader during fetch
   - [ ] Implement empty state with "Create your first goal" button
-- [ ] Task: Implement goal card grid layout
+- [~] Task: Implement goal card grid layout
   - [ ] Write failing test for grid rendering with goals
   - [ ] Implement responsive grid (3 cols desktop, 2 tablet, 1 mobile)
   - [ ] Map goals to GoalCard components

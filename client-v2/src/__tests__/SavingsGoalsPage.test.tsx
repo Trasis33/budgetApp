@@ -68,4 +68,24 @@ describe('SavingsGoalsPage', () => {
     expect(screen.getByText(/Create your first savings goal/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Create First Goal/i })).toBeInTheDocument();
   });
+
+  it('renders a grid of goal cards when goals exist', async () => {
+    const { savingsService } = require('../api/services/savingsService');
+    const mockGoals = [
+      { id: 1, name: 'New Car', target_amount: 200000, current_amount: 50000, category: 'Travel' },
+      { id: 2, name: 'House Downpayment', target_amount: 500000, current_amount: 100000, category: 'Housing' }
+    ];
+    savingsService.getGoals.mockResolvedValueOnce(mockGoals);
+
+    render(
+      <MemoryRouter>
+        <ScopeProvider>
+          <SavingsGoalsPage />
+        </ScopeProvider>
+      </MemoryRouter>
+    );
+    
+    expect(await screen.findByText('New Car')).toBeInTheDocument();
+    expect(screen.getByText('House Downpayment')).toBeInTheDocument();
+  });
 });
