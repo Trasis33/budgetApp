@@ -23,10 +23,10 @@
   - [x] Write failing test for route existence
   - [x] Add /savings route
   - [x] Add /savings/:goalId route for detail page
-- [ ] Task: Add Savings to main navigation
-  - [ ] Write failing test for nav item presence
-  - [ ] Add "Savings" nav item with appropriate icon (PiggyBank from lucide-react)
-  - [ ] Ensure active state styling works correctly
+- [x] Task: Add Savings to main navigation 3fa47e4
+  - [x] Write failing test for nav item presence
+  - [x] Add "Savings" nav item with appropriate icon (PiggyBank from lucide-react)
+  - [x] Ensure active state styling works correctly
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Navigation & Routing' (Protocol in workflow.md)
 
 ## Phase 3: Savings Goals List Page [ ]
