@@ -16,10 +16,10 @@ jest.mock('../api/config', () => ({
 // Mock axios/apiClient
 jest.mock('../api/axios', () => ({
   apiClient: {
-    get: jest.fn().mockResolvedValue({ data: [] }),
-    post: jest.fn().mockResolvedValue({ data: {} }),
-    put: jest.fn().mockResolvedValue({ data: {} }),
-    delete: jest.fn().mockResolvedValue({ data: {} }),
+    get: jest.fn().mockResolvedValue([]),
+    post: jest.fn().mockResolvedValue({}),
+    put: jest.fn().mockResolvedValue({}),
+    delete: jest.fn().mockResolvedValue({}),
   },
 }));
 

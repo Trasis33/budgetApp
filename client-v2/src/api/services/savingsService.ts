@@ -23,9 +23,10 @@ export interface Contribution {
 
 export const savingsService = {
   async getGoals(scope?: string) {
-    return apiClient.get<SavingsGoal[]>('/savings/goals', {
+    const response = await apiClient.get<{ goals: SavingsGoal[] }>('/savings/goals', {
       params: scope ? { scope } : undefined,
     });
+    return response.goals;
   },
 
   async createGoal(data: {
