@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Plus, PiggyBank } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Skeleton } from './ui/skeleton';
+import { GoalCard } from './savings/GoalCard';
 import type { SavingsGoal } from '../types';
 
 export function SavingsGoalsPage() {
@@ -99,10 +100,7 @@ export function SavingsGoalsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {goals.map((goal) => (
-            <div key={goal.id} className="rounded-xl border border-border p-6 bg-card">
-              <h3 className="text-lg font-semibold">{goal.name}</h3>
-              <p className="text-sm text-muted-foreground">{goal.category}</p>
-            </div>
+            <GoalCard key={goal.id} goal={goal} />
           ))}
         </div>
       )}
