@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { savingsService, Contribution } from '@/api/services/savingsService';
 import { SavingsGoal } from '@/types';
@@ -8,6 +8,32 @@ import { ArrowLeft, Plus, PiggyBank } from 'lucide-react';
 import { DualProgressRings } from './DualProgressRings';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
+import { differenceInDays, parseISO } from 'date-fns';
+
+function calculatePaceIndicator(
+  amountProgress: number,
+  timeProgress: number
+): { label: string; colorClass: string } {
+  const tolerance = 5;
+
+  if (timeProgress <= 0) {
+    return { label: 'Not Started', colorClass: 'text-muted-foreground' };
+  }
+
+  if (isNaN(amountProgress) || isNaN(timeProgress)) {
+    return { label: 'On Track', colorClass: 'text-muted-foreground' };
+  }
+
+  if (amountProgress >= timeProgress + tolerance) {
+    return { label: 'Ahead', colorClass: 'text-emerald-500' };
+  }
+
+  if (amountProgress + tolerance <= timeProgress) {
+    return { label: 'Behind', colorClass: 'text-amber-500' };
+  }
+
+  return { label: 'On Track', colorClass: 'text-primary' };
+}
 
 export function SavingsGoalDetailPage() {
   const { goalId } = useParams<{ goalId: string }>();
@@ -22,8 +48,6 @@ export function SavingsGoalDetailPage() {
     
     setLoading(true);
     try {
-      // For now, since we don't have getGoalById, we fetch all and filter
-      // In a real app, adding getGoalById(id) to the service would be better
       const goals = await savingsService.getGoals();
       const targetGoal = goals.find(g => g.id === parseInt(goalId));
       
@@ -46,6 +70,44 @@ export function SavingsGoalDetailPage() {
     fetchData();
   }, [fetchData]);
 
+  const goalCalculations = useMemo(() => {
+    if (!goal) return null;
+
+    const amountProgress = goal.target_amount > 0 
+      ? (goal.current_amount / goal.target_amount) * 100 
+      : 0;
+
+    let daysRemaining = 0;
+    let totalDays = 0;
+    let timeProgress = 0;
+
+    if (goal.created_at && goal.target_date) {
+      const startDate = parseISO(goal.created_at);
+      const endDate = parseISO(goal.target_date);
+      const today = new Date();
+
+      totalDays = differenceInDays(endDate, startDate);
+      const daysElapsed = differenceInDays(today, startDate);
+      daysRemaining = differenceInDays(endDate, today);
+
+      if (totalDays > 0) {
+        timeProgress = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
+      }
+    }
+
+    const pace = calculatePaceIndicator(amountProgress, timeProgress);
+
+    return {
+      amountProgress,
+      timeProgress,
+      daysRemaining,
+      totalDays,
+      pace,
+      percentage: Math.round(amountProgress),
+      remaining: goal.target_amount - goal.current_amount
+    };
+  }, [goal]);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -57,7 +119,7 @@ export function SavingsGoalDetailPage() {
     );
   }
 
-  if (!goal) {
+  if (!goal || !goalCalculations) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <h2 className="text-2xl font-bold">Goal not found</h2>
@@ -72,9 +134,8 @@ export function SavingsGoalDetailPage() {
 
   return (
     <div className="space-y-6 pb-10">
-      {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/savings')} className="rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/savings')} className="rounded-full" aria-label="Back to Savings">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -84,13 +145,12 @@ export function SavingsGoalDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Progress & Details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <DualProgressRings 
-                amountProgress={(goal.current_amount / goal.target_amount) * 100}
-                timeProgress={0} // To be implemented with date logic
+                amountProgress={goalCalculations.amountProgress}
+                timeProgress={goalCalculations.timeProgress}
                 size={180}
                 strokeWidth={12}
               />
@@ -107,17 +167,20 @@ export function SavingsGoalDetailPage() {
                   </div>
                 </div>
 
-                {goal.target_date && (
-                  <div className="space-y-1 pt-2 border-t border-border">
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider">Target Date</p>
-                    <p className="text-lg font-medium">{formatDate(goal.target_date)}</p>
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider">Days Left</p>
+                    <p className="text-lg font-medium">{goalCalculations.daysRemaining} days remaining</p>
                   </div>
-                )}
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider">Progress</p>
+                    <p className="text-lg font-medium">{goalCalculations.percentage}%</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Contribution History placeholder */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Contribution History</h2>
@@ -150,19 +213,26 @@ export function SavingsGoalDetailPage() {
           </div>
         </div>
 
-        {/* Right Column - Sidebar info placeholder */}
         <div className="space-y-6">
           <div className="rounded-xl border border-border bg-muted/30 p-6 space-y-4">
             <h3 className="font-semibold">Goal Summary</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status</span>
-                <span className="font-medium">On Track</span>
+                <span className={`font-medium ${goalCalculations.pace.colorClass}`}>
+                  {goalCalculations.pace.label}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Remaining</span>
-                <span className="font-medium">{formatCurrency(goal.target_amount - goal.current_amount)}</span>
+                <span className="font-medium">{formatCurrency(goalCalculations.remaining)}</span>
               </div>
+              {goalCalculations.totalDays > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Time Progress</span>
+                  <span className="font-medium">{Math.round(goalCalculations.timeProgress)}%</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
