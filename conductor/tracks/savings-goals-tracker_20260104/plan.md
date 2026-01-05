@@ -56,14 +56,14 @@
   - [x] Test: Rings display different colors (amount vs time)
   - [x] Implement SVG-based circular progress indicators
   - [x] Add percentage labels in center
-- [~] Task: Create GoalCard.tsx component
-  - [ ] Write failing tests for card content
-  - [ ] Test: Displays goal name and category
-  - [ ] Test: Shows current/target amounts formatted as SEK
-  - [ ] Test: Shows target date
-  - [ ] Test: Shows pin indicator when pinned
-  - [ ] Implement card layout with DualProgressRings
-- [ ] Task: Add card action buttons
+- [x] Task: Create GoalCard.tsx component 1d8bed9
+  - [x] Write failing tests for card content
+  - [x] Test: Displays goal name and category
+  - [x] Test: Shows current/target amounts formatted as SEK
+  - [x] Test: Shows target date
+  - [x] Test: Shows pin indicator when pinned
+  - [x] Implement card layout with DualProgressRings
+- [~] Task: Add card action buttons
   - [ ] Write failing test for quick-add button presence
   - [ ] Write failing test for edit/delete menu
   - [ ] Implement "+" quick-add button
