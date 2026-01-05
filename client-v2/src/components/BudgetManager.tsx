@@ -9,8 +9,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { 
   Plus, 
-  ChevronLeft, 
-  ChevronRight, 
   ChevronDown,
   ChevronUp,
   AlertTriangle,
@@ -64,11 +62,6 @@ import { calculateCategorySuggestions, getAlertPreferences, saveAlertPreferences
 import { getCategoryColor } from '../lib/categoryColors';
 import { getCategoryIconStyle } from '../lib/iconUtils';
 
-const MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-];
-
 interface BudgetManagerProps {
   onNavigate?: (view: string) => void;
 }
@@ -77,7 +70,7 @@ interface BudgetManagerProps {
 export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const navigate = useNavigate();
   const now = new Date();
-  const { selectedMonth, selectedYear, goToPreviousMonth, goToNextMonth } = useDate();
+  const { selectedMonth, selectedYear } = useDate();
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [showMobileSummary, setShowMobileSummary] = useState(false);
@@ -254,9 +247,6 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     }
   }, [expandedCategory, loadComments]);
 
-  const handlePrevMonth = goToPreviousMonth;
-  const handleNextMonth = goToNextMonth;
-
   const getStatusInfo = (progress: number, isFixed?: boolean) => {
     if (progress >= 100) {
       if (isFixed && progress === 100) {
@@ -390,7 +380,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
             </div>
             <div className="p-2 bg-muted/50 rounded-lg">
               <div className="text-xs text-muted-foreground">Daily</div>
-              <div className={`text-sm font-medium ${isOnTrack ? 'text-[var(--theme-teal)]' : 'text-[var(--theme-coral)]'}`}>
+              <div className={`text-sm font-medium ${isOnTrack ? 'text-(--theme-teal)' : 'text-(--theme-coral)'}`}>
                 {formatCurrency(dailyBurnRate)}
               </div>
             </div>
@@ -475,14 +465,14 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       </AvatarFallback>
                     </Avatar>
                   </div>
-                  <CheckCircle2 className="h-3.5 w-3.5 text-[var(--theme-teal)]" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-(--theme-teal)" />
                 </div>
               )}
 
               <Button 
                 size="sm" 
                 variant="default"
-                className="gap-1.5 text-sm bg-gradient-to-r from-[var(--theme-indigo)] to-[var(--theme-teal)] hover:opacity-90 border-0 text-white"
+                className="gap-1.5 text-sm bg-linear-gradient-to-r from-(--theme-indigo) to-(--theme-teal) hover:opacity-90 border-0 text-white"
                 onClick={() => setWizardOpen(true)}
               >
                 <Sparkles className="h-4 w-4" />
@@ -502,7 +492,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
 
       {/* Month-End Review CTA */}
       {isMonthEnd && (
-        <div className="bg-gradient-to-r from-[var(--theme-indigo)] to-[var(--theme-teal)] text-white">
+        <div className="bg-linear-gradient-to-r from-(--theme-indigo) to-(--theme-teal) text-white">
           <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5" />
@@ -547,8 +537,8 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all ${
-                        overallProgress >= 90 ? 'bg-[var(--theme-coral)]' : 
-                        overallProgress >= 80 ? 'bg-[var(--theme-amber)]' : 'bg-[var(--theme-teal)]'
+                        overallProgress >= 90 ? 'bg-(--theme-coral)' : 
+                        overallProgress >= 80 ? 'bg-(--theme-amber)' : 'bg-(--theme-teal)'
                       }`}
                       style={{ width: `${Math.min(100, overallProgress)}%` }}
                     />
@@ -584,12 +574,12 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                       Daily Target
                       {isOnTrack ? (
-                        <TrendingUp className="h-3 w-3 text-[var(--theme-teal)]" />
+                        <TrendingUp className="h-3 w-3 text-(--theme-teal)" />
                       ) : (
-                        <TrendingDown className="h-3 w-3 text-[var(--theme-coral)]" />
+                        <TrendingDown className="h-3 w-3 text-(--theme-coral)" />
                       )}
                     </div>
-                    <div className={`text-lg font-semibold ${isOnTrack ? 'text-[var(--theme-teal)]' : 'text-[var(--theme-coral)]'}`}>
+                    <div className={`text-lg font-semibold ${isOnTrack ? 'text-(--theme-teal)' : 'text-(--theme-coral)'}`}>
                       {formatCurrency(dailyBurnRate)}/day
                     </div>
                   </div>
@@ -641,7 +631,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       </div>
                       <span className="text-sm font-medium text-foreground">{formatCurrency(settlementAmount)}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-xs text-[var(--theme-teal)]" onClick={() => navigate('/settlements')}>
+                    <Button variant="ghost" size="sm" className="text-xs text-(--theme-teal)" onClick={() => navigate('/settlements')}>
                       Reconcile
                     </Button>
                   </div>
@@ -673,7 +663,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       <Separator />
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">50/50 Settlement</span>
-                        <span className="font-semibold text-[var(--theme-teal)]">{formatCurrency(settlementAmount)}</span>
+                        <span className="font-semibold text-(--theme-teal)">{formatCurrency(settlementAmount)}</span>
                       </div>
                     </div>
                   )}
@@ -692,7 +682,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                 <div className="flex flex-wrap gap-2">
                   <Badge 
                     variant={nearLimitCount > 0 ? 'outline' : 'secondary'}
-                    className={nearLimitCount > 0 ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' : ''}
+                    className={nearLimitCount > 0 ? 'border-(--theme-amber) text-(--theme-amber) bg-(--theme-amber)/10' : ''}
                   >
                     <AlertTriangle className="h-3 w-3" />
                     {nearLimitCount} near limit
@@ -722,7 +712,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       id="show-fixed"
                       checked={showFixedBudgets}
                       onCheckedChange={setShowFixedBudgets}
-                      className="h-4 w-7 data-[state=checked]:bg-[var(--theme-indigo)]"
+                      className="h-4 w-7 data-[state=checked]:bg-(--theme-indigo)"
                     />
                   </div>
                 </div>
@@ -745,7 +735,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       const StatusIcon = status.icon;
                       const isExpanded = expandedCategory === budget.id;
                       const CategoryIcon = getIconByName(budget.category_icon);
-                      const categoryColor = budget.category_color || 'var(--theme-teal)';
+                      const categoryColor = budget.category_color || '--theme-teal';
                       const { userSpent, partnerSpent } = getUserSpending(budget.category_name);
                       const transactions = getCategoryTransactions(budget.category_name);
                       const budgetComments = comments[budget.id] || [];
@@ -804,8 +794,8 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     <Badge 
                                       variant={status.variant}
                                       className={`text-[10px] ${
-                                        status.label === 'Near limit' ? 'border-[var(--theme-amber)] text-[var(--theme-amber)] bg-[var(--theme-amber)]/10' :
-                                        status.label === 'On track' ? 'border-[var(--theme-teal)] text-[var(--theme-teal)] bg-[var(--theme-teal)]/10' : ''
+                                        status.label === 'Near limit' ? 'border-(--theme-amber) text-(--theme-amber) bg-(--theme-amber)/10' :
+                                        status.label === 'On track' ? 'border-(--theme-teal) text-(--theme-teal) bg-(--theme-teal)/10' : ''
                                       }`}
                                     >
                                       {StatusIcon && <StatusIcon className="h-2.5 w-2.5" />}
@@ -822,7 +812,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'} hover:text-[var(--theme-teal)]`}
+                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'} hover:text-[--theme-teal]`}
                                       onClick={(e) => { e.stopPropagation(); handleQuickAddExpense(budget.category_id, budget.category_name); }}
                                     >
                                       <Plus className="h-3.5 w-3.5" />
@@ -954,12 +944,12 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                             <Avatar className="h-6 w-6 shrink-0">
                                               <AvatarFallback 
                                                 className="text-[9px] text-white"
-                                                style={{ backgroundColor: comment.user_color || (comment.user_id === user?.id ? 'var(--theme-indigo)' : 'var(--theme-teal)') }}
+                                                style={{ backgroundColor: comment.user_color || (comment.user_id === user?.id ? '--theme-indigo' : '--theme-teal') }}
                                               >
                                                 {comment.user_name?.[0]}
                                               </AvatarFallback>
                                             </Avatar>
-                                            <div className={`flex-1 p-2 rounded-lg text-sm ${comment.user_id === user?.id ? 'bg-muted/50' : 'bg-[var(--theme-teal)]/10'}`}>
+                                            <div className={`flex-1 p-2 rounded-lg text-sm ${comment.user_id === user?.id ? 'bg-muted/50' : 'bg-[--theme-teal]/10'}`}>
                                               <p>{comment.text}</p>
                                               <span className="text-[10px] text-muted-foreground">
                                                 {new Date(comment.created_at).toLocaleDateString()}
@@ -1069,7 +1059,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                           <button
                             key={category.id}
                             onClick={() => setModalSelectedCategory(category)}
-                            className="flex flex-col items-center justify-center p-4 gap-3 rounded-xl border border-border/50 bg-card hover:border-[var(--theme-indigo)] hover:bg-[var(--theme-indigo)]/5 hover:shadow-sm transition-all group text-center"
+                            className="flex flex-col items-center justify-center p-4 gap-3 rounded-xl border border-border/50 bg-card hover:border-[--theme-indigo] hover:bg-[--theme-indigo]/5 hover:shadow-sm transition-all group text-center"
                           >
                             <div 
                               className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
@@ -1141,14 +1131,14 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                 {suggestions && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Sparkles className="h-3 w-3 text-[var(--theme-amber)]" />
+                      <Sparkles className="h-3 w-3 text-[--theme-amber]" />
                       <span>Smart Suggestions</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setModalAmount(suggestions.matchAvg.toString())}
-                        className="flex flex-col items-start p-2.5 rounded-lg border border-border/50 bg-muted/20 hover:bg-[var(--theme-teal)]/10 hover:border-[var(--theme-teal)]/30 transition-all text-left"
+                        className="flex flex-col items-start p-2.5 rounded-lg border border-border/50 bg-muted/20 hover:bg-[--theme-teal]/10 hover:border-[--theme-teal]/30 transition-all text-left"
                       >
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Average</span>
                         <span className="text-sm font-medium">{formatCurrency(suggestions.matchAvg)}</span>
@@ -1156,7 +1146,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       <button
                         type="button"
                         onClick={() => setModalAmount(suggestions.plusTen.toString())}
-                        className="flex flex-col items-start p-2.5 rounded-lg border border-border/50 bg-muted/20 hover:bg-[var(--theme-teal)]/10 hover:border-[var(--theme-teal)]/30 transition-all text-left"
+                        className="flex flex-col items-start p-2.5 rounded-lg border border-border/50 bg-muted/20 hover:bg-[--theme-teal]/10 hover:border-[--theme-teal]/30 transition-all text-left"
                       >
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Growth (+10%)</span>
                         <span className="text-sm font-medium">{formatCurrency(suggestions.plusTen)}</span>
@@ -1207,7 +1197,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                 </Button>
                 <Button 
                   onClick={() => handleAddBudgetSubmit(false)}
-                  className="bg-[var(--theme-indigo)] hover:bg-[var(--theme-indigo)]/90 text-white min-w-[100px]"
+                  className="bg-[--theme-indigo] hover:bg-[--theme-indigo]/90 text-white min-w-[100px]"
                   disabled={!modalAmount}
                 >
                   Set Budget
