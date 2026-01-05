@@ -29,23 +29,23 @@
   - [x] Ensure active state styling works correctly
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Navigation & Routing' (Protocol in workflow.md) 7e73680
 
-## Phase 3: Savings Goals List Page [ ]
+## Phase 3: Savings Goals List Page [x] [checkpoint: 46c8984]
 
 - [x] Task: Create SavingsGoalsPage.tsx component ee51160
-  - [ ] Write failing test for component render
-  - [ ] Implement page layout with header and grid container
-  - [ ] Add scope switcher (Mine/Partner's/Ours)
-  - [ ] Integrate with savingsService.getGoals()
+  - [x] Write failing test for component render
+  - [x] Implement page layout with header and grid container
+  - [x] Add scope switcher (Mine/Partner's/Ours)
+  - [x] Integrate with savingsService.getGoals()
 - [x] Task: Implement loading and empty states 3aa01ca
-  - [ ] Write failing test for loading skeleton
-  - [ ] Write failing test for empty state with CTA
-  - [ ] Implement skeleton loader during fetch
-  - [ ] Implement empty state with "Create your first goal" button
+  - [x] Write failing test for loading skeleton
+  - [x] Write failing test for empty state with CTA
+  - [x] Implement skeleton loader during fetch
+  - [x] Implement empty state with "Create your first goal" button
 - [x] Task: Implement goal card grid layout 50e6ba8
-  - [ ] Write failing test for grid rendering with goals
-  - [ ] Implement responsive grid (3 cols desktop, 2 tablet, 1 mobile)
-  - [ ] Map goals to GoalCard components
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Savings Goals List Page' (Protocol in workflow.md)
+  - [x] Write failing test for grid rendering with goals
+  - [x] Implement responsive grid (3 cols desktop, 2 tablet, 1 mobile)
+  - [x] Map goals to GoalCard components
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Savings Goals List Page' (Protocol in workflow.md) 46c8984
 
 ## Phase 4: Goal Card Component with Dual Progress Rings [ ]
 
