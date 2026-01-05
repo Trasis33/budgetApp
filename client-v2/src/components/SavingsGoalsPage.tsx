@@ -94,6 +94,20 @@ export function SavingsGoalsPage() {
     }
   };
 
+  const handleQuickAddContribution = async (goalId: number, amount: number) => {
+    try {
+      await savingsService.addContribution(goalId, {
+        amount,
+        date: new Date().toISOString().split('T')[0],
+      });
+      toast.success('Contribution added');
+      fetchGoals();
+    } catch (error) {
+      console.error('Failed to add contribution:', error);
+      toast.error('Failed to add contribution');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -172,10 +186,7 @@ export function SavingsGoalsPage() {
               onEdit={handleOpenEditModal}
               onDelete={handleDeleteGoal}
               onPin={handlePinGoal}
-              onAddContribution={() => {
-                // To be implemented in Phase 8 (Inline Quick Add)
-                toast.info('Quick add coming soon! Use details page for now.');
-              }}
+              onQuickAddContribution={handleQuickAddContribution}
             />
           ))}
         </div>

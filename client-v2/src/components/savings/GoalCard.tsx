@@ -9,8 +9,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DualProgressRings } from './DualProgressRings';
+import { QuickAddContribution } from './QuickAddContribution';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
-import { Pin, MoreVertical, Plus, Pencil, Trash2, PinOff } from 'lucide-react';
+import { Pin, MoreVertical, Pencil, Trash2, PinOff } from 'lucide-react';
 
 interface GoalCardProps {
   goal: SavingsGoal;
@@ -19,7 +20,7 @@ interface GoalCardProps {
   onEdit?: (goal: SavingsGoal) => void;
   onDelete?: (goal: SavingsGoal) => void;
   onPin?: (goal: SavingsGoal) => void;
-  onAddContribution?: (goal: SavingsGoal) => void;
+  onQuickAddContribution?: (goalId: number, amount: number) => void;
 }
 
 export function GoalCard({ 
@@ -29,14 +30,12 @@ export function GoalCard({
   onEdit,
   onDelete,
   onPin,
-  onAddContribution
+  onQuickAddContribution
 }: GoalCardProps) {
-  // Calculate Amount Progress
   const amountProgress = goal.target_amount > 0 
     ? (goal.current_amount / goal.target_amount) * 100 
     : 0;
 
-  // Calculate Time Progress
   let timeProgress = 0;
   if (goal.target_date && goal.created_at) {
     const start = new Date(goal.created_at).getTime();
@@ -50,10 +49,15 @@ export function GoalCard({
     }
   }
 
-  // Handle action clicks with stopPropagation
   const handleAction = (callback?: (goal: SavingsGoal) => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
     callback?.(goal);
+  };
+
+  const handleQuickAdd = (amount: number) => {
+    if (onQuickAddContribution) {
+      onQuickAddContribution(goal.id, amount);
+    }
   };
 
   return (
@@ -64,25 +68,15 @@ export function GoalCard({
       )}
       onClick={onClick}
     >
-      {/* Top Actions & Pin */}
       <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
-         {/* Pin Indicator */}
          {goal.is_pinned && (
            <Pin className="h-4 w-4 fill-current text-primary mr-2 rotate-45" />
          )}
 
-         {/* Quick Add Button */}
-         <Button
-           variant="ghost"
-           size="icon"
-           className="h-8 w-8 rounded-full hover:bg-muted"
-           onClick={handleAction(onAddContribution)}
-           aria-label="Add contribution"
-         >
-           <Plus className="h-4 w-4" />
-         </Button>
+         <QuickAddContribution
+           onSubmit={handleQuickAdd}
+         />
 
-         {/* Menu */}
          <DropdownMenu>
            <DropdownMenuTrigger asChild>
              <Button 
@@ -126,7 +120,6 @@ export function GoalCard({
 
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
-          {/* Main Info */}
           <div className="flex-1 space-y-1">
             <h3 className="font-semibold leading-none tracking-tight truncate pr-24">
               {goal.name}
@@ -138,7 +131,6 @@ export function GoalCard({
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-4">
-          {/* Progress Rings */}
           <div className="flex-shrink-0">
             <DualProgressRings 
               amountProgress={amountProgress} 
@@ -148,7 +140,6 @@ export function GoalCard({
             />
           </div>
 
-          {/* Stats */}
           <div className="flex-1 space-y-4 text-right">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Saved</p>
