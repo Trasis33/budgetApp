@@ -2,15 +2,15 @@
 
 ## Phase 1: API Service Layer [ ]
 
-- [ ] Task: Create savingsService.ts with API methods
-  - [ ] Define TypeScript types for SavingsGoal, Contribution, and API responses
-  - [ ] Implement getGoals(scope?) method
-  - [ ] Implement createGoal(data) method
-  - [ ] Implement updateGoal(id, data) method
-  - [ ] Implement deleteGoal(id) method
-  - [ ] Implement getContributions(goalId) method
-  - [ ] Implement addContribution(goalId, data) method
-  - [ ] Implement deleteContribution(contributionId) method
+- [x] Task: Create savingsService.ts with API methods 8f8542a
+  - [x] Define TypeScript types for SavingsGoal, Contribution, and API responses
+  - [x] Implement getGoals(scope?) method
+  - [x] Implement createGoal(data) method
+  - [x] Implement updateGoal(id, data) method
+  - [x] Implement deleteGoal(id) method
+  - [x] Implement getContributions(goalId) method
+  - [x] Implement addContribution(goalId, data) method
+  - [x] Implement deleteContribution(contributionId) method
 - [ ] Task: Write tests for savingsService methods
   - [ ] Test: getGoals calls correct endpoint with scope parameter
   - [ ] Test: CRUD operations call correct endpoints
