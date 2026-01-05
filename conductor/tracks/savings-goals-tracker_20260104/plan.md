@@ -53,13 +53,13 @@
 
 ## Phase 5: Create/Edit Goal Modal [ ]
 
-- [ ] Task: Create GoalFormModal.tsx component
-  - [ ] Write failing tests for modal behavior
-  - [ ] Test: Modal opens and closes correctly
-  - [ ] Test: Form fields render with correct labels
-  - [ ] Test: Create mode shows empty form
-  - [ ] Test: Edit mode pre-fills form with goal data
-- [ ] Task: Implement form validation
+- [x] Task: Create GoalFormModal.tsx component 6415d2a
+  - [x] Write failing tests for modal behavior
+  - [x] Test: Modal opens and closes correctly
+  - [x] Test: Form fields render with correct labels
+  - [x] Test: Create mode shows empty form
+  - [x] Test: Edit mode pre-fills form with goal data
+- [~] Task: Implement form validation
   - [ ] Write failing tests for validation rules
   - [ ] Test: Goal name is required
   - [ ] Test: Target amount must be positive number
