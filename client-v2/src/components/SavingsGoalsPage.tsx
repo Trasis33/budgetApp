@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useScope } from '../context/ScopeContext';
 import { savingsService } from '../api/services/savingsService';
 import { Button } from './ui/button';
@@ -6,28 +6,91 @@ import { Plus, PiggyBank } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Skeleton } from './ui/skeleton';
 import { GoalCard } from './savings/GoalCard';
+import { GoalFormModal } from './savings/GoalFormModal';
+import { toast } from 'sonner';
 import type { SavingsGoal } from '../types';
 
 export function SavingsGoalsPage() {
   const { currentScope, setScope, isPartnerConnected } = useScope();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | undefined>(undefined);
+
+  const fetchGoals = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await savingsService.getGoals(currentScope);
+      setGoals(data);
+    } catch (error) {
+      console.error('Failed to fetch savings goals:', error);
+      toast.error('Failed to load savings goals');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentScope]);
 
   useEffect(() => {
-    const fetchGoals = async () => {
-      setLoading(true);
-      try {
-        const data = await savingsService.getGoals(currentScope);
-        setGoals(data);
-      } catch (error) {
-        console.error('Failed to fetch savings goals:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchGoals();
-  }, [currentScope]);
+  }, [fetchGoals]);
+
+  const handleOpenCreateModal = () => {
+    setSelectedGoal(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (goal: SavingsGoal) => {
+    setSelectedGoal(goal);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedGoal(undefined);
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    try {
+      if (selectedGoal) {
+        await savingsService.updateGoal(selectedGoal.id, data);
+        toast.success('Goal updated successfully');
+      } else {
+        await savingsService.createGoal({
+          ...data,
+          current_amount: 0,
+        });
+        toast.success('Goal created successfully');
+      }
+      handleModalClose();
+      fetchGoals();
+    } catch (error) {
+      console.error('Failed to save goal:', error);
+      toast.error('Failed to save goal');
+    }
+  };
+
+  const handleDeleteGoal = async (goal: SavingsGoal) => {
+    if (!window.confirm(`Are you sure you want to delete "${goal.name}"?`)) return;
+    
+    try {
+      await savingsService.deleteGoal(goal.id);
+      toast.success('Goal deleted');
+      fetchGoals();
+    } catch (error) {
+      toast.error('Failed to delete goal');
+    }
+  };
+
+  const handlePinGoal = async (goal: SavingsGoal) => {
+    try {
+      await savingsService.updateGoal(goal.id, { is_pinned: !goal.is_pinned });
+      fetchGoals();
+    } catch (error) {
+      toast.error('Failed to pin goal');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -38,7 +101,7 @@ export function SavingsGoalsPage() {
             Track and manage your savings goals.
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={handleOpenCreateModal}>
           <Plus className="h-4 w-4" />
           Add Goal
         </Button>
@@ -92,7 +155,7 @@ export function SavingsGoalsPage() {
           <p className="text-muted-foreground max-w-sm mx-auto mb-6">
             Create your first savings goal to start tracking your progress.
           </p>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleOpenCreateModal}>
             <Plus className="h-4 w-4" />
             Create First Goal
           </Button>
@@ -100,10 +163,27 @@ export function SavingsGoalsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {goals.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} />
+            <GoalCard 
+              key={goal.id} 
+              goal={goal} 
+              onEdit={handleOpenEditModal}
+              onDelete={handleDeleteGoal}
+              onPin={handlePinGoal}
+              onAddContribution={() => {
+                // To be implemented in Phase 8 (Inline Quick Add)
+                toast.info('Quick add coming soon! Use details page for now.');
+              }}
+            />
           ))}
         </div>
       )}
+
+      <GoalFormModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSubmit={handleFormSubmit}
+        goal={selectedGoal}
+      />
     </div>
   );
 }

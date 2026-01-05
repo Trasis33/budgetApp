@@ -1,16 +1,5 @@
 import { apiClient } from '../axios';
-
-export interface SavingsGoal {
-  id: number;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  target_date?: string;
-  is_pinned: boolean;
-  color_index: number;
-  category_id?: number;
-  category_name?: string;
-}
+import { SavingsGoal } from '../../types';
 
 export interface Contribution {
   id: number;
@@ -23,10 +12,14 @@ export interface Contribution {
 
 export const savingsService = {
   async getGoals(scope?: string) {
-    const response = await apiClient.get<{ goals: SavingsGoal[] }>('/savings/goals', {
+    const response = await apiClient.get<{ goals: any[] }>('/savings/goals', {
       params: scope ? { scope } : undefined,
     });
-    return response.goals;
+    return response.goals.map(goal => ({
+      ...goal,
+      name: goal.goal_name,
+      category_name: goal.category,
+    })) as SavingsGoal[];
   },
 
   async createGoal(data: {
@@ -37,12 +30,28 @@ export const savingsService = {
     is_pinned?: boolean;
     color_index?: number;
     category_id?: number;
+    category_name?: string;
   }) {
-    return apiClient.post<SavingsGoal>('/savings/goals', data);
+    const payload = {
+      goal_name: data.name,
+      target_amount: data.target_amount,
+      target_date: data.target_date,
+      category: data.category_name,
+    };
+    return apiClient.post<any>('/savings/goals', payload);
   },
 
   async updateGoal(id: number, data: Partial<SavingsGoal>) {
-    return apiClient.put<SavingsGoal>(`/savings/goals/${id}`, data);
+    const payload: any = { ...data };
+    if (data.name) {
+      payload.goal_name = data.name;
+      delete payload.name;
+    }
+    if (data.category_name !== undefined) {
+      payload.category = data.category_name;
+      delete payload.category_name;
+    }
+    return apiClient.put<any>(`/savings/goals/${id}`, payload);
   },
 
   async deleteGoal(id: number) {
