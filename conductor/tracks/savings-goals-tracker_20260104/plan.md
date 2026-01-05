@@ -11,10 +11,10 @@
   - [x] Implement getContributions(goalId) method
   - [x] Implement addContribution(goalId, data) method
   - [x] Implement deleteContribution(contributionId) method
-- [ ] Task: Write tests for savingsService methods
-  - [ ] Test: getGoals calls correct endpoint with scope parameter
-  - [ ] Test: CRUD operations call correct endpoints
-  - [ ] Test: Error handling for failed requests
+- [x] Task: Write tests for savingsService methods 769ffb2
+  - [x] Test: getGoals calls correct endpoint with scope parameter
+  - [x] Test: CRUD operations call correct endpoints
+  - [x] Test: Error handling for failed requests
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: API Service Layer' (Protocol in workflow.md)
 
 ## Phase 2: Navigation & Routing [ ]
