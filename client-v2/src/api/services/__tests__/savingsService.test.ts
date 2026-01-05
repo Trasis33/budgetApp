@@ -66,7 +66,6 @@ describe('savingsService', () => {
   describe('getContributions', () => {
     it('calls correct endpoint with goalId', async () => {
       mockApiClient.get.mockResolvedValue([]);
-      // @ts-ignore - method doesn't exist yet
       await savingsService.getContributions(1);
       expect(mockApiClient.get).toHaveBeenCalledWith('/savings/goals/1/contributions');
     });
@@ -76,7 +75,6 @@ describe('savingsService', () => {
     it('calls correct endpoint with goalId and data', async () => {
       const contribution = { amount: 100, date: '2026-01-05' };
       mockApiClient.post.mockResolvedValue({ id: 1, ...contribution });
-      // @ts-ignore - method doesn't exist yet
       await savingsService.addContribution(1, contribution);
       expect(mockApiClient.post).toHaveBeenCalledWith('/savings/goals/1/contributions', contribution);
     });
@@ -85,9 +83,17 @@ describe('savingsService', () => {
   describe('deleteContribution', () => {
     it('calls correct endpoint with contributionId', async () => {
       mockApiClient.delete.mockResolvedValue({ success: true });
-      // @ts-ignore - method doesn't exist yet
       await savingsService.deleteContribution(100);
       expect(mockApiClient.delete).toHaveBeenCalledWith('/savings/contributions/100');
+    });
+  });
+
+  describe('error handling', () => {
+    it('propagates errors from apiClient', async () => {
+      const error = new Error('Network error');
+      mockApiClient.get.mockRejectedValue(error);
+      
+      await expect(savingsService.getGoals()).rejects.toThrow('Network error');
     });
   });
 });
