@@ -59,20 +59,20 @@
   - [x] Test: Form fields render with correct labels
   - [x] Test: Create mode shows empty form
   - [x] Test: Edit mode pre-fills form with goal data
-- [~] Task: Implement form validation
-  - [ ] Write failing tests for validation rules
-  - [ ] Test: Goal name is required
-  - [ ] Test: Target amount must be positive number
-  - [ ] Test: Target date must be in the future
-  - [ ] Implement validation with React Hook Form
-  - [ ] Display user-friendly error messages
-- [ ] Task: Implement form submission
-  - [ ] Write failing test for create submission
-  - [ ] Write failing test for edit submission
-  - [ ] Call savingsService.createGoal or updateGoal
-  - [ ] Show success/error toast notifications
-  - [ ] Close modal and refresh list on success
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Create/Edit Goal Modal' (Protocol in workflow.md)
+- [x] Task: Implement form validation 8ee881a
+  - [x] Write failing tests for validation rules
+  - [x] Test: Goal name is required
+  - [x] Test: Target amount must be positive number
+  - [x] Test: Target date must be in the future
+  - [x] Implement validation with React Hook Form
+  - [x] Display user-friendly error messages
+- [x] Task: Implement form submission 8ee881a
+  - [x] Write failing test for create submission
+  - [x] Write failing test for edit submission
+  - [x] Call savingsService.createGoal or updateGoal
+  - [x] Show success/error toast notifications
+  - [x] Close modal and refresh list on success
+- [~] Task: Conductor - User Manual Verification 'Phase 5: Create/Edit Goal Modal' (Protocol in workflow.md)
 
 ## Phase 6: Goal Detail Page [ ]
 
