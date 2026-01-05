@@ -48,6 +48,8 @@ const MainApp = () => {
             <Route path="/statement" element={<MonthlyStatement onNavigate={setCurrentView} />} />
             <Route path="/settings" element={<Settings onNavigate={setCurrentView} />} />
             <Route path="/insights" element={<BudgetInsightsPage onNavigate={setCurrentView} />} />
+            <Route path="/savings" element={<div>Savings Goals</div>} />
+            <Route path="/savings/:goalId" element={<div>Goal Details</div>} />
             <Route path="/bills-design-one" element={<BillsDesignOne />} />
             <Route path="/bills-design-two" element={<BillsDesignTwo />} />
             <Route path="/budget-design-three" element={<BudgetManagerDesignThree />} />
