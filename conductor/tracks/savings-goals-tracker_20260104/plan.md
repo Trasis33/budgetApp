@@ -51,7 +51,7 @@
 ...
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Goal Card Component with Dual Progress Rings' (Protocol in workflow.md) 8c5f7ed
 
-## Phase 5: Create/Edit Goal Modal [ ]
+## Phase 5: Create/Edit Goal Modal [checkpoint: bd39ef3]
 
 - [x] Task: Create GoalFormModal.tsx component 6415d2a
   - [x] Write failing tests for modal behavior
@@ -72,7 +72,7 @@
   - [x] Call savingsService.createGoal or updateGoal
   - [x] Show success/error toast notifications
   - [x] Close modal and refresh list on success
-- [~] Task: Conductor - User Manual Verification 'Phase 5: Create/Edit Goal Modal' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Create/Edit Goal Modal' (Protocol in workflow.md) bd39ef3
 
 ## Phase 6: Goal Detail Page [ ]
 
