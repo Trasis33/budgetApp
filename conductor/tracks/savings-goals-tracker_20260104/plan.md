@@ -63,12 +63,12 @@
   - [x] Test: Shows target date
   - [x] Test: Shows pin indicator when pinned
   - [x] Implement card layout with DualProgressRings
-- [~] Task: Add card action buttons
-  - [ ] Write failing test for quick-add button presence
-  - [ ] Write failing test for edit/delete menu
-  - [ ] Implement "+" quick-add button
-  - [ ] Implement dropdown menu with Edit, Pin/Unpin, Delete options
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Goal Card Component with Dual Progress Rings' (Protocol in workflow.md)
+- [x] Task: Add card action buttons 44960b6
+  - [x] Write failing test for quick-add button presence
+  - [x] Write failing test for edit/delete menu
+  - [x] Implement "+" quick-add button
+  - [x] Implement dropdown menu with Edit, Pin/Unpin, Delete options
+- [~] Task: Conductor - User Manual Verification 'Phase 4: Goal Card Component with Dual Progress Rings' (Protocol in workflow.md)
 
 ## Phase 5: Create/Edit Goal Modal [ ]
 
