@@ -36,7 +36,7 @@
   - [ ] Implement page layout with header and grid container
   - [ ] Add scope switcher (Mine/Partner's/Ours)
   - [ ] Integrate with savingsService.getGoals()
-- [~] Task: Implement loading and empty states
+- [x] Task: Implement loading and empty states 3aa01ca
   - [ ] Write failing test for loading skeleton
   - [ ] Write failing test for empty state with CTA
   - [ ] Implement skeleton loader during fetch
