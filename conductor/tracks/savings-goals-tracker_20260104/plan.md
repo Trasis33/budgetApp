@@ -31,7 +31,7 @@
 
 ## Phase 3: Savings Goals List Page [ ]
 
-- [ ] Task: Create SavingsGoalsPage.tsx component
+- [~] Task: Create SavingsGoalsPage.tsx component
   - [ ] Write failing test for component render
   - [ ] Implement page layout with header and grid container
   - [ ] Add scope switcher (Mine/Partner's/Ours)

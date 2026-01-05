@@ -54,7 +54,7 @@ describe('App Routing & Navigation', () => {
       </MemoryRouter>
     );
     
-    expect(await screen.findByText(/Savings Goals/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Savings Goals/i })).toBeInTheDocument();
   });
 
   it('renders Savings Goal Detail page on /savings/:id route', async () => {
