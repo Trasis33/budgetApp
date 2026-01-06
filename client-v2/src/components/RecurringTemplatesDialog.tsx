@@ -240,10 +240,10 @@ export function RecurringTemplatesDialog({
           </DialogHeader>
 
           {loading ? (
-            <div className="p-6 text-center text-gray-500">Loading templates...</div>
+            <div className="p-6 text-center text-muted-foreground">Loading templates...</div>
           ) : templates.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 No recurring bills yet. Create one when you add an expense by checking "Save as recurring template".
               </p>
               <Button onClick={() => setEditingForm({
@@ -265,8 +265,8 @@ export function RecurringTemplatesDialog({
                     <div className="flex items-start justify-between">
                       <div className="flex-1 space-y-1">
                         <p className="font-medium">{template.description}</p>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <span className="px-2 py-1 bg-gray-100 rounded">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="px-2 py-1 bg-muted rounded">
                             {getCategoryName(template.category_id)}
                           </span>
                           <span>{formatCurrency(template.default_amount)}</span>
@@ -289,7 +289,7 @@ export function RecurringTemplatesDialog({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-[oklch(var(--theme-coral))] hover:text-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.1)]"
                           onClick={() => setDeleteId(template.id)}
                           disabled={isSubmitting}
                         >
@@ -412,7 +412,7 @@ export function RecurringTemplatesDialog({
                     setEditingForm(prev => prev ? { ...prev, split_ratio_user1: val, split_ratio_user2: 100 - val } : null);
                   }}
                 />
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Partner: {100 - (editingForm?.split_ratio_user1 || 50)}%
                 </p>
               </div>
@@ -444,7 +444,7 @@ export function RecurringTemplatesDialog({
             <AlertDialogAction
               onClick={() => deleteId && handleDelete(deleteId)}
               disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.9)]"
             >
               {isSubmitting ? 'Removing...' : 'Remove'}
             </AlertDialogAction>

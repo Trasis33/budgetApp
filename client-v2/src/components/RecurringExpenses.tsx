@@ -249,7 +249,7 @@ export function RecurringExpenses() {
           const category = categories.find(c => c.id === template.category_id);
           const CategoryIcon = getIconByName(category?.icon);
           const categoryColor = category?.color || 'var(--theme-indigo)';
-          const accentColor = type === 'bill' ? 'text-indigo-600' : 'text-violet-600';
+          const accentColor = type === 'bill' ? 'text-[oklch(var(--theme-indigo))]' : 'text-[oklch(var(--theme-gold))]';
 
           return (
             <Card 
@@ -307,7 +307,7 @@ export function RecurringExpenses() {
                     <span className="text-[10px] text-muted-foreground">
                       Payer: <span className="font-medium text-foreground">{getUserName(template.paid_by_user_id)}</span>
                     </span>
-                    <span className="text-[9px] font-bold text-indigo-500/60 uppercase tracking-widest">
+                    <span className="text-[9px] font-bold text-[oklch(var(--theme-teal)/0.7)] uppercase tracking-widest">
                       {template.split_type}
                     </span>
                   </div>
@@ -315,7 +315,7 @@ export function RecurringExpenses() {
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted rounded-full" onClick={() => handleEdit(template)}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => setDeleteId(template.id)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-[oklch(var(--theme-coral))] hover:text-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.1)] rounded-full" onClick={() => setDeleteId(template.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                     <div className="w-px h-4 bg-border/60 mx-1" />
@@ -337,18 +337,23 @@ export function RecurringExpenses() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">Bills & Subscriptions</h1>
-            {pendingCount > 0 && (
-              <Badge className="bg-theme-amber text-white hover:bg-theme-amber/90 border-0 animate-pulse">
-                {pendingCount} Pending
-              </Badge>
-            )}
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(var(--theme-indigo)/0.1)]">
+            <CalendarClock className="h-6 w-6 text-[oklch(var(--theme-indigo))]" />
           </div>
-          <p className="text-muted-foreground">
-            Manage recurring monthly expenses. Indigo for bills, Violet for subscriptions.
-          </p>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-display font-semibold tracking-tight">Bills & Subscriptions</h1>
+              {pendingCount > 0 && (
+                <Badge variant="warning" className="animate-pulse">
+                  {pendingCount} Pending
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Manage recurring monthly expenses. Indigo for bills, Violet for subscriptions.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {pendingCount > 0 && (
@@ -356,13 +361,13 @@ export function RecurringExpenses() {
               variant="outline" 
               onClick={handleGenerate} 
               disabled={isGenerating}
-              className="border-theme-indigo text-theme-indigo hover:bg-theme-indigo/5 gap-2"
+              className="border-[oklch(var(--theme-indigo)/0.3)] text-[oklch(var(--theme-indigo))] hover:bg-[oklch(var(--theme-indigo)/0.05)] gap-2"
             >
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               Sync {now.toLocaleDateString('en-US', { month: 'short' })}
             </Button>
           )}
-          <Button onClick={() => setEditingForm({
+          <Button variant="teal" onClick={() => setEditingForm({
             description: '',
             default_amount: 0,
             category_id: categories[0]?.id || 1,
@@ -385,13 +390,13 @@ export function RecurringExpenses() {
             placeholder="Search descriptions..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-10 bg-background border-border/50 focus-visible:ring-indigo-500/30"
+            className="pl-9 h-10 bg-background border-border/50 focus-visible:ring-[oklch(var(--theme-teal)/0.3)]"
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background border-border/50 focus:ring-indigo-500/30">
+            <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background border-border/50 focus:ring-[oklch(var(--theme-teal)/0.3)]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -417,7 +422,7 @@ export function RecurringExpenses() {
         </TabsList>
         <TabsContent value="bill" className="mt-6">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-indigo-700 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-[oklch(var(--theme-teal))] flex items-center gap-2">
               Monthly Bills
               <Info className="h-4 w-4 text-muted-foreground" />
             </h2>
@@ -454,7 +459,7 @@ export function RecurringExpenses() {
                 <Button 
                   type="button"
                   variant={editingForm?.recurring_type === 'bill' ? 'default' : 'outline'}
-                  className={editingForm?.recurring_type === 'bill' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+                  className={editingForm?.recurring_type === 'bill' ? 'bg-[oklch(var(--theme-teal))] hover:bg-[oklch(var(--theme-teal)/0.9)]' : ''}
                   onClick={() => setEditingForm(prev => prev ? { ...prev, recurring_type: 'bill' } : null)}
                 >
                   Bill
@@ -634,7 +639,7 @@ export function RecurringExpenses() {
             <AlertDialogAction
               onClick={() => deleteId && handleDelete(deleteId)}
               disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.9)]"
             >
               {isSubmitting ? 'Deleting...' : 'Delete Permanently'}
             </AlertDialogAction>

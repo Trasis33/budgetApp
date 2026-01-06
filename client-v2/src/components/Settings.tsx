@@ -24,12 +24,16 @@ export function Settings({}: SettingsProps = {}) {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <SettingsIcon className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Settings</h1>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(var(--theme-indigo)/0.1)]">
+              <SettingsIcon className="h-6 w-6 text-[oklch(var(--theme-indigo))]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-display font-semibold tracking-tight">Settings</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your account, preferences, and app settings
+              </p>
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Manage your account, preferences, and app settings
-          </p>
         </div>
 
         {/* Settings Tabs */}

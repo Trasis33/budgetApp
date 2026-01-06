@@ -29,7 +29,7 @@ export function ActionButtons({
           aria-label={deleteLabel}
           title={deleteLabel}
         >
-          <Trash2 className="w-4 h-4 text-red-500" />
+          <Trash2 className="w-4 h-4 text-[oklch(var(--theme-coral))]" />
         </button>
       )}
     </div>

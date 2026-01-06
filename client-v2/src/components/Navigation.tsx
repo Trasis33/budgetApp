@@ -31,13 +31,13 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
   };
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="border-b border-border/60 bg-background">
       <div className="flex items-center h-16 px-6">
         <Link to="/dashboard" className="flex items-center gap-2 mr-8">
-          <DollarSign className="h-6 w-6 text-primary" />
+          <DollarSign className="h-6 w-6 text-[oklch(var(--theme-teal))]" />
           <div className="flex flex-col">
-            <span className="font-bold text-lg">CouplesFlow</span>
-            <span className="hidden lg:inline text-xs text-gray-500 -mt-1">Money, together</span>
+            <span className="font-display font-semibold text-lg tracking-tight">CouplesFlow</span>
+            <span className="hidden lg:inline text-xs text-muted-foreground -mt-1">Money, together</span>
           </div>
         </Link>
 
@@ -64,12 +64,12 @@ export function Navigation({ currentView, onNavigate, onLogout }: NavigationProp
         <div className="flex items-center gap-4 ml-auto">
           {user && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 hidden md:inline">
+              <span className="text-sm text-muted-foreground hidden md:inline">
                 Hey {user.name}! 
               </span>
               <div className="hidden md:flex items-center gap-1 text-xs">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-gray-500">Team mode</span>
+                <div className="w-2 h-2 bg-[oklch(var(--theme-teal))] rounded-full"></div>
+                <span className="text-muted-foreground">Team mode</span>
               </div>
             </div>
           )}

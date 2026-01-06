@@ -13,6 +13,7 @@ import { OnTrackSummary } from './smart-budget/OnTrackSummary';
 import { DataIntegrityBanner } from './smart-budget/DataIntegrityBanner';
 import { useScope } from '@/context/ScopeContext';
 import { Category } from '@/types';
+import { Button } from './ui/button';
 
 interface OverspendingInsight {
     type: 'overspending';
@@ -284,17 +285,17 @@ export function BudgetInsightsPage({ onNavigate }: BudgetInsightsPageProps) {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                        <Lightbulb className="h-6 w-6 text-amber-500" />
+                    <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+                        <Lightbulb className="h-6 w-6 text-[oklch(var(--theme-gold))]" />
                         Budget Insights
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         Recommendations based on your spending history
                     </p>
                 </div>
                 <button
                     onClick={handleBack}
-                    className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Dashboard
@@ -305,36 +306,36 @@ export function BudgetInsightsPage({ onNavigate }: BudgetInsightsPageProps) {
 
             {/* Loading State */}
             {isLoading && (
-                <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                <div className="bg-card rounded-xl border border-border p-12 text-center">
                     <div className="animate-pulse flex flex-col items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-200 rounded-full"></div>
-                        <div className="h-4 w-48 bg-slate-200 rounded"></div>
-                        <div className="h-3 w-32 bg-slate-100 rounded"></div>
+                        <div className="w-12 h-12 bg-muted rounded-full"></div>
+                        <div className="h-4 w-48 bg-muted rounded"></div>
+                        <div className="h-3 w-32 bg-muted/50 rounded"></div>
                     </div>
-                    <p className="text-slate-500 mt-4">Analyzing your spending patterns...</p>
+                    <p className="text-muted-foreground mt-4">Analyzing your spending patterns...</p>
                 </div>
             )}
 
             {/* Empty State */}
             {!isLoading && !hasInsights && (
-                <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                <div className="bg-card rounded-xl border border-border p-12 text-center">
                     <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                            <TrendingUp className="h-8 w-8 text-slate-400" />
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                            <TrendingUp className="h-8 w-8 text-muted-foreground" />
                         </div>
                     </div>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-2">
+                    <h2 className="text-lg font-semibold text-foreground mb-2">
                         Not enough data yet
                     </h2>
-                    <p className="text-slate-500 mb-6 max-w-md mx-auto">
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                         Complete a few monthly budgets to see spending insights. We need at least 2 months of data to provide meaningful recommendations.
                     </p>
-                    <button
+                    <Button
                         onClick={handleBack}
-                        className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                        variant="teal"
                     >
                         Return to Dashboard
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -343,8 +344,8 @@ export function BudgetInsightsPage({ onNavigate }: BudgetInsightsPageProps) {
                 <div className="space-y-6">
                     {/* Overspending Section */}
                     {overspendingInsights.length > 0 && (
-                        <div className="bg-white rounded-xl border border-slate-200 p-6">
-                            <h2 className="text-lg font-semibold text-red-600 mb-4 flex items-center gap-2">
+                        <div className="bg-card rounded-xl border border-border p-6">
+                            <h2 className="text-lg font-semibold text-[oklch(var(--theme-coral))] mb-4 flex items-center gap-2">
                                 <AlertTriangle className="h-5 w-5" />
                                 Attention Needed ({overspendingInsights.length} {overspendingInsights.length === 1 ? 'category' : 'categories'})
                             </h2>
@@ -363,8 +364,8 @@ export function BudgetInsightsPage({ onNavigate }: BudgetInsightsPageProps) {
 
                     {/* Underspending Section */}
                     {underspendingInsights.length > 0 && (
-                        <div className="bg-white rounded-xl border border-slate-200 p-6">
-                            <h2 className="text-lg font-semibold text-emerald-600 mb-4 flex items-center gap-2">
+                        <div className="bg-card rounded-xl border border-border p-6">
+                            <h2 className="text-lg font-semibold text-[oklch(var(--theme-teal))] mb-4 flex items-center gap-2">
                                 <Check className="h-5 w-5" />
                                 Opportunities ({underspendingInsights.length} {underspendingInsights.length === 1 ? 'category' : 'categories'})
                             </h2>
@@ -385,7 +386,7 @@ export function BudgetInsightsPage({ onNavigate }: BudgetInsightsPageProps) {
 
                     {/* On Track Section */}
                     {onTrackInsights.length > 0 && (
-                        <div className="bg-white rounded-xl border border-slate-200 p-6">
+                        <div className="bg-card rounded-xl border border-border p-6">
                             <OnTrackSummary
                                 insights={onTrackInsights}
                                 formatCurrency={formatCurrency}
@@ -394,40 +395,40 @@ export function BudgetInsightsPage({ onNavigate }: BudgetInsightsPageProps) {
                     )}
 
                     {/* Quick Stats Summary */}
-                    <div className="bg-slate-50 rounded-xl border border-slate-200 p-6">
-                        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">
+                    <div className="bg-muted rounded-xl border border-border p-6">
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4">
                             Quick Summary
                         </h3>
                         <div className="grid grid-cols-3 gap-4 text-center">
                             <div className={cn(
                                 "p-4 rounded-lg",
-                                overspendingInsights.length > 0 ? "bg-red-50" : "bg-slate-100"
+                                overspendingInsights.length > 0 ? "bg-[oklch(var(--theme-coral)/0.1)]" : "bg-muted"
                             )}>
                                 <div className={cn(
-                                    "text-2xl font-bold",
-                                    overspendingInsights.length > 0 ? "text-red-600" : "text-slate-400"
+                                    "text-2xl font-display font-bold",
+                                    overspendingInsights.length > 0 ? "text-[oklch(var(--theme-coral))]" : "text-muted-foreground"
                                 )}>
                                     {overspendingInsights.length}
                                 </div>
-                                <div className="text-xs text-slate-500 mt-1">Over Budget</div>
+                                <div className="text-xs text-muted-foreground mt-1">Over Budget</div>
                             </div>
                             <div className={cn(
                                 "p-4 rounded-lg",
-                                underspendingInsights.length > 0 ? "bg-emerald-50" : "bg-slate-100"
+                                underspendingInsights.length > 0 ? "bg-[oklch(var(--theme-teal)/0.1)]" : "bg-muted"
                             )}>
                                 <div className={cn(
-                                    "text-2xl font-bold",
-                                    underspendingInsights.length > 0 ? "text-emerald-600" : "text-slate-400"
+                                    "text-2xl font-display font-bold",
+                                    underspendingInsights.length > 0 ? "text-[oklch(var(--theme-teal))]" : "text-muted-foreground"
                                 )}>
                                     {underspendingInsights.length}
                                 </div>
-                                <div className="text-xs text-slate-500 mt-1">Under Budget</div>
+                                <div className="text-xs text-muted-foreground mt-1">Under Budget</div>
                             </div>
-                            <div className="p-4 rounded-lg bg-blue-50">
-                                <div className="text-2xl font-bold text-blue-600">
+                            <div className="p-4 rounded-lg bg-[oklch(var(--theme-indigo)/0.1)]">
+                                <div className="text-2xl font-display font-bold text-[oklch(var(--theme-indigo))]">
                                     {onTrackInsights.length}
                                 </div>
-                                <div className="text-xs text-slate-500 mt-1">On Track</div>
+                                <div className="text-xs text-muted-foreground mt-1">On Track</div>
                             </div>
                         </div>
                     </div>

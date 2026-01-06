@@ -107,8 +107,8 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading bill splitting...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[oklch(var(--theme-teal))] mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading bill splitting...</p>
         </div>
       </div>
     );
@@ -196,17 +196,17 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
 
       <div className="space-y-6">
         {pendingTemplatesCount > 0 && (
-          <Card className="border-indigo-200 bg-indigo-50/30 overflow-hidden shadow-md animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="h-1.5 w-full bg-indigo-500" />
+          <Card className="border-[oklch(var(--theme-teal)/0.3)] bg-[oklch(var(--theme-teal)/0.05)] overflow-hidden shadow-md animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="h-1.5 w-full bg-[oklch(var(--theme-teal))]" />
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4 text-center md:text-left">
-                  <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                    <CalendarClock className="h-6 w-6 text-indigo-600" />
+                  <div className="w-12 h-12 rounded-full bg-[oklch(var(--theme-teal)/0.15)] flex items-center justify-center shrink-0">
+                    <CalendarClock className="h-6 w-6 text-[oklch(var(--theme-teal))]" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-indigo-900">Ready to finalize the month?</h2>
-                    <p className="text-sm text-indigo-700/80 max-w-md">
+                    <h2 className="text-lg font-display font-bold text-foreground">Ready to finalize the month?</h2>
+                    <p className="text-sm text-muted-foreground max-w-md">
                       You have <span className="font-bold">{pendingTemplatesCount}</span> recurring bills & subscriptions pending for this period. 
                       Confirm them now to include them in your settlement.
                     </p>
@@ -215,7 +215,8 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
                 <Button 
                   onClick={handleGenerateRecurring} 
                   disabled={isGenerating}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 h-auto text-base shadow-lg shadow-indigo-200 gap-2 min-w-[200px]"
+                  variant="teal"
+                  className="px-8 py-6 h-auto text-base shadow-lg shadow-[oklch(var(--theme-teal)/0.15)] gap-2 min-w-[200px]"
                 >
                   {isGenerating ? (
                     <>
@@ -330,7 +331,7 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span>Balance</span>
-                      <span className={user1Paid - user1Share >= 0 ? 'text-green-600' : 'text-red-500'}>
+                      <span className={user1Paid - user1Share >= 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}>
                         {formatCurrency(user1Paid - user1Share)}
                       </span>
                     </div>
@@ -350,7 +351,7 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span>Balance</span>
-                      <span className={user2Paid - user2Share >= 0 ? 'text-green-600' : 'text-red-500'}>
+                      <span className={user2Paid - user2Share >= 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}>
                         {formatCurrency(user2Paid - user2Share)}
                       </span>
                     </div>

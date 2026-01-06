@@ -30,7 +30,7 @@ export function UnderspendingCard({
   };
   
   return (
-    <div className="rounded-xl border-l-4 border-l-emerald-500 bg-white shadow-sm p-5 space-y-4">
+    <div className="rounded-xl border-l-4 border-l-[oklch(var(--theme-teal))] bg-card shadow-sm p-5 space-y-4">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
           <div
@@ -40,27 +40,27 @@ export function UnderspendingCard({
             {insight.categoryName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h4 className="font-semibold text-slate-900 text-lg">{insight.categoryName}</h4>
-            <p className="text-sm text-slate-600">
+            <h4 className="font-semibold text-foreground text-lg">{insight.categoryName}</h4>
+            <p className="text-sm text-muted-foreground">
               Budget: {formatCurrency(insight.budgetAmount)} • Used: {formatCurrency(insight.actualAmount)}
             </p>
           </div>
         </div>
-        <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">
+        <span className="px-3 py-1 rounded-full bg-[oklch(var(--theme-teal)/0.15)] text-[oklch(var(--theme-teal))] text-sm font-semibold">
           {insight.utilizationPercentage.toFixed(0)}% used
         </span>
       </div>
       
-      <div className="text-sm text-slate-700">
-        <span className="font-semibold text-emerald-600">
+      <div className="text-sm text-foreground">
+        <span className="font-semibold text-[oklch(var(--theme-teal))]">
           {formatCurrency(insight.unusedAmount)} unused
         </span>
         {' '}this month
       </div>
       
       {insight.recommendedAction === 'reallocate' && overspendingCategories.length > 0 && (
-        <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-          <p className="text-sm text-amber-800 font-medium mb-3">
+        <div className="bg-[oklch(var(--theme-amber)/0.1)] rounded-lg p-4 border border-[oklch(var(--theme-amber)/0.3)]">
+          <p className="text-sm text-foreground font-medium mb-3">
             Consider reallocating to categories that need more budget:
           </p>
           <div className="space-y-2">
@@ -72,12 +72,12 @@ export function UnderspendingCard({
                 className={cn(
                   'w-full flex items-center justify-between p-3 rounded-lg border-2 transition-colors text-sm',
                   isApplied
-                    ? 'border-slate-200 bg-slate-50 cursor-not-allowed opacity-50'
-                    : 'border-amber-300 bg-white hover:bg-amber-50 hover:border-amber-400'
+                    ? 'border-border bg-muted cursor-not-allowed opacity-50'
+                    : 'border-[oklch(var(--theme-amber)/0.4)] bg-card hover:bg-[oklch(var(--theme-amber)/0.1)] hover:border-[oklch(var(--theme-amber)/0.6)]'
                 )}
               >
-                <span className="font-medium text-slate-900">Move to {cat.categoryName}</span>
-                <span className="text-emerald-600 font-semibold">
+                <span className="font-medium text-foreground">Move to {cat.categoryName}</span>
+                <span className="text-[oklch(var(--theme-teal))] font-semibold">
                   +{formatCurrency(insight.potentialReallocation)}
                 </span>
               </button>
@@ -87,16 +87,16 @@ export function UnderspendingCard({
       )}
       
       {insight.recommendedAction === 'boost_savings' && (
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <p className="text-sm text-blue-800">
+        <div className="bg-[oklch(var(--theme-indigo)/0.1)] rounded-lg p-4 border border-[oklch(var(--theme-indigo)/0.3)]">
+          <p className="text-sm text-foreground">
             All categories are on track! Consider moving {formatCurrency(insight.potentialReallocation)} to savings.
           </p>
         </div>
       )}
       
       {insight.recommendedAction === 'reduce_budget' && (
-        <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-          <p className="text-sm text-slate-700">
+        <div className="bg-muted rounded-lg p-4 border border-border">
+          <p className="text-sm text-foreground">
             Your spending is consistently below budget. Consider reducing to {formatCurrency(insight.suggestedNewBudget)} to free up funds.
           </p>
         </div>
@@ -108,8 +108,8 @@ export function UnderspendingCard({
         className={cn(
           'w-full py-3 rounded-lg font-medium transition-colors text-sm',
           isApplied
-            ? 'bg-emerald-100 text-emerald-700 cursor-not-allowed'
-            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            ? 'bg-[oklch(var(--theme-teal)/0.15)] text-[oklch(var(--theme-teal))] cursor-not-allowed'
+            : 'bg-muted text-foreground hover:bg-muted/80'
         )}
       >
         {isApplied ? '✓ Applied' : `Reduce to ${formatCurrency(insight.suggestedNewBudget)}`}

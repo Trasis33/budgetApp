@@ -2,6 +2,7 @@ import React from 'react';
 import { Settings, Bell, User } from 'lucide-react';
 import ScopeSelector from './ScopeSelector';
 import { useScope } from '@/context/ScopeContext';
+import { Button } from './ui/button';
 
 interface DashboardHeaderProps {
   title?: string;
@@ -21,51 +22,51 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const { isPartnerConnected, currentScope } = useScope();
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-background border-b border-border/60 px-6 py-5">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+            <h1 className="text-2xl font-display font-semibold tracking-tight text-foreground">{title}</h1>
             {subtitle && (
-              <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+              <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
             )}
           </div>
           
           {showScopeSelector && (
-            <div className="ml-8">
+            <div className="ml-4">
               <ScopeSelector />
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {showNotifications && (
-            <button 
-              type="button"
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label="Notifications"
             >
-              <Bell className="w-5 h-5" />
-            </button>
+              <Bell className="h-5 w-5" />
+            </Button>
           )}
           
           {showUserMenu && (
-            <button 
-              type="button"
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label="User menu"
             >
-              <User className="w-5 h-5" />
-            </button>
+              <User className="h-5 w-5" />
+            </Button>
           )}
           
-          <button 
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label="Settings"
           >
-            <Settings className="w-5 h-5" />
-          </button>
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
       </div>
       
@@ -73,9 +74,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       {showScopeSelector && (
         <div className="mt-3 flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${
-            isPartnerConnected ? 'bg-green-500' : 'bg-gray-300'
+            isPartnerConnected ? 'bg-[oklch(var(--theme-teal))]' : 'bg-muted-foreground/30'
           }`} />
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {isPartnerConnected 
               ? `Partner connected • Viewing ${currentScope} budget` 
               : `Partner not connected • Viewing ${currentScope} budget`

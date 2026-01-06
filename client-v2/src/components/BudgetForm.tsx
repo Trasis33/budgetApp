@@ -196,20 +196,20 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
   const hasExistingBudget = existingBudgets.has(formData.category_id);
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-slate-50/50">
+    <div className="min-h-screen p-4 md:p-8 bg-background">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <button 
             onClick={onCancel}
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <div className="p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+            <div className="p-2 rounded-full bg-card border border-border hover:bg-muted transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </div>
             <span className="font-medium hidden sm:inline">Back</span>
           </button>
-          <h1 className="text-lg font-semibold text-slate-900">
+          <h1 className="text-lg font-semibold text-foreground">
             {isEditMode ? 'Edit Budget' : 'Create Budget'}
           </h1>
           <div className="w-10"></div>
@@ -219,21 +219,21 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
           
           {/* Left Column: Amount & Category (Span 2) */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-sm border-slate-200">
+            <Card className="shadow-sm border-border">
               <CardContent className="p-6 md:p-8">
                 {/* Amount Section */}
                 <div className="text-center mb-10 pt-2">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                  <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                     Monthly Budget Amount
                   </label>
                   <div className="flex items-center justify-center gap-2">
-                    <span className="text-4xl text-slate-300 font-light">kr</span>
+                    <span className="text-4xl text-muted-foreground/50 font-light">kr</span>
                     <input 
                       type="number" 
                       placeholder="0" 
                       value={formData.amount}
                       onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      className="min-w-[100px] max-w-[300px] text-6xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent text-left p-0 m-0 no-spinners"
+                      className="min-w-[100px] max-w-[300px] text-6xl font-bold text-foreground placeholder:text-muted-foreground/30 focus:outline-none bg-transparent text-left p-0 m-0 no-spinners"
                       autoFocus
                       style={{ width: `${Math.max(1, formData.amount.length) * 0.8}em` }}
                     />
@@ -245,7 +245,7 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
                         key={val}
                         type="button"
                         onClick={() => handleQuickAdd(val)}
-                        className="px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                        className="px-3 py-1 rounded-full bg-muted border border-border text-xs font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
                       >
                         +{val}
                       </button>
@@ -256,11 +256,11 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
                 {/* Category Grid Section */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Select Category
                     </label>
                     {hasExistingBudget && (
-                      <span className="text-xs text-amber-600 font-medium">
+                      <span className="text-xs text-[oklch(var(--theme-amber))] font-medium">
                         Budget exists - will update
                       </span>
                     )}
@@ -292,14 +292,14 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
                           </div>
                           <span 
                             className={`text-xs font-medium transition-colors ${
-                              isSelected ? 'font-semibold' : isDisabled ? 'text-slate-400' : 'text-slate-600'
+                              isSelected ? 'font-semibold' : isDisabled ? 'text-muted-foreground' : 'text-foreground/70'
                             }`}
                             style={{ color: isSelected ? category.color : undefined }}
                           >
                             {category.name}
                           </span>
                           {existingBudgets.has(category.id) && (
-                            <div className="absolute top-1 right-1 w-2 h-2 bg-amber-500 rounded-full" />
+                            <div className="absolute top-1 right-1 w-2 h-2 bg-[oklch(var(--theme-amber))] rounded-full" />
                           )}
                         </button>
                       );
@@ -314,21 +314,21 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
           <div className="space-y-6">
             
             {/* Details Card */}
-            <Card className="shadow-sm border-slate-200">
+            <Card className="shadow-sm border-border">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-900">
+                <CardTitle className="text-sm font-semibold text-foreground">
                   Budget Details
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Month/Year Display */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     Period
                   </label>
-                  <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-lg">
-                    <CalendarIcon className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm font-medium text-slate-700">
+                  <div className="flex items-center gap-2 p-2.5 bg-muted rounded-lg">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
                       {new Date(formData.year, formData.month - 1).toLocaleDateString('en-US', { 
                         month: 'long', 
                         year: 'numeric' 
@@ -340,10 +340,10 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
                 {/* Selected Category */}
                 {selectedCategory && (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       Category
                     </label>
-                    <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-3 p-2.5 bg-muted rounded-lg">
                       <div 
                         className="w-8 h-8 rounded-lg flex items-center justify-center"
                         style={getCategoryIconStyle(selectedCategory.color || '#64748b', true)}
@@ -353,7 +353,7 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
                           return <IconComponent className="h-4 w-4" />;
                         })()}
                       </div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-foreground">
                         {selectedCategory.name}
                       </span>
                     </div>
@@ -361,8 +361,8 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
                 )}
 
                 {hasExistingBudget && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-xs text-amber-800">
+                  <div className="p-3 bg-[oklch(var(--theme-amber)/0.1)] border border-[oklch(var(--theme-amber)/0.3)] rounded-lg">
+                    <p className="text-xs text-foreground">
                       <strong>Note:</strong> This will update the existing budget for this category.
                     </p>
                   </div>
@@ -374,7 +374,7 @@ export function BudgetForm({ onCancel }: BudgetFormProps) {
             <Button 
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-foreground text-background rounded-xl font-semibold shadow-xl shadow-foreground/10 hover:shadow-foreground/20 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="animate-spin">⌛</span>

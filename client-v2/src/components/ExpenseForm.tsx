@@ -206,20 +206,20 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-slate-50/50">
+    <div className="min-h-screen p-4 md:p-8 bg-background">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <button 
             onClick={onCancel}
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <div className="p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+            <div className="p-2 rounded-full bg-card border border-border hover:bg-muted transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </div>
             <span className="font-medium hidden sm:inline">Back</span>
           </button>
-          <h1 className="text-lg font-semibold text-slate-900">New Expense</h1>
+          <h1 className="text-lg font-display font-semibold text-foreground">New Expense</h1>
           <div className="w-10"></div>
         </div>
 
@@ -227,21 +227,18 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
           
           {/* Left Column: Amount & Category (Span 3) */}
           <div className="lg:col-span-3 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 relative overflow-hidden">
-              {/* Decorative top bar */}
-              {/* <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500"></div> */}
-
+            <div className="bg-card rounded-2xl shadow-sm border border-border p-6 md:p-8 relative overflow-hidden">
               {/* Amount Section */}
               <div className="text-center mb-10 pt-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Amount</label>
+                <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Amount</label>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-4xl text-slate-300 font-light">kr</span>
+                  <span className="text-4xl text-muted-foreground/50 font-light">kr</span>
                   <input 
                     type="number" 
                     placeholder="0" 
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="min-w-[100px] max-w-[300px] text-6xl font-bold text-slate-900 placeholder:text-slate-200 focus:outline-none bg-transparent text-left p-0 m-0 no-spinners"
+                    className="min-w-[100px] max-w-[300px] text-6xl font-display font-bold text-foreground placeholder:text-muted-foreground/30 focus:outline-none bg-transparent text-left p-0 m-0 no-spinners"
                     autoFocus
                     style={{ width: `${Math.max(1, formData.amount.length) * 0.8}em` }}
                   />
@@ -255,7 +252,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => handleQuickAdd(val)}
-                      className="rounded-full h-7 px-3 text-xs font-medium text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-100"
+                      className="rounded-full h-7 px-3 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 border-border"
                     >
                       +{val}
                     </Button>
@@ -266,7 +263,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
               {/* Category Grid Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category</label>
                 </div>
                 
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-3">
@@ -294,14 +291,14 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         </div>
                         <span 
                           className={`text-xs font-medium transition-colors ${
-                            isSelected ? 'font-semibold' : 'text-slate-600'
+                            isSelected ? 'font-semibold' : 'text-muted-foreground'
                           }`}
                           style={{ color: isSelected ? category.color : undefined }}
                         >
                           {category.name}
                         </span>
                         {hasRecurring && (
-                          <RefreshCw className="absolute top-1 right-1 h-3 w-3 text-blue-500" />
+                          <RefreshCw className="absolute top-1 right-1 h-3 w-3 text-[oklch(var(--theme-teal))]" />
                         )}
                       </button>
                     );
@@ -315,21 +312,21 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Details Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-indigo-500" />
+            <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Users className="h-4 w-4 text-[oklch(var(--theme-teal))]" />
                 Details & Sharing
               </h3>
 
               <div className="space-y-4">
                 {/* Date */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Date</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal bg-slate-50 border-0 rounded-lg hover:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all text-sm text-slate-700"
+                        className="w-full justify-start text-left font-normal bg-muted border-0 rounded-lg hover:bg-muted/80 focus:ring-2 focus:ring-[oklch(var(--theme-teal)/0.2)] transition-all text-sm text-foreground"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
@@ -348,29 +345,29 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Description</label>
                   <input 
                     type="text" 
                     placeholder="What is this for?" 
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all font-medium text-sm"
+                    className="w-full p-2.5 bg-muted border-0 rounded-lg focus:ring-2 focus:ring-[oklch(var(--theme-teal)/0.2)] focus:bg-card transition-all font-medium text-sm"
                   />
                 </div>
 
-                <div className="h-px bg-slate-100 my-2"></div>
+                <div className="h-px bg-border my-2"></div>
 
                 {/* Payer & Split Logic */}
                 {hasPartner ? (
                   <div className="space-y-4">
                     {/* Payer Row */}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-600">Paid by</span>
+                      <span className="text-sm font-medium text-muted-foreground">Paid by</span>
                       <Button 
                         type="button"
                         variant="outline"
                         onClick={togglePayer}
-                        className="flex items-center gap-2 h-auto py-1.5 px-3 bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-900 font-normal"
+                        className="flex items-center gap-2 h-auto py-1.5 px-3 bg-muted border-border hover:bg-muted/80 text-foreground font-normal"
                       >
                         <div 
                           className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
@@ -386,8 +383,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                             : partnerUser?.name?.charAt(0) || 'P'
                           }
                         </div>
-                        <span className="text-sm font-medium text-slate-700">{getPayerName()}</span>
-                        <ChevronDown className="h-3 w-3 text-slate-400" />
+                        <span className="text-sm font-medium text-foreground">{getPayerName()}</span>
+                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
                       </Button>
                     </div>
 
@@ -399,8 +396,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         onClick={() => setFormData({ ...formData, split_type: '50/50' })}
                         className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === '50/50' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
+                            ? 'bg-[oklch(var(--theme-teal)/0.1)] border-[oklch(var(--theme-teal)/0.3)] text-[oklch(var(--theme-teal))] hover:bg-[oklch(var(--theme-teal)/0.15)] shadow-none' 
+                            : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         50/50 Split
@@ -411,8 +408,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         onClick={() => setFormData({ ...formData, split_type: 'personal' })}
                         className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === 'personal' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
+                            ? 'bg-[oklch(var(--theme-teal)/0.1)] border-[oklch(var(--theme-teal)/0.3)] text-[oklch(var(--theme-teal))] hover:bg-[oklch(var(--theme-teal)/0.15)] shadow-none' 
+                            : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         Personal
@@ -423,8 +420,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         onClick={() => setFormData({ ...formData, split_type: 'bill' })}
                         className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === 'bill' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
+                            ? 'bg-[oklch(var(--theme-teal)/0.1)] border-[oklch(var(--theme-teal)/0.3)] text-[oklch(var(--theme-teal))] hover:bg-[oklch(var(--theme-teal)/0.15)] shadow-none' 
+                            : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         Partner Bill
@@ -435,8 +432,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                         onClick={() => setFormData({ ...formData, split_type: 'custom' })}
                         className={`h-auto py-2 text-xs font-medium rounded-lg transition-all ${
                           formData.split_type === 'custom' 
-                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 shadow-none' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700'
+                            ? 'bg-[oklch(var(--theme-teal)/0.1)] border-[oklch(var(--theme-teal)/0.3)] text-[oklch(var(--theme-teal))] hover:bg-[oklch(var(--theme-teal)/0.15)] shadow-none' 
+                            : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         Custom
@@ -445,7 +442,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
 
                     {/* Custom Split Slider */}
                     {formData.split_type === 'custom' && (
-                      <div className="pt-2 animate-in slide-in-from-top-2 fade-in duration-200 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                      <div className="pt-2 animate-in slide-in-from-top-2 fade-in duration-200 bg-muted p-3 rounded-lg border border-border">
                         <div className="flex items-center justify-between text-xs mb-2">
                           <span>You: {formData.split_ratio_user1}%</span>
                           <span>Partner: {formData.split_ratio_user2}%</span>
@@ -464,21 +461,21 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                               split_ratio_user2: 100 - val
                             });
                           }}
-                          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-[oklch(var(--theme-teal))]"
                         />
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800 mb-2">
+                  <div className="p-3 bg-[oklch(var(--theme-teal)/0.1)] border border-[oklch(var(--theme-teal)/0.2)] rounded-lg">
+                    <p className="text-xs text-[oklch(var(--theme-teal))] mb-2">
                       <strong>Solo mode:</strong> Invite partner to split costs!
                     </p>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="w-full text-xs h-8 text-blue-700 border-blue-300 hover:bg-blue-100 bg-white"
+                      className="w-full text-xs h-8 text-[oklch(var(--theme-teal))] border-[oklch(var(--theme-teal)/0.3)] hover:bg-[oklch(var(--theme-teal)/0.1)] bg-card"
                       onClick={() => setInviteModalOpen(true)}
                     >
                       Invite Partner
@@ -486,26 +483,26 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                   </div>
                 )}
 
-                <div className="h-px bg-slate-100 my-2"></div>
+                <div className="h-px bg-border my-2"></div>
 
                 {/* Recurring Toggle */}
                 <div 
                   onClick={() => setSaveAsRecurring(!saveAsRecurring)}
                   className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all group ${
                     saveAsRecurring 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'border-slate-100 hover:bg-slate-50'
+                      ? 'bg-[oklch(var(--theme-teal)/0.1)] border-[oklch(var(--theme-teal)/0.2)]' 
+                      : 'border-border hover:bg-muted'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-1.5 rounded-lg transition-colors ${
                       saveAsRecurring 
-                        ? 'bg-white text-blue-600 border border-blue-100' 
-                        : 'bg-white border border-slate-200 text-slate-400 group-hover:text-blue-500 group-hover:border-blue-200'
+                        ? 'bg-card text-[oklch(var(--theme-teal))] border border-[oklch(var(--theme-teal)/0.2)]' 
+                        : 'bg-card border border-border text-muted-foreground group-hover:text-[oklch(var(--theme-teal))] group-hover:border-[oklch(var(--theme-teal)/0.2)]'
                     }`}>
                       <RefreshCw className="h-4 w-4" />
                     </div>
-                    <div className="text-sm font-medium text-slate-900">Monthly Bill</div>
+                    <div className="text-sm font-medium text-foreground">Monthly Bill</div>
                   </div>
                   
                   <Switch checked={saveAsRecurring} onCheckedChange={setSaveAsRecurring} className="scale-75 origin-right" />
@@ -518,7 +515,8 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
               <Button 
                 onClick={() => handleSubmit(false)}
                 disabled={loading}
-                className="w-full h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:translate-y-[-2px] transition-all gap-2 rounded-xl"
+                variant="teal"
+                className="w-full h-14 text-lg font-semibold shadow-xl shadow-[oklch(var(--theme-teal)/0.15)] hover:shadow-[oklch(var(--theme-teal)/0.25)] hover:translate-y-[-2px] transition-all gap-2 rounded-xl"
               >
                 {loading ? (
                   <span className="animate-spin">⌛</span>
@@ -532,7 +530,7 @@ export function ExpenseForm({ onCancel }: ExpenseFormProps) {
                 variant="outline"
                 onClick={() => handleSubmit(true)}
                 disabled={loading}
-                className="w-full h-12 text-base bg-white text-slate-700 hover:text-slate-900 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl gap-2 font-medium"
+                className="w-full h-12 text-base bg-card text-muted-foreground hover:text-foreground border-border hover:bg-muted hover:border-border rounded-xl gap-2 font-medium"
               >
                 {loading ? (
                   <span className="animate-spin">⌛</span>

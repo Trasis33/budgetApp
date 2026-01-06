@@ -239,7 +239,7 @@ export function SmartBudgetWizard({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden bg-slate-50 border-slate-200 sm:rounded-2xl">
+      <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden bg-background border-border sm:rounded-2xl">
         <DialogTitle className="sr-only">Smart Budget Setup</DialogTitle>
         <DialogDescription className="sr-only">
           A wizard to help you set up your monthly budget based on income and strategies.

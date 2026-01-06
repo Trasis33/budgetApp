@@ -65,7 +65,7 @@ export function PartnerInviteModal({ open, onClose, onSuccess }: PartnerInviteMo
             <UserPlus className="h-5 w-5" />
             Invite your partner
           </h2>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Enter your partner's email to connect your accounts and start tracking expenses together.
           </p>
         </div>
@@ -74,7 +74,7 @@ export function PartnerInviteModal({ open, onClose, onSuccess }: PartnerInviteMo
           <div className="space-y-2">
             <Label htmlFor="partner-email">Partner's email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="partner-email"
                 type="email"
@@ -88,8 +88,8 @@ export function PartnerInviteModal({ open, onClose, onSuccess }: PartnerInviteMo
             </div>
           </div>
           
-          <div className="bg-blue-50 rounded-lg p-3">
-            <p className="text-xs text-blue-800">
+          <div className="bg-[oklch(var(--theme-indigo)/0.1)] rounded-lg p-3">
+            <p className="text-xs text-foreground">
               💡 <strong>Note:</strong> Your partner needs to have an account first. 
               If they don't have one, ask them to sign up!
             </p>

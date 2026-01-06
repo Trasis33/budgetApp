@@ -99,8 +99,8 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Getting your money picture ready...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Getting your money picture ready...</p>
         </div>
       </div>
     );
@@ -147,9 +147,9 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
 
   // Helper function for budget progress text color
   const getProgressTextColor = (progress: number) => {
-    if (progress > 100) return 'text-red-500'; // Above budget - red/coral
-    if (progress === 100) return 'text-amber-500'; // At budget - amber/yellow
-    return 'text-emerald-600'; // Under budget - mint/emerald color
+    if (progress > 100) return 'text-[oklch(var(--theme-coral))]';
+    if (progress === 100) return 'text-[oklch(var(--theme-amber))]';
+    return 'text-[oklch(var(--theme-teal))]';
   };
 
   const getPartnerInitial = (name?: string) => {
@@ -190,7 +190,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   // Remove local hexToRgba function since we're using the centralized one
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background">
       {/* Scope Selector */}
       <div className="flex items-center justify-between mb-6">
         <div className="scope-selector w-fit">
@@ -233,117 +233,120 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
               </div>
             </div>
           )}
-          <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-900">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <Settings className="w-4 h-4" />
           </Button>
         </div>
       </div>
       {/* Partner Invitation Banner for Unpaired Users */}
       {monthlyExpenses.length === 0 && expenses.length === 0 && (
-        <div style={{
-          background: 'linear-gradient(to right, #fdf2f8, #fef2f2)',
-          borderColor: '#fce7f3'
-        }} className="rounded-lg p-6 border mb-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                💕 Ready to team up?
-              </h2>
-              <p className="text-gray-600 mb-4">
-                CouplesFlow works best when you and your partner track money together.
-                Invite them to start managing expenses as a team!
-              </p>
-              <div className="space-y-3">
-                <Button
-                  type="button"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setInviteModalOpen(true)}
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Send partner invitation
-                </Button>
-                <p className="text-xs text-gray-500">
-                  💡 Don't worry - you can still track expenses while you wait
+        <Card className="mb-6 border-[oklch(var(--theme-coral)/0.3)] bg-gradient-to-r from-[oklch(var(--theme-coral)/0.05)] to-[oklch(var(--theme-gold)/0.05)]">
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-display font-semibold text-foreground mb-2">
+                  💕 Ready to team up?
+                </h2>
+                <p className="text-muted-foreground mb-4">
+                  CouplesFlow works best when you and your partner track money together.
+                  Invite them to start managing expenses as a team!
                 </p>
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="teal"
+                    className="gap-2"
+                    onClick={() => setInviteModalOpen(true)}
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Send partner invitation
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    💡 Don't worry - you can still track expenses while you wait
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Welcome Banner */}
       {monthlyExpenses.length > 0 && (
-        <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                👋 Hey{isPartnerConnected ? ` ${user?.name} & ${summary?.couple?.partner?.name}` : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
-              </h2>
-              <p className="text-gray-600 mb-3">
-                This {formattedDate.split(' ')[0]} you've tracked <strong>{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong>{formatCurrency(totalSpent)}</strong>
-              </p>
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className={`status-dot ${budgetProgress < 80 ? 'status-dot-teal' : budgetProgress < 100 ? 'status-dot-amber' : 'status-dot-coral'}`}></div>
-                  <span className="text-gray-600">
-                    {budgetProgress < 80 ? 'On track with budget' : budgetProgress < 100 ? 'Approaching budget limit' : 'Over budget'}
-                  </span>
-                </div>
-                {budgetsWithSpending.filter(b => getBudgetProgress(b, b.spent || 0) >= 80).length > 0 && (
+        <Card className="mb-6 border-[oklch(var(--theme-indigo)/0.2)] bg-gradient-to-r from-[oklch(var(--theme-indigo)/0.05)] to-[oklch(var(--theme-teal)/0.05)]">
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h2 className="text-xl font-display font-semibold text-foreground mb-2">
+                  👋 Hey{isPartnerConnected ? ` ${user?.name} & ${summary?.couple?.partner?.name}` : ` ${user?.name}`}! Here's your {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} money at a glance
+                </h2>
+                <p className="text-muted-foreground mb-3">
+                  This {formattedDate.split(' ')[0]} you've tracked <strong className="text-foreground">{monthlyExpenses.length} {currentScope === 'ours' ? 'shared' : currentScope === 'mine' ? 'personal' : "partner's"} expenses</strong> totalling <strong className="text-foreground">{formatCurrency(totalSpent)}</strong>
+                </p>
+                <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="status-dot status-dot-amber"></div>
-                    <span className="text-gray-600">
-                      {budgetsWithSpending.filter(b => getBudgetProgress(b, b.spent || 0) >= 80).length} categories need attention
+                    <div className={`w-2 h-2 rounded-full ${budgetProgress < 80 ? 'bg-[oklch(var(--theme-teal))]' : budgetProgress < 100 ? 'bg-[oklch(var(--theme-amber))]' : 'bg-[oklch(var(--theme-coral))]'}`}></div>
+                    <span className="text-muted-foreground">
+                      {budgetProgress < 80 ? 'On track with budget' : budgetProgress < 100 ? 'Approaching budget limit' : 'Over budget'}
                     </span>
                   </div>
-                )}
+                  {budgetsWithSpending.filter(b => getBudgetProgress(b, b.spent || 0) >= 80).length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[oklch(var(--theme-amber))]"></div>
+                      <span className="text-muted-foreground">
+                        {budgetsWithSpending.filter(b => getBudgetProgress(b, b.spent || 0) >= 80).length} categories need attention
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="teal"
+                  onClick={() => navigate('/add-expense')}
+                  className="gap-2"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Add expense
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/expenses')}
+                  className="gap-2"
+                >
+                  <Receipt className="h-4 w-4" />
+                  View all
+                </Button>
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                onClick={() => navigate('/add-expense')}
-                className="gap-2"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Add expense
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => navigate('/expenses')}
-                className="gap-2"
-              >
-                <Receipt className="h-4 w-4" />
-                View all
-              </Button>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Empty State for New Users */}
       {monthlyExpenses.length === 0 ? (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto">
-            <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Receipt className="h-12 w-12 text-blue-400" />
+            <div className="w-24 h-24 bg-[oklch(var(--theme-indigo)/0.1)] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Receipt className="h-12 w-12 text-[oklch(var(--theme-indigo))]" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-display font-semibold text-foreground mb-2">
               Ready to track your first expense?
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               Let's start with something simple – maybe coffee, groceries, or a gas fill-up.
               Every expense you track helps you see the full picture.
             </p>
             <div className="space-y-3">
-              <Button type="button" onClick={() => navigate('/add-expense')} className="w-full">
+              <Button type="button" variant="teal" onClick={() => navigate('/add-expense')} className="w-full">
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add your first expense
               </Button>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 💡 Pro tip: Start with today's expenses, we'll handle the rest
               </p>
             </div>
@@ -354,24 +357,24 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
           {/* Metrics Grid using shadcn Card styling */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Budget Status - Variable spending vs budget */}
-            <Card className="">
-              <CardContent className="pt-4">
+            <Card>
+              <CardContent className="pt-5">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground">Budget Status</p>
-                    <p className="text-2xl font-bold mt-1">{formatCurrency(variableSpent)}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Budget Status</p>
+                    <p className="text-2xl font-display font-semibold tracking-tight mt-1">{formatCurrency(variableSpent)}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       of {formatCurrency(totalBudget)} budgeted
                     </p>
                     <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${budgetProgress > 100 ? 'bg-red-500' : budgetProgress >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                        className={`h-full rounded-full transition-all ${budgetProgress > 100 ? 'bg-[oklch(var(--theme-coral))]' : budgetProgress >= 80 ? 'bg-[oklch(var(--theme-amber))]' : 'bg-[oklch(var(--theme-teal))]'
                           }`}
                         style={{ width: `${Math.min(budgetProgress, 100)}%` }}
                       />
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                  <div className="w-10 h-10 rounded-xl bg-[oklch(var(--theme-teal)/0.1)] flex items-center justify-center text-[oklch(var(--theme-teal))]">
                     <DollarSign className="w-5 h-5" />
                   </div>
                 </div>
@@ -379,17 +382,17 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             </Card>
 
             {/* Fixed Costs */}
-            <Card className="">
-              <CardContent className="pt-4">
+            <Card>
+              <CardContent className="pt-5">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground">Fixed Costs</p>
-                    <p className="text-2xl font-bold mt-1">{formatCurrency(fixedSpent)}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fixed Costs</p>
+                    <p className="text-2xl font-display font-semibold tracking-tight mt-1">{formatCurrency(fixedSpent)}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {fixedExpenses.length} recurring expense{fixedExpenses.length !== 1 ? 's' : ''}
                     </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                  <div className="w-10 h-10 rounded-xl bg-[oklch(var(--theme-coral)/0.1)] flex items-center justify-center text-[oklch(var(--theme-coral))]">
                     <Receipt className="w-5 h-5" />
                   </div>
                 </div>
@@ -397,19 +400,19 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             </Card>
 
             {/* Spending Trend */}
-            <Card className="">
-              <CardContent className="pt-4">
+            <Card>
+              <CardContent className="pt-5">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground">Trend</p>
-                    <p className={`text-2xl font-bold mt-1 ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Trend</p>
+                    <p className={`text-2xl font-display font-semibold tracking-tight mt-1 ${spendingChange <= 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}`}>
                       {spendingChange <= 0 ? '' : '+'}{spendingChange.toFixed(1)}%
                     </p>
-                    <p className={`text-sm mt-1 ${spendingChange <= 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                    <p className={`text-sm mt-1 ${spendingChange <= 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}`}>
                       {spendingChange <= 0 ? 'Under last month' : 'Over last month'}
                     </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                  <div className="w-10 h-10 rounded-xl bg-[oklch(var(--theme-amber)/0.1)] flex items-center justify-center text-[oklch(var(--theme-amber))]">
                     {spendingChange > 0 ? (
                       <TrendingUp className="w-5 h-5" />
                     ) : (
@@ -421,19 +424,19 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
             </Card>
 
             {/* Avg per Day */}
-            <Card className="">
-              <CardContent className="pt-4">
+            <Card>
+              <CardContent className="pt-5">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground">Avg per Day</p>
-                    <p className="text-2xl font-bold mt-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Avg per Day</p>
+                    <p className="text-2xl font-display font-semibold tracking-tight mt-1">
                       {formatCurrency(variableSpent / Math.max(1, now.getDate()))}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
                       Based on {now.getDate()} days
                     </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <div className="w-10 h-10 rounded-xl bg-[oklch(var(--theme-indigo)/0.1)] flex items-center justify-center text-[oklch(var(--theme-indigo))]">
                     <TrendingUp className="w-5 h-5" />
                   </div>
                 </div>
@@ -470,7 +473,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                     const isCurrentUser = expense.paid_by_user_id === user?.id;
 
                     return (
-                      <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
+                      <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-border/60 last:border-0 hover:bg-accent/50 p-2 rounded-lg transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             {isPartnerConnected && (
@@ -489,7 +492,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             </div>
                             <div>
                               <p className="font-medium text-sm">{expense.description}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-muted-foreground">
                                 {expense.category_name} • {formatDate(expense.date)}
                               </p>
                             </div>
@@ -497,7 +500,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-sm">{formatCurrency(expense.amount)}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {expense.split_type === 'personal' ? 'Personal' : 'Split'}
                           </p>
                         </div>
@@ -562,7 +565,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${progress > 100 ? 'bg-red-500' : progress >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                            className={`h-full rounded-full transition-all ${progress > 100 ? 'bg-[oklch(var(--theme-coral))]' : progress >= 80 ? 'bg-[oklch(var(--theme-amber))]' : 'bg-[oklch(var(--theme-teal))]'
                               }`}
                             style={{
                               width: `${Math.min(progress, 100)}%`,
@@ -608,7 +611,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                     const isCurrentUser = expense.paid_by_user_id === user?.id;
 
                     return (
-                      <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
+                      <div key={expense.id} className="flex items-center justify-between pb-3 border-b border-border/60 last:border-0 hover:bg-accent/50 p-2 rounded-lg transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             {isPartnerConnected && (
@@ -627,7 +630,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                             </div>
                             <div>
                               <p className="font-medium text-sm">{expense.description}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-muted-foreground">
                                 {expense.category_name} • {formatDate(expense.date)}
                               </p>
                             </div>
@@ -635,7 +638,7 @@ export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-sm">{formatCurrency(expense.amount)}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {expense.split_type === 'personal' ? 'Personal' : 'Split'}
                           </p>
                         </div>

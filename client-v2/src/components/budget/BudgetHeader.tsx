@@ -39,7 +39,7 @@ export function BudgetHeader({
         {onAutoBudget && (
           <button
             onClick={onAutoBudget}
-            className="text-sm flex items-center gap-2 px-4 py-2 bg-white border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors shadow-xs font-medium"
+            className="text-sm flex items-center gap-2 px-4 py-2 bg-card border border-[oklch(var(--theme-teal)/0.3)] text-[oklch(var(--theme-teal))] rounded-lg hover:bg-[oklch(var(--theme-teal)/0.05)] transition-colors shadow-xs font-medium"
             aria-label="Open Smart Budget Wizard"
           >
             <Wand2 className="w-4 h-4" />

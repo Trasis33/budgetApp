@@ -243,13 +243,13 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
 
   const getSplitBadge = (expense: Expense) => {
     if (expense.split_type === 'personal') {
-      return <Badge variant="outline" className="bg-gray-50 text-gray-600 font-normal border-gray-200">Personal</Badge>;
+      return <Badge variant="outline" className="bg-muted text-muted-foreground font-normal border-border/60">Personal</Badge>;
     }
     if (expense.split_type === '50/50') {
-      return <Badge variant="secondary" className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100">50/50</Badge>;
+      return <Badge variant="secondary" className="bg-[oklch(var(--theme-indigo)/0.1)] text-[oklch(var(--theme-indigo))] hover:bg-[oklch(var(--theme-indigo)/0.15)] border-transparent">50/50</Badge>;
     }
     if (expense.split_type === 'custom') {
-      return <Badge variant="default" className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-indigo-100">{expense.split_ratio_user1}% Split</Badge>;
+      return <Badge variant="default" className="bg-[oklch(var(--theme-gold)/0.1)] text-[oklch(var(--theme-gold))] hover:bg-[oklch(var(--theme-gold)/0.15)] border-transparent">{expense.split_ratio_user1}% Split</Badge>;
     }
     if (expense.split_type === 'bill') {
       return <Badge variant="outline">Bill</Badge>;
@@ -436,10 +436,10 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
               {editForm.split_type === 'custom' && hasPartner && (
                 <div
                   ref={splitPanelRef}
-                  className="absolute left-0 top-full z-50 mt-2 w-72 space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
+                  className="absolute left-0 top-full z-50 mt-2 w-72 space-y-4 rounded-xl border border-border bg-background p-4 shadow-2xl"
                 >
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-gray-900">Fine-tune split</p>
+                    <p className="text-sm font-semibold text-foreground">Fine-tune split</p>
                     <p className="text-xs text-muted-foreground">Tap or drag to adjust in 5% increments</p>
                   </div>
                   <Slider
@@ -490,7 +490,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                  className="h-8 w-8 p-0 text-[oklch(var(--theme-teal))] hover:text-[oklch(var(--theme-teal))] hover:bg-[oklch(var(--theme-teal)/0.1)]"
                   onClick={handleSaveEdit}
                 >
                   <Check className="h-4 w-4" />
@@ -498,7 +498,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                   onClick={handleCancelEdit}
                 >
                   <X className="h-4 w-4" />
@@ -509,14 +509,14 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
         ) : (
           // View Mode
           <>
-            <td className={`${styles.compactCell} text-gray-600 font-medium text-sm`}>
+            <td className={`${styles.compactCell} text-muted-foreground font-medium text-sm`}>
               {formatDate(expense.date)}
             </td>
-            <td className={`${styles.compactCell} font-medium text-gray-900`}>
+            <td className={`${styles.compactCell} font-medium text-foreground`}>
               <div className="flex items-center gap-2">
                 {expense.description}
                 {showRecurringBadge && (
-                  <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+                  <Badge variant="outline" className="text-xs bg-[oklch(var(--theme-indigo)/0.1)] text-[oklch(var(--theme-indigo))] border-[oklch(var(--theme-indigo)/0.2)]">
                     Recurring
                   </Badge>
                 )}
@@ -536,20 +536,20 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                   const userColor = paidByUser?.color;
                   return (
                     <div 
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${userColor ? 'text-white border-transparent' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${userColor ? 'text-white border-transparent' : 'bg-muted text-muted-foreground border-border'}`}
                       style={userColor ? { backgroundColor: userColor } : {}}
                     >
                       {expense.paid_by_name.charAt(0).toUpperCase()}
                     </div>
                   );
                 })()}
-                <span className="text-sm text-gray-600">{expense.paid_by_name}</span>
+                <span className="text-sm text-muted-foreground">{expense.paid_by_name}</span>
               </div>
             </td>
             <td className={styles.compactCell}>
               {getSplitBadge(expense)}
             </td>
-            <td className={`${styles.compactCell} text-right font-bold text-gray-900 tabular-nums`}>
+            <td className={`${styles.compactCell} text-right font-bold text-foreground tabular-nums`}>
               {formatCurrency(expense.amount)}
             </td>
             <td className={`${styles.compactCell} text-right`}>
@@ -557,7 +557,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 lg:border-transparent"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-[oklch(var(--theme-indigo))] hover:bg-[oklch(var(--theme-indigo)/0.1)] border border-border/60 lg:border-transparent"
                   onClick={() => handleEdit(expense)}
                 >
                   <Edit2 className="h-4 w-4" />
@@ -565,7 +565,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 lg:border-transparent"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.1)] border border-border/60 lg:border-transparent"
                   onClick={() => setDeleteId(expense.id)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -582,8 +582,8 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Getting your expense history ready...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Getting your expense history ready...</p>
         </div>
       </div>
     );
@@ -608,17 +608,17 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
 
       {/* New User Empty State */}
       {expenses.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-          <Receipt className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="text-center py-12 bg-muted/30 rounded-xl border border-dashed border-border">
+          <Receipt className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-lg font-display font-semibold text-foreground mb-2">
             No expenses yet
           </h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Start tracking your spending to see patterns and insights. Every expense you record 
             helps you and your partner get a clearer picture of where your money goes.
           </p>
           <div className="space-y-3">
-            <Button onClick={() => navigate('/add-expense')}>
+            <Button variant="teal" onClick={() => navigate('/add-expense')}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Add your first expense
             </Button>
@@ -636,7 +636,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                     placeholder="Search expenses..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 bg-gray-50/50 border-gray-200 focus:bg-white transition-colors"
+                    className="pl-9 bg-muted/50 border-border focus:bg-card transition-colors"
                   />
                 </div>
 
@@ -656,7 +656,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                     </SelectContent>
                   </Select>
 
-                  <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                  <div className="w-px h-4 bg-border mx-1"></div>
 
                   <Select value={filterMonth} onValueChange={setFilterMonth}>
                     <SelectTrigger className="w-[140px] border-0 bg-transparent focus:ring-0">
@@ -670,11 +670,11 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                     </SelectContent>
                   </Select>
                   
-                  <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                  <div className="w-px h-4 bg-border mx-1"></div>
 
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
                     <SelectTrigger className="w-[180px] border-0 bg-transparent focus:ring-0">
-                      <Filter className="mr-2 h-3.5 w-3.5 text-gray-500" />
+                      <Filter className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -714,37 +714,37 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                         <th className={styles.colDate} onClick={() => handleSort('date')}>
                           <div className="flex items-center gap-1">
                             Date
-                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-gray-900' : 'text-gray-400'}`} />
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-foreground' : 'text-muted-foreground'}`} />
                           </div>
                         </th>
                         <th className={styles.colDescription} onClick={() => handleSort('description')}>
                           <div className="flex items-center gap-1">
                             Description
-                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-gray-900' : 'text-gray-400'}`} />
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-foreground' : 'text-muted-foreground'}`} />
                           </div>
                         </th>
                         <th className={styles.colCategory} onClick={() => handleSort('category')}>
                           <div className="flex items-center gap-1">
                             Category
-                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-gray-900' : 'text-gray-400'}`} />
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-foreground' : 'text-muted-foreground'}`} />
                           </div>
                         </th>
                         <th className={styles.colPaidBy} onClick={() => handleSort('paid_by')}>
                           <div className="flex items-center gap-1">
                             Paid By
-                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-gray-900' : 'text-gray-400'}`} />
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-foreground' : 'text-muted-foreground'}`} />
                           </div>
                         </th>
                         <th className={styles.colSplit} onClick={() => handleSort('split')}>
                           <div className="flex items-center gap-1">
                             Split
-                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-gray-900' : 'text-gray-400'}`} />
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-foreground' : 'text-muted-foreground'}`} />
                           </div>
                         </th>
                         <th className={styles.colAmount} onClick={() => handleSort('amount')}>
                           <div className="flex items-center justify-end gap-1">
                             Amount
-                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-gray-900' : 'text-gray-400'}`} />
+                            <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-foreground' : 'text-muted-foreground'}`} />
                           </div>
                         </th>
                         <th className={styles.colActions}></th>
@@ -765,12 +765,12 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
 
           {/* Recurring Expenses Card */}
           {/* <Card className="bg-gradient-to-br from-slate-50/80 to-indigo-50/40 border-slate-200/60"> */}
-          <Card className={`border-blue-200 bg-linear-to-br from-blue-50 to-transparent mt-6 mb-6 ${styles.recurringCard}`}>
+          <Card className={`border-[oklch(var(--theme-teal)/0.3)] bg-[linear-gradient(to_bottom_right,oklch(var(--theme-teal)/0.05),transparent)] mt-6 mb-6 ${styles.recurringCard}`}>
             <Collapsible open={recurringExpanded} onOpenChange={toggleRecurringExpanded}>
               <CardHeader className="flex flex-row items-center justify-between pb-4 h-8">
                 <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <RefreshCw className="h-5 w-5 text-indigo-600" />
+                    <RefreshCw className="h-5 w-5 text-[oklch(var(--theme-teal))]" />
                     <span className="font-semibold">Recurring Expenses</span>
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${recurringExpanded ? '' : '-rotate-90'}`} />
                   </button>
@@ -784,7 +784,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                       handleGenerateBills();
                     }}
                     disabled={generatingBills}
-                    className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                    className="text-[oklch(var(--theme-teal))] border-[oklch(var(--theme-teal)/0.3)] hover:bg-[oklch(var(--theme-teal)/0.1)]"
                   >
                     {generatingBills ? (
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -830,37 +830,37 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
                             <th className={styles.colDate} onClick={() => handleSort('date')}>
                               <div className="flex items-center gap-1">
                                 Date
-                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-gray-900' : 'text-gray-400'}`} />
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'date' ? 'text-foreground' : 'text-muted-foreground'}`} />
                               </div>
                             </th>
                             <th className={styles.colDescription} onClick={() => handleSort('description')}>
                               <div className="flex items-center gap-1">
                                 Description
-                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-gray-900' : 'text-gray-400'}`} />
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'description' ? 'text-foreground' : 'text-muted-foreground'}`} />
                               </div>
                             </th>
                             <th className={styles.colCategory} onClick={() => handleSort('category')}>
                               <div className="flex items-center gap-1">
                                 Category
-                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-gray-900' : 'text-gray-400'}`} />
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'category' ? 'text-foreground' : 'text-muted-foreground'}`} />
                               </div>
                             </th>
                             <th className={styles.colPaidBy} onClick={() => handleSort('paid_by')}>
                               <div className="flex items-center gap-1">
                                 Paid By
-                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-gray-900' : 'text-gray-400'}`} />
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'paid_by' ? 'text-foreground' : 'text-muted-foreground'}`} />
                               </div>
                             </th>
                             <th className={styles.colSplit} onClick={() => handleSort('split')}>
                               <div className="flex items-center gap-1">
                                 Split
-                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-gray-900' : 'text-gray-400'}`} />
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'split' ? 'text-foreground' : 'text-muted-foreground'}`} />
                               </div>
                             </th>
                             <th className={styles.colAmount} onClick={() => handleSort('amount')}>
                               <div className="flex items-center justify-end gap-1">
                                 Amount
-                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-gray-900' : 'text-gray-400'}`} />
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === 'amount' ? 'text-foreground' : 'text-muted-foreground'}`} />
                               </div>
                             </th>
                             <th className={styles.colActions}></th>
@@ -885,11 +885,11 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
           {sortedExpenses.length === 0 && expenses.length > 0 && (
             <Card>
               <CardContent className="text-center py-16">
-                <Search className="h-12 w-12 text-gray-200 mx-auto mb-3" />
-                <h3 className="text-sm font-medium text-gray-900 mb-1">
+                <Search className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-foreground mb-1">
                   No expenses found
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   {searchTerm || filterCategory !== 'all' || filterMonth !== 'all' || filterYear !== 'all'
                     ? 'Try adjusting your filters or search terms'
                     : 'No expenses match your current filters'
@@ -932,7 +932,7 @@ export function ExpenseList({ onNavigate: _ }: ExpenseListProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={confirmDelete} className="bg-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.9)]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

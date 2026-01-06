@@ -49,8 +49,8 @@ export function Analytics({ onNavigate }: AnalyticsProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading analytics...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading analytics...</p>
         </div>
       </div>
     );
@@ -152,7 +152,7 @@ export function Analytics({ onNavigate }: AnalyticsProps) {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={savingsRate > 0 ? 'text-green-600' : 'text-red-500'}>
+              <div className={savingsRate > 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}>
                 {savingsRate.toFixed(1)}%
               </div>
               <p className="text-muted-foreground mt-1">

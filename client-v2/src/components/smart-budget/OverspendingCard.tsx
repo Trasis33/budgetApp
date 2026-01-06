@@ -19,9 +19,9 @@ interface BudgetOption {
 
 function DifficultyBadge({ difficulty }: { difficulty: 'easy' | 'moderate' | 'challenging' }) {
   const colors = {
-    easy: 'bg-emerald-100 text-emerald-700',
-    moderate: 'bg-amber-100 text-amber-700',
-    challenging: 'bg-red-100 text-red-700'
+    easy: 'bg-[oklch(var(--theme-teal)/0.15)] text-[oklch(var(--theme-teal))]',
+    moderate: 'bg-[oklch(var(--theme-amber)/0.15)] text-[oklch(var(--theme-amber))]',
+    challenging: 'bg-[oklch(var(--theme-coral)/0.15)] text-[oklch(var(--theme-coral))]'
   };
   
   return (
@@ -37,15 +37,15 @@ function OverspendProgressBar({ budget, actual }: { budget: number; actual: numb
   
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-slate-600">
+      <div className="flex justify-between text-xs text-muted-foreground">
         <span>Budget</span>
         <span>Actual: {overagePercentage.toFixed(0)}% over</span>
       </div>
-      <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+      <div className="h-3 bg-muted rounded-full overflow-hidden">
         <div 
           className={cn(
             'h-full transition-all duration-300',
-            percentage > 150 ? 'bg-red-500' : percentage > 100 ? 'bg-amber-500' : 'bg-emerald-500'
+            percentage > 150 ? 'bg-[oklch(var(--theme-coral))]' : percentage > 100 ? 'bg-[oklch(var(--theme-amber))]' : 'bg-[oklch(var(--theme-teal))]'
           )}
           style={{ width: `${percentage}%` }}
         />
@@ -91,7 +91,7 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
   };
   
   return (
-    <div className="rounded-xl border-l-4 border-l-red-500 bg-white shadow-sm p-5 space-y-4">
+    <div className="rounded-xl border-l-4 border-l-[oklch(var(--theme-coral))] bg-card shadow-sm p-5 space-y-4">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
           <div
@@ -101,48 +101,48 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
             {insight.categoryName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h4 className="font-semibold text-slate-900 text-lg">{insight.categoryName}</h4>
-            <p className="text-sm text-slate-600">
+            <h4 className="font-semibold text-foreground text-lg">{insight.categoryName}</h4>
+            <p className="text-sm text-muted-foreground">
               Budget: {formatCurrency(insight.budgetAmount)} • Actual: {formatCurrency(insight.actualAmount)}
             </p>
           </div>
         </div>
-        <span className="px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
+        <span className="px-3 py-1 rounded-full bg-[oklch(var(--theme-coral)/0.15)] text-[oklch(var(--theme-coral))] text-sm font-semibold">
           +{insight.overagePercentage.toFixed(0)}% over
         </span>
       </div>
       
       <OverspendProgressBar budget={insight.budgetAmount} actual={insight.actualAmount} />
       
-      <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
-        <div className="flex items-center gap-2 text-slate-700">
-          <TrendingUp className="h-4 w-4 text-slate-500" />
+      <div className="bg-muted rounded-lg p-3 space-y-2 text-sm">
+        <div className="flex items-center gap-2 text-foreground">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
           <span>
             {insight.isRecurringPattern 
               ? 'Pattern: Overspent in recent months'
               : 'This appears to be a one-time spike'}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-slate-700">
-          <BarChart className="h-4 w-4 text-slate-500" />
+        <div className="flex items-center gap-2 text-foreground">
+          <BarChart className="h-4 w-4 text-muted-foreground" />
           <span>Your 3-month average: {formatCurrency(insight.averageMonthlySpend)}</span>
         </div>
       </div>
       
       {insight.tips && insight.tips.length > 0 && (
-        <div className="bg-slate-50 rounded-lg p-4 space-y-3">
-          <div className="flex items-center gap-2 text-slate-900">
-            <Lightbulb className="h-4 w-4 text-amber-500" />
+        <div className="bg-muted rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2 text-foreground">
+            <Lightbulb className="h-4 w-4 text-[oklch(var(--theme-gold))]" />
             <h5 className="text-sm font-semibold">Ways to reduce spending:</h5>
           </div>
           <ul className="space-y-2">
             {insight.tips.map(tip => (
-              <li key={tip.id} className="flex items-start gap-2 text-sm text-slate-700">
-                <span className="text-slate-400 mt-0.5">•</span>
+              <li key={tip.id} className="flex items-start gap-2 text-sm text-foreground">
+                <span className="text-muted-foreground mt-0.5">•</span>
                 <span className="flex-1">
                   {tip.text}
                   {tip.potentialSavings && (
-                    <span className="text-emerald-600 font-medium ml-1">
+                    <span className="text-[oklch(var(--theme-teal))] font-medium ml-1">
                       (~{formatCurrency(tip.potentialSavings)}/mo savings)
                     </span>
                   )}
@@ -153,8 +153,8 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
         </div>
       )}
       
-      <div className="border border-slate-200 rounded-lg p-4 space-y-3">
-        <h5 className="text-sm font-semibold text-slate-900">Adjust your budget target:</h5>
+      <div className="border border-border rounded-lg p-4 space-y-3">
+        <h5 className="text-sm font-semibold text-foreground">Adjust your budget target:</h5>
         <div className="space-y-2">
           {options.map(option => (
             <label
@@ -162,8 +162,8 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
               className={cn(
                 'flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all',
                 selectedOption === option.id 
-                  ? 'border-indigo-500 bg-indigo-50' 
-                  : 'border-slate-200 hover:border-slate-300'
+                  ? 'border-[oklch(var(--theme-teal))] bg-[oklch(var(--theme-teal)/0.1)]' 
+                  : 'border-border hover:border-border/80'
               )}
             >
               <input
@@ -172,11 +172,11 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
                 value={option.id}
                 checked={selectedOption === option.id}
                 onChange={(e) => setSelectedOption(e.target.value as typeof selectedOption)}
-                className="w-4 h-4 text-indigo-600"
+                className="w-4 h-4 text-[oklch(var(--theme-teal))]"
               />
               <div className="flex-1">
-                <div className="font-medium text-slate-900 text-sm">{option.label}</div>
-                <div className="text-xs text-slate-500">{option.description}</div>
+                <div className="font-medium text-foreground text-sm">{option.label}</div>
+                <div className="text-xs text-muted-foreground">{option.description}</div>
               </div>
               <DifficultyBadge difficulty={option.difficulty} />
             </label>
@@ -190,8 +190,8 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
         className={cn(
           'w-full py-3 rounded-lg font-medium transition-colors',
           isApplied
-            ? 'bg-emerald-100 text-emerald-700 cursor-not-allowed'
-            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            ? 'bg-[oklch(var(--theme-teal)/0.15)] text-[oklch(var(--theme-teal))] cursor-not-allowed'
+            : 'bg-[oklch(var(--theme-teal))] text-white hover:bg-[oklch(var(--theme-teal)/0.9)]'
         )}
       >
         {isApplied ? '✓ Budget Adjusted' : 'Apply Budget Adjustment'}

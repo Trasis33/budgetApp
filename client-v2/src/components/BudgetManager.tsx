@@ -94,7 +94,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   const { currentScope, setScope, summary: scopeSummary, isPartnerConnected } = useScope();
   const { budgets, expenses, loading: dataLoading, refetch } = useBudgetData(selectedMonth, selectedYear);
   const { budgetsWithSpending, metrics } = useBudgetCalculations(budgets, expenses);
-  const { data: settlementData, loading: settlementLoading } = useSettlement(selectedMonth, selectedYear);
+  const { data: settlementData } = useSettlement(selectedMonth, selectedYear);
 
   // Wizard State
   const [isWizardOpen, setWizardOpen] = useState(false);
@@ -287,10 +287,10 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
 
   const getSplitTypeBadge = (splitType: string) => {
     const styles: Record<string, string> = {
-      '50/50': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-      'personal': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-      'custom': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-      'bill': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+      '50/50': 'bg-[oklch(var(--theme-indigo)/0.1)] text-[oklch(var(--theme-indigo))]',
+      'personal': 'bg-muted text-muted-foreground',
+      'custom': 'bg-[oklch(var(--theme-gold)/0.1)] text-[oklch(var(--theme-gold))]',
+      'bill': 'bg-[oklch(var(--theme-coral)/0.1)] text-[oklch(var(--theme-coral))]',
     };
     return styles[splitType] || styles['50/50'];
   };
@@ -401,7 +401,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-6">
-              <h1 className="text-xl font-medium text-foreground">Budget Manager</h1>
+              <h1 className="text-xl font-display font-semibold tracking-tight text-foreground">Budget Manager</h1>
               
               <div className="flex items-center gap-1 text-sm">
               <DateSelector variant='compact' />
@@ -840,7 +840,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     <Button
                                       variant="ghost" 
                                       size="icon"
-                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'} hover:text-red-500`}
+                                      className={`h-7 w-7 transition-all ${hoveredRow === budget.id ? 'opacity-100' : 'opacity-0'} hover:text-[oklch(var(--theme-coral))]`}
                                       onClick={(e) => { e.stopPropagation(); setDeleteConfirm(budget.id); }}
                                     >
                                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1220,7 +1220,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteConfirm && handleDeleteBudget(deleteConfirm)} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={() => deleteConfirm && handleDeleteBudget(deleteConfirm)} className="bg-[oklch(var(--theme-coral))] hover:bg-[oklch(var(--theme-coral)/0.9)]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

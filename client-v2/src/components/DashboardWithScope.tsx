@@ -15,8 +15,8 @@ export const DashboardWithScope: React.FC<DashboardWithScopeProps> = (props) => 
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your budget...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[oklch(var(--theme-teal))] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your budget...</p>
         </div>
       </div>
     );
@@ -26,14 +26,14 @@ export const DashboardWithScope: React.FC<DashboardWithScopeProps> = (props) => 
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center max-w-md">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-red-800 mb-2">
+          <div className="bg-[oklch(var(--theme-coral)/0.1)] border border-[oklch(var(--theme-coral)/0.3)] rounded-lg p-6">
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Unable to load budget data
             </h3>
-            <p className="text-red-600 mb-4">{error}</p>
+            <p className="text-[oklch(var(--theme-coral))] mb-4">{error}</p>
             <button 
               onClick={() => window.location.reload()}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              className="bg-[oklch(var(--theme-coral))] text-white px-4 py-2 rounded-lg hover:bg-[oklch(var(--theme-coral)/0.9)] transition-colors"
             >
               Try Again
             </button>
@@ -44,7 +44,7 @@ export const DashboardWithScope: React.FC<DashboardWithScopeProps> = (props) => 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <DashboardHeader 
         title={`${currentScope === 'ours' ? 'Our' : currentScope === 'mine' ? 'My' : "Partner's"} Budget`}
         subtitle={

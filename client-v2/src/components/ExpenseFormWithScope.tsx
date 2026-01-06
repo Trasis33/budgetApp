@@ -101,15 +101,15 @@ export const ExpenseFormWithScope: React.FC<ExpenseFormWithScopeProps> = ({
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Scope indicator */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-[oklch(var(--theme-teal)/0.1)] border border-[oklch(var(--theme-teal)/0.2)] rounded-lg p-4">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-sm font-medium text-blue-800">
+                <div className="w-2 h-2 rounded-full bg-[oklch(var(--theme-teal))]" />
+                <span className="text-sm font-medium text-foreground">
                   This expense will be added to the <strong>{currentScope}</strong> budget
                 </span>
               </div>
               {!canSplitWithPartner && currentScope === 'ours' && (
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Partner splitting will be available once your partner connects
                 </p>
               )}
@@ -120,7 +120,7 @@ export const ExpenseFormWithScope: React.FC<ExpenseFormWithScopeProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount *</Label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="amount"
                     type="number"
@@ -137,7 +137,7 @@ export const ExpenseFormWithScope: React.FC<ExpenseFormWithScopeProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="date">Date *</Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="date"
                     type="date"
@@ -202,7 +202,7 @@ export const ExpenseFormWithScope: React.FC<ExpenseFormWithScopeProps> = ({
                       <Label htmlFor={type.value} className="font-medium cursor-pointer">
                         {type.label}
                       </Label>
-                      <p className="text-sm text-gray-600">{type.description}</p>
+                      <p className="text-sm text-muted-foreground">{type.description}</p>
                     </div>
                   </div>
                 ))}
@@ -222,7 +222,7 @@ export const ExpenseFormWithScope: React.FC<ExpenseFormWithScopeProps> = ({
                   value={formData.custom_split_ratio}
                   onChange={(e) => setFormData({ ...formData, custom_split_ratio: e.target.value })}
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Enter your percentage. The remainder will go to your partner.
                 </p>
               </div>

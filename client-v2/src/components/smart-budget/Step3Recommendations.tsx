@@ -271,12 +271,12 @@ export function Step3Recommendations({
       className="h-full flex flex-col p-6 overflow-auto"
     >
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-medium text-slate-900">
+        <h2 className="text-2xl font-display font-medium text-foreground">
           Budget Recommendations & Review
         </h2>
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -287,20 +287,20 @@ export function Step3Recommendations({
         <DataIntegrityBanner />
 
         {isLoading && (
-          <div className="text-center py-8 text-slate-600">
+          <div className="text-center py-8 text-muted-foreground">
             Loading recommendations...
           </div>
         )}
 
         {!isLoading && overspendingInsights.length === 0 && underspendingInsights.length === 0 && onTrackInsights.length === 0 && (
-          <div className="text-center py-8 text-slate-600">
+          <div className="text-center py-8 text-muted-foreground">
             No recommendations available yet. We need more spending data to provide insights.
           </div>
         )}
 
         {overspendingInsights.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-red-600 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[oklch(var(--theme-coral))] mb-4 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
               Attention Needed ({overspendingInsights.length} {overspendingInsights.length === 1 ? 'category' : 'categories'})
             </h3>
@@ -319,7 +319,7 @@ export function Step3Recommendations({
 
         {underspendingInsights.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-emerald-600 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[oklch(var(--theme-teal))] mb-4 flex items-center gap-2">
               <Check className="h-5 w-5" />
               Opportunities ({underspendingInsights.length} {underspendingInsights.length === 1 ? 'category' : 'categories'})
             </h3>
@@ -347,26 +347,26 @@ export function Step3Recommendations({
           </div>
         )}
 
-        <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900 mb-3">Budget Summary</h3>
+        <div className="mt-6 p-4 bg-muted rounded-xl border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-3">Budget Summary</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-slate-600">Total Income</div>
-              <div className="text-xl font-semibold text-slate-900">{formatCurrency(state.income)}</div>
+              <div className="text-sm text-muted-foreground">Total Income</div>
+              <div className="text-xl font-display font-semibold text-foreground">{formatCurrency(state.income)}</div>
             </div>
             <div>
-              <div className="text-sm text-slate-600">Fixed Expenses</div>
-              <div className="text-xl font-semibold text-slate-900">{formatCurrency(totalFixed)}</div>
+              <div className="text-sm text-muted-foreground">Fixed Expenses</div>
+              <div className="text-xl font-display font-semibold text-foreground">{formatCurrency(totalFixed)}</div>
             </div>
             <div>
-              <div className="text-sm text-slate-600">Variable Budgets</div>
-              <div className="text-xl font-semibold text-slate-900">{formatCurrency(totalVariable)}</div>
+              <div className="text-sm text-muted-foreground">Variable Budgets</div>
+              <div className="text-xl font-display font-semibold text-foreground">{formatCurrency(totalVariable)}</div>
             </div>
             <div>
-              <div className="text-sm text-slate-600">Unallocated</div>
+              <div className="text-sm text-muted-foreground">Unallocated</div>
               <div className={cn(
-                'text-xl font-semibold',
-                isOverallocated ? 'text-red-600' : 'text-emerald-600'
+                'text-xl font-display font-semibold',
+                isOverallocated ? 'text-[oklch(var(--theme-coral))]' : 'text-[oklch(var(--theme-teal))]'
               )}>
                 {formatCurrency(unallocated)}
               </div>
@@ -375,13 +375,13 @@ export function Step3Recommendations({
         </div>
       </div>
 
-      <div className="flex gap-3 pt-4 border-t border-slate-200">
+      <div className="flex gap-3 pt-4 border-t border-border">
         <button
           onClick={handleSave}
           aria-label={isOverallocated ? "Cannot save: Budget is over-allocated" : "Save budget plan"}
           className={cn(
             'flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium',
-            'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors',
+            'bg-[oklch(var(--theme-teal))] text-white hover:bg-[oklch(var(--theme-teal)/0.9)] transition-colors',
             (isOverallocated || isLoading) && 'opacity-50 cursor-not-allowed'
           )}
           disabled={isOverallocated || isLoading}
@@ -413,40 +413,40 @@ export function Step3Recommendations({
                 transition={{ type: 'spring', delay: 0.1 }}
                 className="flex justify-center mb-6"
               >
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <Check className="h-8 w-8 text-emerald-600" />
+                <div className="w-16 h-16 bg-[oklch(var(--theme-teal)/0.15)] rounded-full flex items-center justify-center">
+                  <Check className="h-8 w-8 text-[oklch(var(--theme-teal))]" />
                 </div>
               </motion.div>
 
-              <h2 className="text-2xl font-semibold text-slate-900 text-center mb-2">
+              <h2 className="text-2xl font-display font-semibold text-foreground text-center mb-2">
                 Budget Saved Successfully!
               </h2>
 
-              <p className="text-slate-600 text-center mb-6">
+              <p className="text-muted-foreground text-center mb-6">
                 Your budget plan has been applied and is ready to use.
               </p>
 
-              <div className="bg-slate-50 rounded-xl p-4 space-y-3 mb-6">
+              <div className="bg-muted rounded-xl p-4 space-y-3 mb-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Total Budget</span>
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Total Budget</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{formatCurrency(state.income)}</span>
+                  <span className="font-semibold text-foreground">{formatCurrency(state.income)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <PieChart className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Fixed + Variable</span>
+                    <PieChart className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Fixed + Variable</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{formatCurrency(totalFixed + totalVariable)}</span>
+                  <span className="font-semibold text-foreground">{formatCurrency(totalFixed + totalVariable)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <PiggyBank className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm text-slate-600">Savings Rate</span>
+                    <PiggyBank className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Savings Rate</span>
                   </div>
-                  <span className="font-semibold text-emerald-600">{savingsRate.toFixed(1)}%</span>
+                  <span className="font-semibold text-[oklch(var(--theme-teal))]">{savingsRate.toFixed(1)}%</span>
                 </div>
               </div>
 
@@ -457,7 +457,7 @@ export function Step3Recommendations({
                 }}
                 className={cn(
                   'w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium',
-                  'bg-indigo-600 text-white hover:bg-indigo-700 transition-colors'
+                  'bg-[oklch(var(--theme-teal))] text-white hover:bg-[oklch(var(--theme-teal)/0.9)] transition-colors'
                 )}
               >
                 <Home className="h-4 w-4" />

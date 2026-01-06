@@ -335,7 +335,7 @@ export function CategoryManagementSection() {
                         value={formData.budget_weight}
                         onChange={(e) => setFormData(prev => ({ ...prev, budget_weight: parseFloat(e.target.value) }))}
                         disabled={formLoading}
-                        className="flex-1 h-2 bg-slate-100 rounded-lg accent-primary"
+                        className="flex-1 h-2 bg-muted rounded-lg accent-primary"
                       />
                       <span className="text-sm font-semibold text-primary min-w-[3rem] text-right">
                         {(formData.budget_weight * 100).toFixed(0)}%
@@ -348,7 +348,7 @@ export function CategoryManagementSection() {
                       <div className="text-center">↑</div>
                       <div className="text-right">High (100%)</div>
                     </div>
-                    <p className="text-xs text-muted-foreground rounded-lg bg-slate-50 p-2">
+                    <p className="text-xs text-muted-foreground rounded-lg bg-muted p-2">
                       Higher weight means this category gets a larger share within its spending role bucket.
                       Use this for essential categories (groceries, housing) vs. discretionary ones (subscriptions, entertainment).
                     </p>

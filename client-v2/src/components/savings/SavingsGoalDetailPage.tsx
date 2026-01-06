@@ -36,11 +36,11 @@ function calculatePaceIndicator(
   }
 
   if (amountProgress >= timeProgress + tolerance) {
-    return { label: 'Ahead', colorClass: 'text-emerald-500' };
+    return { label: 'Ahead', colorClass: 'text-[oklch(var(--theme-teal))]' };
   }
 
   if (amountProgress + tolerance <= timeProgress) {
-    return { label: 'Behind', colorClass: 'text-amber-500' };
+    return { label: 'Behind', colorClass: 'text-[oklch(var(--theme-amber))]' };
   }
 
   return { label: 'On Track', colorClass: 'text-primary' };

@@ -47,12 +47,12 @@ export function SecuritySection() {
     if (/[^A-Za-z0-9]/.test(password)) strength++;
 
     const strengthMap: Record<number, { text: string; color: string }> = {
-      0: { text: 'Very Weak', color: 'bg-red-500' },
-      1: { text: 'Weak', color: 'bg-orange-500' },
-      2: { text: 'Fair', color: 'bg-yellow-500' },
-      3: { text: 'Good', color: 'bg-lime-500' },
-      4: { text: 'Strong', color: 'bg-green-500' },
-      5: { text: 'Very Strong', color: 'bg-emerald-600' }
+      0: { text: 'Very Weak', color: 'bg-[oklch(var(--theme-coral))]' },
+      1: { text: 'Weak', color: 'bg-[oklch(var(--theme-coral)/0.7)]' },
+      2: { text: 'Fair', color: 'bg-[oklch(var(--theme-amber))]' },
+      3: { text: 'Good', color: 'bg-[oklch(var(--theme-teal)/0.7)]' },
+      4: { text: 'Strong', color: 'bg-[oklch(var(--theme-teal))]' },
+      5: { text: 'Very Strong', color: 'bg-[oklch(var(--theme-teal))]' }
     };
 
     return { strength, ...strengthMap[strength] };
@@ -198,8 +198,8 @@ export function SecuritySection() {
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Password Strength</span>
                   <span className={`text-xs font-medium ${
-                    passwordStrength.strength >= 3 ? 'text-green-600' : 
-                    passwordStrength.strength >= 2 ? 'text-yellow-600' : 'text-red-600'
+                    passwordStrength.strength >= 3 ? 'text-[oklch(var(--theme-teal))]' : 
+                    passwordStrength.strength >= 2 ? 'text-[oklch(var(--theme-amber))]' : 'text-[oklch(var(--theme-coral))]'
                   }`}>
                     {passwordStrength.text}
                   </span>

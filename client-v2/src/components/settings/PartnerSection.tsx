@@ -69,14 +69,14 @@ export function PartnerSection() {
           {/* Partner Status */}
           <div className={`rounded-lg border p-4 ${
             hasPartner 
-              ? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950' 
-              : 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950'
+              ? 'border-[oklch(var(--theme-teal)/0.3)] bg-[oklch(var(--theme-teal)/0.05)] dark:border-[oklch(var(--theme-teal)/0.2)] dark:bg-[oklch(var(--theme-teal)/0.1)]' 
+              : 'border-[oklch(var(--theme-indigo)/0.3)] bg-[oklch(var(--theme-indigo)/0.05)] dark:border-[oklch(var(--theme-indigo)/0.2)] dark:bg-[oklch(var(--theme-indigo)/0.1)]'
           }`}>
             <div className="flex items-center gap-3">
               <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
                 hasPartner 
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
-                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                  ? 'bg-[oklch(var(--theme-teal)/0.2)] text-[oklch(var(--theme-teal))]' 
+                  : 'bg-[oklch(var(--theme-indigo)/0.2)] text-[oklch(var(--theme-indigo))]'
               }`}>
                 <Users className="h-5 w-5" />
               </div>

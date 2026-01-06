@@ -60,8 +60,8 @@ export function MonthlyStatement({ onNavigate }: MonthlyStatementProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading statement...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[oklch(var(--theme-teal))] mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading statement...</p>
         </div>
       </div>
     );
@@ -197,11 +197,11 @@ export function MonthlyStatement({ onNavigate }: MonthlyStatementProps) {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="p-4 border rounded-lg">
               <p className="text-muted-foreground">Total Expenses</p>
-              <p className="text-red-500">{formatCurrency(totalExpenses)}</p>
+              <p className="text-[oklch(var(--theme-coral))]">{formatCurrency(totalExpenses)}</p>
             </div>
             <div className="p-4 border rounded-lg">
               <p className="text-muted-foreground">Net Balance</p>
-              <p className={netIncome >= 0 ? 'text-green-600' : 'text-red-500'}>
+              <p className={netIncome >= 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}>
                 {formatCurrency(netIncome)}
               </p>
             </div>
@@ -233,10 +233,10 @@ export function MonthlyStatement({ onNavigate }: MonthlyStatementProps) {
                       <TableCell>{cat.category}</TableCell>
                       <TableCell className="text-right">{formatCurrency(cat.budget)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(cat.spent)}</TableCell>
-                      <TableCell className={`text-right ${cat.variance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      <TableCell className={`text-right ${cat.variance >= 0 ? 'text-[oklch(var(--theme-teal))]' : 'text-[oklch(var(--theme-coral))]'}`}>
                         {formatCurrency(cat.variance)}
                       </TableCell>
-                      <TableCell className={`text-right ${percentage > 100 ? 'text-red-500' : ''}`}>
+                      <TableCell className={`text-right ${percentage > 100 ? 'text-[oklch(var(--theme-coral))]' : ''}`}>
                         {percentage.toFixed(1)}%
                       </TableCell>
                     </TableRow>
@@ -251,8 +251,8 @@ export function MonthlyStatement({ onNavigate }: MonthlyStatementProps) {
                   <TableCell
                     className={`text-right ${
                       budgets.reduce((sum, b) => sum + (b.amount || 0), 0) - totalExpenses >= 0
-                        ? 'text-green-600'
-                        : 'text-red-500'
+                        ? 'text-[oklch(var(--theme-teal))]'
+                        : 'text-[oklch(var(--theme-coral))]'
                     }`}
                   >
                     {formatCurrency(budgets.reduce((sum, b) => sum + (b.amount || 0), 0) - totalExpenses)}

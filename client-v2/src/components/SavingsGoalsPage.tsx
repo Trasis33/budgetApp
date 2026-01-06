@@ -111,13 +111,18 @@ export function SavingsGoalsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Savings Goals</h1>
-          <p className="text-muted-foreground">
-            Track and manage your savings goals.
-          </p>
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(var(--theme-teal)/0.1)]">
+            <PiggyBank className="h-6 w-6 text-[oklch(var(--theme-teal))]" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-display font-semibold tracking-tight">Savings Goals</h1>
+            <p className="text-sm text-muted-foreground">
+              Track and manage your savings goals.
+            </p>
+          </div>
         </div>
-        <Button className="gap-2" onClick={handleOpenCreateModal}>
+        <Button variant="teal" className="gap-2" onClick={handleOpenCreateModal}>
           <Plus className="h-4 w-4" />
           Add Goal
         </Button>
@@ -163,15 +168,15 @@ export function SavingsGoalsPage() {
           ))}
         </div>
       ) : goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/50">
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-            <PiggyBank className="h-6 w-6 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border rounded-xl bg-muted/30">
+          <div className="h-16 w-16 rounded-full bg-[oklch(var(--theme-teal)/0.1)] flex items-center justify-center mb-4">
+            <PiggyBank className="h-8 w-8 text-[oklch(var(--theme-teal))]" />
           </div>
-          <h3 className="text-lg font-semibold">No savings goals yet</h3>
+          <h3 className="text-lg font-display font-semibold">No savings goals yet</h3>
           <p className="text-muted-foreground max-w-sm mx-auto mb-6">
             Create your first savings goal to start tracking your progress.
           </p>
-          <Button variant="outline" className="gap-2" onClick={handleOpenCreateModal}>
+          <Button variant="teal" className="gap-2" onClick={handleOpenCreateModal}>
             <Plus className="h-4 w-4" />
             Create First Goal
           </Button>
