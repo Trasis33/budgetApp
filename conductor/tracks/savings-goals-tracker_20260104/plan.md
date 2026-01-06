@@ -187,16 +187,16 @@
   - [x] Smooth modal transitions
 - [ ] Task: Conductor - User Manual Verification 'Phase 11: UI Polish & Accessibility' (Protocol in workflow.md)
 
-## Phase 12: Final Testing & Documentation [ ]
+## Phase 12: Final Testing & Documentation [x] [checkpoint: e636903]
 
-- [ ] Task: Run full test suite and verify coverage
-  - [ ] Ensure >80% coverage for new code
-  - [ ] Fix any failing tests
-- [ ] Task: Run TypeScript compiler and linting
-  - [ ] Fix all type errors
-  - [ ] Fix all linting errors
-- [ ] Task: End-to-end manual testing
-  - [ ] Test complete user flow: create goal → add contributions → view progress
-  - [ ] Test scope switching behavior
-  - [ ] Test settlement allocation flow
+- [x] Task: Run full test suite and verify coverage
+  - [x] Ensure >80% coverage for new code
+  - [x] Fix any failing tests
+- [x] Task: Run TypeScript compiler and linting
+  - [x] Fix all type errors
+  - [x] Fix all linting errors
+- [x] Task: End-to-end manual testing
+  - [x] Test complete user flow: create goal → add contributions → view progress
+  - [x] Test scope switching behavior
+  - [x] Test settlement allocation flow
 - [ ] Task: Conductor - User Manual Verification 'Phase 12: Final Testing & Documentation' (Protocol in workflow.md)
