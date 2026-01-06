@@ -11,7 +11,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: Savings Goals Tracker
+## [x] Track: Savings Goals Tracker [checkpoint: ad48ce6]
 *Link: [./conductor/tracks/savings-goals-tracker_20260104/](./conductor/tracks/savings-goals-tracker_20260104/)*
 
 Frontend UI for managing savings goals with dual progress rings, contribution tracking, and BillSplitting settlement integration.
