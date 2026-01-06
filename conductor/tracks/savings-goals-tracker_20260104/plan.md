@@ -152,7 +152,7 @@
   - [x] Remove from list and show toast
 - [ ] Task: Conductor - User Manual Verification 'Phase 9: Goal Management Actions' (Protocol in workflow.md)
 
-## Phase 10: BillSplitting Settlement Integration [x] [checkpoint: d29b8c1]
+## Phase 10: BillSplitting Settlement Integration [x] [checkpoint: 3755cf9]
 
 - [x] Task: Identify settlement completion hook point
   - [x] Read BillSplitting component code
