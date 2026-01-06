@@ -152,22 +152,22 @@
   - [x] Remove from list and show toast
 - [ ] Task: Conductor - User Manual Verification 'Phase 9: Goal Management Actions' (Protocol in workflow.md)
 
-## Phase 10: BillSplitting Settlement Integration [ ]
+## Phase 10: BillSplitting Settlement Integration [x] [checkpoint: d29b8c1]
 
-- [ ] Task: Identify settlement completion hook point
-  - [ ] Read BillSplitting component code
-  - [ ] Determine where settlement is marked complete
-- [ ] Task: Create SettlementAllocationPrompt.tsx component
-  - [ ] Write failing tests for prompt behavior
-  - [ ] Test: Prompt displays after settlement completion
-  - [ ] Test: Shows list of active savings goals
-  - [ ] Test: Skip/dismiss option works
-  - [ ] Fetch active goals from savingsService
-- [ ] Task: Implement allocation flow
-  - [ ] Write failing test for allocation
-  - [ ] On goal selection, call addContribution with settlement amount
-  - [ ] Show success toast with goal name
-  - [ ] Close prompt
+- [x] Task: Identify settlement completion hook point
+  - [x] Read BillSplitting component code
+  - [x] Determine where settlement is marked complete
+- [x] Task: Create SettlementAllocationPrompt.tsx component
+  - [x] Write failing tests for prompt behavior
+  - [x] Test: Prompt displays after settlement completion
+  - [x] Test: Shows list of active savings goals
+  - [x] Test: Skip/dismiss option works
+  - [x] Fetch active goals from savingsService
+- [x] Task: Implement allocation flow
+  - [x] Write failing test for allocation
+  - [x] On goal selection, call addContribution with settlement amount
+  - [x] Show success toast with goal name
+  - [x] Close prompt
 - [ ] Task: Conductor - User Manual Verification 'Phase 10: BillSplitting Settlement Integration' (Protocol in workflow.md)
 
 ## Phase 11: UI Polish & Accessibility [ ]
