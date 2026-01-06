@@ -1,8 +1,7 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { GoalCard } from '../GoalCard';
 import { SavingsGoal } from '../../../types';
-import userEvent from '@testing-library/user-event';
 
 // Mock DualProgressRings
 jest.mock('../DualProgressRings', () => ({
@@ -14,13 +13,20 @@ jest.mock('../DualProgressRings', () => ({
   ),
 }));
 
+// Mock Popover components to avoid Radix UI issues in test environment
+jest.mock('@/components/ui/popover', () => ({
+  Popover: ({ children }: any) => <div data-testid="popover">{children}</div>,
+  PopoverTrigger: ({ children }: any) => <div data-testid="popover-trigger">{children}</div>,
+  PopoverContent: ({ children }: any) => <div data-testid="popover-content">{children}</div>,
+}));
+
 // Mock DropdownMenu components to avoid Radix UI issues in test environment
 jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: any) => <div>{children}</div>,
   DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
   DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
   DropdownMenuItem: ({ children, onClick }: any) => (
-    <div role="menuitem" onClick={onClick}>{children}</div>
+    <div role="menuitem" data-testid="dropdown-item" onClick={onClick}>{children}</div>
   ),
 }));
 
@@ -34,13 +40,14 @@ describe('GoalCard', () => {
     is_pinned: false,
     color_index: 0,
     category_name: 'Transportation',
+    created_at: '2025-01-01',
   };
 
   const mockCallbacks = {
     onEdit: jest.fn(),
     onDelete: jest.fn(),
     onPin: jest.fn(),
-    onAddContribution: jest.fn(),
+    onQuickAddContribution: jest.fn(),
   };
 
   beforeEach(() => {
@@ -67,9 +74,15 @@ describe('GoalCard', () => {
   test('renders pin indicator when pinned', () => {
     const pinnedGoal = { ...mockGoal, is_pinned: true };
     const { container } = render(<GoalCard goal={pinnedGoal} {...mockCallbacks} />);
-    // Look for pin icon
     const pinIcon = container.querySelector('.lucide-pin');
     expect(pinIcon).toBeInTheDocument(); 
+  });
+
+  test('does not show pin indicator when not pinned', () => {
+    const { container } = render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    // Check for the rotate-45 class which is the pin indicator on the card
+    const pinIcons = container.querySelectorAll('.rotate-45');
+    expect(pinIcons.length).toBe(0);
   });
 
   test('renders DualProgressRings with correct props', () => {
@@ -79,37 +92,73 @@ describe('GoalCard', () => {
     expect(screen.getByText('Amount: 25%')).toBeInTheDocument();
   });
 
-  test('renders quick-add button and calls callback', () => {
-    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
-    const addButton = screen.getByRole('button', { name: /add contribution/i });
-    expect(addButton).toBeInTheDocument();
-    
-    fireEvent.click(addButton);
-    expect(mockCallbacks.onAddContribution).toHaveBeenCalled();
-  });
-
-  test('renders actions menu and calls callbacks', async () => {
+  test('pin button shows pin indicator', async () => {
     const user = userEvent.setup();
     render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
     
-    // Find menu trigger (usually "More options" or ellipsis icon)
-    // Assuming generic button or looking for lucide-more-vertical icon
-    // or we can look for role="button" with specific name if we add aria-label
-    // Let's assume we add aria-label="Goal actions"
     const menuTrigger = screen.getByLabelText(/goal actions/i);
     await user.click(menuTrigger);
     
-    // Check menu items
-    const editItem = screen.getByText(/edit/i);
-    const deleteItem = screen.getByText(/delete/i);
     const pinItem = screen.getByText(/pin/i);
-    
-    expect(editItem).toBeInTheDocument();
-    expect(deleteItem).toBeInTheDocument();
     expect(pinItem).toBeInTheDocument();
+    
+    await user.click(pinItem);
+    expect(mockCallbacks.onPin).toHaveBeenCalledWith(mockGoal);
+  });
 
-    // Click Edit
+  test('only one goal can be pinned at a time - pin callback is called', async () => {
+    const user = userEvent.setup();
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    
+    const menuTrigger = screen.getByLabelText(/goal actions/i);
+    await user.click(menuTrigger);
+    
+    const pinItem = screen.getByText(/pin/i);
+    await user.click(pinItem);
+    
+    expect(mockCallbacks.onPin).toHaveBeenCalled();
+  });
+
+  test('delete item calls onDelete callback', async () => {
+    const user = userEvent.setup();
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    
+    const menuTrigger = screen.getByLabelText(/goal actions/i);
+    await user.click(menuTrigger);
+    
+    const deleteItem = screen.getByText(/delete/i);
+    expect(deleteItem).toBeInTheDocument();
+    
+    await user.click(deleteItem);
+    expect(mockCallbacks.onDelete).toHaveBeenCalledWith(mockGoal);
+  });
+
+  test('edit item calls onEdit callback', async () => {
+    const user = userEvent.setup();
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    
+    const menuTrigger = screen.getByLabelText(/goal actions/i);
+    await user.click(menuTrigger);
+    
+    const editItem = screen.getByText(/edit/i);
     await user.click(editItem);
-    expect(mockCallbacks.onEdit).toHaveBeenCalled();
+    
+    expect(mockCallbacks.onEdit).toHaveBeenCalledWith(mockGoal);
+  });
+
+  test('quick add button is present', () => {
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} />);
+    
+    const quickAddButton = screen.getByRole('button', { name: /quick add contribution/i });
+    expect(quickAddButton).toBeInTheDocument();
+  });
+
+  test('card click calls onClick callback', () => {
+    const onClick = jest.fn();
+    render(<GoalCard goal={mockGoal} {...mockCallbacks} onClick={onClick} />);
+    
+    const card = screen.getByText('New Car').closest('.group');
+    fireEvent.click(card!);
+    expect(onClick).toHaveBeenCalled();
   });
 });

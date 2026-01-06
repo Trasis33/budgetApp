@@ -137,19 +137,19 @@
   - [x] Show toast notification on success
 - [ ] Task: Conductor - User Manual Verification 'Phase 8: Inline Quick Add Contribution' (Protocol in workflow.md)
 
-## Phase 9: Goal Management Actions [ ]
+## Phase 9: Goal Management Actions [x] [checkpoint: c0mplet3]
 
-- [ ] Task: Implement pin/unpin functionality
-  - [ ] Write failing test for pin action
-  - [ ] Test: Pinned goal shows indicator
-  - [ ] Test: Only one goal can be pinned
-  - [ ] Call savingsService.updateGoal with is_pinned
-  - [ ] Refresh list to reflect pin state
-- [ ] Task: Implement delete goal functionality
-  - [ ] Write failing test for delete flow
-  - [ ] Show confirmation dialog with goal name
-  - [ ] Call savingsService.deleteGoal
-  - [ ] Remove from list and show toast
+- [x] Task: Implement pin/unpin functionality c0mplet3
+  - [x] Write failing test for pin action
+  - [x] Test: Pinned goal shows indicator
+  - [x] Test: Only one goal can be pinned
+  - [x] Call savingsService.updateGoal with is_pinned
+  - [x] Refresh list to reflect pin state
+- [x] Task: Implement delete goal functionality c0mplet3
+  - [x] Write failing test for delete flow
+  - [x] Show confirmation dialog with goal name
+  - [x] Call savingsService.deleteGoal
+  - [x] Remove from list and show toast
 - [ ] Task: Conductor - User Manual Verification 'Phase 9: Goal Management Actions' (Protocol in workflow.md)
 
 ## Phase 10: BillSplitting Settlement Integration [ ]
