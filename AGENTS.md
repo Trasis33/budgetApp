@@ -61,16 +61,35 @@
 - Dates use `YYYY-MM-DD` format.
 - Key routes: Auth, Expenses, Categories, Incomes, Budgets, Recurring Expenses, Summary, Analytics, Savings, Optimization, Users, Couple
 
-## UI Design Guidelines (Cursor Rules)
-- Use shadcn/ui components from `client-v2/src/components/ui/` - do not build custom modals/buttons/dialogs from scratch
-- Prefer CSS custom properties from `client-v2/src/styles/globals.css` over hard-coded colors
-- Tailwind utility classes for spacing and layout
-- Icon libraries: Lucide React for all icons (standard size `h-4 w-4` or `h-5 w-5`)
-- Toast notifications via sonner for user feedback
-- Implement loading states with spinners and skeleton loaders
-- Accessible components with focus rings and aria labels
-- Color tokens: `--primary`, `--muted`, `--destructive`, theme accents (`--theme-amber`, `--theme-teal`, etc.)
-- Dark mode supported via `.dark` class on root element
+## UI Design Guidelines
+
+**IMPORTANT: Read the Design System documentation before creating or modifying UI:**
+📄 **`client-v2/DESIGN_SYSTEM.md`** — Complete visual language, component patterns, and code examples
+
+### Design Philosophy: "Refined Nordic Finance"
+- Warm ivory backgrounds (not cold white/gray)
+- Instrument Serif (display) + DM Sans (body) typography
+- Teal (success), Coral (warning), Gold (highlight) accent colors
+- Desktop-first, supports both spacious and data-dense layouts
+
+### Quick Reference
+- **Components**: Always use shadcn/ui from `client-v2/src/components/ui/`
+- **Colors**: Use CSS variables from `globals.css` — NEVER raw hex values
+- **Icons**: Lucide React (`h-4 w-4` standard, `h-5 w-5` for emphasis)
+- **Toasts**: sonner for user feedback
+- **Status Colors**:
+  - Success/On track: `--theme-teal` with `bg-theme-teal/10`
+  - Warning/Near limit: `--theme-amber` with `bg-theme-amber/10`
+  - Danger/Over budget: `--theme-coral` with `bg-theme-coral/10`
+- **Display Font**: Use `font-display` class for headings and stat values
+- **Section Labels**: `text-xs font-medium text-muted-foreground uppercase tracking-wide`
+
+### Density Modes
+- **Standard** (dashboards): `p-4` to `p-6`, `gap-4` to `gap-6`
+- **Compact** (tables): `py-2 px-3`, `gap-1` to `gap-2`, hover-reveal actions
+
+### Dark Mode
+Supported via `.dark` class on root element. All color tokens have dark variants.
 
 ## Task List Management (Cursor Rules)
 When working on multi-step features, maintain task lists in markdown files:

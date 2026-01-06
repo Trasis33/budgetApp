@@ -1,111 +1,166 @@
 /* 
+ * Couples Budget App — Global Styles
+ * Design System: "Refined Nordic Finance"
+ * 
  * NOTE: CSS @apply, @theme, and @custom-variant warnings are expected in Tailwind CSS projects.
  * These are valid Tailwind directives that work correctly despite linter warnings.
- * The warnings can be safely ignored as they don't affect functionality.
  */
-/* 
- ---break---
- */
+
 @plugin 'tailwindcss-animate';
 
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* =============================================================================
+   DESIGN TOKENS — Light Mode (Default)
+   ============================================================================= */
+
 :root {
+  /* --- Typography --- */
   --font-size: 16px;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.13 0.028 261.692);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.028 261.692);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  
+  /* --- Canvas & Surfaces (Warm Ivory Base) --- */
+  --background: oklch(0.982 0.008 75);        /* Warm ivory canvas */
+  --foreground: oklch(0.25 0.015 75);         /* Warm charcoal text */
+  --card: oklch(1 0 0);                       /* Pure white cards */
+  --card-foreground: oklch(0.25 0.015 75);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.028 261.692);
-  --primary: oklch(0.21 0.034 264.665);
-  --primary-foreground: oklch(0.985 0.002 247.839);
-  --secondary: oklch(0.967 0.003 264.542);
-  --secondary-foreground: oklch(0.21 0.034 264.665);
-  --muted: oklch(0.967 0.003 264.542);
-  --muted-foreground: oklch(0.551 0.027 264.364);
-  --accent: oklch(0.967 0.003 264.542);
-  --accent-foreground: oklch(0.21 0.034 264.665);
+  --popover-foreground: oklch(0.25 0.015 75);
+  
+  /* --- Primary (Warm Charcoal) --- */
+  --primary: oklch(0.25 0.015 75);
+  --primary-foreground: oklch(0.98 0.005 75);
+  
+  /* --- Secondary & Muted (Warm Grays) --- */
+  --secondary: oklch(0.965 0.006 75);
+  --secondary-foreground: oklch(0.25 0.015 75);
+  --muted: oklch(0.965 0.006 75);
+  --muted-foreground: oklch(0.55 0.01 75);
+  
+  /* --- Accent (Interactive Hover) --- */
+  --accent: oklch(0.965 0.006 75);
+  --accent-foreground: oklch(0.25 0.015 75);
+  
+  /* --- Destructive (Error/Danger) --- */
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: #ffffff;
-  --border: oklch(0.928 0.006 264.531);
-  --input: oklch(0.928 0.006 264.531);
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.707 0.022 261.325);
-  --theme-amber: oklch(.646 .222 41.116);     /* warm amber */
-  --theme-teal: oklch(.6 .118 184.704);       /* teal */
-  --theme-indigo: oklch(.398 .07 227.392);    /* deep indigo */
-  --theme-yellow: oklch(.828 .189 84.429);      /* yellow */
-  --theme-golden: oklch(.769 .188 70.08);     /* golden yellow */
-  --theme-coral: oklch(.71 .18 16);           /* soft coral-red */
-  --theme-violet: oklch(.74 .16 320);         /* lilac / violet */
-  --theme-cyan: oklch(.7 .16 200);            /* aqua-cyan */
-  --theme-periwinkle: oklch(.78 .16 260);     /* periwinkle */
-  --theme-mint: oklch(.82 .12 140);           /* mint green */
+  
+  /* --- Borders & Inputs --- */
+  --border: oklch(0.92 0.005 75);
+  --input: oklch(0.92 0.005 75);
+  --input-background: oklch(0.975 0.004 75);
+  --switch-background: oklch(0.85 0.005 75);
+  --ring: oklch(0.65 0.14 175);               /* Teal focus ring */
+  
+  /* --- Theme Accent Colors (Semantic) --- */
+  --theme-teal: oklch(0.65 0.14 175);         /* Success, progress, positive */
+  --theme-coral: oklch(0.68 0.16 25);         /* Warning, over-budget, attention */
+  --theme-gold: oklch(0.75 0.15 85);          /* Highlights, pinned, premium */
+  --theme-amber: oklch(0.72 0.18 55);         /* Caution, near-limit */
+  --theme-indigo: oklch(0.45 0.12 270);       /* Primary actions, links */
+  
+  /* --- Extended Palette (Categories & Charts) --- */
+  --theme-yellow: oklch(0.828 0.189 84.429);
+  --theme-golden: oklch(0.769 0.188 70.08);
+  --theme-violet: oklch(0.74 0.16 320);
+  --theme-cyan: oklch(0.7 0.16 200);
+  --theme-periwinkle: oklch(0.78 0.16 260);
+  --theme-mint: oklch(0.82 0.12 140);
+  
+  /* --- Border Radius --- */
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.002 247.839);
-  --sidebar-foreground: oklch(0.13 0.028 261.692);
-  --sidebar-primary: oklch(0.21 0.034 264.665);
-  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-accent: oklch(0.967 0.003 264.542);
-  --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
-  --sidebar-border: oklch(0.928 0.006 264.531);
-  --sidebar-ring: oklch(0.707 0.022 261.325);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* --- Sidebar --- */
+  --sidebar: oklch(0.99 0.004 75);
+  --sidebar-foreground: oklch(0.25 0.015 75);
+  --sidebar-primary: oklch(0.25 0.015 75);
+  --sidebar-primary-foreground: oklch(0.98 0.005 75);
+  --sidebar-accent: oklch(0.965 0.006 75);
+  --sidebar-accent-foreground: oklch(0.25 0.015 75);
+  --sidebar-border: oklch(0.92 0.005 75);
+  --sidebar-ring: oklch(0.65 0.14 175);
+  
+  /* --- Charts (Matching Theme Colors) --- */
+  --chart-1: oklch(0.65 0.14 175);            /* Teal */
+  --chart-2: oklch(0.68 0.16 25);             /* Coral */
+  --chart-3: oklch(0.45 0.12 270);            /* Indigo */
+  --chart-4: oklch(0.75 0.15 85);             /* Gold */
+  --chart-5: oklch(0.72 0.18 55);             /* Amber */
 }
+
+/* =============================================================================
+   DESIGN TOKENS — Dark Mode
+   ============================================================================= */
 
 .dark {
-  --background: oklch(0.13 0.028 261.692);
-  --foreground: oklch(0.985 0.002 247.839);
-  --card: oklch(0.21 0.034 264.665);
-  --card-foreground: oklch(0.985 0.002 247.839);
-  --popover: oklch(0.21 0.034 264.665);
-  --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(0.928 0.006 264.531);
-  --primary-foreground: oklch(0.21 0.034 264.665);
-  --secondary: oklch(0.278 0.033 256.848);
-  --secondary-foreground: oklch(0.985 0.002 247.839);
-  --muted: oklch(0.278 0.033 256.848);
-  --muted-foreground: oklch(0.707 0.022 261.325);
-  --accent: oklch(0.278 0.033 256.848);
-  --accent-foreground: oklch(0.985 0.002 247.839);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
+  /* --- Canvas & Surfaces --- */
+  --background: oklch(0.15 0.02 270);
+  --foreground: oklch(0.95 0.01 270);
+  --card: oklch(0.2 0.025 270);
+  --card-foreground: oklch(0.95 0.01 270);
+  --popover: oklch(0.2 0.025 270);
+  --popover-foreground: oklch(0.95 0.01 270);
+  
+  /* --- Primary --- */
+  --primary: oklch(0.95 0.01 270);
+  --primary-foreground: oklch(0.15 0.02 270);
+  
+  /* --- Secondary & Muted --- */
+  --secondary: oklch(0.25 0.025 270);
+  --secondary-foreground: oklch(0.95 0.01 270);
+  --muted: oklch(0.25 0.025 270);
+  --muted-foreground: oklch(0.65 0.02 270);
+  
+  /* --- Accent --- */
+  --accent: oklch(0.25 0.025 270);
+  --accent-foreground: oklch(0.95 0.01 270);
+  
+  /* --- Destructive --- */
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  
+  /* --- Borders & Inputs --- */
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --theme-amber: oklch(0.488 0.243 264.376);
-  --theme-teal: oklch(0.696 0.17 162.48);
-  --theme-golden: oklch(0.769 0.188 70.08);
-  --theme-yellow: oklch(0.627 0.265 303.9);
-  --theme-coral: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.034 264.665);
-  --sidebar-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-accent: oklch(0.278 0.033 256.848);
-  --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
+  --ring: oklch(0.65 0.14 175);
+  
+  /* --- Theme Colors (Slightly Adjusted for Dark) --- */
+  --theme-teal: oklch(0.7 0.15 175);
+  --theme-coral: oklch(0.7 0.18 25);
+  --theme-gold: oklch(0.78 0.16 85);
+  --theme-amber: oklch(0.75 0.19 55);
+  --theme-indigo: oklch(0.6 0.15 270);
+  
+  /* --- Sidebar --- */
+  --sidebar: oklch(0.18 0.022 270);
+  --sidebar-foreground: oklch(0.95 0.01 270);
+  --sidebar-primary: oklch(0.65 0.14 175);
+  --sidebar-primary-foreground: oklch(0.95 0.01 270);
+  --sidebar-accent: oklch(0.25 0.025 270);
+  --sidebar-accent-foreground: oklch(0.95 0.01 270);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar-ring: oklch(0.65 0.14 175);
+  
+  /* --- Charts --- */
+  --chart-1: oklch(0.7 0.15 175);
+  --chart-2: oklch(0.7 0.18 25);
+  --chart-3: oklch(0.6 0.15 270);
+  --chart-4: oklch(0.78 0.16 85);
+  --chart-5: oklch(0.75 0.19 55);
 }
 
+/* =============================================================================
+   TAILWIND THEME MAPPINGS
+   ============================================================================= */
+
 @theme {
+  /* --- Colors --- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -127,16 +182,21 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
-  --color-theme-amber: var(--theme-amber);
+  
+  /* --- Theme Accent Colors --- */
   --color-theme-teal: var(--theme-teal);
+  --color-theme-coral: var(--theme-coral);
+  --color-theme-gold: var(--theme-gold);
+  --color-theme-amber: var(--theme-amber);
   --color-theme-indigo: var(--theme-indigo);
   --color-theme-yellow: var(--theme-yellow);
   --color-theme-golden: var(--theme-golden);
-  --color-theme-coral: var(--theme-coral);
   --color-theme-violet: var(--theme-violet);
   --color-theme-cyan: var(--theme-cyan);
   --color-theme-periwinkle: var(--theme-periwinkle);
   --color-theme-mint: var(--theme-mint);
+  
+  /* --- Extended Color Palette --- */
   --color-blue-50: oklch(0.974 0.01 240);
   --color-blue-100: oklch(0.948 0.021 240);
   --color-blue-200: oklch(0.904 0.042 240);
@@ -163,12 +223,15 @@
   --color-green-600: oklch(0.627 0.194 149.214);
   --color-red-50: oklch(0.971 0.013 17.38);
   --color-red-600: oklch(0.577 0.245 27.325);
+  
+  /* --- Typography --- */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -177,6 +240,8 @@
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
+  
+  /* --- Spacing --- */
   --spacing-0: 0;
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
@@ -195,16 +260,24 @@
   --spacing-48: 12rem;
   --spacing-56: 14rem;
   --spacing-64: 16rem;
+  
+  /* --- Opacity --- */
   --opacity-0: 0;
   --opacity-50: 0.5;
   --opacity-75: 0.75;
   --opacity-80: 0.8;
   --opacity-90: 0.9;
   --opacity-100: 1;
+  
+  /* --- Border Radius --- */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  
+  /* --- Sidebar --- */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -215,6 +288,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -222,30 +299,41 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
   }
 }
 
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
- */
+html {
+  font-size: var(--font-size);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================================
+   TYPOGRAPHY DEFAULTS
+   ============================================================================= */
+
 @layer base {
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
+      font-family: var(--font-display);
       font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
-      line-height: 1.5;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
     }
 
     h2 {
+      font-family: var(--font-display);
       font-size: var(--text-xl);
       font-weight: var(--font-weight-medium);
-      line-height: 1.5;
+      line-height: 1.3;
     }
 
     h3 {
       font-size: var(--text-lg);
       font-weight: var(--font-weight-medium);
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     h4 {
@@ -261,13 +349,13 @@
     }
 
     label {
-      font-size: var(--text-base);
+      font-size: var(--text-sm);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
     }
 
     button {
-      font-size: var(--text-base);
+      font-size: var(--text-sm);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
     }
@@ -280,31 +368,46 @@
   }
 }
 
-html {
-  font-size: var(--font-size);
+/* =============================================================================
+   UTILITY CLASSES — Display Font
+   ============================================================================= */
+
+.font-display {
+  font-family: var(--font-display);
 }
 
-/* Button utility classes */
+/* =============================================================================
+   UTILITY CLASSES — Buttons
+   ============================================================================= */
+
 .btn-ghost {
-  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
   @apply hover:bg-accent hover:text-accent-foreground;
   @apply h-10 py-2 px-4;
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
   @apply bg-primary text-primary-foreground hover:bg-primary/90;
   @apply h-10 py-2 px-4;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
   @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
   @apply h-10 py-2 px-4;
 }
 
 .btn-destructive {
-  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
   @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
   @apply h-10 py-2 px-4;
 }
@@ -313,7 +416,30 @@ html {
   @apply bg-red-50 text-red-600;
 }
 
-/* Dashboard Design 1 Styles */
+/* Teal accent button (success actions) */
+.btn-teal {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-teal/50 focus-visible:ring-offset-2;
+  @apply disabled:opacity-50 disabled:pointer-events-none;
+  @apply bg-theme-teal text-white hover:bg-theme-teal/90;
+  @apply h-10 py-2 px-4;
+  @apply shadow-sm hover:shadow-md;
+}
+
+/* Gradient button (smart/AI actions) */
+.btn-gradient {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-indigo/50 focus-visible:ring-offset-2;
+  @apply disabled:opacity-50 disabled:pointer-events-none;
+  @apply text-white hover:opacity-90;
+  @apply h-10 py-2 px-4;
+  background: linear-gradient(135deg, var(--theme-indigo), var(--theme-teal));
+}
+
+/* =============================================================================
+   COMPONENT PATTERNS — Scope Selector
+   ============================================================================= */
+
 .scope-selector {
   display: flex;
   background: var(--muted);
@@ -327,11 +453,12 @@ html {
   border-radius: calc(var(--radius) - 2px);
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.15s;
+  transition: all 0.15s ease-out;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: var(--muted-foreground);
 }
 
 .scope-option.active {
@@ -342,7 +469,12 @@ html {
 
 .scope-option:not(.active):hover {
   background: var(--accent);
+  color: var(--foreground);
 }
+
+/* =============================================================================
+   COMPONENT PATTERNS — Status Indicators
+   ============================================================================= */
 
 .status-dot {
   width: 0.5rem;
@@ -361,6 +493,14 @@ html {
 .status-dot-coral {
   background: var(--theme-coral);
 }
+
+.status-dot-gold {
+  background: var(--theme-gold);
+}
+
+/* =============================================================================
+   COMPONENT PATTERNS — Partner Avatars
+   ============================================================================= */
 
 .partner-avatar {
   width: 2rem;
@@ -383,20 +523,123 @@ html {
   color: white;
 }
 
+/* =============================================================================
+   COMPONENT PATTERNS — Progress Bar
+   ============================================================================= */
+
 .progress-bar {
   background: var(--muted);
   border-radius: 9999px;
   overflow: hidden;
-  height: 0.55rem;
+  height: 0.5rem;
+}
+
+.progress-bar-sm {
+  height: 0.375rem;
+}
+
+.progress-bar-lg {
+  height: 0.625rem;
 }
 
 .progress-fill {
   height: 100%;
   border-radius: 9999px;
-  transition: width 0.6s ease-out;
+  transition: width 0.5s ease-out;
 }
 
-/* Hide spinners in number inputs */
+/* Status-based progress colors */
+.progress-fill-success {
+  background: var(--theme-teal);
+}
+
+.progress-fill-warning {
+  background: var(--theme-amber);
+}
+
+.progress-fill-danger {
+  background: var(--theme-coral);
+}
+
+/* =============================================================================
+   COMPONENT PATTERNS — Status Badges
+   ============================================================================= */
+
+.badge-success {
+  background: color-mix(in oklch, var(--theme-teal) 12%, transparent);
+  color: var(--theme-teal);
+  border-color: color-mix(in oklch, var(--theme-teal) 20%, transparent);
+}
+
+.badge-warning {
+  background: color-mix(in oklch, var(--theme-amber) 12%, transparent);
+  color: var(--theme-amber);
+  border-color: color-mix(in oklch, var(--theme-amber) 20%, transparent);
+}
+
+.badge-danger {
+  background: color-mix(in oklch, var(--theme-coral) 12%, transparent);
+  color: var(--theme-coral);
+  border-color: color-mix(in oklch, var(--theme-coral) 20%, transparent);
+}
+
+.badge-info {
+  background: color-mix(in oklch, var(--theme-indigo) 12%, transparent);
+  color: var(--theme-indigo);
+  border-color: color-mix(in oklch, var(--theme-indigo) 20%, transparent);
+}
+
+.badge-highlight {
+  background: color-mix(in oklch, var(--theme-gold) 12%, transparent);
+  color: var(--theme-gold);
+  border-color: color-mix(in oklch, var(--theme-gold) 20%, transparent);
+}
+
+/* =============================================================================
+   COMPONENT PATTERNS — Section Labels
+   ============================================================================= */
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+   COMPONENT PATTERNS — Stat Display
+   ============================================================================= */
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.stat-value-sm {
+  font-size: 1.5rem;
+}
+
+.stat-value-lg {
+  font-size: 2.5rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+   UTILITY — Hide Spinners in Number Inputs
+   ============================================================================= */
+
 .no-spinners::-webkit-inner-spin-button,
 .no-spinners::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -404,12 +647,30 @@ html {
 }
 
 .no-spinners {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
 }
 
-/* 
- ---break---
- */
+/* =============================================================================
+   UTILITY — Subtle Background Texture (Optional)
+   ============================================================================= */
+
+.bg-grain {
+  position: relative;
+}
+
+.bg-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =============================================================================
+   INLINE THEME EXTENSIONS (Radius)
+   ============================================================================= */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
