@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SavingsGoalsPage } from '../components/SavingsGoalsPage';
 import { ScopeProvider } from '../context/ScopeContext';
 import { MemoryRouter } from 'react-router-dom';
@@ -7,6 +8,9 @@ import { MemoryRouter } from 'react-router-dom';
 jest.mock('../api/services/savingsService', () => ({
   savingsService: {
     getGoals: jest.fn().mockResolvedValue([]),
+    updateGoal: jest.fn().mockResolvedValue({}),
+    deleteGoal: jest.fn().mockResolvedValue({}),
+    addContribution: jest.fn().mockResolvedValue({}),
   },
 }));
 

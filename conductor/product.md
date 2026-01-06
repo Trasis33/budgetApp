@@ -23,6 +23,7 @@ The Couples Budget App is a specialized financial tool designed for couples who 
 -   **Recurring Expense Management:** robust tools for managing monthly subscriptions and utilities, including shared and personal designations.
 -   **Visual Dashboard:** Interactive charts and progress bars to visualize monthly spending, budget adherence, and savings progress.
 -   **Monthly Reconciliation Workflow:** A dedicated flow for the end-of-month review to input data, calculate splits, and determine the final "who owes who" or "what's left" figures.
+-   **Savings Goals Tracker:** Create and track shared or personal savings goals with visual progress indicators. Allocate settlement amounts directly to savings goals after monthly reconciliation.
 
 ## User Experience Focus
 -   **Automation First:** Reduce manual math and repetitive entry for bill splitting and recurring costs.

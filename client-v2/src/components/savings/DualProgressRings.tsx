@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 import { CHART_COLORS } from '@/lib/constants';
 
@@ -39,7 +38,15 @@ export function DualProgressRings({
   const innerOffset = innerCircumference - (safeTimeProgress / 100) * innerCircumference;
 
   return (
-    <div className={cn("relative inline-flex items-center justify-center", className)} style={{ width: size, height: size }}>
+    <div
+      className={cn("relative inline-flex items-center justify-center", className)}
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={`Savings progress: ${Math.round(safeAmountProgress)}% saved, ${Math.round(safeTimeProgress)}% time elapsed`}
+    >
+      <span className="sr-only">
+        Amount progress: {Math.round(safeAmountProgress)}%, Time progress: {Math.round(safeTimeProgress)}%
+      </span>
       {/* SVG Container */}
       <svg
         width={size}

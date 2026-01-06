@@ -5,13 +5,14 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Expense, User } from '../types';
 import { formatCurrency, calculateBalance, calculateExpenseShare, filterExpensesByMonth } from '../lib/utils';
-import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign, CalendarClock, CheckCircle2, Loader2, RefreshCw, Calendar } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Users, Receipt, DollarSign, CalendarClock, CheckCircle2, Loader2, Calendar, PiggyBank } from 'lucide-react';
 import { expenseService } from '../api/services/expenseService';
 import { analyticsService } from '../api/services/analyticsService';
 import { authService } from '../api/services/authService';
 import { recurringExpenseService } from '../api/services/recurringExpenseService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { SettlementAllocationPrompt } from './savings/SettlementAllocationPrompt';
 
 interface BillSplittingProps {
   onNavigate: (view: string) => void;
@@ -25,6 +26,8 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [pendingTemplatesCount, setPendingTemplatesCount] = useState(0);
+  const [allocationPromptOpen, setAllocationPromptOpen] = useState(false);
+  const [settlementAmount, setSettlementAmount] = useState(0);
 
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -89,6 +92,15 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleMarkSettlementComplete = () => {
+    setSettlementAmount(Math.abs(balance));
+    setAllocationPromptOpen(true);
+  };
+
+  const handleAllocationComplete = () => {
+    toast.success('Settlement marked complete!');
   };
 
   if (loading) {
@@ -292,6 +304,16 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
                       : `${currentUser.name} owes ${partnerUser.name}`
                   }
                 </p>
+                {Math.abs(balance) >= 10 && (
+                  <Button
+                    onClick={handleMarkSettlementComplete}
+                    className="mt-4 w-full"
+                    variant="outline"
+                  >
+                    <PiggyBank className="mr-2 h-4 w-4" />
+                    Mark Settlement Complete & Allocate to Savings
+                  </Button>
+                )}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -462,6 +484,13 @@ export function BillSplitting({ onNavigate }: BillSplittingProps) {
           </Card>
         )}
       </div>
+
+      <SettlementAllocationPrompt
+        isOpen={allocationPromptOpen}
+        amount={settlementAmount}
+        onClose={() => setAllocationPromptOpen(false)}
+        onAllocated={handleAllocationComplete}
+      />
     </div>
   );
 }

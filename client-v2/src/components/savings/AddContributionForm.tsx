@@ -58,7 +58,8 @@ export function AddContributionForm({
     const selectedDate = new Date(value);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+    selectedDate.setHours(0, 0, 0, 0);
+
     if (selectedDate > today) {
       return 'Date cannot be in the future';
     }
