@@ -11,7 +11,7 @@ const progressVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary/20",
+        default: "bg-[oklch(var(--theme-teal)/0.15)]",
         success: "bg-[oklch(var(--theme-teal)/0.15)]",
         warning: "bg-[oklch(var(--theme-amber)/0.15)]",
         danger: "bg-[oklch(var(--theme-coral)/0.15)]",
@@ -34,7 +34,7 @@ const indicatorVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary",
+        default: "bg-[oklch(var(--theme-teal))]",
         success: "bg-[oklch(var(--theme-teal))]",
         warning: "bg-[oklch(var(--theme-amber))]",
         danger: "bg-[oklch(var(--theme-coral))]",

@@ -9,21 +9,23 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Default uses teal as the primary action color
+        default:
+          "bg-[oklch(var(--theme-teal))] text-white hover:bg-[oklch(var(--theme-teal)/0.85)] focus-visible:ring-[oklch(var(--theme-teal)/0.3)]",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-[oklch(var(--theme-coral))] text-white hover:bg-[oklch(var(--theme-coral)/0.85)] focus-visible:ring-[oklch(var(--theme-coral)/0.3)]",
         outline:
-          "border bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
-        // Theme action variants
+        link: "text-[oklch(var(--theme-teal))] underline-offset-4 hover:underline",
+        // Theme action variants (explicit)
         teal:
-          "bg-[oklch(var(--theme-teal))] text-white hover:bg-[oklch(var(--theme-teal)/0.9)] focus-visible:ring-[oklch(var(--theme-teal)/0.3)]",
+          "bg-[oklch(var(--theme-teal))] text-white hover:bg-[oklch(var(--theme-teal)/0.85)] focus-visible:ring-[oklch(var(--theme-teal)/0.3)]",
         coral:
-          "bg-[oklch(var(--theme-coral))] text-white hover:bg-[oklch(var(--theme-coral)/0.9)] focus-visible:ring-[oklch(var(--theme-coral)/0.3)]",
+          "bg-[oklch(var(--theme-coral))] text-white hover:bg-[oklch(var(--theme-coral)/0.85)] focus-visible:ring-[oklch(var(--theme-coral)/0.3)]",
         gradient:
           "bg-gradient-to-r from-[oklch(var(--theme-teal))] to-[oklch(var(--theme-indigo))] text-white hover:opacity-90 focus-visible:ring-[oklch(var(--theme-teal)/0.3)]",
       },

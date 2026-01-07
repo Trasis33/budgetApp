@@ -50,7 +50,7 @@ export function OnTrackSummary({ insights, formatCurrency }: OnTrackSummaryProps
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-                    style={{ backgroundColor: `var(--theme-${insight.categoryColor})` }}
+                    style={{ backgroundColor: insight.categoryColor?.startsWith('#') ? insight.categoryColor : `oklch(var(--theme-${insight.categoryColor}))` }}
                   >
                     {insight.categoryName.charAt(0).toUpperCase()}
                   </div>

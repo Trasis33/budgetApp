@@ -78,7 +78,7 @@ export function DualProgressRings({
           strokeDashoffset={outerOffset}
           strokeLinecap="round"
           className="transition-all duration-1000 ease-out text-theme-mint" // Fallback class if needed
-          style={{ stroke: 'var(--theme-mint)' }}
+          style={{ stroke: 'oklch(var(--theme-mint))' }}
         />
 
         {/* Inner Ring Background (Time) */}
@@ -104,7 +104,7 @@ export function DualProgressRings({
           strokeDashoffset={innerOffset}
           strokeLinecap="round"
           className="transition-all duration-1000 ease-out text-theme-amber"
-          style={{ stroke: 'var(--theme-amber)' }}
+          style={{ stroke: 'oklch(var(--theme-amber))' }}
         />
       </svg>
 
@@ -112,14 +112,14 @@ export function DualProgressRings({
       {showLabels && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--theme-mint)' }}>
+            <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(var(--theme-mint))' }}>
               {Math.round(safeAmountProgress)}%
             </span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Saved</span>
           </div>
           <div className="h-px w-8 bg-border my-1" />
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--theme-amber)' }}>
+            <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(var(--theme-amber))' }}>
               {Math.round(safeTimeProgress)}%
             </span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Time</span>

@@ -260,7 +260,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
         return {
           variant: 'destructive' as const,
           label: 'Over budget',
-          fill: 'bg-[var(--theme-coral)]',
+          fill: 'bg-[oklch(var(--theme-coral))]',
           icon: AlertTriangle
         };
       }
@@ -268,26 +268,26 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
     if (progress >= 90) return {
       variant: 'destructive' as const,
       label: 'Critical',
-      fill: 'bg-[var(--theme-coral)]',
+      fill: 'bg-[oklch(var(--theme-coral))]',
       icon: AlertTriangle
     };
     if (progress >= 80) return {
       variant: 'outline' as const,
       label: 'Near limit',
-      fill: 'bg-[var(--theme-amber)]',
+      fill: 'bg-[oklch(var(--theme-amber))]',
       icon: AlertTriangle
     };
     return {
       variant: 'outline' as const,
       label: 'On track',
-      fill: 'bg-[var(--theme-teal)]',
+      fill: 'bg-[oklch(var(--theme-teal)))]',
       icon: null
     };
   };
 
   const getSplitTypeBadge = (splitType: string) => {
     const styles: Record<string, string> = {
-      '50/50': 'bg-[oklch(var(--theme-indigo)/0.1)] text-[oklch(var(--theme-indigo))]',
+      '50/50': 'bg-[oklch(var(--theme-indigo))/0.1)] text-[oklch(var(--theme-indigo)))]',
       'personal': 'bg-muted text-muted-foreground',
       'custom': 'bg-[oklch(var(--theme-gold)/0.1)] text-[oklch(var(--theme-gold))]',
       'bill': 'bg-[oklch(var(--theme-coral)/0.1)] text-[oklch(var(--theme-coral))]',
@@ -296,10 +296,10 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
   };
 
   const overallStatus = overallProgress >= 90 
-    ? { label: 'Over budget', color: 'text-[var(--theme-coral)]', dot: 'bg-[var(--theme-coral)]' }
+    ? { label: 'Over budget', color: 'text-[oklch(var(--theme-coral))]', dot: 'bg-[oklch(var(--theme-coral))]' }
     : overallProgress >= 80 
-    ? { label: 'Near limit', color: 'text-[var(--theme-amber)]', dot: 'bg-[var(--theme-amber)]' }
-    : { label: 'On track', color: 'text-[var(--theme-teal)]', dot: 'bg-[var(--theme-teal)]' };
+    ? { label: 'Near limit', color: 'text-[oklch(var(--theme-amber))]', dot: 'bg-[oklch(var(--theme-amber))]' }
+    : { label: 'On track', color: 'text-[oklch(var(--theme-teal)))]', dot: 'bg-[oklch(var(--theme-teal)))]' };
 
   const handleAddComment = async (budgetId: number) => {
     const text = commentInputs[budgetId]?.trim();
@@ -451,7 +451,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                     <Avatar className="h-6 w-6 ring-2 ring-background">
                       <AvatarFallback 
                         className="text-white text-[10px]"
-                        style={{ backgroundColor: user.color || 'var(--theme-indigo)' }}
+                        style={{ backgroundColor: user.color || 'oklch(var(--theme-indigo))' }}
                       >
                         {user.name?.[0] || 'U'}
                       </AvatarFallback>
@@ -459,7 +459,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                     <Avatar className="h-6 w-6 ring-2 ring-background">
                       <AvatarFallback 
                         className="text-white text-[10px]"
-                        style={{ backgroundColor: partner.color || 'var(--theme-teal)' }}
+                        style={{ backgroundColor: partner.color || 'oklch(var(--theme-teal))' }}
                       >
                         {partner.name?.[0] || 'P'}
                       </AvatarFallback>
@@ -614,7 +614,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                         <Avatar className="h-6 w-6">
                           <AvatarFallback 
                             className="text-[10px] text-white"
-                            style={{ backgroundColor: userOwes ? (user?.color || 'var(--theme-indigo)') : (partner?.color || 'var(--theme-teal)') }}
+                            style={{ backgroundColor: userOwes ? (user?.color || 'oklch(var(--theme-indigo))') : (partner?.color || 'oklch(var(--theme-teal))') }}
                           >
                             {userOwes ? user?.name?.[0] : partner?.name?.[0]}
                           </AvatarFallback>
@@ -623,7 +623,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                         <Avatar className="h-6 w-6">
                           <AvatarFallback 
                             className="text-[10px] text-white"
-                            style={{ backgroundColor: userOwes ? (partner?.color || 'var(--theme-teal)') : (user?.color || 'var(--theme-indigo)') }}
+                            style={{ backgroundColor: userOwes ? (partner?.color || 'oklch(var(--theme-teal))') : (user?.color || 'oklch(var(--theme-indigo))') }}
                           >
                             {userOwes ? partner?.name?.[0] : user?.name?.[0]}
                           </AvatarFallback>
@@ -641,7 +641,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-5 w-5">
-                            <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: user?.color || 'var(--theme-indigo)' }}>
+                            <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: user?.color || 'oklch(var(--theme-indigo))' }}>
                               {user?.name?.[0]}
                             </AvatarFallback>
                           </Avatar>
@@ -652,7 +652,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-5 w-5">
-                            <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: partner?.color || 'var(--theme-teal)' }}>
+                            <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: partner?.color || 'oklch(var(--theme-teal))' }}>
                               {partner?.name?.[0]}
                             </AvatarFallback>
                           </Avatar>
@@ -871,7 +871,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     <div className="flex-1 p-3 bg-muted/30 rounded-lg">
                                       <div className="flex items-center gap-2 mb-1">
                                         <Avatar className="h-5 w-5">
-                                          <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: user?.color || 'var(--theme-indigo)' }}>
+                                          <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: user?.color || 'oklch(var(--theme-indigo))' }}>
                                             {user?.name?.[0]}
                                           </AvatarFallback>
                                         </Avatar>
@@ -882,7 +882,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                     <div className="flex-1 p-3 bg-muted/30 rounded-lg">
                                       <div className="flex items-center gap-2 mb-1">
                                         <Avatar className="h-5 w-5">
-                                          <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: partner?.color || 'var(--theme-teal)' }}>
+                                          <AvatarFallback className="text-[8px] text-white" style={{ backgroundColor: partner?.color || 'oklch(var(--theme-teal))' }}>
                                             {partner?.name?.[0]}
                                           </AvatarFallback>
                                         </Avatar>
@@ -904,7 +904,7 @@ export function BudgetManager({ onNavigate: _onNavigate }: BudgetManagerProps) {
                                             <Avatar className="h-5 w-5">
                                               <AvatarFallback 
                                                 className="text-[8px] text-white"
-                                                style={{ backgroundColor: tx.paid_by_user_id === user?.id ? (user?.color || 'var(--theme-indigo)') : (partner?.color || 'var(--theme-teal)') }}
+                                                style={{ backgroundColor: tx.paid_by_user_id === user?.id ? (user?.color || 'oklch(var(--theme-indigo))') : (partner?.color || 'oklch(var(--theme-teal))') }}
                                               >
                                                 {tx.paid_by_name?.[0] || '?'}
                                               </AvatarFallback>

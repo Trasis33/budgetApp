@@ -17,13 +17,13 @@ export function TrendSparkline({ data, trend, height = 60, width = 200 }: TrendS
   const getTrendColor = () => {
     switch (trend) {
       case 'increasing':
-        return 'var(--theme-rose)';
+        return 'oklch(var(--theme-coral))';
       case 'decreasing':
-        return 'var(--theme-emerald)';
+        return 'oklch(var(--theme-teal))';
       case 'stable':
-        return 'var(--theme-indigo)';
+        return 'oklch(var(--theme-indigo))';
       default:
-        return 'var(--theme-slate)';
+        return 'oklch(var(--theme-indigo))';
     }
   };
 

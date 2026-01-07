@@ -96,7 +96,7 @@ export function OverspendingCard({ insight, onAdjustBudget, formatCurrency }: Ov
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-semibold"
-            style={{ backgroundColor: `var(--theme-${insight.categoryColor})` }}
+            style={{ backgroundColor: insight.categoryColor?.startsWith('#') ? insight.categoryColor : `oklch(var(--theme-${insight.categoryColor}))` }}
           >
             {insight.categoryName.charAt(0).toUpperCase()}
           </div>

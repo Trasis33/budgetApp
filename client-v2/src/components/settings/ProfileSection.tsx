@@ -116,7 +116,7 @@ export function ProfileSection() {
                   <button 
                     className="flex h-12 w-12 items-center justify-center rounded-full text-white font-semibold text-lg transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
                     style={{ 
-                      backgroundColor: formData.color || 'var(--theme-indigo)',
+                      backgroundColor: formData.color || 'oklch(var(--theme-indigo))',
                       color: 'white'
                     }}
                     title="Click to change avatar color"
