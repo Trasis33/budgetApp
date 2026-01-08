@@ -4,7 +4,7 @@ A lightweight web application that helps couples track expenses, split bills, an
 
 ## Features
 
-- **Expense Tracking**: Quick mobile-first data entry with categories and descriptions
+- **Expense Tracking**: Quick data entry with categories and descriptions
 - **Bill Splitting**: Automated calculations with custom split ratios
 - **Recurring Bills**: Management of predictable monthly expenses
 - **Budget Management**: Category-based budgeting with performance tracking
@@ -15,6 +15,7 @@ A lightweight web application that helps couples track expenses, split bills, an
 ## Technology Stack
 
 ### Frontend
+
 - **React 18.2.0** with hooks and context
 - **React Router DOM 6.14.1** for client-side routing
 - **Tailwind CSS 3.3.2** with custom design system
@@ -23,6 +24,7 @@ A lightweight web application that helps couples track expenses, split bills, an
 - **Axios** for API communication
 
 ### Backend
+
 - **Node.js + Express 4.18.2** RESTful API
 - **SQLite 3 + Knex.js 2.4.2** database with migrations
 - **JWT + bcryptjs** for authentication
@@ -31,31 +33,35 @@ A lightweight web application that helps couples track expenses, split bills, an
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - npm or yarn
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd budget-app
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm run setup
    ```
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
 
-   This starts both the client (port 3000) and server (port 5001) simultaneously.
+   This starts both the client (port 3001) and server (port 5001) simultaneously.
 
 4. **Access the application**
-   - Frontend: http://localhost:3000
+   - Frontend: http://localhost:3001
    - Backend API: http://localhost:5001
 
 ### Environment Configuration
@@ -81,7 +87,7 @@ JWT_SECRET=your_jwt_secret_here
 ```bash
 # Development
 npm run dev          # Start both client and server
-npm run dev:client   # Start client only (port 3000)
+npm run dev:client   # Start client only (port 3001)
 npm run dev:server   # Start server only (port 5001)
 
 # Production
@@ -107,51 +113,49 @@ The application uses SQLite with Knex.js for migrations:
 ## Project Structure
 
 ```
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/         # Route-level components
-│   │   ├── context/       # React Context providers
-│   │   ├── api/           # API client configuration
-│   │   ├── utils/         # Helper functions
-│   │   └── styles/        # CSS files and design system
-│   └── public/            # Static assets
-├── server/                # Node.js/Express backend
+├── client/               # DeprecatedReact frontend
+├── server/               # Node.js/Express backend
 │   ├── routes/           # API route handlers
 │   ├── middleware/       # Custom middleware
-│   ├── db/              # Database configuration and migrations
-│   └── utils/           # Server-side utilities
-├── docs/                # Project documentation
-├── designs/             # UI mockups and design system
+│   ├── db/               # Database configuration and migrations
+│   └── utils/            # Server-side utilities
+├── docs/                 # Project documentation
+├── designs/              # UI mockups and design system
+├── client-v2/            # New React frontend
 ```
 
 ## Key Features
 
 ### Dashboard
+
 - Monthly spending summary
 - Recent expenses listing
 - Budget performance indicators
 - Quick action buttons
 
 ### Expense Management
+
 - Mobile-optimized entry form
 - Category-based organization
 - Custom split ratios for shared expenses
 - Bulk operations and filtering
 
 ### Budget Tracking
+
 - Monthly budget setting per category
 - Budget vs. actual spending comparisons
 - Visual progress indicators
 - Income tracking and management
 
 ### Analytics
+
 - Interactive spending charts
 - Category breakdown analysis
 - Monthly trends and comparisons
 - Savings rate tracking
 
 ### Bill Splitting
+
 - Automated monthly calculations
 - Custom split ratios (50/50, custom, personal)
 - Balance tracking between users

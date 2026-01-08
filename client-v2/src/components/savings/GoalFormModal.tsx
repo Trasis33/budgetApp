@@ -22,7 +22,7 @@ interface GoalFormData {
 interface GoalFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: GoalFormData) => void;
   goal?: SavingsGoal;
 }
 

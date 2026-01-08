@@ -19,6 +19,7 @@ export const savingsService = {
       ...goal,
       name: goal.goal_name,
       category_name: goal.category,
+      is_pinned: Boolean(goal.is_pinned),
     })) as SavingsGoal[];
   },
 

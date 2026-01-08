@@ -20,31 +20,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import { differenceInDays, parseISO } from 'date-fns';
-
-function calculatePaceIndicator(
-  amountProgress: number,
-  timeProgress: number
-): { label: string; colorClass: string } {
-  const tolerance = 5;
-
-  if (timeProgress <= 0) {
-    return { label: 'Not Started', colorClass: 'text-muted-foreground' };
-  }
-
-  if (isNaN(amountProgress) || isNaN(timeProgress)) {
-    return { label: 'On Track', colorClass: 'text-muted-foreground' };
-  }
-
-  if (amountProgress >= timeProgress + tolerance) {
-    return { label: 'Ahead', colorClass: 'text-[oklch(var(--theme-teal))]' };
-  }
-
-  if (amountProgress + tolerance <= timeProgress) {
-    return { label: 'Behind', colorClass: 'text-[oklch(var(--theme-amber))]' };
-  }
-
-  return { label: 'On Track', colorClass: 'text-primary' };
-}
+import { calculatePaceIndicator, calculateTimeProgress } from '@/lib/savingsCalculations';
 
 export function SavingsGoalDetailPage() {
   const { goalId } = useParams<{ goalId: string }>();
@@ -118,26 +94,18 @@ export function SavingsGoalDetailPage() {
   const goalCalculations = useMemo(() => {
     if (!goal) return null;
 
-    const amountProgress = goal.target_amount > 0 
-      ? (goal.current_amount / goal.target_amount) * 100 
+    const amountProgress = goal.target_amount > 0
+      ? (goal.current_amount / goal.target_amount) * 100
       : 0;
 
-    let daysRemaining = 0;
-    let totalDays = 0;
-    let timeProgress = 0;
+    // Use shared utility for time progress
+    const timeProgress = calculateTimeProgress(goal.created_at, goal.target_date);
 
-    if (goal.created_at && goal.target_date) {
-      const startDate = parseISO(goal.created_at);
+    let daysRemaining = 0;
+    if (goal.target_date) {
       const endDate = parseISO(goal.target_date);
       const today = new Date();
-
-      totalDays = differenceInDays(endDate, startDate);
-      const daysElapsed = differenceInDays(today, startDate);
       daysRemaining = differenceInDays(endDate, today);
-
-      if (totalDays > 0) {
-        timeProgress = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
-      }
     }
 
     const pace = calculatePaceIndicator(amountProgress, timeProgress);
@@ -146,7 +114,6 @@ export function SavingsGoalDetailPage() {
       amountProgress,
       timeProgress,
       daysRemaining,
-      totalDays,
       pace,
       percentage: Math.round(amountProgress),
       remaining: goal.target_amount - goal.current_amount
@@ -280,7 +247,7 @@ export function SavingsGoalDetailPage() {
                 <span className="text-muted-foreground">Remaining</span>
                 <span className="font-medium">{formatCurrency(goalCalculations.remaining)}</span>
               </div>
-              {goalCalculations.totalDays > 0 && (
+              {goalCalculations.timeProgress > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Time Progress</span>
                   <span className="font-medium">{Math.round(goalCalculations.timeProgress)}%</span>

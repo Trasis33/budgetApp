@@ -4,10 +4,11 @@ import { useScope } from '../context/ScopeContext';
 import { savingsService } from '../api/services/savingsService';
 import { Button } from './ui/button';
 import { Plus, PiggyBank } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Skeleton } from './ui/skeleton';
 import { GoalCard } from './savings/GoalCard';
-import { GoalFormModal } from './savings/GoalFormModal';
+import { GoalFormModal, GoalFormData } from './savings/GoalFormModal';
+import { ScopeSelector } from './scope/ScopeSelector';
+import { SavingsGoalsStatsBar } from './savings/SavingsGoalsStatsBar';
 import { toast } from 'sonner';
 import type { SavingsGoal } from '../types';
 
@@ -53,7 +54,7 @@ export function SavingsGoalsPage() {
     setSelectedGoal(undefined);
   };
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: GoalFormData) => {
     try {
       if (selectedGoal) {
         await savingsService.updateGoal(selectedGoal.id, data);
@@ -109,38 +110,33 @@ export function SavingsGoalsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(var(--theme-teal)/0.1)]">
-            <PiggyBank className="h-6 w-6 text-[oklch(var(--theme-teal))]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-display font-semibold tracking-tight">Savings Goals</h1>
-            <p className="text-sm text-muted-foreground">
-              Track and manage your savings goals.
-            </p>
-          </div>
+    <div className="space-y-10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-display font-semibold tracking-tight">Savings Goals</h1>
+          <p className="text-base text-muted-foreground mt-2">
+            Track progress toward your dreams, together.
+          </p>
         </div>
-        <Button variant="teal" className="gap-2" onClick={handleOpenCreateModal}>
+        <Button
+          variant="teal"
+          className="gap-2 shadow-md hover:shadow-lg transition-all duration-200"
+          style={{
+            boxShadow: '0 4px 12px rgba(42, 157, 143, 0.25), 0 2px 8px rgba(42, 157, 143, 0.15)'
+          }}
+          onClick={handleOpenCreateModal}
+        >
           <Plus className="h-4 w-4" />
-          Add Goal
+          New Goal
         </Button>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <Tabs 
-          value={currentScope} 
-          onValueChange={(value) => setScope(value as any)}
-          className="w-auto"
-        >
-          <TabsList>
-            <TabsTrigger value="mine">Mine</TabsTrigger>
-            <TabsTrigger value="partner" disabled={!isPartnerConnected}>Partner's</TabsTrigger>
-            <TabsTrigger value="ours">Ours</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex items-center justify-start gap-4">
+        <ScopeSelector />
       </div>
+
+      {/* Stats Bar */}
+      <SavingsGoalsStatsBar goals={goals} loading={loading} />
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -183,15 +179,16 @@ export function SavingsGoalsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {goals.map((goal) => (
-            <GoalCard 
-              key={goal.id} 
+          {goals.map((goal, index) => (
+            <GoalCard
+              key={goal.id}
               goal={goal}
               onClick={() => navigate(`/savings/${goal.id}`)}
               onEdit={handleOpenEditModal}
               onDelete={handleDeleteGoal}
               onPin={handlePinGoal}
               onQuickAddContribution={handleQuickAddContribution}
+              style={{ animationDelay: `${150 + index * 50}ms` }}
             />
           ))}
         </div>
