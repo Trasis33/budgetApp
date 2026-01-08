@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import { CHART_COLORS } from '@/lib/constants';
 
 interface DualProgressRingsProps {
   amountProgress: number; // 0-100
@@ -24,7 +23,7 @@ export function DualProgressRings({
 
   // Center point
   const center = size / 2;
-  
+
   // Outer ring (Amount) calculations
   const outerRadius = (size - strokeWidth) / 2;
   const outerCircumference = 2 * Math.PI * outerRadius;
@@ -32,7 +31,7 @@ export function DualProgressRings({
 
   // Inner ring (Time) calculations
   // Gap between rings equal to stroke width for visual separation
-  const gap = 4;
+  const gap = strokeWidth * 0.5;
   const innerRadius = outerRadius - strokeWidth - gap;
   const innerCircumference = 2 * Math.PI * innerRadius;
   const innerOffset = innerCircumference - (safeTimeProgress / 100) * innerCircumference;
@@ -47,6 +46,7 @@ export function DualProgressRings({
       <span className="sr-only">
         Amount progress: {Math.round(safeAmountProgress)}%, Time progress: {Math.round(safeTimeProgress)}%
       </span>
+
       {/* SVG Container */}
       <svg
         width={size}
@@ -62,23 +62,21 @@ export function DualProgressRings({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-muted/20"
+          className="text-muted/10"
         />
-        
-        {/* Outer Ring Progress (Amount) */}
+
+        {/* Outer Ring Progress (Amount) - Teal for saved amount */}
         <circle
           cx={center}
           cy={center}
           r={outerRadius}
           fill="none"
-          stroke={CHART_COLORS.mint} // Using theme variable directly might require CSS var support in SVGs or specific Tailwind class
-          // If CHART_COLORS.mint is 'var(--theme-mint)', using it in style or stroke attribute works if vars are defined in scope
           strokeWidth={strokeWidth}
           strokeDasharray={outerCircumference}
           strokeDashoffset={outerOffset}
           strokeLinecap="round"
-          className="transition-all duration-1000 ease-out text-theme-mint" // Fallback class if needed
-          style={{ stroke: 'oklch(var(--theme-mint))' }}
+          className="transition-all duration-700 ease-out"
+          style={{ stroke: 'oklch(var(--theme-teal))' }}
         />
 
         {/* Inner Ring Background (Time) */}
@@ -89,40 +87,49 @@ export function DualProgressRings({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-muted/20"
+          className="text-muted/10"
         />
 
-        {/* Inner Ring Progress (Time) */}
+        {/* Inner Ring Progress (Time) - Amber for time elapsed */}
         <circle
           cx={center}
           cy={center}
           r={innerRadius}
           fill="none"
-          stroke={CHART_COLORS.amber}
           strokeWidth={strokeWidth}
           strokeDasharray={innerCircumference}
           strokeDashoffset={innerOffset}
           strokeLinecap="round"
-          className="transition-all duration-1000 ease-out text-theme-amber"
+          className="transition-all duration-700 ease-out"
           style={{ stroke: 'oklch(var(--theme-amber))' }}
         />
       </svg>
 
       {/* Central Labels */}
       {showLabels && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(var(--theme-mint))' }}>
+            <span
+              className="font-display text-xs font-bold tabular-nums leading-none"
+              style={{ color: 'oklch(var(--theme-teal))' }}
+            >
               {Math.round(safeAmountProgress)}%
             </span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Saved</span>
+            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider leading-tight mt-0.5">
+              Saved
+            </span>
           </div>
-          <div className="h-px w-8 bg-border my-1" />
+          <div className="h-px w-6 bg-border my-1" />
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(var(--theme-amber))' }}>
+            <span
+              className="font-display text-xs font-bold tabular-nums leading-none"
+              style={{ color: 'oklch(var(--theme-amber))' }}
+            >
               {Math.round(safeTimeProgress)}%
             </span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Time</span>
+            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider leading-tight mt-0.5">
+              Time
+            </span>
           </div>
         </div>
       )}
