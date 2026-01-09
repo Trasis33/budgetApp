@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface GoalFormData {
+export interface GoalFormData {
   name: string;
   target_amount: number;
   target_date: string;
