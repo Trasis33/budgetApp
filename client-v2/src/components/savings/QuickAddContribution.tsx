@@ -43,10 +43,13 @@ export function QuickAddContribution({
         <Button
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8 rounded-full hover:bg-muted", className)}
+          className={cn(
+            "h-9 w-9 rounded-xl bg-[oklch(var(--theme-teal))] text-white shadow-md hover:bg-[oklch(var(--theme-teal)/0.9)] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200",
+            className
+          )}
           onClick={(e) => e.stopPropagation()}
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-5 w-5" />
           <span className="sr-only">Quick add contribution</span>
         </Button>
       </PopoverTrigger>

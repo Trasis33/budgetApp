@@ -76,11 +76,52 @@ export const GoalCard = React.memo(function GoalCard({
     >
       <CardContent className="p-6">
         {/* Pin Badge */}
-        {goal.is_pinned && (
-          <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-[oklch(var(--theme-gold))] flex items-center justify-center text-white shadow-lg">
-            <Pin className="h-3.5 w-3.5 fill-current" />
-          </div>
-        )}
+        {/* Action Buttons (Top Right) */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          {goal.is_pinned && (
+            <div className="w-7 h-7 rounded-full bg-[oklch(var(--theme-gold))] flex items-center justify-center text-white shadow-lg">
+              <Pin className="h-3.5 w-3.5 fill-current" />
+            </div>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-black/5 data-[state=open]:bg-black/5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={handleAction(onEdit)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAction(onPin)}>
+                {goal.is_pinned ? (
+                  <>
+                    <PinOff className="mr-2 h-4 w-4" />
+                    Unpin
+                  </>
+                ) : (
+                  <>
+                    <Pin className="mr-2 h-4 w-4" />
+                    Pin
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleAction(onDelete)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Header with Rings and Info */}
         <div className="flex items-start gap-5 mb-4">
@@ -153,45 +194,7 @@ export const GoalCard = React.memo(function GoalCard({
             <QuickAddContribution
               onSubmit={handleQuickAdd}
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-lg hover:bg-muted/50"
-                  aria-label="Goal actions"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={handleAction(onEdit)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleAction(onPin)}>
-                  {goal.is_pinned ? (
-                    <>
-                      <PinOff className="mr-2 h-4 w-4" />
-                      Unpin
-                    </>
-                  ) : (
-                    <>
-                      <Pin className="mr-2 h-4 w-4" />
-                      Pin
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleAction(onDelete)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
           </div>
         </div>
       </CardContent>

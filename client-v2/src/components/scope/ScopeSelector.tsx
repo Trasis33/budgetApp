@@ -25,7 +25,7 @@ export function ScopeSelector({ className = '' }: ScopeSelectorProps) {
 
   return (
     <div className={cn(
-      "inline-flex bg-surface border border-border rounded-[20px] p-1 gap-1 shadow-sm",
+      "inline-flex bg-card border border-border rounded-[20px] p-1 gap-1",
       className
     )}>
       {scopes.map((scope) => (
@@ -34,7 +34,7 @@ export function ScopeSelector({ className = '' }: ScopeSelectorProps) {
           onClick={() => setScope(scope.value)}
           disabled={scope.disabled || false}
           className={cn(
-            "px-5 py-2 rounded-md text-sm font-medium transition-all duration-200",
+            "px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             currentScope === scope.value
               ? "bg-foreground text-background shadow-sm"
