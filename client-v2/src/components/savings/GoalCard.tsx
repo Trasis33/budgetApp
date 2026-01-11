@@ -56,7 +56,8 @@ export const GoalCard = React.memo(function GoalCard({
 
   const cardStyle = goal.is_pinned
     ? {
-        background: 'linear-gradient(180deg, oklch(var(--theme-gold) / 0.08) 0%, transparent 60%)',
+        background: 'linear-gradient(180deg, oklch(var(--theme-gold) / 0.18) 0%, oklch(var(--theme-gold) / 0.08) 40%, transparent 75%)',
+        boxShadow: '0 0 0 1px oklch(var(--theme-gold) / 0.2), 0 4px 12px oklch(var(--theme-gold) / 0.1)',
         animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)'
       }
     : {
