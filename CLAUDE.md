@@ -125,6 +125,43 @@ The app uses "Refined Nordic Finance" design with OKLCH color architecture.
 - Status badges: `.badge-success`, `.badge-warning`, `.badge-danger`, `.badge-info`
 - Progress bars: `.progress-bar` with status-based fills
 
+### OKLCH Color Syntax (What Works vs. What Doesn't)
+
+**Theme color variables store raw OKLCH values without the wrapper**:
+```css
+--theme-teal: 0.65 0.14 175;  /* Raw L C H values */
+```
+
+**WORKING - Direct Tailwind theme classes (preferred)**:
+```jsx
+<div className="bg-theme-teal" />           // Uses --color-theme-teal from @theme block
+<div className="border-[var(--border)]" />  // Direct CSS var reference
+```
+
+**WORKING - Arbitrary values with oklch() wrapper (only for opacity)**:
+```jsx
+// Only use arbitrary syntax when you need opacity/alpha
+<div className="bg-[oklch(var(--theme-teal)/0.12)]" />
+<div className="text-[oklch(var(--theme-coral)/0.5)]" />
+```
+
+**NOT WORKING - Nested var() inside relative color syntax**:
+```jsx
+// ❌ This breaks - CSS relative color syntax with nested var() doesn't resolve
+<div style={{ background: `linear-gradient(135deg, oklch(var(--theme-teal)), oklch(from oklch(var(--theme-teal)) calc(l + 0.05) c h))` }} />
+
+// ❌ Tailwind arbitrary values with from/var() also fail
+<div className="to-[oklch(from_var(--theme-teal)_calc(l_+_0.05)_c_h)]" />
+```
+
+**NOT WORKING - Tailwind utility with opacity modifier**:
+```jsx
+// ❌ border-border/50 may not resolve correctly in Tailwind v4
+<div className="border-y border-border/50" />
+// ✅ Use direct var() reference instead
+<div className="border-y border-[var(--border)]" />
+```
+
 ---
 
 ## Important Patterns
